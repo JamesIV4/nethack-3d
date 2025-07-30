@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NetHack 3D</title>
+    <style>
+        /* Basic page styling */
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: monospace;
+        }
+
+        /* Overlay for messages and status */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            color: #fff;
+            padding: 0.5rem;
+            max-width: 45%;
+            pointer-events: none;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay for NetHack messages -->
+    <div id="overlay"></div>
+
+    <!-- Load Three.js as an ES module -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js"></script>
+    <!-- Load NetHack WASM runtime.  This script defines the global function `nethackStart`. -->
+    <script src="nethack.js"></script>
+    <!-- Load our compiled application code.  The TypeScript compiler outputs app.js into this directory. -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
