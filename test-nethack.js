@@ -1,12 +1,12 @@
 // Test using the original @neth4ck/neth4ck package to see the proper callback sequence
-const nethackStart = require('@neth4ck/neth4ck');
+const nethackStart = require("@neth4ck/neth4ck");
 
-console.log('🧪 Testing original @neth4ck/neth4ck package...');
+console.log("🧪 Testing original @neth4ck/neth4ck package...");
 
 function testCallback(name, ...args) {
   console.log(`🔔 UI Callback: ${name}`, args);
-  
-  switch(name) {
+
+  switch (name) {
     case "shim_create_nhwindow":
       console.log("creating window, returning 1");
       return 1;
@@ -28,8 +28,20 @@ function testCallback(name, ...args) {
       console.log("Ending menu");
       return 0;
     case "shim_add_menu":
-      const [winid, glyph, accelerator, groupacc, menuAttr, menuStr, preselected] = args;
-      console.log(`📋 MENU ITEM: "${menuStr}" (key: ${String.fromCharCode(accelerator || 32)})`);
+      const [
+        winid,
+        glyph,
+        accelerator,
+        groupacc,
+        menuAttr,
+        menuStr,
+        preselected,
+      ] = args;
+      console.log(
+        `📋 MENU ITEM: "${menuStr}" (key: ${String.fromCharCode(
+          accelerator || 32
+        )})`
+      );
       return 0;
     case "shim_select_menu":
       console.log("Menu selection request");
@@ -50,7 +62,7 @@ function testCallback(name, ...args) {
 try {
   console.log("Starting NetHack with original package...");
   nethackStart(testCallback);
-  console.log('NetHack started successfully!');
+  console.log("NetHack started successfully!");
 } catch (error) {
-  console.error('Error starting NetHack:', error);
+  console.error("Error starting NetHack:", error);
 }

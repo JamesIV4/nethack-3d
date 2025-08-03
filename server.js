@@ -160,15 +160,20 @@ class NetHackSession {
 
           // Store reference to Module for direct function calls
           this.nethackModule = Module;
-          
+
           // Set up the missing globalThis.nethackGlobal context that the original shim expects
           if (!globalThis.nethackGlobal) {
             console.log("🌐 Setting up missing globalThis.nethackGlobal...");
             globalThis.nethackGlobal = {
               constants: {
-                WIN_TYPE: { 1: "WIN_MESSAGE", 2: "WIN_MAP", 3: "WIN_STATUS", 4: "WIN_INVEN" },
+                WIN_TYPE: {
+                  1: "WIN_MESSAGE",
+                  2: "WIN_MAP",
+                  3: "WIN_STATUS",
+                  4: "WIN_INVEN",
+                },
                 STATUS_FIELD: {},
-                MENU_SELECT: { PICK_NONE: 0, PICK_ONE: 1, PICK_ANY: 2 }
+                MENU_SELECT: { PICK_NONE: 0, PICK_ONE: 1, PICK_ANY: 2 },
               },
               helpers: {
                 getPointerValue: (name, ptr, type) => {
@@ -176,18 +181,18 @@ class NetHackSession {
                     return Module.UTF8ToString(ptr);
                   }
                   return ptr;
-                }
+                },
               },
               globals: {
                 WIN_MAP: 2,
-                WIN_INVEN: 4, 
+                WIN_INVEN: 4,
                 WIN_STATUS: 3,
-                WIN_MESSAGE: 1
-              }
+                WIN_MESSAGE: 1,
+              },
             };
             console.log("✅ globalThis.nethackGlobal set up");
           }
-          
+
           // Try calling createContext to see what it does
           console.log("🔧 Investigating createContext function...");
           try {
@@ -201,7 +206,7 @@ class NetHackSession {
           } catch (e) {
             console.log("   ❌ createContext error:", e.message);
           }
-          
+
           // Set up the global callback first
           console.log("Setting up global nethackCallback...");
           globalThis.nethackCallback = this.uiCallback.bind(this);
@@ -214,7 +219,8 @@ class NetHackSession {
           this.exploreNetHackFunctions();
 
           // At this point, the Module object should have all the WASM functions
-          console.log("Module ccall available:", typeof Module.ccall);          if (Module.ccall) {
+          console.log("Module ccall available:", typeof Module.ccall);
+          if (Module.ccall) {
             try {
               console.log("Setting up graphics callback with Module...");
               Module.ccall(
