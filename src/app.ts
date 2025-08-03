@@ -271,10 +271,12 @@ class Nethack3DEngine {
         break;
 
       case "position_request":
-        // Completely ignore position requests to stop the infinite loop
-        // NetHack is constantly asking for position which creates UI spam
-        // We'll handle positioning through normal game input instead
-        console.log("Ignoring position request to prevent spam");
+        // Only show meaningful position requests, filter out spam
+        if (data.text && data.text.trim() && 
+            !data.text.includes("cursor") && 
+            !data.text.includes("Select a position")) {
+          this.showPositionRequest(data.text);
+        }
         break;
 
       case "name_request":

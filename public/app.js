@@ -25601,8 +25601,16 @@ void main() {
       window.addEventListener("resize", this.onWindowResize.bind(this), false);
       window.addEventListener("keydown", this.handleKeyDown.bind(this), false);
       window.addEventListener("wheel", this.handleMouseWheel.bind(this), false);
-      window.addEventListener("mousedown", this.handleMouseDown.bind(this), false);
-      window.addEventListener("mousemove", this.handleMouseMove.bind(this), false);
+      window.addEventListener(
+        "mousedown",
+        this.handleMouseDown.bind(this),
+        false
+      );
+      window.addEventListener(
+        "mousemove",
+        this.handleMouseMove.bind(this),
+        false
+      );
       window.addEventListener("mouseup", this.handleMouseUp.bind(this), false);
       window.addEventListener("contextmenu", (e) => e.preventDefault(), false);
       this.animate();
@@ -25728,7 +25736,9 @@ void main() {
           );
           break;
         case "position_request":
-          console.log("Ignoring position request to prevent spam");
+          if (data.text && data.text.trim() && !data.text.includes("cursor") && !data.text.includes("Select a position")) {
+            this.showPositionRequest(data.text);
+          }
           break;
         case "name_request":
           this.showNameRequest(data.text, data.maxLength);
@@ -25770,7 +25780,7 @@ void main() {
           // vertical wall
           case 2379:
             return "-";
-          // horizontal wall  
+          // horizontal wall
           case 2380:
             return "-";
           // top-left corner
@@ -26144,7 +26154,10 @@ void main() {
       event.preventDefault();
       const zoomSpeed = 1;
       const delta = event.deltaY > 0 ? zoomSpeed : -zoomSpeed;
-      this.cameraDistance = Math.max(this.minDistance, Math.min(this.maxDistance, this.cameraDistance + delta));
+      this.cameraDistance = Math.max(
+        this.minDistance,
+        Math.min(this.maxDistance, this.cameraDistance + delta)
+      );
     }
     handleMouseDown(event) {
       if (event.button === 1) {
@@ -26162,7 +26175,10 @@ void main() {
         const rotationSpeed = 0.01;
         this.cameraAngleY += deltaX * rotationSpeed;
         this.cameraAngleX += deltaY * rotationSpeed;
-        this.cameraAngleX = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, this.cameraAngleX));
+        this.cameraAngleX = Math.max(
+          -Math.PI / 2 + 0.1,
+          Math.min(Math.PI / 2 - 0.1, this.cameraAngleX)
+        );
         this.lastMouseX = event.clientX;
         this.lastMouseY = event.clientY;
       }

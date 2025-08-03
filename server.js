@@ -471,13 +471,29 @@ class NetHackSession {
 
       case "shim_nh_poskey":
         const [xPtr, yPtr, modPtr] = args;
-        console.log("Position request blocked to prevent infinite loop");
+        console.log(
+          `🖱️ Position key request at pointers: ${xPtr}, ${yPtr}, ${modPtr}`
+        );
 
-        // Always return Escape to stop the position request loop
-        // NetHack gets stuck in position request loops that spam the UI
-        return 27; // Escape key
+        // Check if we have queued input
+        if (this.inputQueue.length > 0) {
+          const input = this.inputQueue.shift();
+          console.log(`Using queued input for position: ${input}`);
 
-      case "shim_select_menu":
+          // Convert common movement keys to their character codes
+          if (input === "ArrowLeft" || input === "h") return "h".charCodeAt(0);
+          if (input === "ArrowRight" || input === "l") return "l".charCodeAt(0);
+          if (input === "ArrowUp" || input === "k") return "k".charCodeAt(0);
+          if (input === "ArrowDown" || input === "j") return "j".charCodeAt(0);
+          if (input === "Escape") return 27; // Escape key
+
+          // Return the first character of the input
+          return input.charCodeAt(0);
+        }
+
+        // If no input queued, return Escape to cancel the position request
+        console.log("No input queued, returning Escape for position request");
+        return 27; // Escape key      case "shim_select_menu":
         const [menuSelectWinid, menuSelectHow, menuPtr] = args;
         console.log(
           `📋 Menu selection request for window ${menuSelectWinid}, how: ${menuSelectHow}, ptr: ${menuPtr}`
