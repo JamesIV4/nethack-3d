@@ -10,11 +10,66 @@ class NetHackSession {
     this.gameMap = new Map(); // Store map glyphs by coordinates
     this.playerPosition = { x: 0, y: 0 };
     this.gameMessages = [];
-    this.pendingInput = null; // Store pending input for callbacks
-    this.waitingForInput = false; // Flag to indicate if we're waiting for user input
     this.currentMenuItems = []; // Store current menu items
     this.currentWindow = null; // Track current window for menu items
+
+    // Promise-based input handling
+    this.inputPromise = null;
+    this.inputResolver = null;
+    this.inputTimeout = null;
+
+    // Input handling with finite state machine
+    this.inputQueue = [];
+    this.isProcessingInput = false;
+    this.inputState = "idle"; // 'idle', 'waiting_user', 'processing'
+    this.lastInputTime = 0;
+    this.inputCooldown = 100; // Minimum time between inputs
+
     this.initializeNetHack();
+  }
+
+  // Promise-based input waiting
+  async waitForInput(timeoutMs = 30000) {
+    return new Promise((resolve, reject) => {
+      // Store the resolver so we can call it when input arrives
+      this.inputResolver = resolve;
+
+      // Set up timeout to prevent hanging forever
+      this.inputTimeout = setTimeout(() => {
+        this.inputResolver = null;
+        reject(new Error("Input timeout"));
+      }, timeoutMs);
+    });
+  }
+
+  // Resolve pending input promise
+  resolveInput(input) {
+    if (this.inputResolver) {
+      clearTimeout(this.inputTimeout);
+      this.inputResolver(input);
+      this.inputResolver = null;
+      this.inputTimeout = null;
+    }
+  }
+
+  // Add input to queue for processing
+  queueInput(input) {
+    console.log(`Queueing input: ${input}`);
+    this.inputQueue.push(input);
+    this.inputState = "processing";
+
+    // Reset state after a short delay
+    setTimeout(() => {
+      if (this.inputState === "processing") {
+        this.inputState = "idle";
+      }
+    }, 200);
+  }
+
+  // Simplified input sending - just queue it
+  sendInput(input) {
+    console.log("Sending input:", input);
+    this.queueInput(input);
   }
 
   async initializeNetHack() {
@@ -269,17 +324,23 @@ class NetHackSession {
       case "shim_get_nh_event":
         console.log("Getting NetHack event");
 
-        // If we have pending input, return it as a key event
-        if (this.pendingInput) {
-          const input = this.pendingInput;
-          this.pendingInput = null;
+        // Check for queued input
+        if (this.inputQueue.length > 0) {
+          const input = this.inputQueue.shift();
           console.log(
-            `Returning input event: ${input} (${input.charCodeAt(0)})`
+            `Returning queued input event: ${input} (${input.charCodeAt(0)})`
           );
+
+          // Convert arrow keys to movement
+          if (input === "ArrowLeft") return "h".charCodeAt(0);
+          if (input === "ArrowRight") return "l".charCodeAt(0);
+          if (input === "ArrowUp") return "k".charCodeAt(0);
+          if (input === "ArrowDown") return "j".charCodeAt(0);
+
           return input.charCodeAt(0);
         }
 
-        // Return a simple event to keep things moving
+        // Return 0 to continue the game loop
         return 0;
 
       case "shim_player_selection":
@@ -314,53 +375,75 @@ class NetHackSession {
           );
         }
 
-        // If we have pending input, use it
-        if (this.pendingInput) {
-          const input = this.pendingInput;
-          this.pendingInput = null;
-          this.waitingForInput = false;
-          console.log(`Using pending input: ${input}`);
+        // Use async/await approach - but since callbacks must be sync,
+        // we'll handle this differently in the next iteration
+        try {
+          // For now, return default but we'll improve this
+          const defaultChar = defaultChoice || "n";
+          console.log(`Returning default choice: ${defaultChar}`);
 
           // Clear menu items after use
           this.currentMenuItems = [];
 
-          return input.charCodeAt(0);
+          return defaultChar.charCodeAt(0);
+        } catch (error) {
+          console.log("Error in yn_function:", error);
+          return "n".charCodeAt(0);
         }
-
-        // Otherwise wait for input
-        this.waitingForInput = true;
-        console.log("Waiting for user input...");
-
-        // Return default for now (this will be handled by the input system)
-        return defaultChoice || "n".charCodeAt(0);
 
       case "shim_nh_poskey":
         const [xPtr, yPtr, modPtr] = args;
+        const now = Date.now();
+
+        // Prevent infinite loops with cooldown
+        if (now - this.lastInputTime < this.inputCooldown) {
+          console.log("Position request on cooldown, returning Escape");
+          return 27; // Escape key
+        }
+
+        this.lastInputTime = now;
         console.log(
           `🖱️ Position key request at pointers: ${xPtr}, ${yPtr}, ${modPtr}`
         );
 
-        // If we have pending input, use it
-        if (this.pendingInput) {
-          const input = this.pendingInput;
-          this.pendingInput = null;
-          this.waitingForInput = false;
-          console.log(`Using pending input for position: ${input}`);
+        // Check if we have queued input
+        if (this.inputQueue.length > 0) {
+          const input = this.inputQueue.shift();
+          console.log(`Using queued input for position: ${input}`);
+
+          // Convert common movement keys
+          if (input === "ArrowLeft" || input === "h") return "h".charCodeAt(0);
+          if (input === "ArrowRight" || input === "l") return "l".charCodeAt(0);
+          if (input === "ArrowUp" || input === "k") return "k".charCodeAt(0);
+          if (input === "ArrowDown" || input === "j") return "j".charCodeAt(0);
+
           return input.charCodeAt(0);
         }
 
-        // Send position request to client
-        if (this.ws && this.ws.readyState === 1) {
-          this.ws.send(
-            JSON.stringify({
-              type: "position_request",
-              text: "Select a position (or press Escape to cancel)",
-            })
-          );
+        // Send position request to client only once per cooldown period
+        if (this.inputState === "idle") {
+          this.inputState = "waiting_user";
+
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(
+              JSON.stringify({
+                type: "position_request",
+                text: "Select a position (or press Escape to cancel)",
+              })
+            );
+          }
+
+          // Set timeout to reset state if no input received
+          setTimeout(() => {
+            if (this.inputState === "waiting_user") {
+              this.inputState = "idle";
+              console.log("Position request timeout, resetting state");
+            }
+          }, 5000);
         }
 
-        // Return Escape key to cancel position selection by default
-        // This is safer than 'q' which triggers drinking!
+        // Return Escape key to cancel by default (but only send message once)
+        console.log("Returning Escape key for position request");
         return 27; // Escape key
 
       case "shim_select_menu":
@@ -452,37 +535,8 @@ class NetHackSession {
   sendInput(input) {
     console.log("Sending input:", input);
 
-    // Store the input for use in callbacks
-    this.pendingInput = input;
-    this.waitingForInput = false;
-
-    if (this.nethackModule && this.nethackModule.ccall) {
-      try {
-        // Convert input to character code
-        const charCode = input.charCodeAt(0);
-        console.log(`Sending character code: ${charCode} for '${input}'`);
-
-        // Try different input methods
-        try {
-          // Try the main input method
-          this.nethackModule.ccall("shim_input_available", null, [], []);
-        } catch (error1) {
-          console.log(
-            "shim_input_available failed, trying alternative:",
-            error1
-          );
-
-          // Try to trigger NetHack to continue processing
-          try {
-            this.nethackModule.ccall("main", null, [], []);
-          } catch (error2) {
-            console.log("main() also failed:", error2);
-          }
-        }
-      } catch (error) {
-        console.log("Error sending input:", error);
-      }
-    }
+    // Add to queue for async processing
+    this.queueInput(input);
   }
 }
 
