@@ -25,22 +25,35 @@ class Nethack3DEngine {
   private tileMap: TileMap = new Map();
   private playerPos = { x: 0, y: 0 };
   private gameMessages: string[] = [];
-  
+
   private ws: WebSocket | null = null;
 
   // Pre-create geometries and materials
   private floorGeometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
-  private wallGeometry = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE, WALL_HEIGHT);
-  
+  private wallGeometry = new THREE.BoxGeometry(
+    TILE_SIZE,
+    TILE_SIZE,
+    WALL_HEIGHT
+  );
+
   // Materials for different glyph types
   private materials = {
-    floor: new THREE.MeshLambertMaterial({ color: 0x8B4513 }), // Brown floor
+    floor: new THREE.MeshLambertMaterial({ color: 0x8b4513 }), // Brown floor
     wall: new THREE.MeshLambertMaterial({ color: 0x666666 }), // Gray wall
-    door: new THREE.MeshLambertMaterial({ color: 0x8B4513 }), // Brown door
-    player: new THREE.MeshLambertMaterial({ color: 0x00FF00, emissive: 0x004400 }), // Green glowing player
-    monster: new THREE.MeshLambertMaterial({ color: 0xFF0000, emissive: 0x440000 }), // Red glowing monster
-    item: new THREE.MeshLambertMaterial({ color: 0x0080FF, emissive: 0x001144 }), // Blue glowing item
-    default: new THREE.MeshLambertMaterial({ color: 0xFFFFFF })
+    door: new THREE.MeshLambertMaterial({ color: 0x8b4513 }), // Brown door
+    player: new THREE.MeshLambertMaterial({
+      color: 0x00ff00,
+      emissive: 0x004400,
+    }), // Green glowing player
+    monster: new THREE.MeshLambertMaterial({
+      color: 0xff0000,
+      emissive: 0x440000,
+    }), // Red glowing monster
+    item: new THREE.MeshLambertMaterial({
+      color: 0x0080ff,
+      emissive: 0x001144,
+    }), // Blue glowing item
+    default: new THREE.MeshLambertMaterial({ color: 0xffffff }),
   };
 
   constructor() {
@@ -63,13 +76,13 @@ class Nethack3DEngine {
     this.renderer.setClearColor(0x000011); // Dark blue background
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    
+
     document.body.appendChild(this.renderer.domElement);
 
     // --- Lighting ---
     const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
     this.scene.add(ambientLight);
-    
+
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(10, 10, 5);
     directionalLight.castShadow = true;
@@ -87,8 +100,8 @@ class Nethack3DEngine {
 
   private initUI(): void {
     // Create game log overlay
-    const logContainer = document.createElement('div');
-    logContainer.id = 'game-log';
+    const logContainer = document.createElement("div");
+    logContainer.id = "game-log";
     logContainer.style.cssText = `
       position: fixed;
       top: 10px;
@@ -109,8 +122,8 @@ class Nethack3DEngine {
     document.body.appendChild(logContainer);
 
     // Create status overlay
-    const statusContainer = document.createElement('div');
-    statusContainer.id = 'game-status';
+    const statusContainer = document.createElement("div");
+    statusContainer.id = "game-status";
     statusContainer.style.cssText = `
       position: fixed;
       bottom: 10px;
@@ -125,12 +138,12 @@ class Nethack3DEngine {
       z-index: 1000;
       pointer-events: none;
     `;
-    statusContainer.innerHTML = 'Connecting to NetHack server...';
+    statusContainer.innerHTML = "Connecting to NetHack server...";
     document.body.appendChild(statusContainer);
 
     // Create connection status
-    const connStatus = document.createElement('div');
-    connStatus.id = 'connection-status';
+    const connStatus = document.createElement("div");
+    connStatus.id = "connection-status";
     connStatus.style.cssText = `
       position: fixed;
       top: 10px;
@@ -143,26 +156,26 @@ class Nethack3DEngine {
       font-size: 12px;
       z-index: 1000;
     `;
-    connStatus.innerHTML = 'Disconnected';
+    connStatus.innerHTML = "Disconnected";
     document.body.appendChild(connStatus);
   }
 
   private connectToServer(): void {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}`;
-    
-    console.log('Connecting to NetHack server at:', wsUrl);
+
+    console.log("Connecting to NetHack server at:", wsUrl);
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
-      console.log('Connected to NetHack server');
-      this.updateConnectionStatus('Connected', '#00aa00');
-      this.updateStatus('Connected to NetHack - Game starting...');
-      
+      console.log("Connected to NetHack server");
+      this.updateConnectionStatus("Connected", "#00aa00");
+      this.updateStatus("Connected to NetHack - Game starting...");
+
       // Hide loading screen
-      const loading = document.getElementById('loading');
+      const loading = document.getElementById("loading");
       if (loading) {
-        loading.style.display = 'none';
+        loading.style.display = "none";
       }
     };
 
@@ -171,22 +184,23 @@ class Nethack3DEngine {
         const data = JSON.parse(event.data);
         this.handleServerMessage(data);
       } catch (error) {
-        console.error('Error parsing server message:', error);
+        console.error("Error parsing server message:", error);
       }
     };
 
     this.ws.onclose = () => {
-      console.log('Disconnected from NetHack server');
-      this.updateConnectionStatus('Disconnected', '#aa0000');
-      this.updateStatus('Disconnected from server');
-      
+      console.log("Disconnected from NetHack server");
+      this.updateConnectionStatus("Disconnected", "#aa0000");
+      this.updateStatus("Disconnected from server");
+
       // Show loading screen
-      const loading = document.getElementById('loading');
+      const loading = document.getElementById("loading");
       if (loading) {
-        loading.style.display = 'block';
-        loading.innerHTML = '<div>NetHack 3D</div><div style="font-size: 14px; margin-top: 10px;">Reconnecting...</div>';
+        loading.style.display = "block";
+        loading.innerHTML =
+          '<div>NetHack 3D</div><div style="font-size: 14px; margin-top: 10px;">Reconnecting...</div>';
       }
-      
+
       // Try to reconnect after 3 seconds
       setTimeout(() => {
         if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
@@ -196,31 +210,31 @@ class Nethack3DEngine {
     };
 
     this.ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      this.updateConnectionStatus('Error', '#aa0000');
+      console.error("WebSocket error:", error);
+      this.updateConnectionStatus("Error", "#aa0000");
     };
   }
 
   private handleServerMessage(data: any): void {
     switch (data.type) {
-      case 'map_glyph':
+      case "map_glyph":
         this.updateTile(data.x, data.y, data.glyph);
         break;
-        
-      case 'player_position':
+
+      case "player_position":
         this.playerPos = { x: data.x, y: data.y };
         break;
-        
-      case 'text':
+
+      case "text":
         this.addGameMessage(data.text);
         break;
-        
-      case 'menu_item':
+
+      case "menu_item":
         this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
         break;
-        
+
       default:
-        console.log('Unknown message type:', data.type, data);
+        console.log("Unknown message type:", data.type, data);
     }
   }
 
@@ -232,7 +246,7 @@ class Nethack3DEngine {
     let material = this.materials.default;
     let geometry = this.floorGeometry;
     let isWall = false;
-    
+
     if (glyph >= 2378 && glyph <= 2394) {
       // Wall glyphs
       material = this.materials.wall;
@@ -263,7 +277,11 @@ class Nethack3DEngine {
     if (!mesh) {
       // Create a new mesh
       mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(x * TILE_SIZE, -y * TILE_SIZE, isWall ? WALL_HEIGHT / 2 : 0);
+      mesh.position.set(
+        x * TILE_SIZE,
+        -y * TILE_SIZE,
+        isWall ? WALL_HEIGHT / 2 : 0
+      );
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       this.scene.add(mesh);
@@ -277,29 +295,29 @@ class Nethack3DEngine {
   }
 
   private addGameMessage(message: string): void {
-    if (!message || message.trim() === '') return;
-    
+    if (!message || message.trim() === "") return;
+
     this.gameMessages.unshift(message);
     if (this.gameMessages.length > 100) {
       this.gameMessages.pop();
     }
-    
-    const logElement = document.getElementById('game-log');
+
+    const logElement = document.getElementById("game-log");
     if (logElement) {
-      logElement.innerHTML = this.gameMessages.join('<br>');
+      logElement.innerHTML = this.gameMessages.join("<br>");
       logElement.scrollTop = 0; // Keep newest messages at top
     }
   }
 
   private updateStatus(status: string): void {
-    const statusElement = document.getElementById('game-status');
+    const statusElement = document.getElementById("game-status");
     if (statusElement) {
       statusElement.innerHTML = status;
     }
   }
 
   private updateConnectionStatus(status: string, color: string): void {
-    const connElement = document.getElementById('connection-status');
+    const connElement = document.getElementById("connection-status");
     if (connElement) {
       connElement.innerHTML = status;
       connElement.style.backgroundColor = color;
@@ -309,10 +327,12 @@ class Nethack3DEngine {
   private handleKeyDown(event: KeyboardEvent): void {
     // Send input to server
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({
-        type: 'input',
-        input: event.key
-      }));
+      this.ws.send(
+        JSON.stringify({
+          type: "input",
+          input: event.key,
+        })
+      );
     }
   }
 

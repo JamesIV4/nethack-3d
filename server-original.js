@@ -10,6 +10,10 @@ class NetHackSession {
     this.gameMap = new Map(); // Store map glyphs by coordinates
     this.playerPosition = { x: 0, y: 0 };
     this.gameMessages = [];
+    this.pendingInput = null; // Store pending input for callbacks
+    this.waitingForInput = false; // Flag to indicate if we're waiting for user input
+    this.currentMenuItems = []; // Store current menu items
+    this.currentWindow = null; // Track current window for menu items
     this.initializeNetHack();
   }
 
@@ -143,11 +147,18 @@ class NetHackSession {
         return 0;
 
       case "shim_start_menu":
+        const [menuWinId, menuOptions] = args;
         console.log("NetHack starting menu:", args);
+
+        // Clear previous menu items for this window
+        this.currentMenuItems = [];
+        this.currentWindow = menuWinId;
+
         return 0;
 
       case "shim_end_menu":
         console.log("NetHack ending menu:", args);
+        // Menu is ending - current items are ready
         return 0;
 
       case "shim_display_nhwindow":
@@ -168,7 +179,17 @@ class NetHackSession {
         const menuChar = String.fromCharCode(accelerator || 32);
         console.log(`📋 MENU ITEM: "${menuStr}" (key: ${menuChar})`);
 
-        // Send this to the web client
+        // Store menu item for current question
+        if (this.currentWindow === menuWinid && menuStr && menuChar.trim()) {
+          this.currentMenuItems.push({
+            text: menuStr,
+            accelerator: menuChar,
+            window: menuWinid,
+            glyph: menuGlyph,
+          });
+        }
+
+        // Send menu item to web client
         if (this.ws && this.ws.readyState === 1) {
           this.ws.send(
             JSON.stringify({
@@ -176,6 +197,7 @@ class NetHackSession {
               text: menuStr,
               accelerator: menuChar,
               window: menuWinid,
+              glyph: menuGlyph,
             })
           );
         }
@@ -185,15 +207,15 @@ class NetHackSession {
       case "shim_putstr":
         const [win, textAttr, textStr] = args;
         console.log(`💬 TEXT [Win ${win}]: "${textStr}"`);
-        
+
         // Store messages for the game log
         this.gameMessages.push({
           text: textStr,
           window: win,
           timestamp: Date.now(),
-          attr: textAttr
+          attr: textAttr,
         });
-        
+
         // Keep only last 100 messages
         if (this.gameMessages.length > 100) {
           this.gameMessages.shift();
@@ -206,7 +228,7 @@ class NetHackSession {
               type: "text",
               text: textStr,
               window: win,
-              attr: textAttr
+              attr: textAttr,
             })
           );
         }
@@ -216,33 +238,47 @@ class NetHackSession {
       case "shim_print_glyph":
         const [printWin, x, y, printGlyph] = args;
         console.log(`🎨 GLYPH [Win ${printWin}] at (${x},${y}): ${printGlyph}`);
-        
+
         // Store map data for the 3D visualization
-        if (printWin === 3) { // WIN_MAP
+        if (printWin === 3) {
+          // WIN_MAP
           const key = `${x},${y}`;
           this.gameMap.set(key, {
             x: x,
             y: y,
             glyph: printGlyph,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
-          
+
           // Send map update to client
           if (this.ws && this.ws.readyState === 1) {
-            this.ws.send(JSON.stringify({
-              type: 'map_glyph',
-              x: x,
-              y: y,
-              glyph: printGlyph,
-              window: printWin
-            }));
+            this.ws.send(
+              JSON.stringify({
+                type: "map_glyph",
+                x: x,
+                y: y,
+                glyph: printGlyph,
+                window: printWin,
+              })
+            );
           }
         }
-        
+
         return 0;
 
       case "shim_get_nh_event":
         console.log("Getting NetHack event");
+
+        // If we have pending input, return it as a key event
+        if (this.pendingInput) {
+          const input = this.pendingInput;
+          this.pendingInput = null;
+          console.log(
+            `Returning input event: ${input} (${input.charCodeAt(0)})`
+          );
+          return input.charCodeAt(0);
+        }
+
         // Return a simple event to keep things moving
         return 0;
 
@@ -261,19 +297,50 @@ class NetHackSession {
 
       case "shim_yn_function":
         const [question, choices, defaultChoice] = args;
-        console.log(`🤔 Y/N Question: "${question}" choices: "${choices}" default: ${defaultChoice}`);
-        this.sendToClients({
-          type: 'text',
-          text: `Question: ${question} (${choices})`
-        });
-        // Return 'n' (no) by default for safety
-        return 'n'.charCodeAt(0);
+        console.log(
+          `🤔 Y/N Question: "${question}" choices: "${choices}" default: ${defaultChoice}`
+        );
+
+        // Send question to web client with available menu items
+        if (this.ws && this.ws.readyState === 1) {
+          this.ws.send(
+            JSON.stringify({
+              type: "question",
+              text: question,
+              choices: choices,
+              default: defaultChoice,
+              menuItems: this.currentMenuItems,
+            })
+          );
+        }
+
+        // If we have pending input, use it
+        if (this.pendingInput) {
+          const input = this.pendingInput;
+          this.pendingInput = null;
+          this.waitingForInput = false;
+          console.log(`Using pending input: ${input}`);
+
+          // Clear menu items after use
+          this.currentMenuItems = [];
+
+          return input.charCodeAt(0);
+        }
+
+        // Otherwise wait for input
+        this.waitingForInput = true;
+        console.log("Waiting for user input...");
+
+        // Return default for now (this will be handled by the input system)
+        return defaultChoice || "n".charCodeAt(0);
 
       case "shim_nh_poskey":
         const [xPtr, yPtr, modPtr] = args;
-        console.log(`🖱️ Position key request at pointers: ${xPtr}, ${yPtr}, ${modPtr}`);
+        console.log(
+          `🖱️ Position key request at pointers: ${xPtr}, ${yPtr}, ${modPtr}`
+        );
         // Return 'q' to quit/escape from position selections
-        return 'q'.charCodeAt(0);
+        return "q".charCodeAt(0);
 
       case "shim_select_menu":
         const [menuSelectWinid, menuSelectHow, menuPtr] = args;
@@ -312,22 +379,27 @@ class NetHackSession {
 
       case "shim_curs":
         const [cursWin, cursX, cursY] = args;
-        console.log(`Setting cursor in window ${cursWin} to (${cursX}, ${cursY})`);
-        
+        console.log(
+          `Setting cursor in window ${cursWin} to (${cursX}, ${cursY})`
+        );
+
         // Track player position
-        if (cursWin === 3) { // WIN_MAP
+        if (cursWin === 3) {
+          // WIN_MAP
           this.playerPosition = { x: cursX, y: cursY };
-          
+
           // Send player position to client
           if (this.ws && this.ws.readyState === 1) {
-            this.ws.send(JSON.stringify({
-              type: 'player_position',
-              x: cursX,
-              y: cursY
-            }));
+            this.ws.send(
+              JSON.stringify({
+                type: "player_position",
+                x: cursX,
+                y: cursY,
+              })
+            );
           }
         }
-        
+
         return 0;
 
       case "shim_cliparound":
@@ -358,10 +430,34 @@ class NetHackSession {
 
   sendInput(input) {
     console.log("Sending input:", input);
+
+    // Store the input for use in callbacks
+    this.pendingInput = input;
+    this.waitingForInput = false;
+
     if (this.nethackModule && this.nethackModule.ccall) {
       try {
-        // Try to send input to NetHack
-        this.nethackModule.ccall("shim_input_available", null, [], []);
+        // Convert input to character code
+        const charCode = input.charCodeAt(0);
+        console.log(`Sending character code: ${charCode} for '${input}'`);
+
+        // Try different input methods
+        try {
+          // Try the main input method
+          this.nethackModule.ccall("shim_input_available", null, [], []);
+        } catch (error1) {
+          console.log(
+            "shim_input_available failed, trying alternative:",
+            error1
+          );
+
+          // Try to trigger NetHack to continue processing
+          try {
+            this.nethackModule.ccall("main", null, [], []);
+          } catch (error2) {
+            console.log("main() also failed:", error2);
+          }
+        }
       } catch (error) {
         console.log("Error sending input:", error);
       }

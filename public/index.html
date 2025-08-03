@@ -28,26 +28,93 @@
         pointer-events: none;
         z-index: 1000;
       }
-      
+
+      .top-left-ui {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #00ff00;
+        padding: 10px;
+        border: 1px solid #333;
+        border-radius: 5px;
+        max-width: 400px;
+        font-size: 12px;
+        pointer-events: auto;
+      }
+
+      #game-status {
+        margin-bottom: 10px;
+        font-weight: bold;
+        color: #ffffff;
+      }
+
       #game-log {
         max-height: 250px;
+        overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: #333 #111;
+        line-height: 1.4;
       }
-      
+
       #game-log::-webkit-scrollbar {
         width: 8px;
       }
-      
+
       #game-log::-webkit-scrollbar-track {
         background: #111;
       }
-      
+
       #game-log::-webkit-scrollbar-thumb {
         background: #333;
         border-radius: 4px;
       }
-      
+
+      .question-ui {
+        position: fixed;
+        bottom: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: #ffffff;
+        padding: 15px;
+        border: 2px solid #00ff00;
+        border-radius: 8px;
+        max-width: 500px;
+        text-align: center;
+        font-size: 14px;
+        pointer-events: auto;
+        display: none;
+      }
+
+      .question-text {
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+
+      .question-options {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .option-button {
+        background: #333;
+        color: #ffffff;
+        border: 1px solid #555;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 12px;
+      }
+
+      .option-button:hover {
+        background: #555;
+        border-color: #00ff00;
+      }
+
       .loading {
         position: fixed;
         top: 50%;
@@ -58,7 +125,7 @@
         text-align: center;
         z-index: 2000;
       }
-      
+
       .controls {
         position: fixed;
         bottom: 10px;
@@ -76,9 +143,21 @@
   <body>
     <div class="loading" id="loading">
       <div>NetHack 3D</div>
-      <div style="font-size: 14px; margin-top: 10px;">Connecting to server...</div>
+      <div style="font-size: 14px; margin-top: 10px">
+        Connecting to server...
+      </div>
     </div>
-    
+
+    <div class="top-left-ui">
+      <div id="game-status">Starting NetHack...</div>
+      <div id="game-log"></div>
+    </div>
+
+    <div class="question-ui" id="question-ui">
+      <div class="question-text" id="question-text"></div>
+      <div class="question-options" id="question-options"></div>
+    </div>
+
     <div class="controls">
       <div><strong>Controls:</strong></div>
       <div>Arrow Keys: Move</div>
@@ -89,13 +168,13 @@
 
     <!-- Import map for development -->
     <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+        }
       }
-    }
     </script>
-    
+
     <!-- 
       Load our compiled application code. It's a module, so it can use 
       import/export syntax. It will connect to the NetHack backend via WebSocket.
