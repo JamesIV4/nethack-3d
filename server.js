@@ -1,146 +1,133 @@
-const express = require("express");
 const WebSocket = require("ws");
 const http = require("http");
-const path = require("path");
 const fs = require("fs");
-
-// Add fetch polyfill if not available
-if (!globalThis.fetch) {
-  const fetch = require("node-fetch");
-  globalThis.fetch = fetch;
-}
-
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
-
-// Serve static files from public directory
-app.use(express.static("public"));
-
-// Store active game sessions
-const gameSessions = new Map();
+const path = require("path");
 
 class NetHackSession {
   constructor(ws) {
     this.ws = ws;
-    this.gameStarted = false;
-    this.winCount = 0;
-    this.keyResolvers = [];
     this.nethackInstance = null;
-    this.nethackModule = null; // Store reference to the Module for direct calls
+    this.gameMap = new Map(); // Store map glyphs by coordinates
+    this.playerPosition = { x: 0, y: 0 };
+    this.gameMessages = [];
+    this.currentMenuItems = []; // Store current menu items
+    this.currentWindow = null; // Track current window for menu items
+    this.hasShownCharacterSelection = false; // Track if we've shown character selection
 
-    // Start NetHack with our callback
-    this.startNetHack();
+    // Promise-based input handling
+    this.inputPromise = null;
+    this.inputResolver = null;
+    this.inputTimeout = null;
+
+    // Input handling with finite state machine
+    this.inputQueue = [];
+    this.isProcessingInput = false;
+    this.inputState = "idle"; // 'idle', 'waiting_user', 'processing'
+    this.lastInputTime = 0;
+    this.inputCooldown = 100; // Minimum time between inputs
+
+    this.initializeNetHack();
   }
 
-  // Function to read window content directly from NetHack
-  readWindowContent(winId) {
-    try {
-      if (!this.nethackModule || !this.nethackModule.ccall) {
-        console.log(`❌ Cannot read window ${winId}: Module not available`);
-        return null;
-      }
+  // Promise-based input waiting
+  async waitForInput(timeoutMs = 30000) {
+    return new Promise((resolve, reject) => {
+      // Store the resolver so we can call it when input arrives
+      this.inputResolver = resolve;
 
-      console.log(`📖 Attempting to read content of window ${winId}...`);
+      // Set up timeout to prevent hanging forever
+      this.inputTimeout = setTimeout(() => {
+        this.inputResolver = null;
+        reject(new Error("Input timeout"));
+      }, timeoutMs);
+    });
+  }
 
-      // Try to get window info - these are common NetHack internal functions
-      const windowFunctions = [
-        "_get_window_content",
-        "_get_window_text",
-        "_dump_window",
-        "_window_get_string",
-        "_nhwindow_content",
-      ];
-
-      for (const funcName of windowFunctions) {
-        try {
-          if (this.nethackModule[funcName]) {
-            console.log(`   🔍 Trying ${funcName}...`);
-            const result = this.nethackModule.ccall(
-              funcName,
-              "string",
-              ["number"],
-              [winId]
-            );
-            if (result) {
-              console.log(`   ✅ ${funcName} returned: "${result}"`);
-              return result;
-            }
-          }
-        } catch (e) {
-          console.log(`   ❌ ${funcName} failed:`, e.message);
-        }
-      }
-
-      // Try to read memory directly if we can get window pointers
-      console.log(
-        `   📋 Available module functions:`,
-        Object.keys(this.nethackModule).filter(
-          (k) => k.includes("window") || k.includes("text")
-        )
-      );
-
-      return null;
-    } catch (error) {
-      console.error(`Error reading window ${winId}:`, error);
-      return null;
+  // Resolve pending input promise
+  resolveInput(input) {
+    if (this.inputResolver) {
+      clearTimeout(this.inputTimeout);
+      this.inputResolver(input);
+      this.inputResolver = null;
+      this.inputTimeout = null;
     }
   }
 
-  // Function to dump all available NetHack functions that might help us read content
-  exploreNetHackFunctions() {
-    if (!this.nethackModule) return;
+  // Add input to queue for processing
+  queueInput(input) {
+    console.log(`Queueing input: ${input}`);
+    this.inputQueue.push(input);
+    this.inputState = "processing";
 
-    console.log("🔍 Exploring NetHack WASM functions...");
-    const allFunctions = Object.keys(this.nethackModule);
-
-    const relevantFunctions = allFunctions.filter(
-      (name) =>
-        name.includes("window") ||
-        name.includes("text") ||
-        name.includes("str") ||
-        name.includes("content") ||
-        name.includes("display") ||
-        name.includes("menu") ||
-        name.includes("get") ||
-        name.includes("read")
-    );
-
-    console.log("📋 Relevant functions found:", relevantFunctions);
-    return relevantFunctions;
+    // Reset state after a short delay
+    setTimeout(() => {
+      if (this.inputState === "processing") {
+        this.inputState = "idle";
+      }
+    }, 200);
   }
 
-  startNetHack() {
+  // Simplified input sending - just queue it
+  sendInput(input) {
+    console.log("Sending input:", input);
+    this.queueInput(input);
+  }
+
+  async initializeNetHack() {
     try {
-      console.log("Starting NetHack session...");
+      console.log("Starting NetHack session with original package files...");
 
-      // Load the WASM file manually from public folder
-      const wasmPath = path.join(__dirname, "public", "nethack.wasm");
-      console.log("Loading WASM from:", wasmPath);
+      // Use the original package files directly
+      const factory = require("./public/nethack-original.js");
+      const wasmPath = path.join(__dirname, "public", "nethack-original.wasm");
+
+      console.log("Loading original WASM from:", wasmPath);
       const wasmBinary = fs.readFileSync(wasmPath);
-      console.log("WASM binary loaded, size:", wasmBinary.length);
+      console.log("Original WASM binary loaded, size:", wasmBinary.length);
 
-      // Use the public folder's nethack.js instead of the npm package
-      const nethackFactory = require(path.join(
-        __dirname,
-        "public",
-        "nethack.js"
-      ));
+      // Set up global callback first
+      globalThis.nethackCallback = (name, ...args) => {
+        return this.handleUICallback(name, args);
+      };
 
-      // Configure module to use the pre-loaded WASM
+      // Set up globalThis.nethackGlobal like the original expects
+      if (!globalThis.nethackGlobal) {
+        console.log("🌐 Setting up globalThis.nethackGlobal...");
+        globalThis.nethackGlobal = {
+          constants: {
+            WIN_TYPE: {
+              1: "WIN_MESSAGE",
+              2: "WIN_MAP",
+              3: "WIN_STATUS",
+              4: "WIN_INVEN",
+            },
+            STATUS_FIELD: {},
+            MENU_SELECT: { PICK_NONE: 0, PICK_ONE: 1, PICK_ANY: 2 },
+          },
+          helpers: {
+            getPointerValue: (name, ptr, type) => {
+              if (type === "s" && this.nethackModule) {
+                return this.nethackModule.UTF8ToString(ptr);
+              }
+              return ptr;
+            },
+          },
+          globals: {
+            WIN_MAP: 2,
+            WIN_INVEN: 4,
+            WIN_STATUS: 3,
+            WIN_MESSAGE: 1,
+          },
+        };
+        console.log("✅ globalThis.nethackGlobal set up");
+      }
+
+      // Configure the module exactly like the original package does
       const Module = {
         wasmBinary: wasmBinary,
-        arguments: [], // NetHack command line arguments
-        preRun: [
-          function () {
-            // Set up NetHack environment variables for automatic play
-            console.log("Setting up NetHack environment...");
-            Module.ENV = Module.ENV || {};
-            // Set NetHack options to skip some prompts
-            Module.ENV.NETHACKOPTIONS =
-              "name:Hero,role:Knight,race:Human,gender:male,align:lawful";
-          },
-        ],
+        ENV: {
+          NETHACKOPTIONS: 'pickup_types:$"=/!?+',
+        },
         locateFile: (path, scriptDirectory) => {
           console.log(
             "locateFile called with:",
@@ -149,460 +136,564 @@ class NetHackSession {
             scriptDirectory
           );
           if (path.endsWith(".wasm")) {
-            const wasmPath = require("path").join(__dirname, "public", path);
-            console.log("Using WASM path:", wasmPath);
             return wasmPath;
           }
           return path;
         },
+        preRun: [
+          () => {
+            console.log("PreRun: Setting up NETHACKOPTIONS");
+            Module.ENV.NETHACKOPTIONS = "";
+          },
+        ],
         onRuntimeInitialized: () => {
           console.log("NetHack WASM runtime initialized!");
 
-          // Store reference to Module for direct function calls
           this.nethackModule = Module;
 
-          // Set up the missing globalThis.nethackGlobal context that the original shim expects
-          if (!globalThis.nethackGlobal) {
-            console.log("🌐 Setting up missing globalThis.nethackGlobal...");
-            globalThis.nethackGlobal = {
-              constants: {
-                WIN_TYPE: {
-                  1: "WIN_MESSAGE",
-                  2: "WIN_MAP",
-                  3: "WIN_STATUS",
-                  4: "WIN_INVEN",
-                },
-                STATUS_FIELD: {},
-                MENU_SELECT: { PICK_NONE: 0, PICK_ONE: 1, PICK_ANY: 2 },
-              },
-              helpers: {
-                getPointerValue: (name, ptr, type) => {
-                  if (type === "s") {
-                    return Module.UTF8ToString(ptr);
-                  }
-                  return ptr;
-                },
-              },
-              globals: {
-                WIN_MAP: 2,
-                WIN_INVEN: 4,
-                WIN_STATUS: 3,
-                WIN_MESSAGE: 1,
-              },
-            };
-            console.log("✅ globalThis.nethackGlobal set up");
-          }
-
-          // Try calling createContext to see what it does
-          console.log("🔧 Investigating createContext function...");
+          // Set up graphics callback exactly like the original package
           try {
-            if (Module.createContext) {
-              console.log("   📞 Calling Module.createContext()...");
-              const context = Module.createContext();
-              console.log("   ✅ createContext returned:", context);
-            } else {
-              console.log("   ❌ createContext not available");
-            }
-          } catch (e) {
-            console.log("   ❌ createContext error:", e.message);
+            console.log("Setting up graphics callback...");
+            Module.ccall(
+              "shim_graphics_set_callback",
+              null,
+              ["string"],
+              ["nethackCallback"],
+              { async: true }
+            );
+            console.log("Graphics callback set up successfully");
+
+            // Don't call main() automatically - wait for it to be called naturally
+            console.log("Waiting for NetHack to start naturally...");
+          } catch (error) {
+            console.error("Error setting up graphics callback:", error);
           }
-
-          // Set up the global callback first
-          console.log("Setting up global nethackCallback...");
-          globalThis.nethackCallback = this.uiCallback.bind(this);
-          console.log(
-            "Global callback set up:",
-            typeof globalThis.nethackCallback
-          );
-
-          // Explore available functions
-          this.exploreNetHackFunctions();
-
-          // At this point, the Module object should have all the WASM functions
-          console.log("Module ccall available:", typeof Module.ccall);
-          if (Module.ccall) {
-            try {
-              console.log("Setting up graphics callback with Module...");
-              Module.ccall(
-                "shim_graphics_set_callback",
-                null,
-                ["string"],
-                ["nethackCallback"],
-                { async: true }
-              );
-              console.log("Graphics callback set up successfully");
-
-              // Don't call main immediately - let the callback setup complete first
-              console.log("Waiting before starting NetHack main...");
-              setTimeout(() => {
-                try {
-                  console.log("Now starting NetHack main...");
-                  Module.ccall("main", "number", [], [], { async: true });
-                  console.log("NetHack main called successfully");
-
-                  // After starting main, try to send some input to continue past intro
-                  setTimeout(() => {
-                    console.log(
-                      "Attempting to send input to continue past intro..."
-                    );
-                    try {
-                      // Try to simulate pressing space or enter to continue
-                      if (Module.ccall && Module._shim_input_available) {
-                        console.log("Trying to send space key...");
-                        Module.ccall("shim_input_available", null, [], []);
-                      }
-                    } catch (inputError) {
-                      console.log(
-                        "Input method not available:",
-                        inputError.message
-                      );
-                    }
-                  }, 500);
-                } catch (mainError) {
-                  console.error("Error calling NetHack main:", mainError);
-                }
-              }, 100);
-            } catch (callbackError) {
-              console.error(
-                "Error setting up NetHack callbacks:",
-                callbackError
-              );
-            }
-          }
-
-          this.gameStarted = true;
-          this.sendMessage({
-            type: "game_started",
-            message: "NetHack game started successfully!",
-          });
         },
       };
 
-      // Set up global callback
-      // globalThis.nethackCallback = this.uiCallback.bind(this); // Moved to onRuntimeInitialized
-
-      console.log("Starting NetHack with factory...");
-      this.nethackInstance = nethackFactory(Module);
+      // Load and run the module
+      console.log("Starting NetHack with original factory...");
+      this.nethackInstance = await factory(Module);
       console.log(
-        "NetHack factory called, instance:",
+        "NetHack factory completed, instance:",
         typeof this.nethackInstance
       );
-      console.log(
-        "NetHack instance has ready:",
-        "ready" in this.nethackInstance
-      );
-      console.log(
-        "NetHack instance ready type:",
-        typeof this.nethackInstance.ready
-      );
-
-      // Wait for the module to be ready if it has a ready promise
-      if (this.nethackInstance && this.nethackInstance.ready) {
-        console.log("Waiting for NetHack module ready promise...");
-        this.nethackInstance.ready
-          .then((module) => {
-            console.log("NetHack module is now ready!");
-            console.log("Module methods:", Object.keys(module));
-            this.handleModuleReady(module);
-          })
-          .catch((error) => {
-            console.error("Error waiting for NetHack module:", error);
-          });
-      } else {
-        console.log("No ready promise found, trying direct approach");
-        // Try using the instance directly after a short delay
-        setTimeout(() => {
-          console.log("Checking instance after delay...");
-          console.log(
-            "Instance methods after delay:",
-            Object.keys(this.nethackInstance)
-          );
-          if (this.nethackInstance.ccall) {
-            this.handleModuleReady(this.nethackInstance);
-          }
-        }, 1000);
-      }
-    } catch (err) {
-      console.error("Error starting NetHack:", err);
-      this.sendMessage({
-        type: "error",
-        message: `Failed to start NetHack: ${err.message}`,
-      });
-    }
-  }
-
-  // Handle when the NetHack module is fully ready
-  handleModuleReady(module) {
-    try {
-      console.log("Setting up NetHack with ready module...");
-      console.log("Module ccall available:", typeof module.ccall);
-
-      if (module.ccall) {
-        console.log("Setting up graphics callback...");
-        module.ccall(
-          "shim_graphics_set_callback",
-          null,
-          ["string"],
-          ["nethackCallback"],
-          { async: true }
-        );
-        console.log("Graphics callback set up successfully");
-
-        // Start the actual NetHack game
-        console.log("Starting NetHack main...");
-        module.ccall("main", "number", [], []);
-        console.log("NetHack main called");
-      }
-
-      this.gameStarted = true;
-      this.sendMessage({
-        type: "game_started",
-        message: "NetHack game started and ready for input!",
-      });
     } catch (error) {
-      console.error("Error in handleModuleReady:", error);
-      this.sendMessage({
-        type: "error",
-        message: `Failed to start NetHack game: ${error.message}`,
-      });
+      console.error("Error initializing NetHack:", error);
     }
   }
 
-  // UI callback function that NetHack will call
-  async uiCallback(name, ...args) {
-    console.log(`🔔 UI Callback: ${name}`, args);
+  handleUICallback(name, args) {
+    console.log(`🎮 UI Callback: ${name}`, args);
 
     switch (name) {
       case "shim_init_nhwindows":
-        // Initialize the window system
         console.log("Initializing NetHack windows");
-        return 0;
+
+        // Send name request first when windows are initialized
+        if (this.ws && this.ws.readyState === 1) {
+          this.ws.send(
+            JSON.stringify({
+              type: "name_request",
+              text: "What is your name, adventurer?",
+              maxLength: 30,
+            })
+          );
+        }
+
+        this.inputState = "waiting_user";
+        return 1;
 
       case "shim_create_nhwindow":
-        this.winCount++;
-        console.log("creating window", args, "returning", this.winCount);
-        return this.winCount;
+        const [windowType] = args;
+        console.log(
+          `Creating window [ ${windowType} ] returning ${windowType}`
+        );
+        return windowType;
 
       case "shim_status_init":
-        // Initialize status display
         console.log("Initializing status display");
         return 0;
 
       case "shim_start_menu":
+        const [menuWinId, menuOptions] = args;
         console.log("NetHack starting menu:", args);
+
+        // Clear previous menu items for this window
+        this.currentMenuItems = [];
+        this.currentWindow = menuWinId;
+
         return 0;
 
       case "shim_end_menu":
         console.log("NetHack ending menu:", args);
+        // Menu is ending - current items are ready
         return 0;
-
-      case "shim_add_menu": {
-        const [winid, glyph, accelerator, groupacc, attr, str, preselected] =
-          args;
-        console.log(
-          `📋 MENU ITEM [Win ${winid}]: "${str}" (key: ${String.fromCharCode(
-            accelerator || 32
-          )})`
-        );
-        return 0;
-      }
-
-      case "shim_select_menu": {
-        const [winid, how] = args;
-        console.log(`🔍 MENU SELECTION REQUEST [Win ${winid}], how: ${how}`);
-        // For character creation, typically select the first option (like Human Knight)
-        // Return a simple selection - this might need adjustment based on NetHack's expectations
-        return 1; // Select first item
-      }
-
-      case "shim_player_selection":
-        // Return a default player selection (let's pick a Knight)
-        console.log("🎭 PLAYER SELECTION - returning default Knight");
-        // Return some default player class - this might need adjustment
-        return 0; // or try different values if this doesn't work
 
       case "shim_display_nhwindow":
-        const [winId, blocking] = args;
-        console.log(`📺 DISPLAY WINDOW [Win ${winId}], blocking: ${blocking}`);
+        const [winid, blocking] = args;
+        console.log(`🖥️ DISPLAY WINDOW [Win ${winid}], blocking: ${blocking}`);
+        return 0;
 
-        // Try to read the actual content of this window
-        console.log(`📖 Reading content of window ${winId}...`);
-        const content = this.readWindowContent(winId);
-        if (content) {
-          console.log(`📄 WINDOW ${winId} CONTENT:\n${content}`);
-        } else {
-          console.log(`❓ No content found for window ${winId}`);
+      case "shim_add_menu":
+        const [
+          menuWinid,
+          menuGlyph,
+          accelerator,
+          groupacc,
+          menuAttr,
+          menuStr,
+          preselected,
+        ] = args;
+        const menuChar = String.fromCharCode(accelerator || 32);
+        console.log(`📋 MENU ITEM: "${menuStr}" (key: ${menuChar})`);
+
+        // Store menu item for current question
+        if (this.currentWindow === menuWinid && menuStr && menuChar.trim()) {
+          this.currentMenuItems.push({
+            text: menuStr,
+            accelerator: menuChar,
+            window: menuWinid,
+            glyph: menuGlyph,
+          });
         }
 
-        // If this is a blocking display, NetHack might be waiting for acknowledgment
-        if (blocking) {
-          console.log(
-            `⏸️  Window ${winId} is blocking - NetHack waiting for input`
+        // Send menu item to web client
+        if (this.ws && this.ws.readyState === 1) {
+          this.ws.send(
+            JSON.stringify({
+              type: "menu_item",
+              text: menuStr,
+              accelerator: menuChar,
+              window: menuWinid,
+              glyph: menuGlyph,
+            })
           );
-          // Try to signal that we've displayed the window
-          setTimeout(() => {
-            console.log(
-              `⚡ Triggering continuation after displaying window ${winId}`
-            );
-            // We might need to call some NetHack function to continue
-          }, 100);
         }
 
+        return 0;
+
+      case "shim_putstr":
+        const [win, textAttr, textStr] = args;
+        console.log(`💬 TEXT [Win ${win}]: "${textStr}"`);
+
+        // Store messages for the game log
+        this.gameMessages.push({
+          text: textStr,
+          window: win,
+          timestamp: Date.now(),
+          attr: textAttr,
+        });
+
+        // Keep only last 100 messages
+        if (this.gameMessages.length > 100) {
+          this.gameMessages.shift();
+        }
+
+        // Send text to web client
+        if (this.ws && this.ws.readyState === 1) {
+          this.ws.send(
+            JSON.stringify({
+              type: "text",
+              text: textStr,
+              window: win,
+              attr: textAttr,
+            })
+          );
+        }
+
+        return 0;
+
+      case "shim_print_glyph":
+        const [printWin, x, y, printGlyph] = args;
+        console.log(`🎨 GLYPH [Win ${printWin}] at (${x},${y}): ${printGlyph}`);
+
+        // Store map data for the 3D visualization
+        if (printWin === 3) {
+          // WIN_MAP
+          const key = `${x},${y}`;
+          this.gameMap.set(key, {
+            x: x,
+            y: y,
+            glyph: printGlyph,
+            timestamp: Date.now(),
+          });
+
+          // Send map update to client
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(
+              JSON.stringify({
+                type: "map_glyph",
+                x: x,
+                y: y,
+                glyph: printGlyph,
+                window: printWin,
+              })
+            );
+          }
+
+          // If this is the first glyph being printed and we haven't shown character selection,
+          // trigger our interactive character creation now
+          if (!this.hasShownCharacterSelection) {
+            this.hasShownCharacterSelection = true;
+            console.log(
+              "🎯 Game started - showing interactive character selection"
+            );
+
+            if (this.ws && this.ws.readyState === 1) {
+              // Send character selection dialog
+              this.ws.send(
+                JSON.stringify({
+                  type: "question",
+                  text: "Welcome to NetHack! Would you like to create a new character?",
+                  choices: "yn",
+                  default: "y",
+                  menuItems: [
+                    {
+                      accelerator: "y",
+                      text: "Yes - Choose character class and race",
+                    },
+                    {
+                      accelerator: "n",
+                      text: "No - Continue with current character",
+                    },
+                  ],
+                })
+              );
+            }
+          }
+        }
+
+        return 0;
+
+      case "shim_get_nh_event":
+        console.log("Getting NetHack event");
+
+        // Check for queued input
+        if (this.inputQueue.length > 0) {
+          const input = this.inputQueue.shift();
+          console.log(
+            `Returning queued input event: ${input} (${input.charCodeAt(0)})`
+          );
+
+          // Convert arrow keys to movement
+          if (input === "ArrowLeft") return "h".charCodeAt(0);
+          if (input === "ArrowRight") return "l".charCodeAt(0);
+          if (input === "ArrowUp") return "k".charCodeAt(0);
+          if (input === "ArrowDown") return "j".charCodeAt(0);
+
+          return input.charCodeAt(0);
+        }
+
+        // Return 0 to continue the game loop
+        return 0;
+
+      case "shim_player_selection":
+        console.log("NetHack player selection started");
+
+        // Send a custom character selection prompt to the client
+        if (this.ws && this.ws.readyState === 1) {
+          this.ws.send(
+            JSON.stringify({
+              type: "question",
+              text: "Choose your character class:",
+              choices: "",
+              default: "",
+              menuItems: [
+                { accelerator: "a", text: "Archeologist" },
+                { accelerator: "b", text: "Barbarian" },
+                { accelerator: "c", text: "Caveman" },
+                { accelerator: "h", text: "Healer" },
+                { accelerator: "k", text: "Knight" },
+                { accelerator: "m", text: "Monk" },
+                { accelerator: "p", text: "Priest" },
+                { accelerator: "r", text: "Rogue" },
+                { accelerator: "s", text: "Samurai" },
+                { accelerator: "t", text: "Tourist" },
+                { accelerator: "v", text: "Valkyrie" },
+                { accelerator: "w", text: "Wizard" },
+              ],
+            })
+          );
+        }
+
+        // Wait for user input before proceeding
+        this.inputState = "waiting_user";
+
+        return 0;
+
+      case "shim_raw_print":
+        const [rawText] = args;
+        console.log(`📢 RAW PRINT: "${rawText}"`);
+        return 0;
+
+      case "shim_wait_synch":
+        console.log("NetHack waiting for synchronization");
+        return 0;
+
+      case "shim_yn_function":
+        const [question, choices, defaultChoice] = args;
+        console.log(
+          `🤔 Y/N Question: "${question}" choices: "${choices}" default: ${defaultChoice}`
+        );
+
+        // Send question to web client with available menu items
+        if (this.ws && this.ws.readyState === 1) {
+          this.ws.send(
+            JSON.stringify({
+              type: "question",
+              text: question,
+              choices: choices,
+              default: defaultChoice,
+              menuItems: this.currentMenuItems,
+            })
+          );
+        }
+
+        // Check if we have queued input for this question
+        if (this.inputQueue.length > 0) {
+          const input = this.inputQueue.shift();
+          console.log(`Using queued input for question: ${input}`);
+
+          // Clear menu items after use
+          this.currentMenuItems = [];
+
+          return input.charCodeAt(0);
+        }
+
+        // For now, return default choice to prevent crashes
+        // TODO: Implement proper async input handling
+        this.inputState = "waiting_user";
+        console.log(`Waiting for user input for question: "${question}"`);
+
+        // Return default choice instead of -1 to prevent type errors
+        return defaultChoice;
+
+      case "shim_nh_poskey":
+        const [xPtr, yPtr, modPtr] = args;
+        console.log("Position request blocked to prevent infinite loop");
+
+        // Always return Escape to stop the position request loop
+        // NetHack gets stuck in position request loops that spam the UI
+        return 27; // Escape key
+
+      case "shim_select_menu":
+        const [menuSelectWinid, menuSelectHow, menuPtr] = args;
+        console.log(
+          `📋 Menu selection request for window ${menuSelectWinid}, how: ${menuSelectHow}, ptr: ${menuPtr}`
+        );
+
+        // Check if we have queued input for menu selection
+        if (this.inputQueue.length > 0) {
+          const input = this.inputQueue.shift();
+          console.log(`Using queued input for menu selection: ${input}`);
+
+          // Find matching menu item
+          const selectedItem = this.currentMenuItems.find(
+            (item) =>
+              item.accelerator === input ||
+              item.accelerator === input.toLowerCase()
+          );
+
+          if (selectedItem) {
+            console.log(`Selected menu item: ${selectedItem.text}`);
+            // Return the accelerator key
+            return input.charCodeAt(0);
+          }
+        }
+
+        // For character selection during startup, return 0 for now
+        if (menuSelectHow === 1) {
+          // PICK_ONE - this is character creation
+          console.log("Character selection - returning 0 for now");
+          this.inputState = "waiting_user";
+          return 0; // Return 0 instead of -1
+        }
+
+        // For other menus, return 0 to indicate no selection
+        console.log("Returning 0 (no selection) for menu");
+        return 0;
+
+      case "shim_getmsghistory":
+        const [init] = args;
+        console.log(`Getting message history, init: ${init}`);
+        // Return empty string for message history
+        return "";
+
+      case "shim_putmsghistory":
+        const [msg, attr] = args;
+        console.log(`Put message history: "${msg}", attr: ${attr}`);
+        return 0;
+
+      case "shim_mark_synch":
+        console.log("Mark synchronization");
+        return 0;
+
+      case "shim_destroy_nhwindow":
+        const [destroyWin] = args;
+        console.log(`Destroying window ${destroyWin}`);
         return 0;
 
       case "shim_clear_nhwindow":
-        console.log(`🧹 CLEAR WINDOW [Win ${args[0]}]`);
+        const [clearWin] = args;
+        console.log(`Clearing window ${clearWin}`);
         return 0;
 
-      case "shim_print_glyph": {
-        const [win, x, y, glyph] = args;
-        console.log(`🗺️  GLYPH [Win ${win}] at (${x},${y}): glyph ${glyph}`);
-        // Send glyph data to client for 3D rendering
-        this.sendMessage({
-          type: "print_glyph",
-          data: { win, x, y, glyph },
-        });
-        return;
-      }
-
-      case "shim_putstr": {
-        const [win, attr, str] = args;
-        console.log(`💬 TEXT [Win ${win}]: "${str}" (attr: ${attr})`);
-        console.log(`   📝 CAPTURED TEXT: "${str}"`);
-
-        // Send message to client
-        this.sendMessage({
-          type: "message",
-          data: { win, attr, str },
-        });
-        return;
-      }
-
-      case "shim_getlin": {
-        const [prompt] = args;
-        console.log(`⌨️  LINE INPUT REQUEST: "${prompt}"`);
-        // For character name, return a default name
-        if (prompt && prompt.toLowerCase().includes("name")) {
-          console.log("   → Providing default character name: Hero");
-          return "Hero"; // Default character name
-        }
-        console.log("   → Providing empty response");
-        return ""; // Default empty response for other line inputs
-      }
-
-      case "shim_nhgetch":
-        // Wait for key input from client
+      case "shim_curs":
+        const [cursWin, cursX, cursY] = args;
         console.log(
-          "🎯 KEY INPUT REQUEST - sending automatic response to continue"
+          `Setting cursor in window ${cursWin} to (${cursX}, ${cursY})`
         );
-        // For now, send a space key to continue past initial screens
-        return 32; // Space key
 
-      // Original code for future WebSocket input:
-      // return new Promise((resolve) => {
-      //   this.keyResolvers.push(resolve);
-      //   this.sendMessage({
-      //     type: "request_key",
-      //   });
-      // });
+        // Track player position
+        if (cursWin === 3) {
+          // WIN_MAP
+          this.playerPosition = { x: cursX, y: cursY };
 
-      case "shim_yn_function":
-        console.log("❓ YES/NO QUESTION - answering yes");
-        // For now, automatically answer 'yes' to questions
-        return "y".charCodeAt(0);
+          // Send player position to client
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(
+              JSON.stringify({
+                type: "player_position",
+                x: cursX,
+                y: cursY,
+              })
+            );
+          }
+        }
 
-      case "shim_message_menu":
-        console.log("📝 MESSAGE MENU - returning y");
-        return 121; // return 'y' to all questions
+        return 0;
 
-      case "shim_nh_poskey":
-        console.log("🎯 POSITION KEY REQUEST - returning space");
-        return 32; // Space key to continue
+      case "shim_cliparound":
+        const [clipX, clipY] = args;
+        console.log(`Clipping around (${clipX}, ${clipY})`);
+        return 0;
+
+      case "shim_status_update":
+        const [field, ptr, chg, percent, color, colormasks] = args;
+        console.log(`Status update field ${field}, ptr: ${ptr}`);
+        return 0;
+
+      case "shim_askname":
+        console.log("NetHack is asking for player name, args:", args);
+
+        // Send name request to client
+        if (this.ws && this.ws.readyState === 1) {
+          this.ws.send(
+            JSON.stringify({
+              type: "name_request",
+              text: "What is your name?",
+              maxLength: 30,
+            })
+          );
+        }
+
+        // Check if we have a name in the input queue
+        if (this.inputQueue.length > 0) {
+          const name = this.inputQueue.shift();
+          console.log(`Using player name from input: ${name}`);
+          return name;
+        }
+
+        // DON'T return a default name - wait for user input
+        console.log("Waiting for user to enter name");
+        this.inputState = "waiting_user";
+        return null; // Wait for input
+
+      case "shim_exit_nhwindows":
+        console.log("Exiting NetHack windows");
+        return 0;
 
       default:
-        console.log(`❌ UNHANDLED UI CALLBACK: ${name}`, args);
-        console.log(`   📋 Available methods: ${Object.keys(this).join(", ")}`);
+        console.log(`Unknown callback: ${name}`, args);
         return 0;
     }
   }
 
-  // Send message to WebSocket client
-  sendMessage(message) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(message));
-    }
-  }
+  sendInput(input) {
+    console.log("Sending input:", input);
 
-  // Handle key input from client
-  handleKeyInput(key) {
-    if (this.keyResolvers.length > 0) {
-      const resolve = this.keyResolvers.shift();
-      resolve(key.charCodeAt(0));
-    }
-  }
-
-  // Clean up session
-  cleanup() {
-    // Resolve any pending key requests
-    this.keyResolvers.forEach((resolve) => resolve(27)); // ESC key
-    this.keyResolvers = [];
+    // Add to queue for async processing
+    this.queueInput(input);
   }
 }
 
-// WebSocket connection handler
+// HTTP Server for serving static files
+const server = http.createServer((req, res) => {
+  let filePath = req.url === "/" ? "/index.html" : req.url;
+  const extname = path.extname(filePath);
+
+  let contentType = "text/html";
+  switch (extname) {
+    case ".js":
+      contentType = "text/javascript";
+      break;
+    case ".css":
+      contentType = "text/css";
+      break;
+    case ".json":
+      contentType = "application/json";
+      break;
+    case ".png":
+      contentType = "image/png";
+      break;
+    case ".jpg":
+      contentType = "image/jpg";
+      break;
+    case ".wav":
+      contentType = "audio/wav";
+      break;
+  }
+
+  const fullPath = path.join(__dirname, "public", filePath);
+
+  fs.readFile(fullPath, (error, content) => {
+    if (error) {
+      if (error.code == "ENOENT") {
+        res.writeHead(404);
+        res.end("404 - File Not Found");
+      } else {
+        res.writeHead(500);
+        res.end("500 - Internal Server Error");
+      }
+    } else {
+      res.writeHead(200, { "Content-Type": contentType });
+      res.end(content, "utf-8");
+    }
+  });
+});
+
+// WebSocket Server
+const wss = new WebSocket.Server({ server });
+let sessionCount = 0;
+
 wss.on("connection", (ws) => {
   console.log("New WebSocket connection");
+  sessionCount++;
 
-  const sessionId = Date.now().toString();
   const session = new NetHackSession(ws);
-  gameSessions.set(sessionId, session);
 
-  ws.on("message", (data) => {
+  ws.on("message", (message) => {
     try {
-      const message = JSON.parse(data);
-      console.log("Received message:", message);
+      const data = JSON.parse(message);
+      console.log("Received:", data);
 
-      switch (message.type) {
-        case "key_input":
-          session.handleKeyInput(message.key);
-          break;
-
-        case "ping":
-          ws.send(JSON.stringify({ type: "pong" }));
-          break;
-
-        default:
-          console.log("Unknown message type:", message.type);
+      if (data.type === "input") {
+        session.sendInput(data.input);
       }
-    } catch (err) {
-      console.error("Error processing message:", err);
+    } catch (error) {
+      console.error("Error parsing message:", error);
     }
   });
 
   ws.on("close", () => {
     console.log("WebSocket connection closed");
-    session.cleanup();
-    gameSessions.delete(sessionId);
-  });
-
-  ws.on("error", (err) => {
-    console.error("WebSocket error:", err);
-    session.cleanup();
-    gameSessions.delete(sessionId);
+    sessionCount--;
   });
 });
 
-const PORT = process.env.PORT || 3002;
+const PORT = 3002;
 server.listen(PORT, () => {
   console.log(`NetHack 3D Server running on http://localhost:${PORT}`);
-  console.log(`Game sessions: ${gameSessions.size}`);
-});
-
-// Graceful shutdown
-process.on("SIGINT", () => {
-  console.log("Shutting down server...");
-  gameSessions.forEach((session) => session.cleanup());
-  server.close(() => {
-    process.exit(0);
-  });
+  console.log(`Game sessions: ${sessionCount}`);
 });

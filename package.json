@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "node server-original.js",
+    "build": "npx esbuild src/app.ts --bundle --outfile=public/app.js --platform=browser --target=es2020",
+    "start": "node server.js",
     "dev": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
