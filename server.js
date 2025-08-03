@@ -27,9 +27,87 @@ class NetHackSession {
     this.winCount = 0;
     this.keyResolvers = [];
     this.nethackInstance = null;
+    this.nethackModule = null; // Store reference to the Module for direct calls
 
     // Start NetHack with our callback
     this.startNetHack();
+  }
+
+  // Function to read window content directly from NetHack
+  readWindowContent(winId) {
+    try {
+      if (!this.nethackModule || !this.nethackModule.ccall) {
+        console.log(`❌ Cannot read window ${winId}: Module not available`);
+        return null;
+      }
+
+      console.log(`📖 Attempting to read content of window ${winId}...`);
+
+      // Try to get window info - these are common NetHack internal functions
+      const windowFunctions = [
+        "_get_window_content",
+        "_get_window_text",
+        "_dump_window",
+        "_window_get_string",
+        "_nhwindow_content",
+      ];
+
+      for (const funcName of windowFunctions) {
+        try {
+          if (this.nethackModule[funcName]) {
+            console.log(`   🔍 Trying ${funcName}...`);
+            const result = this.nethackModule.ccall(
+              funcName,
+              "string",
+              ["number"],
+              [winId]
+            );
+            if (result) {
+              console.log(`   ✅ ${funcName} returned: "${result}"`);
+              return result;
+            }
+          }
+        } catch (e) {
+          console.log(`   ❌ ${funcName} failed:`, e.message);
+        }
+      }
+
+      // Try to read memory directly if we can get window pointers
+      console.log(
+        `   📋 Available module functions:`,
+        Object.keys(this.nethackModule).filter(
+          (k) => k.includes("window") || k.includes("text")
+        )
+      );
+
+      return null;
+    } catch (error) {
+      console.error(`Error reading window ${winId}:`, error);
+      return null;
+    }
+  }
+
+  // Function to dump all available NetHack functions that might help us read content
+  exploreNetHackFunctions() {
+    if (!this.nethackModule) return;
+
+    console.log("🔍 Exploring NetHack WASM functions...");
+    const allFunctions = Object.keys(this.nethackModule);
+
+    const relevantFunctions = allFunctions.filter(
+      (name) =>
+        name.includes("window") ||
+        name.includes("text") ||
+        name.includes("str") ||
+        name.includes("content") ||
+        name.includes("display") ||
+        name.includes("menu") ||
+        name.includes("get") ||
+        name.includes("read")
+    );
+
+    console.log("📋 Relevant functions found:", relevantFunctions);
+    return relevantFunctions;
   }
 
   startNetHack() {
@@ -52,6 +130,17 @@ class NetHackSession {
       // Configure module to use the pre-loaded WASM
       const Module = {
         wasmBinary: wasmBinary,
+        arguments: [], // NetHack command line arguments
+        preRun: [
+          function () {
+            // Set up NetHack environment variables for automatic play
+            console.log("Setting up NetHack environment...");
+            Module.ENV = Module.ENV || {};
+            // Set NetHack options to skip some prompts
+            Module.ENV.NETHACKOPTIONS =
+              "name:Hero,role:Knight,race:Human,gender:male,align:lawful";
+          },
+        ],
         locateFile: (path, scriptDirectory) => {
           console.log(
             "locateFile called with:",
@@ -69,6 +158,50 @@ class NetHackSession {
         onRuntimeInitialized: () => {
           console.log("NetHack WASM runtime initialized!");
 
+          // Store reference to Module for direct function calls
+          this.nethackModule = Module;
+          
+          // Set up the missing globalThis.nethackGlobal context that the original shim expects
+          if (!globalThis.nethackGlobal) {
+            console.log("🌐 Setting up missing globalThis.nethackGlobal...");
+            globalThis.nethackGlobal = {
+              constants: {
+                WIN_TYPE: { 1: "WIN_MESSAGE", 2: "WIN_MAP", 3: "WIN_STATUS", 4: "WIN_INVEN" },
+                STATUS_FIELD: {},
+                MENU_SELECT: { PICK_NONE: 0, PICK_ONE: 1, PICK_ANY: 2 }
+              },
+              helpers: {
+                getPointerValue: (name, ptr, type) => {
+                  if (type === "s") {
+                    return Module.UTF8ToString(ptr);
+                  }
+                  return ptr;
+                }
+              },
+              globals: {
+                WIN_MAP: 2,
+                WIN_INVEN: 4, 
+                WIN_STATUS: 3,
+                WIN_MESSAGE: 1
+              }
+            };
+            console.log("✅ globalThis.nethackGlobal set up");
+          }
+          
+          // Try calling createContext to see what it does
+          console.log("🔧 Investigating createContext function...");
+          try {
+            if (Module.createContext) {
+              console.log("   📞 Calling Module.createContext()...");
+              const context = Module.createContext();
+              console.log("   ✅ createContext returned:", context);
+            } else {
+              console.log("   ❌ createContext not available");
+            }
+          } catch (e) {
+            console.log("   ❌ createContext error:", e.message);
+          }
+          
           // Set up the global callback first
           console.log("Setting up global nethackCallback...");
           globalThis.nethackCallback = this.uiCallback.bind(this);
@@ -77,10 +210,11 @@ class NetHackSession {
             typeof globalThis.nethackCallback
           );
 
-          // At this point, the Module object should have all the WASM functions
-          console.log("Module ccall available:", typeof Module.ccall);
+          // Explore available functions
+          this.exploreNetHackFunctions();
 
-          if (Module.ccall) {
+          // At this point, the Module object should have all the WASM functions
+          console.log("Module ccall available:", typeof Module.ccall);          if (Module.ccall) {
             try {
               console.log("Setting up graphics callback with Module...");
               Module.ccall(
@@ -99,6 +233,25 @@ class NetHackSession {
                   console.log("Now starting NetHack main...");
                   Module.ccall("main", "number", [], [], { async: true });
                   console.log("NetHack main called successfully");
+
+                  // After starting main, try to send some input to continue past intro
+                  setTimeout(() => {
+                    console.log(
+                      "Attempting to send input to continue past intro..."
+                    );
+                    try {
+                      // Try to simulate pressing space or enter to continue
+                      if (Module.ccall && Module._shim_input_available) {
+                        console.log("Trying to send space key...");
+                        Module.ccall("shim_input_available", null, [], []);
+                      }
+                    } catch (inputError) {
+                      console.log(
+                        "Input method not available:",
+                        inputError.message
+                      );
+                    }
+                  }, 500);
                 } catch (mainError) {
                   console.error("Error calling NetHack main:", mainError);
                 }
@@ -211,7 +364,7 @@ class NetHackSession {
 
   // UI callback function that NetHack will call
   async uiCallback(name, ...args) {
-    console.log(`UI Callback: ${name}`, args);
+    console.log(`🔔 UI Callback: ${name}`, args);
 
     switch (name) {
       case "shim_init_nhwindows":
@@ -230,23 +383,74 @@ class NetHackSession {
         return 0;
 
       case "shim_start_menu":
-      case "shim_end_menu":
-        // Menu operations can be ignored for now
+        console.log("NetHack starting menu:", args);
         return 0;
+
+      case "shim_end_menu":
+        console.log("NetHack ending menu:", args);
+        return 0;
+
+      case "shim_add_menu": {
+        const [winid, glyph, accelerator, groupacc, attr, str, preselected] =
+          args;
+        console.log(
+          `📋 MENU ITEM [Win ${winid}]: "${str}" (key: ${String.fromCharCode(
+            accelerator || 32
+          )})`
+        );
+        return 0;
+      }
+
+      case "shim_select_menu": {
+        const [winid, how] = args;
+        console.log(`🔍 MENU SELECTION REQUEST [Win ${winid}], how: ${how}`);
+        // For character creation, typically select the first option (like Human Knight)
+        // Return a simple selection - this might need adjustment based on NetHack's expectations
+        return 1; // Select first item
+      }
 
       case "shim_player_selection":
         // Return a default player selection (let's pick a Knight)
-        console.log("Player selection - returning default Knight");
+        console.log("🎭 PLAYER SELECTION - returning default Knight");
         // Return some default player class - this might need adjustment
         return 0; // or try different values if this doesn't work
 
       case "shim_display_nhwindow":
+        const [winId, blocking] = args;
+        console.log(`📺 DISPLAY WINDOW [Win ${winId}], blocking: ${blocking}`);
+
+        // Try to read the actual content of this window
+        console.log(`📖 Reading content of window ${winId}...`);
+        const content = this.readWindowContent(winId);
+        if (content) {
+          console.log(`📄 WINDOW ${winId} CONTENT:\n${content}`);
+        } else {
+          console.log(`❓ No content found for window ${winId}`);
+        }
+
+        // If this is a blocking display, NetHack might be waiting for acknowledgment
+        if (blocking) {
+          console.log(
+            `⏸️  Window ${winId} is blocking - NetHack waiting for input`
+          );
+          // Try to signal that we've displayed the window
+          setTimeout(() => {
+            console.log(
+              `⚡ Triggering continuation after displaying window ${winId}`
+            );
+            // We might need to call some NetHack function to continue
+          }, 100);
+        }
+
+        return 0;
+
       case "shim_clear_nhwindow":
-        // These can be ignored for our 3D implementation
-        return;
+        console.log(`🧹 CLEAR WINDOW [Win ${args[0]}]`);
+        return 0;
 
       case "shim_print_glyph": {
         const [win, x, y, glyph] = args;
+        console.log(`🗺️  GLYPH [Win ${win}] at (${x},${y}): glyph ${glyph}`);
         // Send glyph data to client for 3D rendering
         this.sendMessage({
           type: "print_glyph",
@@ -257,6 +461,9 @@ class NetHackSession {
 
       case "shim_putstr": {
         const [win, attr, str] = args;
+        console.log(`💬 TEXT [Win ${win}]: "${str}" (attr: ${attr})`);
+        console.log(`   📝 CAPTURED TEXT: "${str}"`);
+
         // Send message to client
         this.sendMessage({
           type: "message",
@@ -265,27 +472,50 @@ class NetHackSession {
         return;
       }
 
+      case "shim_getlin": {
+        const [prompt] = args;
+        console.log(`⌨️  LINE INPUT REQUEST: "${prompt}"`);
+        // For character name, return a default name
+        if (prompt && prompt.toLowerCase().includes("name")) {
+          console.log("   → Providing default character name: Hero");
+          return "Hero"; // Default character name
+        }
+        console.log("   → Providing empty response");
+        return ""; // Default empty response for other line inputs
+      }
+
       case "shim_nhgetch":
         // Wait for key input from client
-        return new Promise((resolve) => {
-          this.keyResolvers.push(resolve);
-          this.sendMessage({
-            type: "request_key",
-          });
-        });
+        console.log(
+          "🎯 KEY INPUT REQUEST - sending automatic response to continue"
+        );
+        // For now, send a space key to continue past initial screens
+        return 32; // Space key
+
+      // Original code for future WebSocket input:
+      // return new Promise((resolve) => {
+      //   this.keyResolvers.push(resolve);
+      //   this.sendMessage({
+      //     type: "request_key",
+      //   });
+      // });
 
       case "shim_yn_function":
+        console.log("❓ YES/NO QUESTION - answering yes");
         // For now, automatically answer 'yes' to questions
         return "y".charCodeAt(0);
 
       case "shim_message_menu":
+        console.log("📝 MESSAGE MENU - returning y");
         return 121; // return 'y' to all questions
 
       case "shim_nh_poskey":
-        return 0; // simulates a mouse click
+        console.log("🎯 POSITION KEY REQUEST - returning space");
+        return 32; // Space key to continue
 
       default:
-        console.log("Unhandled UI callback:", name, args);
+        console.log(`❌ UNHANDLED UI CALLBACK: ${name}`, args);
+        console.log(`   📋 Available methods: ${Object.keys(this).join(", ")}`);
         return 0;
     }
   }

@@ -1,24 +1,14 @@
-// Simple test to see if nethack can initialize using the public folder files
-const path = require("path");
+// Test using the original @neth4ck/neth4ck package to see the proper callback sequence
+const nethackStart = require('@neth4ck/neth4ck');
 
-// Add fetch polyfill if not available
-if (!globalThis.fetch) {
-  const fetch = require("node-fetch");
-  globalThis.fetch = fetch;
-}
-
-// Use the public folder's nethack.js instead of the npm package
-const publicPath = path.join(__dirname, "public");
-const nethackFactory = require(path.join(publicPath, "nethack.js"));
-
-console.log("Starting NetHack test...");
+console.log('🧪 Testing original @neth4ck/neth4ck package...');
 
 function testCallback(name, ...args) {
-  console.log(`NetHack callback: ${name}`, args);
-
-  switch (name) {
+  console.log(`🔔 UI Callback: ${name}`, args);
+  
+  switch(name) {
     case "shim_create_nhwindow":
-      console.log("Creating window, returning 1");
+      console.log("creating window, returning 1");
       return 1;
     case "shim_yn_function":
     case "shim_message_menu":
@@ -26,8 +16,31 @@ function testCallback(name, ...args) {
       return 121; // return 'y' to all questions
     case "shim_nhgetch":
     case "shim_nh_poskey":
-      console.log("Getting key, returning 0");
-      return 0; // simulates a mouse click on "exit up the stairs"
+      console.log("Getting key, returning space");
+      return 32; // space key
+    case "shim_player_selection":
+      console.log("Player selection, returning 0");
+      return 0;
+    case "shim_start_menu":
+      console.log("Starting menu");
+      return 0;
+    case "shim_end_menu":
+      console.log("Ending menu");
+      return 0;
+    case "shim_add_menu":
+      const [winid, glyph, accelerator, groupacc, menuAttr, menuStr, preselected] = args;
+      console.log(`📋 MENU ITEM: "${menuStr}" (key: ${String.fromCharCode(accelerator || 32)})`);
+      return 0;
+    case "shim_select_menu":
+      console.log("Menu selection request");
+      return 1;
+    case "shim_putstr":
+      const [win, textAttr, textStr] = args;
+      console.log(`💬 TEXT [Win ${win}]: "${textStr}"`);
+      return 0;
+    case "shim_display_nhwindow":
+      console.log(`📺 DISPLAY WINDOW [Win ${args[0]}]`);
+      return 0;
     default:
       console.log("Default case, returning 0");
       return 0;
@@ -35,40 +48,9 @@ function testCallback(name, ...args) {
 }
 
 try {
-  console.log("Creating Module...");
-  const fs = require("fs");
-
-  // Load the WASM file manually
-  const wasmPath = path.join(__dirname, "public", "nethack.wasm");
-  console.log("Loading WASM from:", wasmPath);
-  const wasmBinary = fs.readFileSync(wasmPath);
-  console.log("WASM binary loaded, size:", wasmBinary.length);
-
-  // Configure module to use the pre-loaded WASM
-  const Module = {
-    wasmBinary: wasmBinary,
-    locateFile: function (path, scriptDirectory) {
-      console.log(
-        "locateFile called with:",
-        path,
-        "scriptDirectory:",
-        scriptDirectory
-      );
-      if (path.endsWith(".wasm")) {
-        const wasmPath = require("path").join(__dirname, "public", path);
-        console.log("Using WASM path:", wasmPath);
-        return wasmPath;
-      }
-      return path;
-    },
-    onRuntimeInitialized: function () {
-      console.log("NetHack WASM runtime initialized!");
-    },
-  };
-
-  console.log("Starting NetHack with factory...");
-  const instance = nethackFactory(Module);
-  console.log("NetHack factory called, instance:", typeof instance);
+  console.log("Starting NetHack with original package...");
+  nethackStart(testCallback);
+  console.log('NetHack started successfully!');
 } catch (error) {
-  console.error("Error starting NetHack:", error);
+  console.error('Error starting NetHack:', error);
 }
