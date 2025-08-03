@@ -199,6 +199,9 @@ class Nethack3DEngine {
           data.menuItems
         );
         break;
+      case "position_request":
+        this.showQuestion(data.text, "Escape", 0, []);
+        break;
       case "menu_item":
         this.addMenuOption(data.text, data.accelerator, data.window);
         break;

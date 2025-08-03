@@ -339,8 +339,29 @@ class NetHackSession {
         console.log(
           `🖱️ Position key request at pointers: ${xPtr}, ${yPtr}, ${modPtr}`
         );
-        // Return 'q' to quit/escape from position selections
-        return "q".charCodeAt(0);
+
+        // If we have pending input, use it
+        if (this.pendingInput) {
+          const input = this.pendingInput;
+          this.pendingInput = null;
+          this.waitingForInput = false;
+          console.log(`Using pending input for position: ${input}`);
+          return input.charCodeAt(0);
+        }
+
+        // Send position request to client
+        if (this.ws && this.ws.readyState === 1) {
+          this.ws.send(
+            JSON.stringify({
+              type: "position_request",
+              text: "Select a position (or press Escape to cancel)",
+            })
+          );
+        }
+
+        // Return Escape key to cancel position selection by default
+        // This is safer than 'q' which triggers drinking!
+        return 27; // Escape key
 
       case "shim_select_menu":
         const [menuSelectWinid, menuSelectHow, menuPtr] = args;
