@@ -7,6 +7,9 @@ class NetHackSession {
   constructor(ws) {
     this.ws = ws;
     this.nethackInstance = null;
+    this.gameMap = new Map(); // Store map glyphs by coordinates
+    this.playerPosition = { x: 0, y: 0 };
+    this.gameMessages = [];
     this.initializeNetHack();
   }
 
@@ -182,6 +185,19 @@ class NetHackSession {
       case "shim_putstr":
         const [win, textAttr, textStr] = args;
         console.log(`💬 TEXT [Win ${win}]: "${textStr}"`);
+        
+        // Store messages for the game log
+        this.gameMessages.push({
+          text: textStr,
+          window: win,
+          timestamp: Date.now(),
+          attr: textAttr
+        });
+        
+        // Keep only last 100 messages
+        if (this.gameMessages.length > 100) {
+          this.gameMessages.shift();
+        }
 
         // Send text to web client
         if (this.ws && this.ws.readyState === 1) {
@@ -190,6 +206,7 @@ class NetHackSession {
               type: "text",
               text: textStr,
               window: win,
+              attr: textAttr
             })
           );
         }
@@ -199,6 +216,29 @@ class NetHackSession {
       case "shim_print_glyph":
         const [printWin, x, y, printGlyph] = args;
         console.log(`🎨 GLYPH [Win ${printWin}] at (${x},${y}): ${printGlyph}`);
+        
+        // Store map data for the 3D visualization
+        if (printWin === 3) { // WIN_MAP
+          const key = `${x},${y}`;
+          this.gameMap.set(key, {
+            x: x,
+            y: y,
+            glyph: printGlyph,
+            timestamp: Date.now()
+          });
+          
+          // Send map update to client
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(JSON.stringify({
+              type: 'map_glyph',
+              x: x,
+              y: y,
+              glyph: printGlyph,
+              window: printWin
+            }));
+          }
+        }
+        
         return 0;
 
       case "shim_get_nh_event":
@@ -219,6 +259,22 @@ class NetHackSession {
         console.log("NetHack waiting for synchronization");
         return 0;
 
+      case "shim_yn_function":
+        const [question, choices, defaultChoice] = args;
+        console.log(`🤔 Y/N Question: "${question}" choices: "${choices}" default: ${defaultChoice}`);
+        this.sendToClients({
+          type: 'text',
+          text: `Question: ${question} (${choices})`
+        });
+        // Return 'n' (no) by default for safety
+        return 'n'.charCodeAt(0);
+
+      case "shim_nh_poskey":
+        const [xPtr, yPtr, modPtr] = args;
+        console.log(`🖱️ Position key request at pointers: ${xPtr}, ${yPtr}, ${modPtr}`);
+        // Return 'q' to quit/escape from position selections
+        return 'q'.charCodeAt(0);
+
       case "shim_select_menu":
         const [menuSelectWinid, menuSelectHow, menuPtr] = args;
         console.log(
@@ -227,6 +283,61 @@ class NetHackSession {
 
         // Try returning 0 (no selection) to avoid segfault
         console.log("Returning 0 (no selection) to skip this step");
+        return 0;
+
+      case "shim_getmsghistory":
+        const [init] = args;
+        console.log(`Getting message history, init: ${init}`);
+        // Return empty string for message history
+        return "";
+
+      case "shim_putmsghistory":
+        const [msg, attr] = args;
+        console.log(`Put message history: "${msg}", attr: ${attr}`);
+        return 0;
+
+      case "shim_mark_synch":
+        console.log("Mark synchronization");
+        return 0;
+
+      case "shim_destroy_nhwindow":
+        const [destroyWin] = args;
+        console.log(`Destroying window ${destroyWin}`);
+        return 0;
+
+      case "shim_clear_nhwindow":
+        const [clearWin] = args;
+        console.log(`Clearing window ${clearWin}`);
+        return 0;
+
+      case "shim_curs":
+        const [cursWin, cursX, cursY] = args;
+        console.log(`Setting cursor in window ${cursWin} to (${cursX}, ${cursY})`);
+        
+        // Track player position
+        if (cursWin === 3) { // WIN_MAP
+          this.playerPosition = { x: cursX, y: cursY };
+          
+          // Send player position to client
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(JSON.stringify({
+              type: 'player_position',
+              x: cursX,
+              y: cursY
+            }));
+          }
+        }
+        
+        return 0;
+
+      case "shim_cliparound":
+        const [clipX, clipY] = args;
+        console.log(`Clipping around (${clipX}, ${clipY})`);
+        return 0;
+
+      case "shim_status_update":
+        const [field, ptr, chg, percent, color, colormasks] = args;
+        console.log(`Status update field ${field}, ptr: ${ptr}`);
         return 0;
 
       case "shim_askname":

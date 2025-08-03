@@ -13,7 +13,7 @@
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background: #1a1a1a; /* Dark background */
+        background: #000011; /* Dark blue background */
         font-family: "Courier New", Courier, monospace;
       }
 
@@ -22,32 +22,80 @@
         display: block;
       }
 
-      /* Overlay for messages and status from the game */
-      #overlay {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 100;
-        color: #e0e0e0;
-        padding: 1rem;
-        max-width: 45%;
-        max-height: 90vh;
-        overflow-y: auto;
-        background: rgba(0, 0, 0, 0.6);
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        pointer-events: none; /* Let mouse events pass through */
-        white-space: pre-wrap; /* Respect newlines from NetHack */
-        font-size: 0.9rem;
+      /* UI overlays */
+      .ui-overlay {
+        position: fixed;
+        pointer-events: none;
+        z-index: 1000;
+      }
+      
+      #game-log {
+        max-height: 250px;
+        scrollbar-width: thin;
+        scrollbar-color: #333 #111;
+      }
+      
+      #game-log::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      #game-log::-webkit-scrollbar-track {
+        background: #111;
+      }
+      
+      #game-log::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+      }
+      
+      .loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #00ff00;
+        font-size: 18px;
+        text-align: center;
+        z-index: 2000;
+      }
+      
+      .controls {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #ffffff;
+        padding: 10px;
+        border: 1px solid #333;
+        border-radius: 5px;
+        font-size: 12px;
         line-height: 1.4;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
       }
     </style>
   </head>
   <body>
-    <!-- This div will display messages from the NetHack engine -->
-    <div id="overlay">Starting NetHack 3D...</div>
+    <div class="loading" id="loading">
+      <div>NetHack 3D</div>
+      <div style="font-size: 14px; margin-top: 10px;">Connecting to server...</div>
+    </div>
+    
+    <div class="controls">
+      <div><strong>Controls:</strong></div>
+      <div>Arrow Keys: Move</div>
+      <div>Space: Wait</div>
+      <div>Enter: Confirm</div>
+      <div>Esc: Cancel/Menu</div>
+    </div>
 
+    <!-- Import map for development -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      }
+    }
+    </script>
+    
     <!-- 
       Load our compiled application code. It's a module, so it can use 
       import/export syntax. It will connect to the NetHack backend via WebSocket.

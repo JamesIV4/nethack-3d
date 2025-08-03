@@ -1,320 +1,295 @@
 /*
  * Main entry point for the NetHack 3D client.
- * This module communicates with a Node.js backend that runs the NetHack WASM.
- * It handles 3D rendering, input, and WebSocket communication.
+ * This module connects to our NetHack WebSocket server and renders the game in 3D using Three.js.
  */
-// Import Three.js from a CDN
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
-
-// A map for NetHack's directional keys
-const DIRECTION_MAP = {
-  ArrowUp: "k",
-  ArrowDown: "j",
-  ArrowLeft: "h",
-  ArrowRight: "l",
-};
-
+import * as THREE from "three";
 // --- CONSTANTS ---
-const TILE_SIZE = 10; // The size of each tile in 3D space
-const WALL_HEIGHT = 10; // How tall wall blocks are
-
+const TILE_SIZE = 1; // The size of each tile in 3D space
+const WALL_HEIGHT = 1; // How tall wall blocks are
 /**
  * The main game engine class. It encapsulates all the logic for the 3D client.
  */
 class Nethack3DEngine {
-  renderer;
-  scene;
-  camera;
-  tileMap = new Map();
-  heroPos = { x: 0, y: 0 };
-  messageLog = [];
-  ws = null;
-  connected = false;
-
-  // Pre-create geometries and a basic material to improve performance
-  floorGeometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
-  wallGeometry = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE, WALL_HEIGHT);
-  basicMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-
-  constructor() {
-    // --- Basic Three.js setup ---
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setClearColor(0x1a1a1a);
-    document.body.appendChild(this.renderer.domElement);
-
-    // --- Lighting ---
-    const ambientLight = new THREE.AmbientLight(0x606060);
-    this.scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    directionalLight.position.set(1, 1, 1).normalize();
-    this.scene.add(directionalLight);
-
-    // --- Event Listeners ---
-    window.addEventListener("resize", this.onWindowResize.bind(this), false);
-    window.addEventListener("keydown", this.handleKeyDown.bind(this), false);
-  }
-
-  /**
-   * Starts the engine by initializing the animation loop and WebSocket connection.
-   */
-  start() {
-    this.animate();
-    this.connectWebSocket();
-    console.log("Engine started, connecting to NetHack server...");
-  }
-
-  /**
-   * Establish WebSocket connection to the NetHack backend
-   */
-  connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}`;
-    
-    this.updateMessageOverlay("Connecting to NetHack server...");
-    
-    this.ws = new WebSocket(wsUrl);
-
-    this.ws.onopen = () => {
-      console.log('Connected to NetHack server');
-      this.connected = true;
-      this.updateMessageOverlay("Connected! Starting NetHack...");
-    };
-
-    this.ws.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        this.handleServerMessage(message);
-      } catch (err) {
-        console.error('Error parsing server message:', err);
-      }
-    };
-
-    this.ws.onclose = () => {
-      console.log('Disconnected from NetHack server');
-      this.connected = false;
-      this.updateMessageOverlay("Disconnected from server. Attempting to reconnect...");
-      
-      // Attempt to reconnect after 3 seconds
-      setTimeout(() => {
-        if (!this.connected) {
-          this.connectWebSocket();
+    constructor() {
+        this.tileMap = new Map();
+        this.playerPos = { x: 0, y: 0 };
+        this.gameMessages = [];
+        this.ws = null;
+        // Pre-create geometries and materials
+        this.floorGeometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
+        this.wallGeometry = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE, WALL_HEIGHT);
+        // Materials for different glyph types
+        this.materials = {
+            floor: new THREE.MeshLambertMaterial({ color: 0x8B4513 }), // Brown floor
+            wall: new THREE.MeshLambertMaterial({ color: 0x666666 }), // Gray wall
+            door: new THREE.MeshLambertMaterial({ color: 0x8B4513 }), // Brown door
+            player: new THREE.MeshLambertMaterial({ color: 0x00FF00, emissive: 0x004400 }), // Green glowing player
+            monster: new THREE.MeshLambertMaterial({ color: 0xFF0000, emissive: 0x440000 }), // Red glowing monster
+            item: new THREE.MeshLambertMaterial({ color: 0x0080FF, emissive: 0x001144 }), // Blue glowing item
+            default: new THREE.MeshLambertMaterial({ color: 0xFFFFFF })
+        };
+        this.initThreeJS();
+        this.initUI();
+        this.connectToServer();
+    }
+    initThreeJS() {
+        // --- Basic Three.js setup ---
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setClearColor(0x000011); // Dark blue background
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(this.renderer.domElement);
+        // --- Lighting ---
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+        this.scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 10, 5);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        this.scene.add(directionalLight);
+        // --- Event Listeners ---
+        window.addEventListener("resize", this.onWindowResize.bind(this), false);
+        window.addEventListener("keydown", this.handleKeyDown.bind(this), false);
+        // Start render loop
+        this.animate();
+    }
+    initUI() {
+        // Create game log overlay
+        const logContainer = document.createElement('div');
+        logContainer.id = 'game-log';
+        logContainer.style.cssText = `
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      width: 400px;
+      height: 200px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #00ff00;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 10px;
+      border: 1px solid #333;
+      border-radius: 5px;
+      overflow-y: auto;
+      z-index: 1000;
+      pointer-events: none;
+    `;
+        document.body.appendChild(logContainer);
+        // Create status overlay
+        const statusContainer = document.createElement('div');
+        statusContainer.id = 'game-status';
+        statusContainer.style.cssText = `
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #ffffff;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 10px;
+      border: 1px solid #333;
+      border-radius: 5px;
+      z-index: 1000;
+      pointer-events: none;
+    `;
+        statusContainer.innerHTML = 'Connecting to NetHack server...';
+        document.body.appendChild(statusContainer);
+        // Create connection status
+        const connStatus = document.createElement('div');
+        connStatus.id = 'connection-status';
+        connStatus.style.cssText = `
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 3px;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      z-index: 1000;
+    `;
+        connStatus.innerHTML = 'Disconnected';
+        document.body.appendChild(connStatus);
+    }
+    connectToServer() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}`;
+        console.log('Connecting to NetHack server at:', wsUrl);
+        this.ws = new WebSocket(wsUrl);
+        this.ws.onopen = () => {
+            console.log('Connected to NetHack server');
+            this.updateConnectionStatus('Connected', '#00aa00');
+            this.updateStatus('Connected to NetHack - Game starting...');
+            // Hide loading screen
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.style.display = 'none';
+            }
+        };
+        this.ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                this.handleServerMessage(data);
+            }
+            catch (error) {
+                console.error('Error parsing server message:', error);
+            }
+        };
+        this.ws.onclose = () => {
+            console.log('Disconnected from NetHack server');
+            this.updateConnectionStatus('Disconnected', '#aa0000');
+            this.updateStatus('Disconnected from server');
+            // Show loading screen
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.style.display = 'block';
+                loading.innerHTML = '<div>NetHack 3D</div><div style="font-size: 14px; margin-top: 10px;">Reconnecting...</div>';
+            }
+            // Try to reconnect after 3 seconds
+            setTimeout(() => {
+                if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
+                    this.connectToServer();
+                }
+            }, 3000);
+        };
+        this.ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.updateConnectionStatus('Error', '#aa0000');
+        };
+    }
+    handleServerMessage(data) {
+        switch (data.type) {
+            case 'map_glyph':
+                this.updateTile(data.x, data.y, data.glyph);
+                break;
+            case 'player_position':
+                this.playerPos = { x: data.x, y: data.y };
+                break;
+            case 'text':
+                this.addGameMessage(data.text);
+                break;
+            case 'menu_item':
+                this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
+                break;
+            default:
+                console.log('Unknown message type:', data.type, data);
         }
-      }, 3000);
-    };
-
-    this.ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      this.updateMessageOverlay("Connection error. Please refresh the page.");
-    };
-  }
-
-  /**
-   * Handle messages from the NetHack server
-   */
-  handleServerMessage(message) {
-    switch (message.type) {
-      case 'game_started':
-        this.updateMessageOverlay(message.message);
-        break;
-
-      case 'print_glyph':
-        const { x, y, glyph } = message.data;
-        this.updateTile(x, y, glyph);
-        break;
-
-      case 'message':
-        const { str } = message.data;
-        this.messageLog.unshift(str);
-        if (this.messageLog.length > 50) this.messageLog.pop();
-        this.updateMessageOverlay(this.messageLog.join("\n"));
-        break;
-
-      case 'request_key':
-        // Server is waiting for key input - we'll handle this in handleKeyDown
-        break;
-
-      case 'error':
-        console.error('Server error:', message.message);
-        this.updateMessageOverlay(`Error: ${message.message}`);
-        break;
-
-      case 'pong':
-        // Server responded to ping
-        break;
-
-      default:
-        console.log('Unknown message type:', message.type);
     }
-  }
-
-  /**
-   * Send a message to the NetHack server
-   */
-  sendMessage(message) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(message));
+    updateTile(x, y, glyph) {
+        const key = `${x},${y}`;
+        let mesh = this.tileMap.get(key);
+        // Determine tile type based on glyph ID ranges (these are NetHack-specific)
+        let material = this.materials.default;
+        let geometry = this.floorGeometry;
+        let isWall = false;
+        if (glyph >= 2378 && glyph <= 2394) {
+            // Wall glyphs
+            material = this.materials.wall;
+            geometry = this.wallGeometry;
+            isWall = true;
+        }
+        else if (glyph >= 2395 && glyph <= 2397) {
+            // Floor glyphs
+            material = this.materials.floor;
+            geometry = this.floorGeometry;
+        }
+        else if (glyph === 342) {
+            // Player glyph
+            material = this.materials.player;
+            geometry = this.floorGeometry;
+        }
+        else if (glyph >= 400 && glyph <= 500) {
+            // Monster glyphs (approximate range)
+            material = this.materials.monster;
+            geometry = this.floorGeometry;
+        }
+        else if (glyph >= 1900 && glyph <= 2400) {
+            // Item glyphs (approximate range)
+            material = this.materials.item;
+            geometry = this.floorGeometry;
+        }
+        else {
+            // Default floor for unknown glyphs
+            material = this.materials.floor;
+            geometry = this.floorGeometry;
+        }
+        if (!mesh) {
+            // Create a new mesh
+            mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x * TILE_SIZE, -y * TILE_SIZE, isWall ? WALL_HEIGHT / 2 : 0);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            this.scene.add(mesh);
+            this.tileMap.set(key, mesh);
+        }
+        else {
+            // Update existing mesh
+            mesh.material = material;
+            mesh.geometry = geometry;
+            mesh.position.z = isWall ? WALL_HEIGHT / 2 : 0;
+        }
     }
-  }
-
-  /**
-   * Creates or updates a 3D mesh for a specific tile on the map.
-   * This now uses basic glyph-to-character mapping since we don't have direct access to mapglyphHelper
-   */
-  updateTile(x, y, glyph) {
-    const key = `${x},${y}`;
-    let mesh = this.tileMap.get(key);
-
-    // Basic glyph to character mapping (we'll improve this later)
-    const char = this.glyphToChar(glyph);
-    const color = this.getColorForGlyph(glyph);
-    
-    let isWall = false;
-    if (char === "|" || char === "-" || char === "+") {
-      isWall = true;
-    } else if (char === "@") {
-      // This is our hero!
-      this.heroPos = { x, y };
+    addGameMessage(message) {
+        if (!message || message.trim() === '')
+            return;
+        this.gameMessages.unshift(message);
+        if (this.gameMessages.length > 100) {
+            this.gameMessages.pop();
+        }
+        const logElement = document.getElementById('game-log');
+        if (logElement) {
+            logElement.innerHTML = this.gameMessages.join('<br>');
+            logElement.scrollTop = 0; // Keep newest messages at top
+        }
     }
-    
-    if (!mesh) {
-      // Create a new mesh if one doesn't exist for these coordinates
-      const geometry = isWall ? this.wallGeometry : this.floorGeometry;
-      const material = this.basicMaterial.clone();
-      mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(
-        x * TILE_SIZE,
-        -y * TILE_SIZE,
-        isWall ? WALL_HEIGHT / 2 : 0
-      );
-      this.scene.add(mesh);
-      this.tileMap.set(key, mesh);
+    updateStatus(status) {
+        const statusElement = document.getElementById('game-status');
+        if (statusElement) {
+            statusElement.innerHTML = status;
+        }
     }
-    
-    // Update the mesh's properties
-    mesh.material.color.set(color);
-    mesh.material.emissive.set(0x000000);
-    
-    // Make special characters (like the hero) glow slightly
-    if (char === "@" || char === "$" || char === "<" || char === ">") {
-      mesh.material.emissive.set(color).multiplyScalar(0.5);
+    updateConnectionStatus(status, color) {
+        const connElement = document.getElementById('connection-status');
+        if (connElement) {
+            connElement.innerHTML = status;
+            connElement.style.backgroundColor = color;
+        }
     }
-    
-    // Switch geometry if a floor becomes a wall or vice-versa
-    if (isWall && mesh.geometry !== this.wallGeometry) {
-      mesh.geometry = this.wallGeometry;
-      mesh.position.z = WALL_HEIGHT / 2;
-    } else if (!isWall && mesh.geometry !== this.floorGeometry) {
-      mesh.geometry = this.floorGeometry;
-      mesh.position.z = 0;
+    handleKeyDown(event) {
+        // Send input to server
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({
+                type: 'input',
+                input: event.key
+            }));
+        }
     }
-  }
-
-  /**
-   * Basic glyph to character conversion (simplified)
-   */
-  glyphToChar(glyph) {
-    // This is a simplified mapping - the real NetHack has hundreds of glyphs
-    const basicGlyphs = {
-      0: ' ',   // GLYPH_NOTHING
-      1: '.',   // floor
-      2: '#',   // wall (corridor)
-      3: '|',   // wall (vertical)
-      4: '-',   // wall (horizontal)
-      5: '+',   // door
-      6: '@',   // player
-      7: '$',   // gold
-      8: '<',   // staircase up
-      9: '>',   // staircase down
-    };
-    
-    return basicGlyphs[glyph] || '?';
-  }
-
-  /**
-   * Get color for glyph (simplified)
-   */
-  getColorForGlyph(glyph) {
-    const char = this.glyphToChar(glyph);
-    
-    switch (char) {
-      case '@': return new THREE.Color(0xffffff); // white for player
-      case '#': 
-      case '|': 
-      case '-': return new THREE.Color(0x666666); // gray for walls
-      case '+': return new THREE.Color(0x8B4513); // brown for doors
-      case '$': return new THREE.Color(0xFFD700); // gold
-      case '<':
-      case '>': return new THREE.Color(0x808080); // gray for stairs
-      case '.': return new THREE.Color(0x444444); // dark gray for floor
-      default: return new THREE.Color(0x888888); // default gray
+    updateCamera() {
+        const { x, y } = this.playerPos;
+        const targetX = x * TILE_SIZE;
+        const targetY = -y * TILE_SIZE;
+        // Position the camera behind and above the player for an isometric view
+        this.camera.position.x = targetX + 10;
+        this.camera.position.y = targetY - 10;
+        this.camera.position.z = 15;
+        this.camera.lookAt(targetX, targetY, 0);
     }
-  }
-
-  /**
-   * Handles keyboard input and sends it to the server
-   */
-  handleKeyDown(event) {
-    let key = DIRECTION_MAP[event.key] || event.key;
-    if (key.length !== 1) return; // Only handle single character keys
-    
-    // Send key to server
-    this.sendMessage({
-      type: 'key_input',
-      key: key
-    });
-  }
-
-  /**
-   * Updates the HTML overlay with new messages.
-   */
-  updateMessageOverlay(text) {
-    const overlay = document.getElementById("overlay");
-    if (overlay) {
-      overlay.textContent = text;
+    onWindowResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
-  }
-
-  /**
-   * Keeps the camera focused on the hero's position.
-   */
-  updateCamera() {
-    const { x, y } = this.heroPos;
-    const targetX = x * TILE_SIZE;
-    const targetY = -y * TILE_SIZE;
-    // Position the camera behind and above the hero for a classic RPG view
-    this.camera.position.x = targetX;
-    this.camera.position.y = targetY - TILE_SIZE * 5;
-    this.camera.position.z = TILE_SIZE * 6;
-    this.camera.lookAt(targetX, targetY, 0);
-  }
-
-  /**
-   * Handles window resizing to keep the viewport correct.
-   */
-  onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-  }
-
-  /**
-   * The main render loop, called via requestAnimationFrame.
-   */
-  animate() {
-    requestAnimationFrame(this.animate.bind(this));
-    this.updateCamera();
-    this.renderer.render(this.scene, this.camera);
-  }
+    animate() {
+        requestAnimationFrame(this.animate.bind(this));
+        this.updateCamera();
+        this.renderer.render(this.scene, this.camera);
+    }
 }
-
 // --- APPLICATION ENTRY POINT ---
 const game = new Nethack3DEngine();
-game.start();
+export default game;
