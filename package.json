@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "python -m http.server 8000 --directory public",
+    "start": "echo Open http://localhost:8000/index.html && python -m http.server 8000 --directory public",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

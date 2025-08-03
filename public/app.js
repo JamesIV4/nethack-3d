@@ -55,32 +55,53 @@ class Nethack3DEngine {
     window.addEventListener("keydown", this.handleKeyDown.bind(this), false);
   }
   /**
-   * Starts the engine by initializing the animation loop and then waiting for
-   * the NetHack WASM module to be ready before starting the game.
+   * Starts the engine by initializing the animation loop.
+   * The NetHack game itself will be started by the `onRuntimeInitialized` callback.
    */
   start() {
     this.animate();
-    console.log("Waiting for NetHack WASM module to load...");
-    Module.ready.then((nethackModule) => {
-      console.log("NetHack WASM module is ready.");
-      if (typeof nethackModule.nethackStart !== "function") {
-        this.updateMessageOverlay(
-          "Error: nethackStart is not available. Check nethack.js."
-        );
-        return;
-      }
-      try {
-        this.updateMessageOverlay("Starting NetHack...");
-        nethackModule.nethackStart(this.uiCallback.bind(this), {
-          nethackOptions: { name: "3DHero", autoquiver: true },
-        });
-        console.log("NetHack game started.");
-      } catch (err) {
-        console.error("An error occurred when starting NetHack:", err);
-        this.updateMessageOverlay(`Error starting NetHack: ${err}`);
-      }
-    });
+    console.log("Engine started, waiting for NetHack WASM module to load...");
   }
+
+  /**
+   * Initializes the NetHack game after the WASM module is ready.
+   */
+  initializeNethack() {
+    console.log("NetHack WASM module is ready.");
+
+    // Set up global NetHack callback that the WASM module will call
+    globalThis.nethackCallback = (name, ...args) => {
+      return this.uiCallback(name, ...args);
+    };
+
+    // The WASM module should have set up the graphics callback by now
+    // We can call the main NetHack function to start the game
+    try {
+      this.updateMessageOverlay("Starting NetHack...");
+
+      // Call the main NetHack entry point
+      if (window.Module && typeof window.Module.ccall === "function") {
+        // Set up the graphics callback
+        window.Module.ccall(
+          "shim_graphics_set_callback",
+          null,
+          ["string"],
+          ["nethackCallback"],
+          { async: true }
+        );
+
+        // Start the game main loop
+        window.Module.ccall("main", null, [], [], { async: true });
+        console.log("NetHack game started.");
+      } else {
+        this.updateMessageOverlay("Error: NetHack module not properly loaded.");
+      }
+    } catch (err) {
+      console.error("An error occurred when starting NetHack:", err);
+      this.updateMessageOverlay(`Error starting NetHack: ${err}`);
+    }
+  }
+
   /**
    * The core UI callback function passed to the NetHack engine.
    * NetHack calls this function whenever it needs to interact with the UI.
@@ -131,15 +152,30 @@ class Nethack3DEngine {
         return;
     }
   }
+
   /**
    * Creates or updates a 3D mesh for a specific tile on the map.
    * This is optimized to reuse existing meshes and materials.
    */
   updateTile(x, y, glyph) {
+    // The nethack.js runtime makes the helper functions available globally
+    if (
+      !globalThis.nethackGlobal ||
+      !globalThis.nethackGlobal.helpers ||
+      typeof globalThis.nethackGlobal.helpers.mapglyphHelper !== "function"
+    ) {
+      return; // Not ready yet, skip this render update.
+    }
+
     const key = `${x},${y}`;
     let mesh = this.tileMap.get(key);
-    // Use the mapglyph helper provided by NetHack to decode the glyph
-    const glyphInfo = Module.nethackOptions.mapglyphHelper(glyph, x, y, 0);
+
+    const glyphInfo = globalThis.nethackGlobal.helpers.mapglyphHelper(
+      glyph,
+      x,
+      y,
+      0
+    );
     const char = glyphInfo.char;
     const color = new THREE.Color(glyphInfo.color);
     let isWall = false;
@@ -178,6 +214,7 @@ class Nethack3DEngine {
       mesh.position.z = 0;
     }
   }
+
   /**
    * Handles keyboard input, mapping keys to NetHack commands and queuing them.
    */
@@ -193,6 +230,7 @@ class Nethack3DEngine {
       this.keyQueue.push({ key, resolve: () => {} });
     }
   }
+
   /**
    * Updates the HTML overlay with new messages.
    */
@@ -202,6 +240,7 @@ class Nethack3DEngine {
       overlay.textContent = text;
     }
   }
+
   /**
    * Keeps the camera focused on the hero's position.
    */
@@ -215,6 +254,7 @@ class Nethack3DEngine {
     this.camera.position.z = TILE_SIZE * 6;
     this.camera.lookAt(targetX, targetY, 0);
   }
+
   /**
    * Handles window resizing to keep the viewport correct.
    */
@@ -223,6 +263,7 @@ class Nethack3DEngine {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
+
   /**
    * The main render loop, called via requestAnimationFrame.
    */
@@ -232,6 +273,15 @@ class Nethack3DEngine {
     this.renderer.render(this.scene, this.camera);
   }
 }
+
 // --- APPLICATION ENTRY POINT ---
 const game = new Nethack3DEngine();
+
+// Set up the Module object with onRuntimeInitialized callback before loading the script
+window.Module = {
+  onRuntimeInitialized: () => {
+    game.initializeNethack();
+  },
+};
+
 game.start();
