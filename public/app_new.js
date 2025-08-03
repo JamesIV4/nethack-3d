@@ -75,15 +75,15 @@ class Nethack3DEngine {
    * Establish WebSocket connection to the NetHack backend
    */
   connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}`;
-    
+
     this.updateMessageOverlay("Connecting to NetHack server...");
-    
+
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
-      console.log('Connected to NetHack server');
+      console.log("Connected to NetHack server");
       this.connected = true;
       this.updateMessageOverlay("Connected! Starting NetHack...");
     };
@@ -93,15 +93,17 @@ class Nethack3DEngine {
         const message = JSON.parse(event.data);
         this.handleServerMessage(message);
       } catch (err) {
-        console.error('Error parsing server message:', err);
+        console.error("Error parsing server message:", err);
       }
     };
 
     this.ws.onclose = () => {
-      console.log('Disconnected from NetHack server');
+      console.log("Disconnected from NetHack server");
       this.connected = false;
-      this.updateMessageOverlay("Disconnected from server. Attempting to reconnect...");
-      
+      this.updateMessageOverlay(
+        "Disconnected from server. Attempting to reconnect..."
+      );
+
       // Attempt to reconnect after 3 seconds
       setTimeout(() => {
         if (!this.connected) {
@@ -111,7 +113,7 @@ class Nethack3DEngine {
     };
 
     this.ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error("WebSocket error:", error);
       this.updateMessageOverlay("Connection error. Please refresh the page.");
     };
   }
@@ -121,37 +123,37 @@ class Nethack3DEngine {
    */
   handleServerMessage(message) {
     switch (message.type) {
-      case 'game_started':
+      case "game_started":
         this.updateMessageOverlay(message.message);
         break;
 
-      case 'print_glyph':
+      case "print_glyph":
         const { x, y, glyph } = message.data;
         this.updateTile(x, y, glyph);
         break;
 
-      case 'message':
+      case "message":
         const { str } = message.data;
         this.messageLog.unshift(str);
         if (this.messageLog.length > 50) this.messageLog.pop();
         this.updateMessageOverlay(this.messageLog.join("\n"));
         break;
 
-      case 'request_key':
+      case "request_key":
         // Server is waiting for key input - we'll handle this in handleKeyDown
         break;
 
-      case 'error':
-        console.error('Server error:', message.message);
+      case "error":
+        console.error("Server error:", message.message);
         this.updateMessageOverlay(`Error: ${message.message}`);
         break;
 
-      case 'pong':
+      case "pong":
         // Server responded to ping
         break;
 
       default:
-        console.log('Unknown message type:', message.type);
+        console.log("Unknown message type:", message.type);
     }
   }
 
@@ -175,7 +177,7 @@ class Nethack3DEngine {
     // Basic glyph to character mapping (we'll improve this later)
     const char = this.glyphToChar(glyph);
     const color = this.getColorForGlyph(glyph);
-    
+
     let isWall = false;
     if (char === "|" || char === "-" || char === "+") {
       isWall = true;
@@ -183,7 +185,7 @@ class Nethack3DEngine {
       // This is our hero!
       this.heroPos = { x, y };
     }
-    
+
     if (!mesh) {
       // Create a new mesh if one doesn't exist for these coordinates
       const geometry = isWall ? this.wallGeometry : this.floorGeometry;
@@ -197,16 +199,16 @@ class Nethack3DEngine {
       this.scene.add(mesh);
       this.tileMap.set(key, mesh);
     }
-    
+
     // Update the mesh's properties
     mesh.material.color.set(color);
     mesh.material.emissive.set(0x000000);
-    
+
     // Make special characters (like the hero) glow slightly
     if (char === "@" || char === "$" || char === "<" || char === ">") {
       mesh.material.emissive.set(color).multiplyScalar(0.5);
     }
-    
+
     // Switch geometry if a floor becomes a wall or vice-versa
     if (isWall && mesh.geometry !== this.wallGeometry) {
       mesh.geometry = this.wallGeometry;
@@ -223,19 +225,19 @@ class Nethack3DEngine {
   glyphToChar(glyph) {
     // This is a simplified mapping - the real NetHack has hundreds of glyphs
     const basicGlyphs = {
-      0: ' ',   // GLYPH_NOTHING
-      1: '.',   // floor
-      2: '#',   // wall (corridor)
-      3: '|',   // wall (vertical)
-      4: '-',   // wall (horizontal)
-      5: '+',   // door
-      6: '@',   // player
-      7: '$',   // gold
-      8: '<',   // staircase up
-      9: '>',   // staircase down
+      0: " ", // GLYPH_NOTHING
+      1: ".", // floor
+      2: "#", // wall (corridor)
+      3: "|", // wall (vertical)
+      4: "-", // wall (horizontal)
+      5: "+", // door
+      6: "@", // player
+      7: "$", // gold
+      8: "<", // staircase up
+      9: ">", // staircase down
     };
-    
-    return basicGlyphs[glyph] || '?';
+
+    return basicGlyphs[glyph] || "?";
   }
 
   /**
@@ -243,18 +245,25 @@ class Nethack3DEngine {
    */
   getColorForGlyph(glyph) {
     const char = this.glyphToChar(glyph);
-    
+
     switch (char) {
-      case '@': return new THREE.Color(0xffffff); // white for player
-      case '#': 
-      case '|': 
-      case '-': return new THREE.Color(0x666666); // gray for walls
-      case '+': return new THREE.Color(0x8B4513); // brown for doors
-      case '$': return new THREE.Color(0xFFD700); // gold
-      case '<':
-      case '>': return new THREE.Color(0x808080); // gray for stairs
-      case '.': return new THREE.Color(0x444444); // dark gray for floor
-      default: return new THREE.Color(0x888888); // default gray
+      case "@":
+        return new THREE.Color(0xffffff); // white for player
+      case "#":
+      case "|":
+      case "-":
+        return new THREE.Color(0x666666); // gray for walls
+      case "+":
+        return new THREE.Color(0x8b4513); // brown for doors
+      case "$":
+        return new THREE.Color(0xffd700); // gold
+      case "<":
+      case ">":
+        return new THREE.Color(0x808080); // gray for stairs
+      case ".":
+        return new THREE.Color(0x444444); // dark gray for floor
+      default:
+        return new THREE.Color(0x888888); // default gray
     }
   }
 
@@ -264,11 +273,11 @@ class Nethack3DEngine {
   handleKeyDown(event) {
     let key = DIRECTION_MAP[event.key] || event.key;
     if (key.length !== 1) return; // Only handle single character keys
-    
+
     // Send key to server
     this.sendMessage({
-      type: 'key_input',
-      key: key
+      type: "key_input",
+      key: key,
     });
   }
 
