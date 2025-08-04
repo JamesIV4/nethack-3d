@@ -31,6 +31,32 @@ class Nethack3DEngine {
   private currentInventory: any[] = []; // Store current inventory items
   private pendingInventoryDialog: boolean = false; // Flag to show inventory dialog after update
 
+  // Player stats tracking
+  private playerStats = {
+    name: "Adventurer",
+    hp: 10,
+    maxHp: 10,
+    power: 0,
+    maxPower: 0,
+    level: 1,
+    experience: 0,
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10,
+    armor: 10,
+    dungeon: "Dungeons of Doom",
+    dlevel: 1,
+    gold: 0,
+    alignment: "Neutral",
+    hunger: "Not Hungry",
+    encumbrance: "",
+    time: 1,
+    score: 0,
+  };
+
   private ws: WebSocket | null = null;
 
   // Camera controls
@@ -402,6 +428,19 @@ class Nethack3DEngine {
         );
         break;
 
+      case "clear_scene":
+        console.log("🧹 Clearing 3D scene for level transition");
+        this.clearScene();
+        if (data.message) {
+          this.addGameMessage(data.message);
+        }
+        break;
+
+      case "status_update":
+        console.log(`📊 Status update: field ${data.field} = "${data.value}"`);
+        this.updatePlayerStats(data.field, data.value, data);
+        break;
+
       default:
         console.log("Unknown message type:", data.type, data);
     }
@@ -572,6 +611,24 @@ class Nethack3DEngine {
 
     // Fallback: For unknown glyphs, show a generic character instead of the number
     return "?";
+  }
+
+  private clearScene(): void {
+    console.log("🧹 Clearing all tiles and sprites from 3D scene");
+
+    // Clear all tile meshes
+    this.tileMap.forEach((mesh, key) => {
+      this.scene.remove(mesh);
+    });
+    this.tileMap.clear();
+
+    // Clear all text sprites
+    this.textSpriteMap.forEach((sprite, key) => {
+      this.scene.remove(sprite);
+    });
+    this.textSpriteMap.clear();
+
+    console.log("🧹 Scene cleared - ready for new level");
   }
 
   private updateTile(
@@ -829,6 +886,228 @@ class Nethack3DEngine {
       connElement.innerHTML = status;
       connElement.style.backgroundColor = color;
     }
+  }
+
+  private updatePlayerStats(field: number, value: string | null, data: any): void {
+    // NetHack status field mapping (based on NetHack source code)
+    // Reference: https://github.com/NetHack/NetHack/blob/NetHack-3.6/include/botl.h
+    const statusFields: { [key: number]: string } = {
+      0: "name",
+      1: "strength", 
+      2: "dexterity",
+      3: "constitution", 
+      4: "intelligence",
+      5: "wisdom",
+      6: "charisma",
+      7: "alignment",
+      8: "score",
+      9: "hp",
+      10: "maxhp", 
+      11: "power",
+      12: "maxpower",
+      13: "armor",
+      14: "level",
+      15: "experience",
+      16: "time",
+      17: "hunger",
+      18: "encumbrance",
+      19: "dungeon",
+      20: "dlevel",
+      21: "gold",
+    };
+
+    const fieldName = statusFields[field];
+    
+    if (fieldName && value !== null && !value.startsWith('ptr:')) {
+      console.log(`📊 Updating ${fieldName}: "${value}"`);
+      
+      // Parse values intelligently based on field type and content
+      let parsedValue: any = value;
+      
+      // Handle numeric fields
+      if (fieldName.match(/^(hp|maxhp|power|maxpower|level|experience|time|armor|score|gold|dlevel)$/)) {
+        // For pure numbers, try to parse directly
+        if (typeof value === 'string') {
+          // Remove any leading/trailing whitespace
+          const cleanValue = value.trim();
+          
+          // Try to extract a number from the string
+          const match = cleanValue.match(/^(\d+)/);
+          if (match) {
+            parsedValue = parseInt(match[1], 10);
+          } else {
+            console.log(`⚠️ Could not parse numeric value for ${fieldName}: "${value}"`);
+            return; // Skip update if we can't parse the number
+          }
+        }
+      }
+      
+      // Handle attribute fields (strength can be like "18/01")
+      else if (fieldName.match(/^(strength|dexterity|constitution|intelligence|wisdom|charisma)$/)) {
+        if (typeof value === 'string') {
+          const cleanValue = value.trim();
+          
+          // Handle special strength format like "18/01" or just "18"
+          if (fieldName === 'strength') {
+            const strengthMatch = cleanValue.match(/^(\d+)/);
+            if (strengthMatch) {
+              parsedValue = parseInt(strengthMatch[1], 10);
+            } else {
+              console.log(`⚠️ Could not parse strength value: "${value}"`);
+              return;
+            }
+          } else {
+            // For other attributes, just get the first number
+            const attrMatch = cleanValue.match(/^(\d+)/);
+            if (attrMatch) {
+              parsedValue = parseInt(attrMatch[1], 10);
+            } else {
+              console.log(`⚠️ Could not parse attribute value for ${fieldName}: "${value}"`);
+              return;
+            }
+          }
+        }
+      }
+      
+      // Handle string fields (keep as-is)
+      else if (fieldName.match(/^(name|alignment|hunger|encumbrance|dungeon)$/)) {
+        // Keep as string, just trim whitespace
+        parsedValue = typeof value === 'string' ? value.trim() : String(value);
+      }
+      
+      // Update the stats object
+      if (fieldName === "maxhp") {
+        this.playerStats.maxHp = parsedValue;
+      } else if (fieldName === "maxpower") {
+        this.playerStats.maxPower = parsedValue;
+      } else if (fieldName === "dlevel") {
+        this.playerStats.dlevel = parsedValue;
+      } else {
+        (this.playerStats as any)[fieldName] = parsedValue;
+      }
+      
+      // Update the stats display
+      this.updateStatsDisplay();
+    } else if (value && value.startsWith('ptr:')) {
+      console.log(`📊 Skipping pointer value for field ${field}: ${value}`);
+    } else {
+      console.log(`📊 Unknown status field ${field} or null/invalid value: "${value}"`);
+    }
+  }
+
+  private updateStatsDisplay(): void {
+    // Update or create the stats bar
+    let statsBar = document.getElementById("stats-bar");
+    if (!statsBar) {
+      // Create the stats bar at the top of the screen
+      statsBar = document.createElement("div");
+      statsBar.id = "stats-bar";
+      statsBar.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
+        color: white;
+        padding: 8px 15px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        z-index: 1500;
+        border-bottom: 2px solid #00ff00;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      `;
+      document.body.appendChild(statsBar);
+      
+      // Adjust the game log position to accommodate the stats bar
+      const gameLogContainer = document.querySelector('.top-left-ui') as HTMLElement;
+      if (gameLogContainer) {
+        gameLogContainer.style.top = '70px'; // Move down below stats bar
+      }
+    }
+
+    // Create HP bar component
+    const hpPercentage = this.playerStats.maxHp > 0 ? (this.playerStats.hp / this.playerStats.maxHp) * 100 : 0;
+    const hpColor = hpPercentage > 60 ? '#00ff00' : hpPercentage > 30 ? '#ffaa00' : '#ff0000';
+    
+    const hpBar = `
+      <div style="display: flex; flex-direction: column; min-width: 120px;">
+        <div style="font-weight: bold; color: #ff6666; margin-bottom: 2px;">
+          HP: ${this.playerStats.hp}/${this.playerStats.maxHp}
+        </div>
+        <div style="background: #333; height: 8px; border-radius: 4px; border: 1px solid #666;">
+          <div style="
+            background: ${hpColor}; 
+            height: 100%; 
+            width: ${hpPercentage}%; 
+            border-radius: 3px;
+            transition: width 0.3s ease;
+          "></div>
+        </div>
+      </div>
+    `;
+
+    // Create Power bar component (if the player has magical power)
+    let powerBar = '';
+    if (this.playerStats.maxPower > 0) {
+      const powerPercentage = (this.playerStats.power / this.playerStats.maxPower) * 100;
+      powerBar = `
+        <div style="display: flex; flex-direction: column; min-width: 120px;">
+          <div style="font-weight: bold; color: #6666ff; margin-bottom: 2px;">
+            Pw: ${this.playerStats.power}/${this.playerStats.maxPower}
+          </div>
+          <div style="background: #333; height: 8px; border-radius: 4px; border: 1px solid #666;">
+            <div style="
+              background: #6666ff; 
+              height: 100%; 
+              width: ${powerPercentage}%; 
+              border-radius: 3px;
+              transition: width 0.3s ease;
+            "></div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Build the complete stats display
+    statsBar.innerHTML = `
+      <!-- Player Name and Level -->
+      <div style="font-weight: bold; color: #00ff00; min-width: 150px;">
+        ${this.playerStats.name} (Lvl ${this.playerStats.level})
+      </div>
+      
+      <!-- HP Bar -->
+      ${hpBar}
+      
+      <!-- Power Bar (if applicable) -->
+      ${powerBar}
+      
+      <!-- Core Stats -->
+      <div style="display: flex; gap: 15px; font-size: 11px;">
+        <div style="color: #ffaa00;">St:${this.playerStats.strength}</div>
+        <div style="color: #ffaa00;">Dx:${this.playerStats.dexterity}</div>
+        <div style="color: #ffaa00;">Co:${this.playerStats.constitution}</div>
+        <div style="color: #ffaa00;">In:${this.playerStats.intelligence}</div>
+        <div style="color: #ffaa00;">Wi:${this.playerStats.wisdom}</div>
+        <div style="color: #ffaa00;">Ch:${this.playerStats.charisma}</div>
+      </div>
+      
+      <!-- Secondary Stats -->
+      <div style="display: flex; gap: 15px; font-size: 11px;">
+        <div style="color: #aaaaff;">AC:${this.playerStats.armor}</div>
+        <div style="color: #ffff66;">$:${this.playerStats.gold}</div>
+        <div style="color: #66ffff;">T:${this.playerStats.time}</div>
+      </div>
+      
+      <!-- Location and Status -->
+      <div style="display: flex; flex-direction: column; gap: 2px; font-size: 11px; flex: 1; text-align: right;">
+        <div style="color: #cccccc;">${this.playerStats.dungeon} ${this.playerStats.dlevel}</div>
+        <div style="color: #ffaaff;">${this.playerStats.hunger}${this.playerStats.encumbrance ? ' ' + this.playerStats.encumbrance : ''}</div>
+      </div>
+    `;
   }
 
   private updateInventoryDisplay(items: any[]): void {
@@ -1927,6 +2206,26 @@ class Nethack3DEngine {
   }
 
   private handleMouseWheel(event: WheelEvent): void {
+    // Check if the mouse is over the game log element
+    const gameLog = document.getElementById("game-log");
+    if (gameLog) {
+      const rect = gameLog.getBoundingClientRect();
+      const mouseX = event.clientX;
+      const mouseY = event.clientY;
+
+      // If mouse is over the game log, allow normal scrolling and don't zoom camera
+      if (
+        mouseX >= rect.left &&
+        mouseX <= rect.right &&
+        mouseY >= rect.top &&
+        mouseY <= rect.bottom
+      ) {
+        // Don't prevent default - allow the log to scroll naturally
+        return;
+      }
+    }
+
+    // If not over game log, handle camera zooming
     event.preventDefault();
     const zoomSpeed = 1.0;
     const delta = event.deltaY > 0 ? zoomSpeed : -zoomSpeed;

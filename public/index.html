@@ -31,7 +31,7 @@
 
       .top-left-ui {
         position: fixed;
-        top: 10px;
+        top: 70px; /* Moved down to make room for stats bar */
         left: 10px;
         background: rgba(0, 0, 0, 0.8);
         color: #00ff00;
@@ -137,6 +137,41 @@
         border-radius: 5px;
         font-size: 12px;
         line-height: 1.4;
+      }
+
+      /* Stats bar styling */
+      #stats-bar {
+        font-family: 'Courier New', monospace !important;
+      }
+
+      #stats-bar .stat-label {
+        color: #aaaaaa;
+        font-size: 10px;
+      }
+
+      #stats-bar .stat-value {
+        color: #ffffff;
+        font-weight: bold;
+      }
+
+      #stats-bar .hp-bar, #stats-bar .power-bar {
+        background: #333333;
+        border: 1px solid #666666;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      #stats-bar .hp-fill {
+        height: 8px;
+        transition: width 0.3s ease-in-out;
+        border-radius: 3px;
+      }
+
+      #stats-bar .power-fill {
+        height: 8px;
+        background: #6666ff;
+        transition: width 0.3s ease-in-out;
+        border-radius: 3px;
       }
     </style>
   </head>

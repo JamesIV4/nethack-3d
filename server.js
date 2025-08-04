@@ -1184,10 +1184,16 @@ class NetHackSession {
         const [clearWinId] = args;
         console.log(`🗑️ Clearing window ${clearWinId}`);
 
-        // If clearing the map window, we might need to refresh the display
-        if (clearWinId === 2) {
-          // WIN_MAP = 2
-          console.log("Map window cleared - preparing for redraw");
+        // If clearing the map window, clear the 3D scene
+        if (clearWinId === 2 || clearWinId === 3) {
+          // WIN_MAP = 2, but window 3 is also used for map display in some contexts
+          console.log("Map window cleared - clearing 3D scene");
+          this.ws.send(
+            JSON.stringify({
+              type: "clear_scene",
+              message: "Level transition - clearing display",
+            })
+          );
         }
         return 0;
 
@@ -1217,6 +1223,63 @@ class NetHackSession {
           `🖱️ Setting cursor for window ${cursWin} to (${cursX}, ${cursY})`
         );
         return 0;
+
+      case "shim_status_update":
+        const [field, ptr, chg, percent, color, colormask] = args;
+        console.log(`📊 Status update field ${field}, ptr: ${ptr}, chg: ${chg}, percent: ${percent}, color: ${color}, colormask: ${colormask}`);
+        
+        // Handle status field updates (HP, stats, etc.)
+        if (this.ws && this.ws.readyState === 1) {
+          let value = null;
+          
+          // Try different approaches to get the actual value from the pointer
+          if (globalThis.nethackGlobal && globalThis.nethackGlobal.helpers && globalThis.nethackGlobal.helpers.getPointerValue) {
+            try {
+              // For most NetHack status fields, try string first (many are formatted strings)
+              try {
+                value = globalThis.nethackGlobal.helpers.getPointerValue("status_update", ptr, "s");
+                console.log(`📊 Got string value for field ${field}: "${value}"`);
+              } catch (stringError) {
+                // If string fails, try integer
+                try {
+                  value = globalThis.nethackGlobal.helpers.getPointerValue("status_update", ptr, "i");
+                  console.log(`📊 Got integer value for field ${field}: ${value}`);
+                } catch (intError) {
+                  // If both fail, try character
+                  try {
+                    value = globalThis.nethackGlobal.helpers.getPointerValue("status_update", ptr, "c");
+                    console.log(`📊 Got character value for field ${field}: "${value}"`);
+                  } catch (charError) {
+                    console.log(`⚠️ Could not read status pointer for field ${field}. String error:`, stringError.message, "Int error:", intError.message, "Char error:", charError.message);
+                    value = `ptr:${ptr}`; // Fallback to indicate it's a pointer
+                  }
+                }
+              }
+            } catch (error) {
+              console.log(`⚠️ Error accessing getPointerValue for field ${field}:`, error);
+              value = `ptr:${ptr}`;
+            }
+          } else {
+            // Fallback if helpers are not available
+            console.log(`⚠️ nethackGlobal.helpers.getPointerValue not available`);
+            value = `ptr:${ptr}`;
+          }
+          
+          this.ws.send(
+            JSON.stringify({
+              type: "status_update",
+              field: field,
+              value: value,
+              ptr: ptr,
+              chg: chg,
+              percent: percent,
+              color: color,
+              colormask: colormask,
+            })
+          );
+        }
+        return 0;
+
       default:
         console.log(`Unknown callback: ${name}`, args);
         return 0;
