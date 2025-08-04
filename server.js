@@ -18,6 +18,10 @@ class NetHackSession {
     this.latestInput = null;
     this.waitingForInput = false;
 
+    // Add cooldown for position requests
+    this.lastInputTime = 0;
+    this.inputCooldown = 100; // 100ms cooldown
+
     this.initializeNetHack();
   }
 
@@ -102,16 +106,8 @@ class NetHackSession {
             );
             console.log("Graphics callback set up successfully");
 
-            // Start the main NetHack loop - this will naturally pause when input is needed
-            console.log("Starting NetHack main loop...");
-            setTimeout(async () => {
-              try {
-                await Module.ccall("main", "number", [], [], { async: true });
-                console.log("NetHack main loop completed successfully");
-              } catch (error) {
-                console.log("NetHack main loop error:", error);
-              }
-            }, 100);
+            // Don't call main() automatically - wait for it to be called naturally
+            console.log("Waiting for NetHack to start naturally...");
           } catch (error) {
             console.error("Error setting up NetHack:", error);
           }
@@ -163,6 +159,7 @@ class NetHackSession {
           `🤔 Y/N Question: "${question}" choices: "${choices}" default: ${defaultChoice}`
         );
 
+        // Send question to web client with available menu items
         if (this.ws && this.ws.readyState === 1) {
           this.ws.send(
             JSON.stringify({
@@ -175,26 +172,27 @@ class NetHackSession {
           );
         }
 
-        // If we have input, use it, otherwise return default
-        if (this.latestInput) {
-          const input = this.latestInput;
-          this.latestInput = null;
-          console.log(`Using input for question: ${input}`);
-          this.currentMenuItems = [];
-          return input.charCodeAt(0);
-        }
+        // For now, return default but we'll improve this later
+        const defaultChar = defaultChoice || "n";
+        console.log(`Returning default choice: ${defaultChar}`);
 
-        // Return default choice or 'y' if no default
-        const defaultReturn = defaultChoice || "y";
-        console.log(`No input, using default: ${defaultReturn}`);
+        // Clear menu items after use
         this.currentMenuItems = [];
-        return defaultReturn.charCodeAt(0);
+
+        return defaultChar.charCodeAt(0);
 
       case "shim_nh_poskey":
         const [xPtr, yPtr, modPtr] = args;
-        console.log(
-          `🖱️ Position key request at pointers: ${xPtr}, ${yPtr}, ${modPtr}`
-        );
+        const now = Date.now();
+
+        // Prevent infinite loops with cooldown
+        if (now - this.lastInputTime < this.inputCooldown) {
+          console.log("Position request on cooldown, returning Escape");
+          return 27; // ESC key
+        }
+
+        this.lastInputTime = now;
+        console.log("NetHack requesting position key");
 
         if (this.latestInput) {
           const input = this.latestInput;
@@ -203,9 +201,9 @@ class NetHackSession {
           return processKey(input);
         }
 
-        // Return a movement command as default
-        console.log("No input for position, returning right movement");
-        return "l".charCodeAt(0);
+        // Return ESC to cancel position requests during character creation
+        console.log("No input for position, returning ESC");
+        return 27;
 
       case "shim_init_nhwindows":
         console.log("Initializing NetHack windows");
@@ -253,6 +251,8 @@ class NetHackSession {
         ] = args;
         const menuChar = String.fromCharCode(accelerator || 32);
         console.log(`📋 MENU ITEM: "${menuStr}" (key: ${menuChar})`);
+
+        // Store menu item for current question
         if (this.currentWindow === menuWinid && menuStr && menuChar.trim()) {
           this.currentMenuItems.push({
             text: menuStr,
@@ -261,6 +261,8 @@ class NetHackSession {
             glyph: menuGlyph,
           });
         }
+
+        // Send menu item to web client
         if (this.ws && this.ws.readyState === 1) {
           this.ws.send(
             JSON.stringify({
@@ -269,9 +271,11 @@ class NetHackSession {
               accelerator: menuChar,
               window: menuWinid,
               glyph: menuGlyph,
+              menuItems: this.currentMenuItems,
             })
           );
         }
+
         return 0;
       case "shim_putstr":
         const [win, textAttr, textStr] = args;
@@ -388,26 +392,8 @@ class NetHackSession {
           `📋 Menu selection request for window ${menuSelectWinid}, how: ${menuSelectHow}, ptr: ${menuPtr}`
         );
 
-        if (this.latestInput) {
-          const input = this.latestInput;
-          this.latestInput = null;
-          console.log(`Using input for menu selection: ${input}`);
-          const selectedItem = this.currentMenuItems.find(
-            (item) =>
-              item.accelerator === input ||
-              item.accelerator === input.toLowerCase()
-          );
-          if (selectedItem) {
-            console.log(`Selected menu item: ${selectedItem.text}`);
-            return input.charCodeAt(0);
-          }
-        }
-
-        if (menuSelectHow === 1) {
-          console.log("Character selection - returning 0 for now");
-          return 0;
-        }
-        console.log("Returning 0 (no selection) for menu");
+        // Try returning 0 (no selection) to avoid segfault
+        console.log("Returning 0 (no selection) to skip this step");
         return 0;
 
       case "shim_askname":
