@@ -7,6 +7,8 @@ class NetHackSession {
   constructor(ws) {
     this.ws = ws;
     this.nethackInstance = null;
+    this.nethackModule = null;
+    this.nethackStarted = false;
     this.gameMap = new Map();
     this.playerPosition = { x: 0, y: 0 };
     this.gameMessages = [];
@@ -29,7 +31,20 @@ class NetHackSession {
   handleClientInput(input) {
     console.log("Received client input:", input);
     this.latestInput = input;
-    // NetHack will naturally pick this up when it needs input
+    
+    // If this is the first input and NetHack hasn't started yet, start it
+    if (!this.nethackStarted && this.nethackModule) {
+      this.nethackStarted = true;
+      console.log("Starting NetHack main loop with first input...");
+      setTimeout(async () => {
+        try {
+          await this.nethackModule.ccall("main", "number", [], [], { async: true });
+          console.log("NetHack main loop completed successfully");
+        } catch (error) {
+          console.log("NetHack main loop error:", error);
+        }
+      }, 10);
+    }
   }
 
   async initializeNetHack() {
@@ -149,9 +164,9 @@ class NetHackSession {
         }
 
         // NetHack is asking for input but we don't have any
-        // Since we're using Asyncify, we can just return a default and NetHack will call again
-        console.log("No input available, returning space as default");
-        return 32; // space
+        // Instead of space, return 0 to indicate no input yet
+        console.log("No input available, returning 0 (no event)");
+        return 0;
 
       case "shim_yn_function":
         const [question, choices, defaultChoice] = args;
@@ -183,15 +198,6 @@ class NetHackSession {
 
       case "shim_nh_poskey":
         const [xPtr, yPtr, modPtr] = args;
-        const now = Date.now();
-
-        // Prevent infinite loops with cooldown
-        if (now - this.lastInputTime < this.inputCooldown) {
-          console.log("Position request on cooldown, returning Escape");
-          return 27; // ESC key
-        }
-
-        this.lastInputTime = now;
         console.log("NetHack requesting position key");
 
         if (this.latestInput) {
@@ -201,9 +207,9 @@ class NetHackSession {
           return processKey(input);
         }
 
-        // Return ESC to cancel position requests during character creation
-        console.log("No input for position, returning ESC");
-        return 27;
+        // Return 0 to indicate no position input available yet
+        console.log("No input for position, returning 0 (no position)");
+        return 0;
 
       case "shim_init_nhwindows":
         console.log("Initializing NetHack windows");
@@ -417,6 +423,38 @@ class NetHackSession {
 
         console.log("No name provided, using default");
         return "Player";
+      case "shim_cliparound":
+        const [clipX, clipY] = args;
+        console.log(`NetHack clipping around position (${clipX}, ${clipY})`);
+        return 0;
+
+      case "shim_curs":
+        const [cursWin, cursX, cursY] = args;
+        console.log(`NetHack setting cursor in window ${cursWin} to (${cursX}, ${cursY})`);
+        return 0;
+
+      case "shim_clear_nhwindow":
+        const [clearWin] = args;
+        console.log(`NetHack clearing window ${clearWin}`);
+        return 0;
+
+      case "shim_mark_synch":
+        console.log("NetHack marking synchronization");
+        return 0;
+
+      case "shim_getmsghistory":
+        const [init] = args;
+        console.log(`Getting message history, init: ${init}`);
+        // Return empty string for message history
+        return "";
+
+      case "shim_putmsghistory":
+        const [msg, is_restoring] = args;
+        console.log(
+          `Putting message history: "${msg}", restoring: ${is_restoring}`
+        );
+        return 0;
+
       case "shim_exit_nhwindows":
         console.log("Exiting NetHack windows");
         return 0;
