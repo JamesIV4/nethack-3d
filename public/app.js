@@ -26211,18 +26211,24 @@ void main() {
       if (fieldName && value !== null && !value.startsWith("ptr:")) {
         console.log(`\u{1F4CA} Updating ${fieldName}: "${value}"`);
         let parsedValue = value;
-        if (fieldName.match(/^(hp|maxhp|power|maxpower|level|experience|time|armor|score|gold|dlevel)$/)) {
+        if (fieldName.match(
+          /^(hp|maxhp|power|maxpower|level|experience|time|armor|score|gold|dlevel)$/
+        )) {
           if (typeof value === "string") {
             const cleanValue = value.trim();
             const match = cleanValue.match(/^(\d+)/);
             if (match) {
               parsedValue = parseInt(match[1], 10);
             } else {
-              console.log(`\u26A0\uFE0F Could not parse numeric value for ${fieldName}: "${value}"`);
+              console.log(
+                `\u26A0\uFE0F Could not parse numeric value for ${fieldName}: "${value}"`
+              );
               return;
             }
           }
-        } else if (fieldName.match(/^(strength|dexterity|constitution|intelligence|wisdom|charisma)$/)) {
+        } else if (fieldName.match(
+          /^(strength|dexterity|constitution|intelligence|wisdom|charisma)$/
+        )) {
           if (typeof value === "string") {
             const cleanValue = value.trim();
             if (fieldName === "strength") {
@@ -26238,7 +26244,9 @@ void main() {
               if (attrMatch) {
                 parsedValue = parseInt(attrMatch[1], 10);
               } else {
-                console.log(`\u26A0\uFE0F Could not parse attribute value for ${fieldName}: "${value}"`);
+                console.log(
+                  `\u26A0\uFE0F Could not parse attribute value for ${fieldName}: "${value}"`
+                );
                 return;
               }
             }
@@ -26259,7 +26267,9 @@ void main() {
       } else if (value && value.startsWith("ptr:")) {
         console.log(`\u{1F4CA} Skipping pointer value for field ${field}: ${value}`);
       } else {
-        console.log(`\u{1F4CA} Unknown status field ${field} or null/invalid value: "${value}"`);
+        console.log(
+          `\u{1F4CA} Unknown status field ${field} or null/invalid value: "${value}"`
+        );
       }
     }
     updateStatsDisplay() {
@@ -26272,7 +26282,6 @@ void main() {
         top: 0;
         left: 0;
         right: 0;
-        height: 60px;
         background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
         color: white;
         padding: 8px 15px;
@@ -26286,7 +26295,9 @@ void main() {
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
       `;
         document.body.appendChild(statsBar);
-        const gameLogContainer = document.querySelector(".top-left-ui");
+        const gameLogContainer = document.querySelector(
+          ".top-left-ui"
+        );
         if (gameLogContainer) {
           gameLogContainer.style.top = "70px";
         }

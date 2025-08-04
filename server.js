@@ -1232,32 +1232,52 @@ class NetHackSession {
         if (this.ws && this.ws.readyState === 1) {
           let value = null;
           
-          // Try different approaches to get the actual value from the pointer
+          // Map of NetHack status fields to their expected data types
+          // Based on NetHack source code - most numeric fields are integers, some are strings
+          const fieldTypes = {
+            0: "s",  // name - string
+            1: "i",  // strength - integer (may be formatted like "18/01" but stored as int)
+            2: "i",  // dexterity - integer
+            3: "i",  // constitution - integer  
+            4: "i",  // intelligence - integer
+            5: "i",  // wisdom - integer
+            6: "i",  // charisma - integer
+            7: "s",  // alignment - string
+            8: "i",  // score - integer
+            9: "i",  // hp - integer
+            10: "i", // maxhp - integer
+            11: "i", // power - integer
+            12: "i", // maxpower - integer
+            13: "i", // armor - integer
+            14: "i", // level - integer
+            15: "i", // experience - integer
+            16: "i", // time - integer
+            17: "s", // hunger - string
+            18: "s", // encumbrance - string
+            19: "s", // dungeon - string
+            20: "i", // dlevel - integer
+            21: "i", // gold - integer
+          };
+          
+          const expectedType = fieldTypes[field] || "i"; // Default to integer
+          
+          // Try to get the actual value from the pointer using the correct type
           if (globalThis.nethackGlobal && globalThis.nethackGlobal.helpers && globalThis.nethackGlobal.helpers.getPointerValue) {
             try {
-              // For most NetHack status fields, try string first (many are formatted strings)
-              try {
-                value = globalThis.nethackGlobal.helpers.getPointerValue("status_update", ptr, "s");
-                console.log(`📊 Got string value for field ${field}: "${value}"`);
-              } catch (stringError) {
-                // If string fails, try integer
-                try {
-                  value = globalThis.nethackGlobal.helpers.getPointerValue("status_update", ptr, "i");
-                  console.log(`📊 Got integer value for field ${field}: ${value}`);
-                } catch (intError) {
-                  // If both fail, try character
-                  try {
-                    value = globalThis.nethackGlobal.helpers.getPointerValue("status_update", ptr, "c");
-                    console.log(`📊 Got character value for field ${field}: "${value}"`);
-                  } catch (charError) {
-                    console.log(`⚠️ Could not read status pointer for field ${field}. String error:`, stringError.message, "Int error:", intError.message, "Char error:", charError.message);
-                    value = `ptr:${ptr}`; // Fallback to indicate it's a pointer
-                  }
-                }
-              }
+              value = globalThis.nethackGlobal.helpers.getPointerValue("status_update", ptr, expectedType);
+              console.log(`📊 Got ${expectedType === 'i' ? 'integer' : 'string'} value for field ${field}: ${value}`);
             } catch (error) {
-              console.log(`⚠️ Error accessing getPointerValue for field ${field}:`, error);
-              value = `ptr:${ptr}`;
+              console.log(`⚠️ Could not read status pointer for field ${field} as ${expectedType}:`, error.message);
+              
+              // Fallback: try the other type
+              const fallbackType = expectedType === "i" ? "s" : "i";
+              try {
+                value = globalThis.nethackGlobal.helpers.getPointerValue("status_update", ptr, fallbackType);
+                console.log(`📊 Fallback: got ${fallbackType === 'i' ? 'integer' : 'string'} value for field ${field}: ${value}`);
+              } catch (fallbackError) {
+                console.log(`⚠️ Fallback also failed for field ${field}:`, fallbackError.message);
+                value = `ptr:${ptr}`; // Last resort fallback
+              }
             }
           } else {
             // Fallback if helpers are not available

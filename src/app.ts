@@ -888,21 +888,25 @@ class Nethack3DEngine {
     }
   }
 
-  private updatePlayerStats(field: number, value: string | null, data: any): void {
+  private updatePlayerStats(
+    field: number,
+    value: string | null,
+    data: any
+  ): void {
     // NetHack status field mapping (based on NetHack source code)
     // Reference: https://github.com/NetHack/NetHack/blob/NetHack-3.6/include/botl.h
     const statusFields: { [key: number]: string } = {
       0: "name",
-      1: "strength", 
+      1: "strength",
       2: "dexterity",
-      3: "constitution", 
+      3: "constitution",
       4: "intelligence",
       5: "wisdom",
       6: "charisma",
       7: "alignment",
       8: "score",
       9: "hp",
-      10: "maxhp", 
+      10: "maxhp",
       11: "power",
       12: "maxpower",
       13: "armor",
@@ -917,38 +921,48 @@ class Nethack3DEngine {
     };
 
     const fieldName = statusFields[field];
-    
-    if (fieldName && value !== null && !value.startsWith('ptr:')) {
+
+    if (fieldName && value !== null && !value.startsWith("ptr:")) {
       console.log(`📊 Updating ${fieldName}: "${value}"`);
-      
+
       // Parse values intelligently based on field type and content
       let parsedValue: any = value;
-      
+
       // Handle numeric fields
-      if (fieldName.match(/^(hp|maxhp|power|maxpower|level|experience|time|armor|score|gold|dlevel)$/)) {
+      if (
+        fieldName.match(
+          /^(hp|maxhp|power|maxpower|level|experience|time|armor|score|gold|dlevel)$/
+        )
+      ) {
         // For pure numbers, try to parse directly
-        if (typeof value === 'string') {
+        if (typeof value === "string") {
           // Remove any leading/trailing whitespace
           const cleanValue = value.trim();
-          
+
           // Try to extract a number from the string
           const match = cleanValue.match(/^(\d+)/);
           if (match) {
             parsedValue = parseInt(match[1], 10);
           } else {
-            console.log(`⚠️ Could not parse numeric value for ${fieldName}: "${value}"`);
+            console.log(
+              `⚠️ Could not parse numeric value for ${fieldName}: "${value}"`
+            );
             return; // Skip update if we can't parse the number
           }
         }
       }
-      
+
       // Handle attribute fields (strength can be like "18/01")
-      else if (fieldName.match(/^(strength|dexterity|constitution|intelligence|wisdom|charisma)$/)) {
-        if (typeof value === 'string') {
+      else if (
+        fieldName.match(
+          /^(strength|dexterity|constitution|intelligence|wisdom|charisma)$/
+        )
+      ) {
+        if (typeof value === "string") {
           const cleanValue = value.trim();
-          
+
           // Handle special strength format like "18/01" or just "18"
-          if (fieldName === 'strength') {
+          if (fieldName === "strength") {
             const strengthMatch = cleanValue.match(/^(\d+)/);
             if (strengthMatch) {
               parsedValue = parseInt(strengthMatch[1], 10);
@@ -962,19 +976,23 @@ class Nethack3DEngine {
             if (attrMatch) {
               parsedValue = parseInt(attrMatch[1], 10);
             } else {
-              console.log(`⚠️ Could not parse attribute value for ${fieldName}: "${value}"`);
+              console.log(
+                `⚠️ Could not parse attribute value for ${fieldName}: "${value}"`
+              );
               return;
             }
           }
         }
       }
-      
+
       // Handle string fields (keep as-is)
-      else if (fieldName.match(/^(name|alignment|hunger|encumbrance|dungeon)$/)) {
+      else if (
+        fieldName.match(/^(name|alignment|hunger|encumbrance|dungeon)$/)
+      ) {
         // Keep as string, just trim whitespace
-        parsedValue = typeof value === 'string' ? value.trim() : String(value);
+        parsedValue = typeof value === "string" ? value.trim() : String(value);
       }
-      
+
       // Update the stats object
       if (fieldName === "maxhp") {
         this.playerStats.maxHp = parsedValue;
@@ -985,13 +1003,15 @@ class Nethack3DEngine {
       } else {
         (this.playerStats as any)[fieldName] = parsedValue;
       }
-      
+
       // Update the stats display
       this.updateStatsDisplay();
-    } else if (value && value.startsWith('ptr:')) {
+    } else if (value && value.startsWith("ptr:")) {
       console.log(`📊 Skipping pointer value for field ${field}: ${value}`);
     } else {
-      console.log(`📊 Unknown status field ${field} or null/invalid value: "${value}"`);
+      console.log(
+        `📊 Unknown status field ${field} or null/invalid value: "${value}"`
+      );
     }
   }
 
@@ -1007,7 +1027,6 @@ class Nethack3DEngine {
         top: 0;
         left: 0;
         right: 0;
-        height: 60px;
         background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
         color: white;
         padding: 8px 15px;
@@ -1021,18 +1040,24 @@ class Nethack3DEngine {
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
       `;
       document.body.appendChild(statsBar);
-      
+
       // Adjust the game log position to accommodate the stats bar
-      const gameLogContainer = document.querySelector('.top-left-ui') as HTMLElement;
+      const gameLogContainer = document.querySelector(
+        ".top-left-ui"
+      ) as HTMLElement;
       if (gameLogContainer) {
-        gameLogContainer.style.top = '70px'; // Move down below stats bar
+        gameLogContainer.style.top = "70px"; // Move down below stats bar
       }
     }
 
     // Create HP bar component
-    const hpPercentage = this.playerStats.maxHp > 0 ? (this.playerStats.hp / this.playerStats.maxHp) * 100 : 0;
-    const hpColor = hpPercentage > 60 ? '#00ff00' : hpPercentage > 30 ? '#ffaa00' : '#ff0000';
-    
+    const hpPercentage =
+      this.playerStats.maxHp > 0
+        ? (this.playerStats.hp / this.playerStats.maxHp) * 100
+        : 0;
+    const hpColor =
+      hpPercentage > 60 ? "#00ff00" : hpPercentage > 30 ? "#ffaa00" : "#ff0000";
+
     const hpBar = `
       <div style="display: flex; flex-direction: column; min-width: 120px;">
         <div style="font-weight: bold; color: #ff6666; margin-bottom: 2px;">
@@ -1051,9 +1076,10 @@ class Nethack3DEngine {
     `;
 
     // Create Power bar component (if the player has magical power)
-    let powerBar = '';
+    let powerBar = "";
     if (this.playerStats.maxPower > 0) {
-      const powerPercentage = (this.playerStats.power / this.playerStats.maxPower) * 100;
+      const powerPercentage =
+        (this.playerStats.power / this.playerStats.maxPower) * 100;
       powerBar = `
         <div style="display: flex; flex-direction: column; min-width: 120px;">
           <div style="font-weight: bold; color: #6666ff; margin-bottom: 2px;">
@@ -1104,8 +1130,12 @@ class Nethack3DEngine {
       
       <!-- Location and Status -->
       <div style="display: flex; flex-direction: column; gap: 2px; font-size: 11px; flex: 1; text-align: right;">
-        <div style="color: #cccccc;">${this.playerStats.dungeon} ${this.playerStats.dlevel}</div>
-        <div style="color: #ffaaff;">${this.playerStats.hunger}${this.playerStats.encumbrance ? ' ' + this.playerStats.encumbrance : ''}</div>
+        <div style="color: #cccccc;">${this.playerStats.dungeon} ${
+      this.playerStats.dlevel
+    }</div>
+        <div style="color: #ffaaff;">${this.playerStats.hunger}${
+      this.playerStats.encumbrance ? " " + this.playerStats.encumbrance : ""
+    }</div>
       </div>
     `;
   }
