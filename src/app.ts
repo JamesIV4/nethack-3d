@@ -909,65 +909,20 @@ class Nethack3DEngine {
 
     // Add menu items if available
     if (menuItems && menuItems.length > 0) {
-      menuItems.forEach((item) => {
-        // Check if this is a category header
-        if (
-          item.isCategory ||
-          !item.accelerator ||
-          item.accelerator.trim() === ""
-        ) {
-          // This is a category header
-          const categoryHeader = document.createElement("div");
-          categoryHeader.style.cssText = `
-            font-size: 14px;
-            font-weight: bold;
-            color: #ffff00;
-            margin: 15px 0 5px 0;
-            text-align: left;
-            border-bottom: 1px solid #444;
-            padding-bottom: 3px;
-          `;
-          categoryHeader.textContent = item.text;
-          questionDialog.appendChild(categoryHeader);
-        } else {
-          // This is a selectable item
-          const menuButton = document.createElement("button");
-          menuButton.style.cssText = `
-            display: block;
-            width: 100%;
-            margin: 3px 0;
-            padding: 8px;
-            background: #333;
-            color: white;
-            border: 1px solid #666;
-            border-radius: 3px;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
-            text-align: left;
-            line-height: 1.3;
-          `;
+      // Check if this is a multi-pickup dialog
+      const isPickupDialog =
+        question &&
+        (question.toLowerCase().includes("pick up what") ||
+          question.toLowerCase().includes("pick up") ||
+          question.toLowerCase().includes("what do you want to pick up"));
 
-          // Format the button text with key and description
-          const keyPart = document.createElement("span");
-          keyPart.style.cssText = `
-            color: #00ff00;
-            font-weight: bold;
-          `;
-          keyPart.textContent = `${item.accelerator}) `;
-
-          const textPart = document.createElement("span");
-          textPart.textContent = item.text;
-
-          menuButton.appendChild(keyPart);
-          menuButton.appendChild(textPart);
-
-          menuButton.onclick = () => {
-            this.sendInput(item.accelerator);
-            this.hideQuestion();
-          };
-          questionDialog.appendChild(menuButton);
-        }
-      });
+      if (isPickupDialog) {
+        // Create multi-selection pickup dialog
+        this.createPickupDialog(questionDialog, menuItems, question);
+      } else {
+        // Create standard single-selection menu
+        this.createStandardMenu(questionDialog, menuItems);
+      }
     } else {
       // Add choice buttons for simple y/n questions
       const choiceContainer = document.createElement("div");
@@ -1448,7 +1403,210 @@ class Nethack3DEngine {
     if (questionDialog) {
       questionDialog.style.display = "none";
       questionDialog.innerHTML = ""; // Clear content to prevent retention
+      // Clear pickup dialog flags
+      (questionDialog as any).isPickupDialog = false;
+      (questionDialog as any).menuItems = null;
     }
+  }
+
+  private createPickupDialog(
+    questionDialog: HTMLElement,
+    menuItems: any[],
+    question: string
+  ): void {
+    // Track selected items for multi-pickup
+    const selectedItems = new Set<string>();
+
+    menuItems.forEach((item) => {
+      if (
+        item.isCategory ||
+        !item.accelerator ||
+        item.accelerator.trim() === ""
+      ) {
+        // Category header
+        const categoryHeader = document.createElement("div");
+        categoryHeader.style.cssText = `
+          font-size: 14px;
+          font-weight: bold;
+          color: #ffff00;
+          margin: 15px 0 5px 0;
+          text-align: left;
+          border-bottom: 1px solid #444;
+          padding-bottom: 3px;
+        `;
+        categoryHeader.textContent = item.text;
+        questionDialog.appendChild(categoryHeader);
+      } else {
+        // Selectable item with checkbox
+        const itemContainer = document.createElement("div");
+        itemContainer.style.cssText = `
+          display: flex;
+          align-items: center;
+          margin: 3px 0;
+          padding: 8px;
+          background: #333;
+          border: 1px solid #666;
+          border-radius: 3px;
+          cursor: pointer;
+          font-family: 'Courier New', monospace;
+          line-height: 1.3;
+        `;
+
+        // Checkbox
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = `pickup-${item.accelerator}`;
+        checkbox.style.cssText = `
+          margin-right: 8px;
+          transform: scale(1.2);
+        `;
+
+        // Key label
+        const keyPart = document.createElement("span");
+        keyPart.style.cssText = `
+          color: #00ff00;
+          font-weight: bold;
+          margin-right: 8px;
+          min-width: 30px;
+        `;
+        keyPart.textContent = `${item.accelerator})`;
+
+        // Item text
+        const textPart = document.createElement("span");
+        textPart.style.cssText = `
+          color: white;
+          flex: 1;
+        `;
+        textPart.textContent = item.text;
+
+        // Toggle function
+        const toggleItem = () => {
+          checkbox.checked = !checkbox.checked;
+          if (checkbox.checked) {
+            selectedItems.add(item.accelerator);
+            itemContainer.style.backgroundColor = "#444";
+          } else {
+            selectedItems.delete(item.accelerator);
+            itemContainer.style.backgroundColor = "#333";
+          }
+          // Send the key to NetHack to keep game state in sync
+          this.sendInput(item.accelerator);
+        };
+
+        // Click handlers
+        itemContainer.onclick = (e) => {
+          e.preventDefault();
+          toggleItem();
+        };
+
+        checkbox.onchange = (e) => {
+          e.stopPropagation();
+          // Checkbox state already changed, just update selection tracking
+          if (checkbox.checked) {
+            selectedItems.add(item.accelerator);
+            itemContainer.style.backgroundColor = "#444";
+          } else {
+            selectedItems.delete(item.accelerator);
+            itemContainer.style.backgroundColor = "#333";
+          }
+          // Send the key to NetHack to keep game state in sync
+          this.sendInput(item.accelerator);
+        };
+
+        // Store toggle function for keyboard access
+        (itemContainer as any).toggleItem = toggleItem;
+        (itemContainer as any).accelerator = item.accelerator;
+
+        itemContainer.appendChild(checkbox);
+        itemContainer.appendChild(keyPart);
+        itemContainer.appendChild(textPart);
+        questionDialog.appendChild(itemContainer);
+      }
+    });
+
+    // Add confirmation instruction
+    const confirmInstruction = document.createElement("div");
+    confirmInstruction.style.cssText = `
+      margin-top: 15px;
+      padding: 10px;
+      background: rgba(0, 255, 0, 0.1);
+      border: 1px solid #00ff00;
+      border-radius: 3px;
+      text-align: center;
+      color: #00ff00;
+      font-weight: bold;
+    `;
+    confirmInstruction.textContent =
+      "Press ENTER to confirm pickup, or ESC to cancel";
+    questionDialog.appendChild(confirmInstruction);
+
+    // Store that this is a pickup dialog for keyboard handling
+    (questionDialog as any).isPickupDialog = true;
+    (questionDialog as any).menuItems = menuItems;
+  }
+
+  private createStandardMenu(
+    questionDialog: HTMLElement,
+    menuItems: any[]
+  ): void {
+    menuItems.forEach((item) => {
+      if (
+        item.isCategory ||
+        !item.accelerator ||
+        item.accelerator.trim() === ""
+      ) {
+        // Category header
+        const categoryHeader = document.createElement("div");
+        categoryHeader.style.cssText = `
+          font-size: 14px;
+          font-weight: bold;
+          color: #ffff00;
+          margin: 15px 0 5px 0;
+          text-align: left;
+          border-bottom: 1px solid #444;
+          padding-bottom: 3px;
+        `;
+        categoryHeader.textContent = item.text;
+        questionDialog.appendChild(categoryHeader);
+      } else {
+        // Standard single-selection button
+        const menuButton = document.createElement("button");
+        menuButton.style.cssText = `
+          display: block;
+          width: 100%;
+          margin: 3px 0;
+          padding: 8px;
+          background: #333;
+          color: white;
+          border: 1px solid #666;
+          border-radius: 3px;
+          cursor: pointer;
+          font-family: 'Courier New', monospace;
+          text-align: left;
+          line-height: 1.3;
+        `;
+
+        // Format the button text with key and description
+        const keyPart = document.createElement("span");
+        keyPart.style.cssText = `
+          color: #00ff00;
+          font-weight: bold;
+        `;
+        keyPart.textContent = `${item.accelerator}) `;
+
+        const textPart = document.createElement("span");
+        textPart.textContent = item.text;
+
+        menuButton.appendChild(keyPart);
+        menuButton.appendChild(textPart);
+
+        menuButton.onclick = () => {
+          this.sendInput(item.accelerator);
+          this.hideQuestion();
+        };
+        questionDialog.appendChild(menuButton);
+      }
+    });
   }
 
   private sendInput(input: string): void {
@@ -1681,9 +1839,48 @@ class Nethack3DEngine {
         return; // Don't send other keys when in direction question mode
       }
 
-      // For other questions, send the key directly to answer the question
-      this.sendInput(event.key);
-      this.hideQuestion(); // Close the question dialog after sending input
+      // For other questions, handle pickup dialogs specially
+      const questionDialog = document.getElementById("question-dialog");
+      if (questionDialog && (questionDialog as any).isPickupDialog) {
+        // This is a pickup dialog - handle multi-selection
+        if (event.key === "Enter") {
+          // Confirm pickup and close dialog
+          this.sendInput("Enter");
+          this.hideQuestion();
+        } else if (event.key === "Escape") {
+          // Cancel pickup
+          this.sendInput("Escape");
+          this.hideQuestion();
+        } else {
+          // Toggle item selection - find matching item and toggle it
+          const menuItems = (questionDialog as any).menuItems || [];
+          const matchingItem = menuItems.find(
+            (item: any) => item.accelerator === event.key && !item.isCategory
+          );
+
+          if (matchingItem) {
+            // Find the corresponding item container and toggle it
+            const containers = questionDialog.querySelectorAll(
+              'div[style*="display: flex"]'
+            );
+            containers.forEach((container: Element) => {
+              if (
+                (container as any).accelerator === event.key &&
+                (container as any).toggleItem
+              ) {
+                (container as any).toggleItem();
+              }
+            });
+          } else {
+            // Send the key anyway in case it's a valid NetHack command
+            this.sendInput(event.key);
+          }
+        }
+      } else {
+        // Standard single-selection dialog - send key and close
+        this.sendInput(event.key);
+        this.hideQuestion();
+      }
       return; // Don't allow normal movement during questions
     }
 

@@ -15,6 +15,13 @@ class NetHackSession {
     this.hasShownCharacterSelection = false;
     this.lastQuestionText = null; // Store the last question for menu expansion
 
+    // Multi-pickup selection tracking
+    this.menuSelections = new Map(); // Track selected items: key=menuChar, value={menuChar, originalAccelerator, menuIndex}
+    this.isInMultiPickup = false;
+    this.waitingForMenuSelection = false;
+    this.menuSelectionResolver = null;
+    this.multiPickupReadyToConfirm = false;
+
     // Simplified input handling with async support
     this.latestInput = null;
     this.waitingForInput = false;
@@ -36,6 +43,104 @@ class NetHackSession {
     // Store the input for potential reuse
     this.latestInput = input;
     this.lastInputTime = Date.now();
+
+    // Track multi-pickup selections
+    if (this.isInMultiPickup && input.match(/^[a-zA-Z]$/)) {
+      // Find the menu item for this accelerator
+      const menuItem = this.currentMenuItems.find(
+        (item) => item.accelerator === input && !item.isCategory
+      );
+      if (menuItem) {
+        if (this.menuSelections.has(input)) {
+          // Deselect item
+          this.menuSelections.delete(input);
+          console.log(
+            `📋 Deselected item: ${input} (${menuItem.text}). Current selections:`,
+            Array.from(this.menuSelections.keys())
+          );
+        } else {
+          // Select item - store complete information
+          this.menuSelections.set(input, {
+            menuChar: input,
+            originalAccelerator: menuItem.originalAccelerator,
+            menuIndex: menuItem.menuIndex,
+            text: menuItem.text,
+          });
+          console.log(
+            `📋 Selected item: ${input} (${menuItem.text}). Current selections:`,
+            Array.from(this.menuSelections.keys())
+          );
+        }
+      } else {
+        console.log(
+          `📋 Warning: No menu item found for accelerator '${input}'`
+        );
+      }
+      // DON'T resolve the input promise for individual item selections in multi-pickup
+      console.log("📋 Multi-pickup item selection - not resolving promise yet");
+      return;
+    } else if (
+      this.isInMultiPickup &&
+      (input === "Enter" || input === "\r" || input === "\n")
+    ) {
+      // Confirm multi-pickup
+      const selectedItems = Array.from(this.menuSelections.values()).map(
+        (item) => `${item.menuChar}:${item.text}`
+      );
+      console.log(`📋 Confirming multi-pickup with selections:`, selectedItems);
+
+      // Resolve the menu selection promise if waiting
+      if (this.waitingForMenuSelection && this.menuSelectionResolver) {
+        console.log("🎮 Resolving menu selection with selection count");
+        this.waitingForMenuSelection = false;
+        const resolver = this.menuSelectionResolver;
+        this.menuSelectionResolver = null;
+        const selectionCount = this.menuSelections.size;
+        this.isInMultiPickup = false; // Clear it here when we resolve
+        resolver(selectionCount);
+        return;
+      }
+
+      // If no menu selection is waiting, mark that we're ready to confirm
+      // Also resolve the input promise that's waiting in shim_end_menu
+      console.log("📋 Multi-pickup ready to confirm - resolving input promise");
+      this.multiPickupReadyToConfirm = true;
+
+      // Resolve the general input promise if waiting (from shim_end_menu)
+      if (this.waitingForInput && this.inputResolver) {
+        console.log(
+          "🎮 Resolving waiting input promise for multi-pickup confirmation"
+        );
+        this.waitingForInput = false;
+        const resolver = this.inputResolver;
+        this.inputResolver = null;
+        resolver(this.processKey("Enter"));
+        return;
+      }
+      return;
+    } else if (this.isInMultiPickup && input === "Escape") {
+      // Cancel multi-pickup
+      console.log(`📋 Cancelling multi-pickup`);
+      this.menuSelections.clear();
+      this.multiPickupReadyToConfirm = false;
+
+      // Resolve the menu selection promise with 0 (no selection)
+      if (this.waitingForMenuSelection && this.menuSelectionResolver) {
+        console.log("🎮 Resolving menu selection cancellation with 0");
+        this.waitingForMenuSelection = false;
+        const resolver = this.menuSelectionResolver;
+        this.menuSelectionResolver = null;
+        this.isInMultiPickup = false; // Clear it here when we resolve
+        resolver(0);
+        return;
+      }
+      // If no menu selection is waiting, just clear and store the input
+      this.isInMultiPickup = false;
+      console.log(
+        "📋 No menu selection waiting - storing Escape for later use"
+      );
+      return;
+    }
 
     // If we're waiting for general input, resolve the promise immediately
     if (this.waitingForInput && this.inputResolver) {
@@ -418,6 +523,18 @@ class NetHackSession {
         this.currentWindow = menuWinId;
         this.lastQuestionText = null; // Clear any previous question text when starting new menu
 
+        // Reset selection tracking for new menus
+        this.menuSelections.clear();
+        this.isInMultiPickup = false;
+        this.multiPickupReadyToConfirm = false;
+
+        // Also clear any waiting menu selection resolvers
+        if (this.waitingForMenuSelection && this.menuSelectionResolver) {
+          console.log("📋 Clearing previous menu selection resolver");
+          this.waitingForMenuSelection = false;
+          this.menuSelectionResolver = null;
+        }
+
         // Log window type for debugging
         const windowTypes = {
           1: "WIN_MESSAGE",
@@ -440,7 +557,9 @@ class NetHackSession {
         const hasMenuQuestion = menuQuestion && menuQuestion.trim();
 
         // Log the menu details for debugging
-        console.log(`📋 Menu ending - Window: ${endMenuWinid}, Question: "${menuQuestion}", Items: ${this.currentMenuItems.length}`);
+        console.log(
+          `📋 Menu ending - Window: ${endMenuWinid}, Question: "${menuQuestion}", Items: ${this.currentMenuItems.length}`
+        );
 
         // If this is an inventory window without a question, it's just an inventory update
         if (isInventoryWindow && !hasMenuQuestion) {
@@ -478,6 +597,19 @@ class NetHackSession {
           console.log(
             `📋 Inventory action question detected: "${menuQuestion}" with ${this.currentMenuItems.length} items`
           );
+
+          // Check if this is a multi-pickup dialog
+          if (
+            menuQuestion &&
+            (menuQuestion.toLowerCase().includes("pick up what") ||
+              menuQuestion.toLowerCase().includes("pick up") ||
+              menuQuestion
+                .toLowerCase()
+                .includes("what do you want to pick up"))
+          ) {
+            console.log("📋 Multi-pickup dialog detected");
+            this.isInMultiPickup = true;
+          }
 
           // Send the inventory question to web client
           if (this.ws && this.ws.readyState === 1) {
@@ -636,11 +768,55 @@ class NetHackSession {
         const isCategory =
           !accelerator || accelerator === 0 || accelerator === 32; // 32 is space character
         let menuChar = "";
+        let glyphChar = "";
 
-        if (!isCategory && accelerator > 0) {
-          menuChar = String.fromCharCode(accelerator);
+        // Convert glyph to visual character using mapglyphHelper
+        if (
+          menuGlyph &&
+          globalThis.nethackGlobal &&
+          globalThis.nethackGlobal.helpers &&
+          globalThis.nethackGlobal.helpers.mapglyphHelper
+        ) {
+          try {
+            const glyphInfo = globalThis.nethackGlobal.helpers.mapglyphHelper(
+              menuGlyph,
+              0,
+              0,
+              0 // x, y, and other params not needed for menu items
+            );
+            if (glyphInfo && glyphInfo.ch !== undefined) {
+              glyphChar = String.fromCharCode(glyphInfo.ch);
+            }
+          } catch (error) {
+            console.log(
+              `⚠️ Error getting glyph info for menu glyph ${menuGlyph}:`,
+              error
+            );
+          }
+        }
+
+        if (!isCategory) {
+          // For non-category items, determine the accelerator key
+          if (accelerator > 0 && accelerator < 256) {
+            // If accelerator is a valid ASCII character code, use it
+            menuChar = String.fromCharCode(accelerator);
+          } else {
+            // If accelerator is invalid (like the large numbers we're seeing),
+            // assign letters automatically based on the current menu items
+            const existingItems = this.currentMenuItems.filter(
+              (item) => !item.isCategory
+            );
+            const alphabet =
+              "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            if (existingItems.length < alphabet.length) {
+              menuChar = alphabet[existingItems.length];
+            } else {
+              menuChar = "?"; // Fallback for too many items
+            }
+          }
+
           console.log(
-            `📋 MENU ITEM: "${menuText}" (key: ${menuChar}) - accelerator code: ${accelerator}`
+            `📋 MENU ITEM: "${menuText}" (key: ${menuChar}) glyph: ${menuGlyph} -> "${glyphChar}" - accelerator code: ${accelerator}`
           );
         } else {
           console.log(
@@ -653,9 +829,13 @@ class NetHackSession {
           this.currentMenuItems.push({
             text: menuText,
             accelerator: menuChar,
+            originalAccelerator: accelerator, // Store the original accelerator code
             window: menuWinid,
             glyph: menuGlyph,
+            glyphChar: glyphChar, // Add the visual character representation
             isCategory: isCategory,
+            menuIndex: this.currentMenuItems.length, // Store the menu item index
+            count: preselected, // Store the preselected count
           });
         }
 
@@ -668,6 +848,7 @@ class NetHackSession {
               accelerator: menuChar,
               window: menuWinid,
               glyph: menuGlyph,
+              glyphChar: glyphChar, // Include glyph character in client message
               isCategory: isCategory,
               menuItems: this.currentMenuItems,
             })
@@ -846,8 +1027,100 @@ class NetHackSession {
           `📋 Menu selection request for window ${menuSelectWinid}, how: ${menuSelectHow}, ptr: ${menuPtr}`
         );
 
-        // Try returning 0 (no selection) to avoid segfault
-        console.log("Returning 0 (no selection) to skip this step");
+        // For multi-pickup menus (how == PICK_ANY), check if we're ready to confirm
+        if (menuSelectHow === 2 && this.isInMultiPickup) {
+          // If user already confirmed selections, return immediately
+          if (this.multiPickupReadyToConfirm && this.menuSelections.size > 0) {
+            console.log(
+              "📋 Multi-pickup already confirmed - returning selection count immediately"
+            );
+            const selectionCount = this.menuSelections.size;
+
+            // Try to write the selections to NetHack's memory if we have the module
+            if (this.nethackModule && menuPtr) {
+              try {
+                console.log(
+                  `📋 Writing selections to NetHack memory at ptr: ${menuPtr}`
+                );
+                const selectedItems = Array.from(this.menuSelections.values());
+
+                // NetHack expects us to fill an array of `menu_item` structs.
+                // Each struct has two fields: `item` (a pointer/identifier) and `count`.
+                // We will write the identifier to the `item` field.
+                for (let i = 0; i < selectedItems.length; i++) {
+                  const item = selectedItems[i];
+                  // The menu_item struct is 8 bytes (on a 32-bit system): {int item_ptr, int count}
+                  const structOffset = menuPtr + i * 8;
+                  const itemIdentifier = item.originalAccelerator;
+
+                  console.log(
+                    `📋 Writing item ${i}: identifier ${itemIdentifier} to offset ${structOffset}`
+                  );
+                  this.nethackModule.setValue(
+                    structOffset,
+                    itemIdentifier,
+                    "i32"
+                  ); // Write the identifier
+                  this.nethackModule.setValue(structOffset + 4, -1, "i32"); // Set count to -1 for "all"
+                }
+                console.log(
+                  "📋 Successfully wrote selections to NetHack memory"
+                );
+              } catch (error) {
+                console.log(
+                  "⚠️ Error writing selections to NetHack memory:",
+                  error
+                );
+              }
+            }
+
+            // Clear all multi-pickup state
+            this.menuSelections.clear();
+            this.isInMultiPickup = false;
+            this.multiPickupReadyToConfirm = false;
+            return selectionCount;
+          }
+
+          console.log(
+            "📋 Multi-pickup menu - waiting for completion (async)..."
+          );
+          return new Promise((resolve) => {
+            // Set up a special resolver for menu selection completion
+            this.menuSelectionResolver = resolve;
+            this.waitingForMenuSelection = true;
+          });
+        }
+
+        // If we have completed selections from multi-pickup, return the count
+        if (this.menuSelections.size > 0) {
+          const selectedItems = Array.from(this.menuSelections.values());
+          console.log(
+            `📋 Returning ${this.menuSelections.size} selected items:`,
+            selectedItems.map((item) => `${item.menuChar}:${item.text}`)
+          );
+
+          const selectionCount = this.menuSelections.size;
+          // Clear selections and multi-pickup state after returning them
+          this.menuSelections.clear();
+          this.isInMultiPickup = false;
+          return selectionCount;
+        }
+
+        // For single-selection menus (how == PICK_ONE), check if we have a single selection
+        if (menuSelectHow === 1 && this.menuSelections.size === 1) {
+          const selectedItem = Array.from(this.menuSelections.values())[0];
+          console.log(
+            `📋 Returning single selection: ${selectedItem.menuChar} (${selectedItem.text})`
+          );
+          // For single selection, NetHack might expect the accelerator character code
+          return (
+            selectedItem.originalAccelerator ||
+            selectedItem.menuChar.charCodeAt(0)
+          );
+        }
+
+        // Default: no selection
+        console.log("📋 Returning 0 (no selection)");
         return 0;
 
       case "shim_askname":
@@ -933,6 +1206,16 @@ class NetHackSession {
 
       case "shim_exit_nhwindows":
         console.log("Exiting NetHack windows");
+        return 0;
+      case "shim_destroy_nhwindow":
+        const [destroyWinId] = args;
+        console.log(`🗑️ Destroying window ${destroyWinId}`);
+        return 0;
+      case "shim_curs":
+        const [cursWin, cursX, cursY] = args;
+        console.log(
+          `🖱️ Setting cursor for window ${cursWin} to (${cursX}, ${cursY})`
+        );
         return 0;
       default:
         console.log(`Unknown callback: ${name}`, args);

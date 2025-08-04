@@ -26185,53 +26185,12 @@ void main() {
       questionText.textContent = question;
       questionDialog.appendChild(questionText);
       if (menuItems && menuItems.length > 0) {
-        menuItems.forEach((item) => {
-          if (item.isCategory || !item.accelerator || item.accelerator.trim() === "") {
-            const categoryHeader = document.createElement("div");
-            categoryHeader.style.cssText = `
-            font-size: 14px;
-            font-weight: bold;
-            color: #ffff00;
-            margin: 15px 0 5px 0;
-            text-align: left;
-            border-bottom: 1px solid #444;
-            padding-bottom: 3px;
-          `;
-            categoryHeader.textContent = item.text;
-            questionDialog.appendChild(categoryHeader);
-          } else {
-            const menuButton = document.createElement("button");
-            menuButton.style.cssText = `
-            display: block;
-            width: 100%;
-            margin: 3px 0;
-            padding: 8px;
-            background: #333;
-            color: white;
-            border: 1px solid #666;
-            border-radius: 3px;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
-            text-align: left;
-            line-height: 1.3;
-          `;
-            const keyPart = document.createElement("span");
-            keyPart.style.cssText = `
-            color: #00ff00;
-            font-weight: bold;
-          `;
-            keyPart.textContent = `${item.accelerator}) `;
-            const textPart = document.createElement("span");
-            textPart.textContent = item.text;
-            menuButton.appendChild(keyPart);
-            menuButton.appendChild(textPart);
-            menuButton.onclick = () => {
-              this.sendInput(item.accelerator);
-              this.hideQuestion();
-            };
-            questionDialog.appendChild(menuButton);
-          }
-        });
+        const isPickupDialog = question && (question.toLowerCase().includes("pick up what") || question.toLowerCase().includes("pick up") || question.toLowerCase().includes("what do you want to pick up"));
+        if (isPickupDialog) {
+          this.createPickupDialog(questionDialog, menuItems, question);
+        } else {
+          this.createStandardMenu(questionDialog, menuItems);
+        }
       } else {
         const choiceContainer = document.createElement("div");
         choiceContainer.style.cssText = `
@@ -26631,7 +26590,159 @@ void main() {
       if (questionDialog) {
         questionDialog.style.display = "none";
         questionDialog.innerHTML = "";
+        questionDialog.isPickupDialog = false;
+        questionDialog.menuItems = null;
       }
+    }
+    createPickupDialog(questionDialog, menuItems, question) {
+      const selectedItems = /* @__PURE__ */ new Set();
+      menuItems.forEach((item) => {
+        if (item.isCategory || !item.accelerator || item.accelerator.trim() === "") {
+          const categoryHeader = document.createElement("div");
+          categoryHeader.style.cssText = `
+          font-size: 14px;
+          font-weight: bold;
+          color: #ffff00;
+          margin: 15px 0 5px 0;
+          text-align: left;
+          border-bottom: 1px solid #444;
+          padding-bottom: 3px;
+        `;
+          categoryHeader.textContent = item.text;
+          questionDialog.appendChild(categoryHeader);
+        } else {
+          const itemContainer = document.createElement("div");
+          itemContainer.style.cssText = `
+          display: flex;
+          align-items: center;
+          margin: 3px 0;
+          padding: 8px;
+          background: #333;
+          border: 1px solid #666;
+          border-radius: 3px;
+          cursor: pointer;
+          font-family: 'Courier New', monospace;
+          line-height: 1.3;
+        `;
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.id = `pickup-${item.accelerator}`;
+          checkbox.style.cssText = `
+          margin-right: 8px;
+          transform: scale(1.2);
+        `;
+          const keyPart = document.createElement("span");
+          keyPart.style.cssText = `
+          color: #00ff00;
+          font-weight: bold;
+          margin-right: 8px;
+          min-width: 30px;
+        `;
+          keyPart.textContent = `${item.accelerator})`;
+          const textPart = document.createElement("span");
+          textPart.style.cssText = `
+          color: white;
+          flex: 1;
+        `;
+          textPart.textContent = item.text;
+          const toggleItem = () => {
+            checkbox.checked = !checkbox.checked;
+            if (checkbox.checked) {
+              selectedItems.add(item.accelerator);
+              itemContainer.style.backgroundColor = "#444";
+            } else {
+              selectedItems.delete(item.accelerator);
+              itemContainer.style.backgroundColor = "#333";
+            }
+            this.sendInput(item.accelerator);
+          };
+          itemContainer.onclick = (e) => {
+            e.preventDefault();
+            toggleItem();
+          };
+          checkbox.onchange = (e) => {
+            e.stopPropagation();
+            if (checkbox.checked) {
+              selectedItems.add(item.accelerator);
+              itemContainer.style.backgroundColor = "#444";
+            } else {
+              selectedItems.delete(item.accelerator);
+              itemContainer.style.backgroundColor = "#333";
+            }
+            this.sendInput(item.accelerator);
+          };
+          itemContainer.toggleItem = toggleItem;
+          itemContainer.accelerator = item.accelerator;
+          itemContainer.appendChild(checkbox);
+          itemContainer.appendChild(keyPart);
+          itemContainer.appendChild(textPart);
+          questionDialog.appendChild(itemContainer);
+        }
+      });
+      const confirmInstruction = document.createElement("div");
+      confirmInstruction.style.cssText = `
+      margin-top: 15px;
+      padding: 10px;
+      background: rgba(0, 255, 0, 0.1);
+      border: 1px solid #00ff00;
+      border-radius: 3px;
+      text-align: center;
+      color: #00ff00;
+      font-weight: bold;
+    `;
+      confirmInstruction.textContent = "Press ENTER to confirm pickup, or ESC to cancel";
+      questionDialog.appendChild(confirmInstruction);
+      questionDialog.isPickupDialog = true;
+      questionDialog.menuItems = menuItems;
+    }
+    createStandardMenu(questionDialog, menuItems) {
+      menuItems.forEach((item) => {
+        if (item.isCategory || !item.accelerator || item.accelerator.trim() === "") {
+          const categoryHeader = document.createElement("div");
+          categoryHeader.style.cssText = `
+          font-size: 14px;
+          font-weight: bold;
+          color: #ffff00;
+          margin: 15px 0 5px 0;
+          text-align: left;
+          border-bottom: 1px solid #444;
+          padding-bottom: 3px;
+        `;
+          categoryHeader.textContent = item.text;
+          questionDialog.appendChild(categoryHeader);
+        } else {
+          const menuButton = document.createElement("button");
+          menuButton.style.cssText = `
+          display: block;
+          width: 100%;
+          margin: 3px 0;
+          padding: 8px;
+          background: #333;
+          color: white;
+          border: 1px solid #666;
+          border-radius: 3px;
+          cursor: pointer;
+          font-family: 'Courier New', monospace;
+          text-align: left;
+          line-height: 1.3;
+        `;
+          const keyPart = document.createElement("span");
+          keyPart.style.cssText = `
+          color: #00ff00;
+          font-weight: bold;
+        `;
+          keyPart.textContent = `${item.accelerator}) `;
+          const textPart = document.createElement("span");
+          textPart.textContent = item.text;
+          menuButton.appendChild(keyPart);
+          menuButton.appendChild(textPart);
+          menuButton.onclick = () => {
+            this.sendInput(item.accelerator);
+            this.hideQuestion();
+          };
+          questionDialog.appendChild(menuButton);
+        }
+      });
     }
     sendInput(input) {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -26830,8 +26941,36 @@ void main() {
           }
           return;
         }
-        this.sendInput(event.key);
-        this.hideQuestion();
+        const questionDialog = document.getElementById("question-dialog");
+        if (questionDialog && questionDialog.isPickupDialog) {
+          if (event.key === "Enter") {
+            this.sendInput("Enter");
+            this.hideQuestion();
+          } else if (event.key === "Escape") {
+            this.sendInput("Escape");
+            this.hideQuestion();
+          } else {
+            const menuItems = questionDialog.menuItems || [];
+            const matchingItem = menuItems.find(
+              (item) => item.accelerator === event.key && !item.isCategory
+            );
+            if (matchingItem) {
+              const containers = questionDialog.querySelectorAll(
+                'div[style*="display: flex"]'
+              );
+              containers.forEach((container) => {
+                if (container.accelerator === event.key && container.toggleItem) {
+                  container.toggleItem();
+                }
+              });
+            } else {
+              this.sendInput(event.key);
+            }
+          }
+        } else {
+          this.sendInput(event.key);
+          this.hideQuestion();
+        }
         return;
       }
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
