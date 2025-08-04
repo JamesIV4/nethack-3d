@@ -177,6 +177,16 @@ class Nethack3DEngine {
     const wsUrl = `${protocol}//${window.location.host}`;
 
     console.log("Connecting to NetHack server at:", wsUrl);
+
+    // Clean up any existing WebSocket
+    if (this.ws) {
+      console.log("Cleaning up existing WebSocket connection");
+      this.ws.onopen = null;
+      this.ws.onmessage = null;
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+    }
+
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
@@ -204,21 +214,17 @@ class Nethack3DEngine {
     this.ws.onclose = () => {
       console.log("Disconnected from NetHack server");
       this.updateConnectionStatus("Disconnected", "#aa0000");
-      this.updateStatus("Disconnected from server");
-      this.addGameMessage("Disconnected from server");
 
-      // Show loading screen
-      const loading = document.getElementById("loading");
-      if (loading) {
-        loading.style.display = "block";
-        loading.innerHTML =
-          '<div>NetHack 3D</div><div style="font-size: 14px; margin-top: 10px;">Reconnecting...</div>';
-      }
-
-      // Try to reconnect after 3 seconds
+      // Silently attempt to reconnect after 3 seconds
       setTimeout(() => {
+        console.log("Attempting to reconnect...");
         if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
+          console.log("WebSocket is closed, starting reconnection");
           this.connectToServer();
+        } else {
+          console.log(
+            `WebSocket state: ${this.ws.readyState}, skipping reconnection`
+          );
         }
       }, 3000);
     };

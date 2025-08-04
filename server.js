@@ -451,7 +451,7 @@ class NetHackSession {
           });
         }
 
-        // Send question to web client with available menu items for non-direction questions
+        // Send question to web client (don't include menu items for simple Y/N questions)
         if (this.ws && this.ws.readyState === 1) {
           this.ws.send(
             JSON.stringify({
@@ -459,7 +459,8 @@ class NetHackSession {
               text: question,
               choices: choices,
               default: defaultChoice,
-              menuItems: this.currentMenuItems,
+              // Only include menuItems if this is actually a menu question, not a simple Y/N
+              menuItems: [],
             })
           );
         }
@@ -835,7 +836,6 @@ class NetHackSession {
             glyphChar: glyphChar, // Add the visual character representation
             isCategory: isCategory,
             menuIndex: this.currentMenuItems.length, // Store the menu item index
-            count: preselected, // Store the preselected count
           });
         }
 
