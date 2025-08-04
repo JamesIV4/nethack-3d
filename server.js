@@ -14,9 +14,12 @@ class NetHackSession {
     this.currentWindow = null;
     this.hasShownCharacterSelection = false;
 
-    // Simplified input handling - just store the latest input
+    // Simplified input handling with async support
     this.latestInput = null;
     this.waitingForInput = false;
+    this.waitingForPosition = false;
+    this.inputResolver = null;
+    this.positionResolver = null;
 
     // Add cooldown for position requests
     this.lastInputTime = 0;
@@ -27,9 +30,42 @@ class NetHackSession {
 
   // Handle incoming input from the client
   handleClientInput(input) {
-    console.log("Received client input:", input);
+    console.log("🎮 Received client input:", input);
+    
+    // If we're waiting for general input, resolve the promise immediately
+    if (this.waitingForInput && this.inputResolver) {
+      console.log("🎮 Resolving waiting input promise with:", input);
+      this.waitingForInput = false;
+      const resolver = this.inputResolver;
+      this.inputResolver = null;
+      resolver(this.processKey(input));
+      return;
+    }
+    
+    // If we're waiting for position input, resolve that promise
+    if (this.waitingForPosition && this.positionResolver) {
+      console.log("🎮 Resolving waiting position promise with:", input);
+      this.waitingForPosition = false;
+      const resolver = this.positionResolver;
+      this.positionResolver = null;
+      resolver(this.processKey(input));
+      return;
+    }
+    
+    // Otherwise, store for later use (for synchronous phases like character creation)
+    console.log("🎮 Storing input for later use:", input);
     this.latestInput = input;
-    // NetHack will naturally pick this up when it needs input
+  }
+
+  // Helper method for key processing
+  processKey(key) {
+    if (key === "ArrowLeft" || key === "h") return "h".charCodeAt(0);
+    if (key === "ArrowRight" || key === "l") return "l".charCodeAt(0);
+    if (key === "ArrowUp" || key === "k") return "k".charCodeAt(0);
+    if (key === "ArrowDown" || key === "j") return "j".charCodeAt(0);
+    if (key === "Escape") return 27;
+    if (key.length > 0) return key.charCodeAt(0);
+    return 0; // Default for empty/unknown input
   }
 
   async initializeNetHack() {
@@ -129,29 +165,26 @@ class NetHackSession {
     console.log(`🎮 UI Callback: ${name}`, args);
 
     const processKey = (key) => {
-      if (key === "ArrowLeft" || key === "h") return "h".charCodeAt(0);
-      if (key === "ArrowRight" || key === "l") return "l".charCodeAt(0);
-      if (key === "ArrowUp" || key === "k") return "k".charCodeAt(0);
-      if (key === "ArrowDown" || key === "j") return "j".charCodeAt(0);
-      if (key === "Escape") return 27;
-      if (key.length > 0) return key.charCodeAt(0);
-      return 0; // Default for empty/unknown input
+      return this.processKey(key);
     };
 
     switch (name) {
       case "shim_get_nh_event":
-        // Simply return the latest input if available, otherwise wait
+        // Check if we have input available
         if (this.latestInput) {
           const input = this.latestInput;
           this.latestInput = null; // Clear it after use
-          console.log(`Returning input: ${input}`);
+          console.log(`🎮 Returning input: ${input}`);
           return processKey(input);
         }
 
-        // NetHack is asking for input but we don't have any
-        // Since we're using Asyncify, we can just return a default and NetHack will call again
-        console.log("No input available, returning space as default");
-        return 32; // space
+        // We're now in gameplay mode - use Asyncify to wait for real user input
+        console.log("🎮 Waiting for player input (async)...");
+        return new Promise((resolve) => {
+          this.inputResolver = resolve;
+          this.waitingForInput = true;
+          // No timeout - wait for real user input via WebSocket
+        });
 
       case "shim_yn_function":
         const [question, choices, defaultChoice] = args;
@@ -183,27 +216,23 @@ class NetHackSession {
 
       case "shim_nh_poskey":
         const [xPtr, yPtr, modPtr] = args;
-        const now = Date.now();
+        console.log("🎮 NetHack requesting position key");
 
-        // Prevent infinite loops with cooldown
-        // if (now - this.lastInputTime < this.inputCooldown) {
-        //   console.log("Position request on cooldown, returning Escape");
-        //   return 27; // ESC key
-        // }
-
-        this.lastInputTime = now;
-        console.log("NetHack requesting position key");
-
+        // Check if we have input available
         if (this.latestInput) {
           const input = this.latestInput;
           this.latestInput = null;
-          console.log(`Using input for position: ${input}`);
+          console.log(`🎮 Using input for position: ${input}`);
           return processKey(input);
         }
 
-      // Return ESC to cancel position requests during character creation
-      // console.log("No input for position, returning ESC");
-      // return 27;
+        // We're now in gameplay mode - use Asyncify to wait for real user input
+        console.log("🎮 Waiting for position input (async)...");
+        return new Promise((resolve) => {
+          this.positionResolver = resolve;
+          this.waitingForPosition = true;
+          // No timeout - wait for real user input via WebSocket
+        });
 
       case "shim_init_nhwindows":
         console.log("Initializing NetHack windows");
