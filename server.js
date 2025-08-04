@@ -32,6 +32,10 @@ class NetHackSession {
   handleClientInput(input) {
     console.log("🎮 Received client input:", input);
     
+    // Store the input for potential reuse
+    this.latestInput = input;
+    this.lastInputTime = Date.now();
+    
     // If we're waiting for general input, resolve the promise immediately
     if (this.waitingForInput && this.inputResolver) {
       console.log("🎮 Resolving waiting input promise with:", input);
@@ -52,9 +56,8 @@ class NetHackSession {
       return;
     }
     
-    // Otherwise, store for later use (for synchronous phases like character creation)
+    // Otherwise, just store for later use (for synchronous phases like character creation)
     console.log("🎮 Storing input for later use:", input);
-    this.latestInput = input;
   }
 
   // Helper method for key processing
@@ -170,11 +173,12 @@ class NetHackSession {
 
     switch (name) {
       case "shim_get_nh_event":
-        // Check if we have input available
-        if (this.latestInput) {
+        // Check if we have recent input available (within input window)
+        const timeSinceInput = Date.now() - this.lastInputTime;
+        if (this.latestInput && timeSinceInput < this.inputCooldown) {
           const input = this.latestInput;
           this.latestInput = null; // Clear it after use
-          console.log(`🎮 Returning input: ${input}`);
+          console.log(`🎮 Reusing recent input for event: ${input} (${timeSinceInput}ms ago)`);
           return processKey(input);
         }
 
@@ -218,11 +222,12 @@ class NetHackSession {
         const [xPtr, yPtr, modPtr] = args;
         console.log("🎮 NetHack requesting position key");
 
-        // Check if we have input available
-        if (this.latestInput) {
+        // Check if we have recent input available (within input window)
+        const timeSincePositionInput = Date.now() - this.lastInputTime;
+        if (this.latestInput && timeSincePositionInput < this.inputCooldown) {
           const input = this.latestInput;
-          this.latestInput = null;
-          console.log(`🎮 Using input for position: ${input}`);
+          // Don't clear it yet - let shim_get_nh_event potentially reuse it
+          console.log(`🎮 Using recent input for position: ${input} (${timeSincePositionInput}ms ago)`);
           return processKey(input);
         }
 
