@@ -25528,6 +25528,10 @@ void main() {
       this.textSpriteMap = /* @__PURE__ */ new Map();
       this.playerPos = { x: 0, y: 0 };
       this.gameMessages = [];
+      this.currentInventory = [];
+      // Store current inventory items
+      this.pendingInventoryDialog = false;
+      // Flag to show inventory dialog after update
       this.ws = null;
       // Camera controls
       this.cameraDistance = 20;
@@ -25543,6 +25547,8 @@ void main() {
       this.maxDistance = 50;
       // Direction question handling
       this.isInDirectionQuestion = false;
+      // General question handling (pauses all movement)
+      this.isInQuestion = false;
       // Camera panning
       this.cameraPanX = 0;
       this.cameraPanY = 0;
@@ -25697,10 +25703,41 @@ void main() {
     handleServerMessage(data) {
       switch (data.type) {
         case "map_glyph":
+          if (data.isRefresh) {
+            console.log(`\u{1F504} Processing tile refresh for (${data.x}, ${data.y})`);
+          }
           this.updateTile(data.x, data.y, data.glyph, data.char, data.color);
           break;
         case "player_position":
+          console.log(
+            `\u{1F3AF} Received player position update: (${data.x}, ${data.y})`
+          );
+          const oldPos = { ...this.playerPos };
           this.playerPos = { x: data.x, y: data.y };
+          console.log(
+            `\u{1F3AF} Player position changed from (${oldPos.x}, ${oldPos.y}) to (${data.x}, ${data.y})`
+          );
+          this.updateStatus(`Player at (${data.x}, ${data.y}) - NetHack 3D`);
+          break;
+        case "force_player_redraw":
+          console.log(
+            `\u{1F3AF} Force redraw player from (${data.oldPosition.x}, ${data.oldPosition.y}) to (${data.newPosition.x}, ${data.newPosition.y})`
+          );
+          this.playerPos = { x: data.newPosition.x, y: data.newPosition.y };
+          const oldKey = `${data.oldPosition.x},${data.oldPosition.y}`;
+          const oldSprite = this.textSpriteMap.get(oldKey);
+          if (oldSprite) {
+            console.log(
+              `\u{1F3AF} Clearing old player sprite at (${data.oldPosition.x}, ${data.oldPosition.y})`
+            );
+            this.scene.remove(oldSprite);
+            this.textSpriteMap.delete(oldKey);
+            this.updateTile(data.oldPosition.x, data.oldPosition.y, 2396, ".", 0);
+          }
+          this.updateTile(data.newPosition.x, data.newPosition.y, 331, "@", 0);
+          console.log(
+            `\u{1F3AF} Player visual updated to position (${data.newPosition.x}, ${data.newPosition.y})`
+          );
           break;
         case "text":
           this.addGameMessage(data.text);
@@ -25712,6 +25749,7 @@ void main() {
         //   this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
         //   break;
         case "direction_question":
+          this.isInQuestion = true;
           this.showDirectionQuestion(data.text);
           break;
         case "question":
@@ -25726,12 +25764,30 @@ void main() {
             }
             return;
           }
+          this.isInQuestion = true;
           this.showQuestion(
             data.text,
             data.choices,
             data.default,
             data.menuItems
           );
+          break;
+        case "inventory_update":
+          const itemCount = data.items ? data.items.length : 0;
+          const actualItems = data.items ? data.items.filter((item) => !item.isCategory) : [];
+          console.log(
+            `\u{1F4E6} Received inventory update with ${itemCount} total items (${actualItems.length} actual items)`
+          );
+          this.currentInventory = data.items || [];
+          if (this.pendingInventoryDialog) {
+            console.log("\u{1F4E6} Showing inventory dialog with fresh data");
+            this.pendingInventoryDialog = false;
+            this.showInventoryDialog();
+          }
+          this.updateInventoryDisplay(data.items);
+          if (actualItems.length > 0) {
+            this.addGameMessage(`Inventory: ${actualItems.length} items`);
+          }
           break;
         case "position_request":
           if (data.text && data.text.trim() && !data.text.includes("cursor") && !data.text.includes("Select a position")) {
@@ -25742,9 +25798,71 @@ void main() {
           console.log("Auto-providing default name for:", data.text);
           this.sendInput("Player");
           break;
+        case "area_refresh_complete":
+          console.log(
+            `\u{1F504} Area refresh completed: ${data.tilesRefreshed} tiles refreshed around (${data.centerX}, ${data.centerY})`
+          );
+          this.addGameMessage(
+            `Refreshed ${data.tilesRefreshed} tiles around (${data.centerX}, ${data.centerY})`
+          );
+          break;
+        case "tile_not_found":
+          console.log(
+            `\u26A0\uFE0F Tile not found at (${data.x}, ${data.y}): ${data.message}`
+          );
+          break;
         default:
           console.log("Unknown message type:", data.type, data);
       }
+    }
+    /**
+     * Request a view update for a specific tile from the server
+     * @param x The x coordinate of the tile
+     * @param y The y coordinate of the tile
+     */
+    requestTileUpdate(x, y) {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        console.log(`\u{1F504} Requesting tile update for (${x}, ${y})`);
+        this.ws.send(
+          JSON.stringify({
+            type: "request_tile_update",
+            x,
+            y
+          })
+        );
+      } else {
+        console.log("\u26A0\uFE0F Cannot request tile update - WebSocket not connected");
+      }
+    }
+    /**
+     * Request a view update for an area around a center point
+     * @param centerX The x coordinate of the center
+     * @param centerY The y coordinate of the center
+     * @param radius The radius around the center point (default: 3)
+     */
+    requestAreaUpdate(centerX, centerY, radius = 3) {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        console.log(
+          `\u{1F504} Requesting area update centered at (${centerX}, ${centerY}) with radius ${radius}`
+        );
+        this.ws.send(
+          JSON.stringify({
+            type: "request_area_update",
+            centerX,
+            centerY,
+            radius
+          })
+        );
+      } else {
+        console.log("\u26A0\uFE0F Cannot request area update - WebSocket not connected");
+      }
+    }
+    /**
+     * Request a view update for the area around the player
+     * @param radius The radius around the player (default: 5)
+     */
+    requestPlayerAreaUpdate(radius = 5) {
+      this.requestAreaUpdate(this.playerPos.x, this.playerPos.y, radius);
     }
     createTextSprite(text, size = 128, textColor = "yellow") {
       const canvas = document.createElement("canvas");
@@ -25823,11 +25941,13 @@ void main() {
       return "?";
     }
     updateTile(x, y, glyph, char, color) {
-      console.log(`\u{1F3A8} updateTile(${x},${y}) glyph=${glyph} char="${char}" color=${color}`);
+      console.log(
+        `\u{1F3A8} updateTile(${x},${y}) glyph=${glyph} char="${char}" color=${color}`
+      );
       const key = `${x},${y}`;
       let mesh = this.tileMap.get(key);
       let textSprite = this.textSpriteMap.get(key);
-      const isPlayerGlyph = char === "@" || glyph >= 331 && glyph <= 360;
+      const isPlayerGlyph = glyph >= 331 && glyph <= 360 && (char === "@" || !char);
       if (isPlayerGlyph) {
         console.log(
           `\u{1F3AF} Player detected at position (${x}, ${y}) with glyph ${glyph}, char: "${char}"`
@@ -25852,7 +25972,9 @@ void main() {
             geometry = this.wallGeometry;
             isWall = true;
           } else {
-            console.log(`  -> Door with character "${char}" - defaulting to open`);
+            console.log(
+              `  -> Door with character "${char}" - defaulting to open`
+            );
             material = this.materials.floor;
             geometry = this.floorGeometry;
             isWall = false;
@@ -25877,9 +25999,14 @@ void main() {
           material = this.materials.wall;
           geometry = this.wallGeometry;
           isWall = true;
-        } else if (char === "@") {
+        } else if (isPlayerGlyph) {
           console.log(`  -> Player`);
           material = this.materials.player;
+          geometry = this.floorGeometry;
+          isWall = false;
+        } else if (char === "@") {
+          console.log(`  -> NPC/Shopkeeper`);
+          material = this.materials.monster;
           geometry = this.floorGeometry;
           isWall = false;
         } else if (char === "{") {
@@ -26001,7 +26128,29 @@ void main() {
         connElement.style.backgroundColor = color;
       }
     }
+    updateInventoryDisplay(items) {
+      if (!items || items.length === 0) {
+        console.log("\u{1F4E6} Inventory is empty");
+        return;
+      }
+      console.log("\u{1F4E6} Current inventory:");
+      items.forEach((item, index) => {
+        if (item.isCategory) {
+          console.log(`  \u{1F4C1} ${item.text}`);
+        } else {
+          console.log(`  ${item.accelerator || "?"}) ${item.text}`);
+        }
+      });
+    }
     showQuestion(question, choices, defaultChoice, menuItems) {
+      const needsExpansion = false;
+      if (needsExpansion) {
+        console.log(
+          "\u{1F50D} Question includes '?' option, automatically expanding options..."
+        );
+        this.sendInput("?");
+        return;
+      }
       let questionDialog = document.getElementById("question-dialog");
       if (!questionDialog) {
         questionDialog = document.createElement("div");
@@ -26020,7 +26169,9 @@ void main() {
         font-family: 'Courier New', monospace;
         text-align: center;
         min-width: 300px;
-        max-width: 500px;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
       `;
         document.body.appendChild(questionDialog);
       }
@@ -26035,26 +26186,51 @@ void main() {
       questionDialog.appendChild(questionText);
       if (menuItems && menuItems.length > 0) {
         menuItems.forEach((item) => {
-          const menuButton = document.createElement("button");
-          menuButton.style.cssText = `
-          display: block;
-          width: 100%;
-          margin: 5px 0;
-          padding: 8px;
-          background: #333;
-          color: white;
-          border: 1px solid #666;
-          border-radius: 3px;
-          cursor: pointer;
-          font-family: 'Courier New', monospace;
-          text-align: left;
-        `;
-          menuButton.textContent = `${item.accelerator}) ${item.text}`;
-          menuButton.onclick = () => {
-            this.sendInput(item.accelerator);
-            this.hideQuestion();
-          };
-          questionDialog.appendChild(menuButton);
+          if (item.isCategory || !item.accelerator || item.accelerator.trim() === "") {
+            const categoryHeader = document.createElement("div");
+            categoryHeader.style.cssText = `
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffff00;
+            margin: 15px 0 5px 0;
+            text-align: left;
+            border-bottom: 1px solid #444;
+            padding-bottom: 3px;
+          `;
+            categoryHeader.textContent = item.text;
+            questionDialog.appendChild(categoryHeader);
+          } else {
+            const menuButton = document.createElement("button");
+            menuButton.style.cssText = `
+            display: block;
+            width: 100%;
+            margin: 3px 0;
+            padding: 8px;
+            background: #333;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            line-height: 1.3;
+          `;
+            const keyPart = document.createElement("span");
+            keyPart.style.cssText = `
+            color: #00ff00;
+            font-weight: bold;
+          `;
+            keyPart.textContent = `${item.accelerator}) `;
+            const textPart = document.createElement("span");
+            textPart.textContent = item.text;
+            menuButton.appendChild(keyPart);
+            menuButton.appendChild(textPart);
+            menuButton.onclick = () => {
+              this.sendInput(item.accelerator);
+              this.hideQuestion();
+            };
+            questionDialog.appendChild(menuButton);
+          }
         });
       } else {
         const choiceContainer = document.createElement("div");
@@ -26193,10 +26369,160 @@ void main() {
     }
     hideDirectionQuestion() {
       this.isInDirectionQuestion = false;
+      this.isInQuestion = false;
       const directionDialog = document.getElementById("direction-dialog");
       if (directionDialog) {
         directionDialog.style.display = "none";
       }
+    }
+    showInventoryDialog() {
+      let inventoryDialog = document.getElementById("inventory-dialog");
+      if (!inventoryDialog) {
+        inventoryDialog = document.createElement("div");
+        inventoryDialog.id = "inventory-dialog";
+        inventoryDialog.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.95);
+        color: white;
+        padding: 20px;
+        border: 2px solid #00ff00;
+        border-radius: 10px;
+        z-index: 2000;
+        font-family: 'Courier New', monospace;
+        min-width: 450px;
+        max-width: 600px;
+        max-height: 95vh;
+        overflow-y: auto;
+      `;
+        document.body.appendChild(inventoryDialog);
+      }
+      inventoryDialog.innerHTML = "";
+      const title = document.createElement("div");
+      title.style.cssText = `
+      font-size: 18px;
+      font-weight: bold;
+      color: #00ff00;
+      margin-bottom: 15px;
+      text-align: center;
+      border-bottom: 2px solid #00ff00;
+      padding-bottom: 8px;
+    `;
+      title.textContent = "\u{1F4E6} INVENTORY";
+      inventoryDialog.appendChild(title);
+      const itemsContainer = document.createElement("div");
+      itemsContainer.style.cssText = `
+      margin-bottom: 20px;
+      max-height: 70vh;
+      overflow-y: auto;
+    `;
+      if (this.currentInventory.length === 0) {
+        const emptyMessage = document.createElement("div");
+        emptyMessage.style.cssText = `
+        text-align: center;
+        color: #aaa;
+        font-style: italic;
+        padding: 20px;
+      `;
+        emptyMessage.textContent = "Your inventory is empty.";
+        itemsContainer.appendChild(emptyMessage);
+      } else {
+        this.currentInventory.forEach((item, index) => {
+          if (item.isCategory) {
+            const categoryHeader = document.createElement("div");
+            categoryHeader.style.cssText = `
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffff00;
+            margin: ${index === 0 ? "10px" : "15px"} 0 8px 0;
+            text-align: left;
+            border-bottom: 1px solid #666;
+            padding-bottom: 4px;
+            text-transform: uppercase;
+          `;
+            categoryHeader.textContent = item.text;
+            itemsContainer.appendChild(categoryHeader);
+          } else {
+            const itemDiv = document.createElement("div");
+            itemDiv.style.cssText = `
+            padding: 4px 10px;
+            margin: 1px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid #00ff00;
+            line-height: 1.3;
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+          `;
+            const keySpan = document.createElement("span");
+            keySpan.style.cssText = `
+            color: #00ff00;
+            font-weight: bold;
+            margin-right: 8px;
+            min-width: 20px;
+            font-size: 13px;
+          `;
+            keySpan.textContent = `${item.accelerator || "?"})`;
+            const textSpan = document.createElement("span");
+            textSpan.style.cssText = `
+            color: #ffffff;
+            flex: 1;
+            font-size: 13px;
+          `;
+            textSpan.textContent = item.text || "Unknown item";
+            itemDiv.appendChild(keySpan);
+            itemDiv.appendChild(textSpan);
+            itemsContainer.appendChild(itemDiv);
+          }
+        });
+      }
+      inventoryDialog.appendChild(itemsContainer);
+      const keybindsTitle = document.createElement("div");
+      keybindsTitle.style.cssText = `
+      font-size: 13px;
+      font-weight: bold;
+      color: #ffff00;
+      margin-bottom: 8px;
+      border-top: 1px solid #444;
+      padding-top: 12px;
+    `;
+      keybindsTitle.textContent = "\u{1F3AE} ITEM COMMANDS";
+      inventoryDialog.appendChild(keybindsTitle);
+      const keybindsContainer = document.createElement("div");
+      keybindsContainer.style.cssText = `
+      font-size: 11px;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 4px;
+      border: 1px solid #333;
+    `;
+      const commandText = `<span style="color: #88ff88;">a</span>)pply <span style="color: #88ff88;">d</span>)rop <span style="color: #88ff88;">e</span>)at <span style="color: #88ff88;">q</span>)uaff <span style="color: #88ff88;">r</span>)ead <span style="color: #88ff88;">t</span>)hrow <span style="color: #88ff88;">w</span>)ield <span style="color: #88ff88;">W</span>)ear <span style="color: #88ff88;">T</span>)ake-off <span style="color: #88ff88;">P</span>)ut-on <span style="color: #88ff88;">R</span>)emove <span style="color: #88ff88;">z</span>)ap <span style="color: #88ff88;">Z</span>)cast
+    Special: <span style="color: #88ff88;">"</span>)weapons <span style="color: #88ff88;">[</span>)armor <span style="color: #88ff88;">=</span>)rings <span style="color: #88ff88;">"</span>)amulets <span style="color: #88ff88;">(</span>)tools`;
+      keybindsContainer.innerHTML = `<div style="color: #cccccc; white-space: pre-line;">${commandText}</div>`;
+      inventoryDialog.appendChild(keybindsContainer);
+      const closeText = document.createElement("div");
+      closeText.style.cssText = `
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+      margin-top: 10px;
+      border-top: 1px solid #444;
+      padding-top: 10px;
+    `;
+      closeText.textContent = "Press ESC or 'i' to close";
+      inventoryDialog.appendChild(closeText);
+      inventoryDialog.style.display = "block";
+    }
+    hideInventoryDialog() {
+      const inventoryDialog = document.getElementById("inventory-dialog");
+      if (inventoryDialog) {
+        inventoryDialog.style.display = "none";
+      }
+      this.pendingInventoryDialog = false;
     }
     showPositionRequest(text) {
       let posDialog = document.getElementById("position-dialog");
@@ -26300,9 +26626,11 @@ void main() {
       nameInput.focus();
     }
     hideQuestion() {
+      this.isInQuestion = false;
       const questionDialog = document.getElementById("question-dialog");
       if (questionDialog) {
         questionDialog.style.display = "none";
+        questionDialog.innerHTML = "";
       }
     }
     sendInput(input) {
@@ -26317,52 +26645,192 @@ void main() {
     }
     handleKeyDown(event) {
       if (event.key === "Escape") {
+        const inventoryDialog = document.getElementById("inventory-dialog");
+        if (inventoryDialog && inventoryDialog.style.display !== "none") {
+          this.hideInventoryDialog();
+          return;
+        }
+        if (this.isInQuestion || this.isInDirectionQuestion) {
+          console.log("\u{1F504} Sending Escape to NetHack to cancel question");
+          this.sendInput("Escape");
+        }
         this.hideQuestion();
         this.hideDirectionQuestion();
         const posDialog = document.getElementById("position-dialog");
         if (posDialog) {
           posDialog.style.display = "none";
         }
+        this.isInQuestion = false;
+        this.isInDirectionQuestion = false;
         return;
       }
-      if (this.isInDirectionQuestion) {
-        let keyToSend = null;
+      if (event.ctrlKey) {
+        switch (event.key.toLowerCase()) {
+          case "r":
+            if (event.shiftKey) {
+              event.preventDefault();
+              console.log("\u{1F504} Manual refresh requested for large player area");
+              this.requestPlayerAreaUpdate(10);
+              this.addGameMessage("Refreshing large area around player...");
+              return;
+            } else {
+              event.preventDefault();
+              console.log("\u{1F504} Manual refresh requested for player area");
+              this.requestPlayerAreaUpdate(5);
+              this.addGameMessage("Refreshing area around player...");
+              return;
+            }
+          case "t":
+            event.preventDefault();
+            console.log("\u{1F504} Manual refresh requested for player tile");
+            this.requestTileUpdate(this.playerPos.x, this.playerPos.y);
+            this.addGameMessage(
+              `Refreshing tile at (${this.playerPos.x}, ${this.playerPos.y})...`
+            );
+            return;
+        }
+      }
+      if (event.key === "i" || event.key === "I") {
+        event.preventDefault();
+        const inventoryDialog = document.getElementById("inventory-dialog");
+        if (inventoryDialog && inventoryDialog.style.display !== "none") {
+          console.log("\u{1F4E6} Closing inventory dialog");
+          this.hideInventoryDialog();
+        } else {
+          if (this.currentInventory && this.currentInventory.length > 0) {
+            console.log("\u{1F4E6} Showing inventory dialog with existing data");
+            this.showInventoryDialog();
+          } else {
+            console.log("\u{1F4E6} Requesting current inventory from NetHack...");
+            this.sendInput("i");
+            this.pendingInventoryDialog = true;
+          }
+        }
+        return;
+      }
+      const modifierKeys = [
+        "Shift",
+        "Control",
+        "Alt",
+        "Meta",
+        "CapsLock",
+        "NumLock",
+        "ScrollLock",
+        "Tab",
+        "Insert",
+        "Delete",
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9",
+        "F10",
+        "F11",
+        "F12"
+      ];
+      if (modifierKeys.indexOf(event.key) !== -1) {
+        console.log(`\u{1F6AB} Filtering out modifier key: ${event.key}`);
+        return;
+      }
+      if (!this.isInQuestion && !this.isInDirectionQuestion) {
+        let mappedKey = null;
         switch (event.key) {
-          // Arrow keys - map to numpad equivalents
-          case "ArrowUp":
-            keyToSend = "8";
+          case "Home":
+            mappedKey = "7";
+            console.log("\u{1F504} Mapping Home to numpad 7 (Northwest)");
             break;
-          case "ArrowDown":
-            keyToSend = "2";
+          case "PageUp":
+            mappedKey = "9";
+            console.log("\u{1F504} Mapping PageUp to numpad 9 (Northeast)");
             break;
-          case "ArrowLeft":
-            keyToSend = "4";
+          case "End":
+            mappedKey = "1";
+            console.log("\u{1F504} Mapping End to numpad 1 (Southwest)");
             break;
-          case "ArrowRight":
-            keyToSend = "6";
-            break;
-          // Numpad keys - pass through directly
-          case "1":
-          case "2":
-          case "3":
-          case "4":
-          case "5":
-          case "6":
-          case "7":
-          case "8":
-          case "9":
-            keyToSend = event.key;
-            break;
-          // Space or period for wait (center/5)
-          case " ":
-          case ".":
-            keyToSend = "5";
+          case "PageDown":
+            mappedKey = "3";
+            console.log("\u{1F504} Mapping PageDown to numpad 3 (Southeast)");
             break;
         }
-        if (keyToSend) {
-          this.sendInput(keyToSend);
-          this.hideDirectionQuestion();
+        if (mappedKey) {
+          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(
+              JSON.stringify({
+                type: "input",
+                input: mappedKey
+              })
+            );
+          }
+          return;
         }
+      }
+      if (this.isInQuestion || this.isInDirectionQuestion) {
+        if (this.isInDirectionQuestion) {
+          let keyToSend = null;
+          switch (event.key) {
+            // Arrow keys - map to numpad equivalents
+            case "ArrowUp":
+              keyToSend = "8";
+              break;
+            case "ArrowDown":
+              keyToSend = "2";
+              break;
+            case "ArrowLeft":
+              keyToSend = "4";
+              break;
+            case "ArrowRight":
+              keyToSend = "6";
+              break;
+            // Diagonal movement with Home/End/PageUp/PageDown
+            case "Home":
+              keyToSend = "7";
+              break;
+            case "PageUp":
+              keyToSend = "9";
+              break;
+            case "End":
+              keyToSend = "1";
+              break;
+            case "PageDown":
+              keyToSend = "3";
+              break;
+            // Numpad keys - pass through directly (includes diagonals)
+            case "1":
+            // Southwest
+            case "2":
+            // South
+            case "3":
+            // Southeast
+            case "4":
+            // West
+            case "5":
+            // Wait/rest
+            case "6":
+            // East
+            case "7":
+            // Northwest
+            case "8":
+            // North
+            case "9":
+              keyToSend = event.key;
+              break;
+            // Space or period for wait (center/5)
+            case " ":
+            case ".":
+              keyToSend = "5";
+              break;
+          }
+          if (keyToSend) {
+            this.sendInput(keyToSend);
+            this.hideDirectionQuestion();
+          }
+          return;
+        }
+        this.sendInput(event.key);
         return;
       }
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -26452,6 +26920,31 @@ void main() {
     }
   };
   var game = new Nethack3DEngine();
+  window.nethackGame = game;
+  window.refreshTile = (x, y) => {
+    game.requestTileUpdate(x, y);
+  };
+  window.refreshArea = (centerX, centerY, radius = 3) => {
+    game.requestAreaUpdate(centerX, centerY, radius);
+  };
+  window.refreshPlayerArea = (radius = 5) => {
+    game.requestPlayerAreaUpdate(radius);
+  };
+  console.log("\u{1F3AE} NetHack 3D debugging helpers available:");
+  console.log("  refreshTile(x, y) - Refresh a specific tile");
+  console.log("  refreshArea(x, y, radius) - Refresh an area");
+  console.log("  refreshPlayerArea(radius) - Refresh around player");
+  console.log("  Ctrl+T - Refresh player tile");
+  console.log("  Ctrl+R - Refresh player area (radius 5)");
+  console.log("  Ctrl+Shift+R - Refresh large player area (radius 10)");
+  console.log("\u{1F579}\uFE0F Movement controls:");
+  console.log("  Arrow keys - Cardinal directions (N/S/E/W)");
+  console.log("  Numpad 1-9 - All directions including diagonals");
+  console.log("  Home/PgUp/End/PgDn - Diagonal movement (NW/NE/SW/SE)");
+  console.log("  Numpad 5 or Space - Wait/rest");
+  console.log("\u{1F4E6} Interface controls:");
+  console.log("  'i' - Open/close inventory dialog");
+  console.log("  ESC - Close dialogs or cancel actions");
   var app_default = game;
 })();
 /*! Bundled license information:

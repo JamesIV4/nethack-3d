@@ -28,6 +28,8 @@ class Nethack3DEngine {
   private textSpriteMap: TextSpriteMap = new Map();
   private playerPos = { x: 0, y: 0 };
   private gameMessages: string[] = [];
+  private currentInventory: any[] = []; // Store current inventory items
+  private pendingInventoryDialog: boolean = false; // Flag to show inventory dialog after update
 
   private ws: WebSocket | null = null;
 
@@ -44,6 +46,9 @@ class Nethack3DEngine {
 
   // Direction question handling
   private isInDirectionQuestion: boolean = false;
+
+  // General question handling (pauses all movement)
+  private isInQuestion: boolean = false;
 
   // Camera panning
   private cameraPanX: number = 0;
@@ -227,11 +232,55 @@ class Nethack3DEngine {
   private handleServerMessage(data: any): void {
     switch (data.type) {
       case "map_glyph":
+        // Check if this is a refresh vs new data
+        if (data.isRefresh) {
+          console.log(`🔄 Processing tile refresh for (${data.x}, ${data.y})`);
+        }
         this.updateTile(data.x, data.y, data.glyph, data.char, data.color);
         break;
 
       case "player_position":
+        console.log(
+          `🎯 Received player position update: (${data.x}, ${data.y})`
+        );
+        const oldPos = { ...this.playerPos };
         this.playerPos = { x: data.x, y: data.y };
+        console.log(
+          `🎯 Player position changed from (${oldPos.x}, ${oldPos.y}) to (${data.x}, ${data.y})`
+        );
+        this.updateStatus(`Player at (${data.x}, ${data.y}) - NetHack 3D`);
+        break;
+
+      case "force_player_redraw":
+        // Force update player visual position when NetHack doesn't send map updates
+        console.log(
+          `🎯 Force redraw player from (${data.oldPosition.x}, ${data.oldPosition.y}) to (${data.newPosition.x}, ${data.newPosition.y})`
+        );
+
+        // Update the player position first
+        this.playerPos = { x: data.newPosition.x, y: data.newPosition.y };
+
+        // Clear the old player visual position by redrawing it as floor
+        const oldKey = `${data.oldPosition.x},${data.oldPosition.y}`;
+        const oldSprite = this.textSpriteMap.get(oldKey);
+        if (oldSprite) {
+          console.log(
+            `🎯 Clearing old player sprite at (${data.oldPosition.x}, ${data.oldPosition.y})`
+          );
+          // Remove the old sprite and redraw as floor
+          this.scene.remove(oldSprite);
+          this.textSpriteMap.delete(oldKey);
+
+          // Redraw the old position as floor (assuming it's walkable since player was there)
+          this.updateTile(data.oldPosition.x, data.oldPosition.y, 2396, ".", 0);
+        }
+
+        // Create a fake player glyph at the new position to ensure visual update
+        // Use a typical player glyph number (around 331-360 range)
+        this.updateTile(data.newPosition.x, data.newPosition.y, 331, "@", 0);
+        console.log(
+          `🎯 Player visual updated to position (${data.newPosition.x}, ${data.newPosition.y})`
+        );
         break;
 
       case "text":
@@ -248,6 +297,7 @@ class Nethack3DEngine {
 
       case "direction_question":
         // Special handling for direction questions - show UI and pause movement
+        this.isInQuestion = true;
         this.showDirectionQuestion(data.text);
         break;
 
@@ -274,13 +324,43 @@ class Nethack3DEngine {
           return; // Don't show the dialog
         }
 
-        // For non-character creation questions, show normal dialog
+        // For non-character creation questions, show normal dialog and pause movement
+        this.isInQuestion = true;
         this.showQuestion(
           data.text,
           data.choices,
           data.default,
           data.menuItems
         );
+        break;
+
+      case "inventory_update":
+        // Handle inventory updates without showing dialog
+        const itemCount = data.items ? data.items.length : 0;
+        const actualItems = data.items
+          ? data.items.filter((item: any) => !item.isCategory)
+          : [];
+        console.log(
+          `📦 Received inventory update with ${itemCount} total items (${actualItems.length} actual items)`
+        );
+
+        // Store the current inventory for later display
+        this.currentInventory = data.items || [];
+
+        // If we have a pending inventory dialog request, show it now
+        if (this.pendingInventoryDialog) {
+          console.log("📦 Showing inventory dialog with fresh data");
+          this.pendingInventoryDialog = false;
+          this.showInventoryDialog();
+        }
+
+        // Update inventory display if we have an inventory UI element
+        this.updateInventoryDisplay(data.items);
+
+        // Add a message to the log about inventory update (optional)
+        if (actualItems.length > 0) {
+          this.addGameMessage(`Inventory: ${actualItems.length} items`);
+        }
         break;
 
       case "position_request":
@@ -301,12 +381,87 @@ class Nethack3DEngine {
         this.sendInput("Player");
         break;
 
+      case "area_refresh_complete":
+        console.log(
+          `🔄 Area refresh completed: ${data.tilesRefreshed} tiles refreshed around (${data.centerX}, ${data.centerY})`
+        );
+        this.addGameMessage(
+          `Refreshed ${data.tilesRefreshed} tiles around (${data.centerX}, ${data.centerY})`
+        );
+        break;
+
+      case "tile_not_found":
+        console.log(
+          `⚠️ Tile not found at (${data.x}, ${data.y}): ${data.message}`
+        );
+        break;
+
       default:
         console.log("Unknown message type:", data.type, data);
     }
   }
 
-  private createTextSprite(text: string, size: number = 128, textColor: string = "yellow"): THREE.Sprite {
+  /**
+   * Request a view update for a specific tile from the server
+   * @param x The x coordinate of the tile
+   * @param y The y coordinate of the tile
+   */
+  public requestTileUpdate(x: number, y: number): void {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      console.log(`🔄 Requesting tile update for (${x}, ${y})`);
+      this.ws.send(
+        JSON.stringify({
+          type: "request_tile_update",
+          x: x,
+          y: y,
+        })
+      );
+    } else {
+      console.log("⚠️ Cannot request tile update - WebSocket not connected");
+    }
+  }
+
+  /**
+   * Request a view update for an area around a center point
+   * @param centerX The x coordinate of the center
+   * @param centerY The y coordinate of the center
+   * @param radius The radius around the center point (default: 3)
+   */
+  public requestAreaUpdate(
+    centerX: number,
+    centerY: number,
+    radius: number = 3
+  ): void {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      console.log(
+        `🔄 Requesting area update centered at (${centerX}, ${centerY}) with radius ${radius}`
+      );
+      this.ws.send(
+        JSON.stringify({
+          type: "request_area_update",
+          centerX: centerX,
+          centerY: centerY,
+          radius: radius,
+        })
+      );
+    } else {
+      console.log("⚠️ Cannot request area update - WebSocket not connected");
+    }
+  }
+
+  /**
+   * Request a view update for the area around the player
+   * @param radius The radius around the player (default: 5)
+   */
+  public requestPlayerAreaUpdate(radius: number = 5): void {
+    this.requestAreaUpdate(this.playerPos.x, this.playerPos.y, radius);
+  }
+
+  private createTextSprite(
+    text: string,
+    size: number = 128,
+    textColor: string = "yellow"
+  ): THREE.Sprite {
     // Create a canvas to draw text on
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d")!;
@@ -421,15 +576,19 @@ class Nethack3DEngine {
     color?: number
   ): void {
     // Debug logging to see what character data we're receiving
-    console.log(`🎨 updateTile(${x},${y}) glyph=${glyph} char="${char}" color=${color}`);
-    
+    console.log(
+      `🎨 updateTile(${x},${y}) glyph=${glyph} char="${char}" color=${color}`
+    );
+
     const key = `${x},${y}`;
     let mesh = this.tileMap.get(key);
     let textSprite = this.textSpriteMap.get(key);
 
     // Check if this is the player glyph and update player position
-    // Use the provided char if available, otherwise fall back to glyph range detection
-    const isPlayerGlyph = char === "@" || (glyph >= 331 && glyph <= 360);
+    // Use glyph range as the primary indicator (more reliable than character)
+    // Only consider "@" characters that are within the player glyph range
+    const isPlayerGlyph =
+      glyph >= 331 && glyph <= 360 && (char === "@" || !char);
     if (isPlayerGlyph) {
       console.log(
         `🎯 Player detected at position (${x}, ${y}) with glyph ${glyph}, char: "${char}"`
@@ -447,7 +606,7 @@ class Nethack3DEngine {
     // BUT check for special cases first (like doors) where glyph number is more reliable
     if (char) {
       console.log(`🔤 Using character-based detection: "${char}"`);
-      
+
       // Special case: Check for door glyphs, but respect the character
       if (glyph === 2389 || glyph === 2390) {
         // Door glyphs - but the character tells us the actual state
@@ -465,7 +624,9 @@ class Nethack3DEngine {
           isWall = true;
         } else {
           // Other door states - default to open
-          console.log(`  -> Door with character "${char}" - defaulting to open`);
+          console.log(
+            `  -> Door with character "${char}" - defaulting to open`
+          );
           material = this.materials.floor;
           geometry = this.floorGeometry;
           isWall = false;
@@ -494,10 +655,16 @@ class Nethack3DEngine {
         material = this.materials.wall;
         geometry = this.wallGeometry;
         isWall = true;
-      } else if (char === "@") {
-        // Player character
+      } else if (isPlayerGlyph) {
+        // Player character (based on glyph range + "@" char)
         console.log(`  -> Player`);
         material = this.materials.player;
+        geometry = this.floorGeometry;
+        isWall = false;
+      } else if (char === "@") {
+        // Non-player "@" character (shopkeeper, NPC, etc.)
+        console.log(`  -> NPC/Shopkeeper`);
+        material = this.materials.monster; // Treat as monster/NPC
         geometry = this.floorGeometry;
         isWall = false;
       } else if (char === "{") {
@@ -578,10 +745,10 @@ class Nethack3DEngine {
     // Create or update text sprite showing glyph character
     // Use the character provided by NetHack's mapglyph function if available
     const glyphChar = char || this.glyphToChar(glyph);
-    
+
     // Determine text color based on glyph type (more comprehensive and robust)
     let textColor = "yellow"; // Default color
-    
+
     // NetHack glyph categories (based on NetHack source code glyph ranges)
     if (glyph >= 2378 && glyph <= 2399) {
       // Structural glyphs: walls, floors, corridors, doors
@@ -606,7 +773,7 @@ class Nethack3DEngine {
       // Miscellaneous objects and terrain
       textColor = "white";
     }
-    
+
     if (!textSprite) {
       textSprite = this.createTextSprite(glyphChar, 128, textColor);
       this.scene.add(textSprite);
@@ -658,12 +825,49 @@ class Nethack3DEngine {
     }
   }
 
+  private updateInventoryDisplay(items: any[]): void {
+    // Update inventory display without showing a dialog
+    // This is for informational inventory updates from NetHack
+
+    if (!items || items.length === 0) {
+      console.log("📦 Inventory is empty");
+      return;
+    }
+
+    // Log inventory items for debugging
+    console.log("📦 Current inventory:");
+    items.forEach((item, index) => {
+      if (item.isCategory) {
+        console.log(`  📁 ${item.text}`);
+      } else {
+        console.log(`  ${item.accelerator || "?"}) ${item.text}`);
+      }
+    });
+
+    // TODO: If we add an inventory panel to the UI in the future, update it here
+    // For now, we just log the inventory and don't show any dialog
+  }
+
   private showQuestion(
     question: string,
     choices: string,
     defaultChoice: string,
     menuItems: any[]
   ): void {
+    // Temporarily disable automatic "?" expansion to debug menu issues
+    // TODO: Re-enable with better logic later
+    const needsExpansion = false;
+
+    if (needsExpansion) {
+      console.log(
+        "🔍 Question includes '?' option, automatically expanding options..."
+      );
+      // Send "?" to get detailed menu items
+      this.sendInput("?");
+      // Don't show the dialog yet - wait for expanded menu items
+      return;
+    }
+
     // Create or get question dialog
     let questionDialog = document.getElementById("question-dialog");
     if (!questionDialog) {
@@ -683,7 +887,9 @@ class Nethack3DEngine {
         font-family: 'Courier New', monospace;
         text-align: center;
         min-width: 300px;
-        max-width: 500px;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
       `;
       document.body.appendChild(questionDialog);
     }
@@ -704,26 +910,63 @@ class Nethack3DEngine {
     // Add menu items if available
     if (menuItems && menuItems.length > 0) {
       menuItems.forEach((item) => {
-        const menuButton = document.createElement("button");
-        menuButton.style.cssText = `
-          display: block;
-          width: 100%;
-          margin: 5px 0;
-          padding: 8px;
-          background: #333;
-          color: white;
-          border: 1px solid #666;
-          border-radius: 3px;
-          cursor: pointer;
-          font-family: 'Courier New', monospace;
-          text-align: left;
-        `;
-        menuButton.textContent = `${item.accelerator}) ${item.text}`;
-        menuButton.onclick = () => {
-          this.sendInput(item.accelerator);
-          this.hideQuestion();
-        };
-        questionDialog.appendChild(menuButton);
+        // Check if this is a category header
+        if (
+          item.isCategory ||
+          !item.accelerator ||
+          item.accelerator.trim() === ""
+        ) {
+          // This is a category header
+          const categoryHeader = document.createElement("div");
+          categoryHeader.style.cssText = `
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffff00;
+            margin: 15px 0 5px 0;
+            text-align: left;
+            border-bottom: 1px solid #444;
+            padding-bottom: 3px;
+          `;
+          categoryHeader.textContent = item.text;
+          questionDialog.appendChild(categoryHeader);
+        } else {
+          // This is a selectable item
+          const menuButton = document.createElement("button");
+          menuButton.style.cssText = `
+            display: block;
+            width: 100%;
+            margin: 3px 0;
+            padding: 8px;
+            background: #333;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            line-height: 1.3;
+          `;
+
+          // Format the button text with key and description
+          const keyPart = document.createElement("span");
+          keyPart.style.cssText = `
+            color: #00ff00;
+            font-weight: bold;
+          `;
+          keyPart.textContent = `${item.accelerator}) `;
+
+          const textPart = document.createElement("span");
+          textPart.textContent = item.text;
+
+          menuButton.appendChild(keyPart);
+          menuButton.appendChild(textPart);
+
+          menuButton.onclick = () => {
+            this.sendInput(item.accelerator);
+            this.hideQuestion();
+          };
+          questionDialog.appendChild(menuButton);
+        }
       });
     } else {
       // Add choice buttons for simple y/n questions
@@ -825,18 +1068,18 @@ class Nethack3DEngine {
     `;
 
     const directions = [
-      { key: '7', label: '↖', name: 'NW' },
-      { key: '8', label: '↑', name: 'N' },
-      { key: '9', label: '↗', name: 'NE' },
-      { key: '4', label: '←', name: 'W' },
-      { key: '5', label: '•', name: 'Wait' },
-      { key: '6', label: '→', name: 'E' },
-      { key: '1', label: '↙', name: 'SW' },
-      { key: '2', label: '↓', name: 'S' },
-      { key: '3', label: '↘', name: 'SE' }
+      { key: "7", label: "↖", name: "NW" },
+      { key: "8", label: "↑", name: "N" },
+      { key: "9", label: "↗", name: "NE" },
+      { key: "4", label: "←", name: "W" },
+      { key: "5", label: "•", name: "Wait" },
+      { key: "6", label: "→", name: "E" },
+      { key: "1", label: "↙", name: "SW" },
+      { key: "2", label: "↓", name: "S" },
+      { key: "3", label: "↘", name: "SE" },
     ];
 
-    directions.forEach(dir => {
+    directions.forEach((dir) => {
       const button = document.createElement("button");
       button.style.cssText = `
         width: 80px;
@@ -855,22 +1098,22 @@ class Nethack3DEngine {
         transition: background-color 0.2s;
         line-height: 1.2;
       `;
-      
+
       button.innerHTML = `<div style="font-size: 24px; margin-bottom: 2px;">${dir.label}</div><div style="font-size: 14px;">${dir.key}</div>`;
-      
+
       button.onmouseover = () => {
         button.style.backgroundColor = "#666";
       };
-      
+
       button.onmouseout = () => {
         button.style.backgroundColor = "#444";
       };
-      
+
       button.onclick = () => {
         this.sendInput(dir.key);
         this.hideDirectionQuestion();
       };
-      
+
       directionsContainer.appendChild(button);
     });
 
@@ -883,7 +1126,8 @@ class Nethack3DEngine {
       color: #aaa;
       margin-top: 15px;
     `;
-    escapeText.textContent = "Use numpad (1-9), arrow keys, or click a direction. Press ESC to cancel";
+    escapeText.textContent =
+      "Use numpad (1-9), arrow keys, or click a direction. Press ESC to cancel";
     directionDialog.appendChild(escapeText);
 
     // Show the dialog
@@ -892,10 +1136,189 @@ class Nethack3DEngine {
 
   private hideDirectionQuestion(): void {
     this.isInDirectionQuestion = false;
+    this.isInQuestion = false; // Clear general question state
     const directionDialog = document.getElementById("direction-dialog");
     if (directionDialog) {
       directionDialog.style.display = "none";
     }
+  }
+
+  private showInventoryDialog(): void {
+    // Create or get inventory dialog
+    let inventoryDialog = document.getElementById("inventory-dialog");
+    if (!inventoryDialog) {
+      inventoryDialog = document.createElement("div");
+      inventoryDialog.id = "inventory-dialog";
+      inventoryDialog.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.95);
+        color: white;
+        padding: 20px;
+        border: 2px solid #00ff00;
+        border-radius: 10px;
+        z-index: 2000;
+        font-family: 'Courier New', monospace;
+        min-width: 450px;
+        max-width: 600px;
+        max-height: 95vh;
+        overflow-y: auto;
+      `;
+      document.body.appendChild(inventoryDialog);
+    }
+
+    // Clear previous content
+    inventoryDialog.innerHTML = "";
+
+    // Add title
+    const title = document.createElement("div");
+    title.style.cssText = `
+      font-size: 18px;
+      font-weight: bold;
+      color: #00ff00;
+      margin-bottom: 15px;
+      text-align: center;
+      border-bottom: 2px solid #00ff00;
+      padding-bottom: 8px;
+    `;
+    title.textContent = "📦 INVENTORY";
+    inventoryDialog.appendChild(title);
+
+    // Add inventory items
+    const itemsContainer = document.createElement("div");
+    itemsContainer.style.cssText = `
+      margin-bottom: 20px;
+      max-height: 70vh;
+      overflow-y: auto;
+    `;
+
+    if (this.currentInventory.length === 0) {
+      const emptyMessage = document.createElement("div");
+      emptyMessage.style.cssText = `
+        text-align: center;
+        color: #aaa;
+        font-style: italic;
+        padding: 20px;
+      `;
+      emptyMessage.textContent = "Your inventory is empty.";
+      itemsContainer.appendChild(emptyMessage);
+    } else {
+      // Display both categories and items (don't filter out categories)
+      this.currentInventory.forEach((item: any, index: number) => {
+        if (item.isCategory) {
+          // This is a category header
+          const categoryHeader = document.createElement("div");
+          categoryHeader.style.cssText = `
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffff00;
+            margin: ${index === 0 ? "10px" : "15px"} 0 8px 0;
+            text-align: left;
+            border-bottom: 1px solid #666;
+            padding-bottom: 4px;
+            text-transform: uppercase;
+          `;
+          categoryHeader.textContent = item.text;
+          itemsContainer.appendChild(categoryHeader);
+        } else {
+          // This is an actual item
+          const itemDiv = document.createElement("div");
+          itemDiv.style.cssText = `
+            padding: 4px 10px;
+            margin: 1px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid #00ff00;
+            line-height: 1.3;
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+          `;
+
+          const keySpan = document.createElement("span");
+          keySpan.style.cssText = `
+            color: #00ff00;
+            font-weight: bold;
+            margin-right: 8px;
+            min-width: 20px;
+            font-size: 13px;
+          `;
+          keySpan.textContent = `${item.accelerator || "?"})`;
+
+          const textSpan = document.createElement("span");
+          textSpan.style.cssText = `
+            color: #ffffff;
+            flex: 1;
+            font-size: 13px;
+          `;
+          textSpan.textContent = item.text || "Unknown item";
+
+          itemDiv.appendChild(keySpan);
+          itemDiv.appendChild(textSpan);
+          itemsContainer.appendChild(itemDiv);
+        }
+      });
+    }
+
+    inventoryDialog.appendChild(itemsContainer);
+
+    // Add compact NetHack item handling keybinds
+    const keybindsTitle = document.createElement("div");
+    keybindsTitle.style.cssText = `
+      font-size: 13px;
+      font-weight: bold;
+      color: #ffff00;
+      margin-bottom: 8px;
+      border-top: 1px solid #444;
+      padding-top: 12px;
+    `;
+    keybindsTitle.textContent = "🎮 ITEM COMMANDS";
+    inventoryDialog.appendChild(keybindsTitle);
+
+    // Create commands container
+    const keybindsContainer = document.createElement("div");
+    keybindsContainer.style.cssText = `
+      font-size: 11px;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 4px;
+      border: 1px solid #333;
+    `;
+
+    // Create highlighted command list with color-coded keys
+    const commandText = `<span style="color: #88ff88;">a</span>)pply <span style="color: #88ff88;">d</span>)rop <span style="color: #88ff88;">e</span>)at <span style="color: #88ff88;">q</span>)uaff <span style="color: #88ff88;">r</span>)ead <span style="color: #88ff88;">t</span>)hrow <span style="color: #88ff88;">w</span>)ield <span style="color: #88ff88;">W</span>)ear <span style="color: #88ff88;">T</span>)ake-off <span style="color: #88ff88;">P</span>)ut-on <span style="color: #88ff88;">R</span>)emove <span style="color: #88ff88;">z</span>)ap <span style="color: #88ff88;">Z</span>)cast
+    Special: <span style="color: #88ff88;">"</span>)weapons <span style="color: #88ff88;">[</span>)armor <span style="color: #88ff88;">=</span>)rings <span style="color: #88ff88;">"</span>)amulets <span style="color: #88ff88;">(</span>)tools`;
+
+    keybindsContainer.innerHTML = `<div style="color: #cccccc; white-space: pre-line;">${commandText}</div>`;
+    inventoryDialog.appendChild(keybindsContainer);
+
+    // Add close instructions
+    const closeText = document.createElement("div");
+    closeText.style.cssText = `
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+      margin-top: 10px;
+      border-top: 1px solid #444;
+      padding-top: 10px;
+    `;
+    closeText.textContent = "Press ESC or 'i' to close";
+    inventoryDialog.appendChild(closeText);
+
+    // Show the dialog
+    inventoryDialog.style.display = "block";
+  }
+
+  private hideInventoryDialog(): void {
+    const inventoryDialog = document.getElementById("inventory-dialog");
+    if (inventoryDialog) {
+      inventoryDialog.style.display = "none";
+    }
+    // Clear any pending inventory dialog flag
+    this.pendingInventoryDialog = false;
   }
 
   private showPositionRequest(text: string): void {
@@ -1020,9 +1443,11 @@ class Nethack3DEngine {
   }
 
   private hideQuestion(): void {
+    this.isInQuestion = false; // Clear general question state
     const questionDialog = document.getElementById("question-dialog");
     if (questionDialog) {
       questionDialog.style.display = "none";
+      questionDialog.innerHTML = ""; // Clear content to prevent retention
     }
   }
 
@@ -1040,60 +1465,225 @@ class Nethack3DEngine {
   private handleKeyDown(event: KeyboardEvent): void {
     // Handle escape key to close dialogs
     if (event.key === "Escape") {
+      // Check if inventory dialog is open and close it
+      const inventoryDialog = document.getElementById("inventory-dialog");
+      if (inventoryDialog && inventoryDialog.style.display !== "none") {
+        this.hideInventoryDialog();
+        return;
+      }
+
+      // If we're in a question, send escape to NetHack to cancel the question
+      if (this.isInQuestion || this.isInDirectionQuestion) {
+        console.log("🔄 Sending Escape to NetHack to cancel question");
+        this.sendInput("Escape");
+      }
+
+      // Clear UI dialogs and states
       this.hideQuestion();
       this.hideDirectionQuestion();
       const posDialog = document.getElementById("position-dialog");
       if (posDialog) {
         posDialog.style.display = "none";
       }
+      // Clear question states when escape is pressed
+      this.isInQuestion = false;
+      this.isInDirectionQuestion = false;
       return;
     }
 
-    // If we're in a direction question, handle direction input specially
-    if (this.isInDirectionQuestion) {
-      // With number_pad:1 option, we can pass numpad keys and arrow keys directly
-      let keyToSend = null;
-      
+    // Handle tile refresh shortcuts (Ctrl + key combinations)
+    if (event.ctrlKey) {
+      switch (event.key.toLowerCase()) {
+        case "r":
+          if (event.shiftKey) {
+            // Ctrl+Shift+R: Refresh larger area around player
+            event.preventDefault();
+            console.log("🔄 Manual refresh requested for large player area");
+            this.requestPlayerAreaUpdate(10);
+            this.addGameMessage("Refreshing large area around player...");
+            return;
+          } else {
+            // Ctrl+R: Refresh area around player
+            event.preventDefault();
+            console.log("🔄 Manual refresh requested for player area");
+            this.requestPlayerAreaUpdate(5);
+            this.addGameMessage("Refreshing area around player...");
+            return;
+          }
+
+        case "t":
+          // Ctrl+T: Refresh tile at player position
+          event.preventDefault();
+          console.log("🔄 Manual refresh requested for player tile");
+          this.requestTileUpdate(this.playerPos.x, this.playerPos.y);
+          this.addGameMessage(
+            `Refreshing tile at (${this.playerPos.x}, ${this.playerPos.y})...`
+          );
+          return;
+      }
+    }
+
+    // Handle inventory display (before other key processing)
+    if (event.key === "i" || event.key === "I") {
+      event.preventDefault();
+
+      // Check if inventory dialog is already open
+      const inventoryDialog = document.getElementById("inventory-dialog");
+      if (inventoryDialog && inventoryDialog.style.display !== "none") {
+        console.log("📦 Closing inventory dialog");
+        this.hideInventoryDialog();
+      } else {
+        // If we already have inventory data, show it immediately
+        if (this.currentInventory && this.currentInventory.length > 0) {
+          console.log("📦 Showing inventory dialog with existing data");
+          this.showInventoryDialog();
+        } else {
+          console.log("📦 Requesting current inventory from NetHack...");
+          // First send "i" to NetHack to fetch current inventory
+          this.sendInput("i");
+          // Set a flag to show dialog when inventory update arrives
+          this.pendingInventoryDialog = true;
+        }
+      }
+      return;
+    }
+
+    // Filter out modifier keys that shouldn't be sent to NetHack
+    // Note: Home, End, PageUp, PageDown are NOT filtered as they can be used for diagonal movement
+    const modifierKeys = [
+      "Shift",
+      "Control",
+      "Alt",
+      "Meta",
+      "CapsLock",
+      "NumLock",
+      "ScrollLock",
+      "Tab",
+      "Insert",
+      "Delete",
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F6",
+      "F7",
+      "F8",
+      "F9",
+      "F10",
+      "F11",
+      "F12",
+    ];
+
+    if (modifierKeys.indexOf(event.key) !== -1) {
+      console.log(`🚫 Filtering out modifier key: ${event.key}`);
+      return;
+    }
+
+    // Handle diagonal movement keys during regular gameplay
+    // Map navigation keys to numpad equivalents for NetHack
+    if (!this.isInQuestion && !this.isInDirectionQuestion) {
+      let mappedKey = null;
+
       switch (event.key) {
-        // Arrow keys - map to numpad equivalents
-        case 'ArrowUp':
-          keyToSend = '8';
+        case "Home":
+          mappedKey = "7"; // Northwest
+          console.log("🔄 Mapping Home to numpad 7 (Northwest)");
           break;
-        case 'ArrowDown':
-          keyToSend = '2';
+        case "PageUp":
+          mappedKey = "9"; // Northeast
+          console.log("🔄 Mapping PageUp to numpad 9 (Northeast)");
           break;
-        case 'ArrowLeft':
-          keyToSend = '4';
+        case "End":
+          mappedKey = "1"; // Southwest
+          console.log("🔄 Mapping End to numpad 1 (Southwest)");
           break;
-        case 'ArrowRight':
-          keyToSend = '6';
-          break;
-        
-        // Numpad keys - pass through directly
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-          keyToSend = event.key;
-          break;
-        
-        // Space or period for wait (center/5)
-        case ' ':
-        case '.':
-          keyToSend = '5';
+        case "PageDown":
+          mappedKey = "3"; // Southeast
+          console.log("🔄 Mapping PageDown to numpad 3 (Southeast)");
           break;
       }
-      
-      if (keyToSend) {
-        this.sendInput(keyToSend);
-        this.hideDirectionQuestion();
+
+      if (mappedKey) {
+        // Send the mapped key instead of the original
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+          this.ws.send(
+            JSON.stringify({
+              type: "input",
+              input: mappedKey,
+            })
+          );
+        }
+        return;
       }
-      return; // Don't send other keys when in direction question mode
+    }
+
+    // If we're in any question, handle input specially and don't allow normal movement
+    if (this.isInQuestion || this.isInDirectionQuestion) {
+      // If it's a direction question, handle direction input
+      if (this.isInDirectionQuestion) {
+        // With number_pad:1 option, we can pass numpad keys and arrow keys directly
+        let keyToSend = null;
+
+        switch (event.key) {
+          // Arrow keys - map to numpad equivalents
+          case "ArrowUp":
+            keyToSend = "8";
+            break;
+          case "ArrowDown":
+            keyToSend = "2";
+            break;
+          case "ArrowLeft":
+            keyToSend = "4";
+            break;
+          case "ArrowRight":
+            keyToSend = "6";
+            break;
+
+          // Diagonal movement with Home/End/PageUp/PageDown
+          case "Home":
+            keyToSend = "7"; // Northwest
+            break;
+          case "PageUp":
+            keyToSend = "9"; // Northeast
+            break;
+          case "End":
+            keyToSend = "1"; // Southwest
+            break;
+          case "PageDown":
+            keyToSend = "3"; // Southeast
+            break;
+
+          // Numpad keys - pass through directly (includes diagonals)
+          case "1": // Southwest
+          case "2": // South
+          case "3": // Southeast
+          case "4": // West
+          case "5": // Wait/rest
+          case "6": // East
+          case "7": // Northwest
+          case "8": // North
+          case "9": // Northeast
+            keyToSend = event.key;
+            break;
+
+          // Space or period for wait (center/5)
+          case " ":
+          case ".":
+            keyToSend = "5";
+            break;
+        }
+
+        if (keyToSend) {
+          this.sendInput(keyToSend);
+          this.hideDirectionQuestion();
+        }
+        return; // Don't send other keys when in direction question mode
+      }
+
+      // For other questions, send the key directly to answer the question
+      this.sendInput(event.key);
+      return; // Don't allow normal movement during questions
     }
 
     // Send input to server for normal gameplay
@@ -1217,5 +1807,41 @@ class Nethack3DEngine {
 
 // --- APPLICATION ENTRY POINT ---
 const game = new Nethack3DEngine();
+
+// Make game instance available globally for debugging
+(window as any).nethackGame = game;
+
+// Add some debugging helpers to the window object
+(window as any).refreshTile = (x: number, y: number) => {
+  game.requestTileUpdate(x, y);
+};
+
+(window as any).refreshArea = (
+  centerX: number,
+  centerY: number,
+  radius: number = 3
+) => {
+  game.requestAreaUpdate(centerX, centerY, radius);
+};
+
+(window as any).refreshPlayerArea = (radius: number = 5) => {
+  game.requestPlayerAreaUpdate(radius);
+};
+
+console.log("🎮 NetHack 3D debugging helpers available:");
+console.log("  refreshTile(x, y) - Refresh a specific tile");
+console.log("  refreshArea(x, y, radius) - Refresh an area");
+console.log("  refreshPlayerArea(radius) - Refresh around player");
+console.log("  Ctrl+T - Refresh player tile");
+console.log("  Ctrl+R - Refresh player area (radius 5)");
+console.log("  Ctrl+Shift+R - Refresh large player area (radius 10)");
+console.log("🕹️ Movement controls:");
+console.log("  Arrow keys - Cardinal directions (N/S/E/W)");
+console.log("  Numpad 1-9 - All directions including diagonals");
+console.log("  Home/PgUp/End/PgDn - Diagonal movement (NW/NE/SW/SE)");
+console.log("  Numpad 5 or Space - Wait/rest");
+console.log("📦 Interface controls:");
+console.log("  'i' - Open/close inventory dialog");
+console.log("  ESC - Close dialogs or cancel actions");
 
 export default game;

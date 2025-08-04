@@ -13,6 +13,7 @@ class NetHackSession {
     this.currentMenuItems = [];
     this.currentWindow = null;
     this.hasShownCharacterSelection = false;
+    this.lastQuestionText = null; // Store the last question for menu expansion
 
     // Simplified input handling with async support
     this.latestInput = null;
@@ -58,6 +59,103 @@ class NetHackSession {
 
     // Otherwise, just store for later use (for synchronous phases like character creation)
     console.log("🎮 Storing input for later use:", input);
+  }
+
+  // Handle request for tile update from client
+  handleTileUpdateRequest(x, y) {
+    console.log(`🔄 Client requested tile update for (${x}, ${y})`);
+
+    const key = `${x},${y}`;
+    const tileData = this.gameMap.get(key);
+
+    if (tileData) {
+      console.log(`📤 Resending tile data for (${x}, ${y}):`, tileData);
+
+      if (this.ws && this.ws.readyState === 1) {
+        this.ws.send(
+          JSON.stringify({
+            type: "map_glyph",
+            x: tileData.x,
+            y: tileData.y,
+            glyph: tileData.glyph,
+            char: tileData.char,
+            color: tileData.color,
+            window: 2, // WIN_MAP
+            isRefresh: true, // Mark this as a refresh to distinguish from new data
+          })
+        );
+      }
+    } else {
+      console.log(
+        `⚠️ No tile data found for (${x}, ${y}) - tile may not be explored yet`
+      );
+
+      // Optionally, we could send a "blank" tile or request NetHack to redraw the area
+      if (this.ws && this.ws.readyState === 1) {
+        this.ws.send(
+          JSON.stringify({
+            type: "tile_not_found",
+            x: x,
+            y: y,
+            message: "Tile data not available - may not be explored yet",
+          })
+        );
+      }
+    }
+  }
+
+  // Handle request for area update from client
+  handleAreaUpdateRequest(centerX, centerY, radius = 3) {
+    console.log(
+      `🔄 Client requested area update centered at (${centerX}, ${centerY}) with radius ${radius}`
+    );
+
+    let tilesRefreshed = 0;
+
+    for (let dx = -radius; dx <= radius; dx++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        const x = centerX + dx;
+        const y = centerY + dy;
+        const key = `${x},${y}`;
+        const tileData = this.gameMap.get(key);
+
+        if (tileData) {
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(
+              JSON.stringify({
+                type: "map_glyph",
+                x: tileData.x,
+                y: tileData.y,
+                glyph: tileData.glyph,
+                char: tileData.char,
+                color: tileData.color,
+                window: 2, // WIN_MAP
+                isRefresh: true,
+                isAreaRefresh: true,
+              })
+            );
+          }
+          tilesRefreshed++;
+        }
+      }
+    }
+
+    console.log(
+      `📤 Refreshed ${tilesRefreshed} tiles in area around (${centerX}, ${centerY})`
+    );
+
+    // Send completion message
+    if (this.ws && this.ws.readyState === 1) {
+      this.ws.send(
+        JSON.stringify({
+          type: "area_refresh_complete",
+          centerX: centerX,
+          centerY: centerY,
+          radius: radius,
+          tilesRefreshed: tilesRefreshed,
+        })
+      );
+    }
   }
 
   // Helper method for key processing
@@ -218,10 +316,15 @@ class NetHackSession {
           `🤔 Y/N Question: "${question}" choices: "${choices}" default: ${defaultChoice}`
         );
 
+        // Store the question text for potential menu expansion
+        this.lastQuestionText = question;
+
         // Check if this is a direction question that needs special handling
         if (question && question.toLowerCase().includes("direction")) {
-          console.log("🧭 Direction question detected - waiting for user input");
-          
+          console.log(
+            "🧭 Direction question detected - waiting for user input"
+          );
+
           // Send direction question to web client
           if (this.ws && this.ws.readyState === 1) {
             this.ws.send(
@@ -256,14 +359,13 @@ class NetHackSession {
           );
         }
 
-        // For now, return default but we'll improve this later
-        const defaultChar = defaultChoice || "n";
-        console.log(`Returning default choice: ${defaultChar}`);
-
-        // Clear menu items after use
-        this.currentMenuItems = [];
-
-        return defaultChar.charCodeAt(0);
+        // Wait for actual user input instead of returning default choice automatically
+        console.log("🤔 Y/N Question - waiting for user input (async)...");
+        return new Promise((resolve) => {
+          this.inputResolver = resolve;
+          this.waitingForInput = true;
+          // No timeout - wait for real user input via WebSocket
+        });
 
       case "shim_nh_poskey":
         const [xPtr, yPtr, modPtr] = args;
@@ -312,11 +414,174 @@ class NetHackSession {
       case "shim_start_menu":
         const [menuWinId, menuOptions] = args;
         console.log("NetHack starting menu:", args);
-        this.currentMenuItems = [];
+        this.currentMenuItems = []; // Clear previous menu items
         this.currentWindow = menuWinId;
+        this.lastQuestionText = null; // Clear any previous question text when starting new menu
+
+        // Log window type for debugging
+        const windowTypes = {
+          1: "WIN_MESSAGE",
+          2: "WIN_MAP",
+          3: "WIN_STATUS",
+          4: "WIN_INVEN",
+        };
+        console.log(
+          `📋 Starting menu for window ${menuWinId} (${
+            windowTypes[menuWinId] || "UNKNOWN"
+          })`
+        );
         return 0;
       case "shim_end_menu":
+        const [endMenuWinid, menuQuestion] = args;
         console.log("NetHack ending menu:", args);
+
+        // Check if this is just an inventory update vs an actual question
+        const isInventoryWindow = endMenuWinid === 4; // WIN_INVEN = 4
+        const hasMenuQuestion = menuQuestion && menuQuestion.trim();
+
+        // If this is an inventory window without a question, it's just an inventory update
+        if (isInventoryWindow && !hasMenuQuestion) {
+          console.log(
+            `📦 Inventory update detected (${this.currentMenuItems.length} total items) - not showing dialog`
+          );
+
+          // Count actual items vs category headers for better logging
+          const actualItems = this.currentMenuItems.filter(
+            (item) => !item.isCategory
+          );
+          const categoryHeaders = this.currentMenuItems.filter(
+            (item) => item.isCategory
+          );
+          console.log(
+            `📦 -> ${actualItems.length} actual items, ${categoryHeaders.length} category headers`
+          );
+
+          // Send inventory update to client as informational only
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(
+              JSON.stringify({
+                type: "inventory_update",
+                items: this.currentMenuItems,
+                window: endMenuWinid,
+              })
+            );
+          }
+
+          return 0; // Don't wait for input - this is just informational
+        }
+
+        // If there's a menu question (like "Pick up what?"), send it to the client
+        if (hasMenuQuestion && this.currentMenuItems.length > 0) {
+          console.log(
+            `📋 Menu question detected: "${menuQuestion}" with ${this.currentMenuItems.length} items`
+          );
+
+          // Send menu question to web client
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(
+              JSON.stringify({
+                type: "question",
+                text: menuQuestion,
+                choices: "",
+                default: "",
+                menuItems: this.currentMenuItems,
+              })
+            );
+          }
+
+          // Wait for actual user input for menu questions
+          console.log("📋 Waiting for menu selection (async)...");
+          return new Promise((resolve) => {
+            this.inputResolver = resolve;
+            this.waitingForInput = true;
+            // No timeout - wait for real user input via WebSocket
+          });
+        }
+
+        // Check if we have menu items but no explicit question - could be a pickup or action menu
+        if (
+          this.currentMenuItems.length > 0 &&
+          !hasMenuQuestion &&
+          !isInventoryWindow
+        ) {
+          console.log(
+            `📋 Menu expansion detected with ${this.currentMenuItems.length} items (window ${endMenuWinid})`
+          );
+
+          // Determine the appropriate question based on context and window type
+          let contextualQuestion = "Please select an option:";
+
+          // Count non-category items to get actual selectable items
+          const selectableItems = this.currentMenuItems.filter(
+            (item) => !item.isCategory
+          );
+          console.log(
+            `📋 Found ${selectableItems.length} selectable items out of ${this.currentMenuItems.length} total`
+          );
+
+          // Try to infer the action from the menu items and context
+          if (
+            selectableItems.some(
+              (item) =>
+                item.text &&
+                typeof item.text === "string" &&
+                (item.text.includes("gold pieces") ||
+                  item.text.includes("corpse") ||
+                  item.text.includes("here"))
+            )
+          ) {
+            contextualQuestion = "What would you like to pick up?";
+          } else if (
+            selectableItems.some(
+              (item) =>
+                item.text &&
+                typeof item.text === "string" &&
+                (item.text.includes("spell") || item.text.includes("magic"))
+            )
+          ) {
+            contextualQuestion = "Which spell would you like to cast?";
+          } else if (
+            selectableItems.some(
+              (item) =>
+                item.text &&
+                typeof item.text === "string" &&
+                (item.text.includes("wear") ||
+                  item.text.includes("wield") ||
+                  item.text.includes("armor"))
+            )
+          ) {
+            contextualQuestion = "What would you like to use?";
+          }
+
+          // Only show dialog if we have actual selectable items
+          if (selectableItems.length > 0) {
+            // Send expanded question to web client
+            if (this.ws && this.ws.readyState === 1) {
+              this.ws.send(
+                JSON.stringify({
+                  type: "question",
+                  text: contextualQuestion,
+                  choices: "",
+                  default: "",
+                  menuItems: this.currentMenuItems,
+                })
+              );
+            }
+
+            // Wait for actual user input for expanded questions
+            console.log("📋 Waiting for expanded menu selection (async)...");
+            return new Promise((resolve) => {
+              this.inputResolver = resolve;
+              this.waitingForInput = true;
+              // No timeout - wait for real user input via WebSocket
+            });
+          } else {
+            console.log(
+              "📋 Menu has no selectable items - treating as informational"
+            );
+          }
+        }
+
         return 0;
       case "shim_display_nhwindow":
         const [winid, blocking] = args;
@@ -332,16 +597,34 @@ class NetHackSession {
           menuStr,
           preselected,
         ] = args;
-        const menuChar = String.fromCharCode(accelerator || 32);
-        console.log(`📋 MENU ITEM: "${menuStr}" (key: ${menuChar})`);
 
-        // Store menu item for current question
-        if (this.currentWindow === menuWinid && menuStr && menuChar.trim()) {
+        // Fix: menuStr is actually at index 6, not 5
+        const menuText = String(args[6] || "");
+
+        // Determine if this is a category header and the correct accelerator
+        const isCategory =
+          !accelerator || accelerator === 0 || accelerator === 32; // 32 is space character
+        let menuChar = "";
+
+        if (!isCategory && accelerator > 0) {
+          menuChar = String.fromCharCode(accelerator);
+          console.log(
+            `📋 MENU ITEM: "${menuText}" (key: ${menuChar}) - accelerator code: ${accelerator}`
+          );
+        } else {
+          console.log(
+            `📋 CATEGORY HEADER: "${menuText}" - accelerator code: ${accelerator}`
+          );
+        }
+
+        // Store menu item for current question (only store non-category items or all items for display)
+        if (this.currentWindow === menuWinid && menuText) {
           this.currentMenuItems.push({
-            text: menuStr,
+            text: menuText,
             accelerator: menuChar,
             window: menuWinid,
             glyph: menuGlyph,
+            isCategory: isCategory,
           });
         }
 
@@ -350,10 +633,11 @@ class NetHackSession {
           this.ws.send(
             JSON.stringify({
               type: "menu_item",
-              text: menuStr,
+              text: menuText,
               accelerator: menuChar,
               window: menuWinid,
               glyph: menuGlyph,
+              isCategory: isCategory,
               menuItems: this.currentMenuItems,
             })
           );
@@ -404,7 +688,10 @@ class NetHackSession {
                 y,
                 0
               );
-              console.log(`🔍 Raw glyphInfo for glyph ${printGlyph}:`, glyphInfo);
+              console.log(
+                `🔍 Raw glyphInfo for glyph ${printGlyph}:`,
+                glyphInfo
+              );
               if (glyphInfo && glyphInfo.ch !== undefined) {
                 glyphChar = String.fromCharCode(glyphInfo.ch);
                 glyphColor = glyphInfo.color;
@@ -412,7 +699,10 @@ class NetHackSession {
                   `🔤 Glyph ${printGlyph} -> "${glyphChar}" (ASCII ${glyphInfo.ch}) color ${glyphColor}`
                 );
               } else {
-                console.log(`⚠️ No character info for glyph ${printGlyph}, glyphInfo:`, glyphInfo);
+                console.log(
+                  `⚠️ No character info for glyph ${printGlyph}, glyphInfo:`,
+                  glyphInfo
+                );
               }
             } catch (error) {
               console.log(
@@ -554,6 +844,49 @@ class NetHackSession {
         console.log("NetHack marking synchronization");
         return 0;
 
+      case "shim_cliparound":
+        const [clipX, clipY] = args;
+        console.log(
+          `🎯 Cliparound request for position (${clipX}, ${clipY}) - updating player position`
+        );
+
+        // Update player position when NetHack requests clipping around a position
+        const oldPlayerPos = { ...this.playerPos };
+        this.playerPos = { x: clipX, y: clipY };
+
+        // Send updated player position to client
+        if (this.ws && this.ws.readyState === 1) {
+          this.ws.send(
+            JSON.stringify({
+              type: "player_position",
+              x: clipX,
+              y: clipY,
+            })
+          );
+
+          // Also send a map update to clear the old player position and show new one
+          // This helps when NetHack doesn't send explicit glyph updates
+          this.ws.send(
+            JSON.stringify({
+              type: "force_player_redraw",
+              oldPosition: oldPlayerPos,
+              newPosition: { x: clipX, y: clipY },
+            })
+          );
+        }
+        return 0;
+
+      case "shim_clear_nhwindow":
+        const [clearWinId] = args;
+        console.log(`🗑️ Clearing window ${clearWinId}`);
+
+        // If clearing the map window, we might need to refresh the display
+        if (clearWinId === 2) {
+          // WIN_MAP = 2
+          console.log("Map window cleared - preparing for redraw");
+        }
+        return 0;
+
       case "shim_getmsghistory":
         const [init] = args;
         console.log(`Getting message history, init: ${init}`);
@@ -639,6 +972,14 @@ wss.on("connection", (ws) => {
 
       if (data.type === "input") {
         session.handleClientInput(data.input);
+      } else if (data.type === "request_tile_update") {
+        session.handleTileUpdateRequest(data.x, data.y);
+      } else if (data.type === "request_area_update") {
+        session.handleAreaUpdateRequest(
+          data.centerX,
+          data.centerY,
+          data.radius
+        );
       }
     } catch (error) {
       console.error("Error parsing message:", error);
