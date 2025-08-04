@@ -613,7 +613,7 @@ wss.on("connection", (ws) => {
   });
 });
 
-const PORT = 3002;
+const PORT = 3000;
 server.listen(PORT, () => {
   console.log(`NetHack 3D Server running on http://localhost:${PORT}`);
   console.log(`Game sessions: ${sessionCount}`);
