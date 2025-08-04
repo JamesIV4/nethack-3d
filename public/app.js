@@ -25536,10 +25536,14 @@ void main() {
       this.cameraAngleY = 0.5;
       // Horizontal rotation around Y axis
       this.isMiddleMouseDown = false;
+      this.isRightMouseDown = false;
       this.lastMouseX = 0;
       this.lastMouseY = 0;
       this.minDistance = 5;
       this.maxDistance = 50;
+      // Camera panning
+      this.cameraPanX = 0;
+      this.cameraPanY = 0;
       // Pre-create geometries and materials
       this.floorGeometry = new PlaneGeometry(TILE_SIZE, TILE_SIZE);
       this.wallGeometry = new BoxGeometry(
@@ -25575,6 +25579,9 @@ void main() {
       this.initThreeJS();
       this.initUI();
       this.connectToServer();
+      this.cameraDistance = 15;
+      this.cameraAngleX = 0.8;
+      this.cameraAngleY = 0;
     }
     initThreeJS() {
       this.scene = new Scene();
@@ -25820,7 +25827,8 @@ void main() {
             return "#";
         }
       }
-      if (glyph === 342 || glyph === 339 || glyph === 331) return "@";
+      if (glyph === 335 || glyph === 342 || glyph === 339 || glyph === 331)
+        return "@";
       if (glyph >= 400 && glyph <= 500) {
         if (glyph >= 400 && glyph <= 410) return "d";
         if (glyph >= 411 && glyph <= 420) return "k";
@@ -25844,6 +25852,13 @@ void main() {
       const key = `${x},${y}`;
       let mesh = this.tileMap.get(key);
       let textSprite = this.textSpriteMap.get(key);
+      if (glyph === 335 || glyph === 342 || glyph === 339 || glyph === 331) {
+        console.log(
+          `\u{1F3AF} Player detected at position (${x}, ${y}) with glyph ${glyph}`
+        );
+        this.playerPos = { x, y };
+        this.updateStatus(`Player at (${x}, ${y}) - NetHack 3D`);
+      }
       let material = this.materials.default;
       let geometry = this.floorGeometry;
       let isWall = false;
@@ -25854,7 +25869,7 @@ void main() {
       } else if (glyph >= 2395 && glyph <= 2397) {
         material = this.materials.floor;
         geometry = this.floorGeometry;
-      } else if (glyph === 342) {
+      } else if (glyph === 335 || glyph === 342 || glyph === 339 || glyph === 331) {
         material = this.materials.player;
         geometry = this.floorGeometry;
       } else if (glyph >= 400 && glyph <= 500) {
@@ -26157,8 +26172,8 @@ void main() {
     }
     updateCamera() {
       const { x, y } = this.playerPos;
-      const targetX = x * TILE_SIZE;
-      const targetY = -y * TILE_SIZE;
+      const targetX = -x * TILE_SIZE + this.cameraPanX;
+      const targetY = -y * TILE_SIZE + this.cameraPanY;
       const sphericalX = this.cameraDistance * Math.cos(this.cameraAngleX) * Math.cos(this.cameraAngleY);
       const sphericalY = this.cameraDistance * Math.cos(this.cameraAngleX) * Math.sin(this.cameraAngleY);
       const sphericalZ = this.cameraDistance * Math.sin(this.cameraAngleX);
@@ -26182,6 +26197,11 @@ void main() {
         this.isMiddleMouseDown = true;
         this.lastMouseX = event.clientX;
         this.lastMouseY = event.clientY;
+      } else if (event.button === 2) {
+        event.preventDefault();
+        this.isRightMouseDown = true;
+        this.lastMouseX = event.clientX;
+        this.lastMouseY = event.clientY;
       }
     }
     handleMouseMove(event) {
@@ -26190,12 +26210,21 @@ void main() {
         const deltaX = event.clientX - this.lastMouseX;
         const deltaY = event.clientY - this.lastMouseY;
         const rotationSpeed = 0.01;
-        this.cameraAngleY += deltaX * rotationSpeed;
-        this.cameraAngleX += deltaY * rotationSpeed;
+        this.cameraAngleY += deltaY * rotationSpeed;
+        this.cameraAngleX += deltaX * rotationSpeed;
         this.cameraAngleX = Math.max(
           -Math.PI / 2 + 0.1,
           Math.min(Math.PI / 2 - 0.1, this.cameraAngleX)
         );
+        this.lastMouseX = event.clientX;
+        this.lastMouseY = event.clientY;
+      } else if (this.isRightMouseDown) {
+        event.preventDefault();
+        const deltaX = event.clientX - this.lastMouseX;
+        const deltaY = event.clientY - this.lastMouseY;
+        const panSpeed = 0.05;
+        this.cameraPanX += deltaX * panSpeed;
+        this.cameraPanY -= deltaY * panSpeed;
         this.lastMouseX = event.clientX;
         this.lastMouseY = event.clientY;
       }
@@ -26203,6 +26232,8 @@ void main() {
     handleMouseUp(event) {
       if (event.button === 1) {
         this.isMiddleMouseDown = false;
+      } else if (event.button === 2) {
+        this.isRightMouseDown = false;
       }
     }
     onWindowResize() {

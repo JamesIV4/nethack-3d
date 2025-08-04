@@ -36,10 +36,15 @@ class Nethack3DEngine {
   private cameraAngleX: number = 0.5; // Vertical rotation around X axis
   private cameraAngleY: number = 0.5; // Horizontal rotation around Y axis
   private isMiddleMouseDown: boolean = false;
+  private isRightMouseDown: boolean = false;
   private lastMouseX: number = 0;
   private lastMouseY: number = 0;
   private minDistance: number = 5;
   private maxDistance: number = 50;
+
+  // Camera panning
+  private cameraPanX: number = 0;
+  private cameraPanY: number = 0;
 
   // Pre-create geometries and materials
   private floorGeometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
@@ -73,6 +78,11 @@ class Nethack3DEngine {
     this.initThreeJS();
     this.initUI();
     this.connectToServer();
+
+    // Set initial camera position for better viewing
+    this.cameraDistance = 15;
+    this.cameraAngleX = 0.8; // Look down at an angle
+    this.cameraAngleY = 0; // Start facing north
   }
 
   private initThreeJS(): void {
@@ -397,7 +407,8 @@ class Nethack3DEngine {
     }
 
     // Player character (specific glyph numbers for player)
-    if (glyph === 342 || glyph === 339 || glyph === 331) return "@";
+    if (glyph === 335 || glyph === 342 || glyph === 339 || glyph === 331)
+      return "@";
 
     // Monster glyphs (approximate ranges)
     if (glyph >= 400 && glyph <= 500) {
@@ -432,6 +443,15 @@ class Nethack3DEngine {
     let mesh = this.tileMap.get(key);
     let textSprite = this.textSpriteMap.get(key);
 
+    // Check if this is the player glyph and update player position
+    if (glyph === 335 || glyph === 342 || glyph === 339 || glyph === 331) {
+      console.log(
+        `🎯 Player detected at position (${x}, ${y}) with glyph ${glyph}`
+      );
+      this.playerPos = { x, y };
+      this.updateStatus(`Player at (${x}, ${y}) - NetHack 3D`);
+    }
+
     // Determine tile type based on glyph ID ranges (these are NetHack-specific)
     let material = this.materials.default;
     let geometry = this.floorGeometry;
@@ -446,8 +466,13 @@ class Nethack3DEngine {
       // Floor glyphs
       material = this.materials.floor;
       geometry = this.floorGeometry;
-    } else if (glyph === 342) {
-      // Player glyph
+    } else if (
+      glyph === 335 ||
+      glyph === 342 ||
+      glyph === 339 ||
+      glyph === 331
+    ) {
+      // Player glyphs
       material = this.materials.player;
       geometry = this.floorGeometry;
     } else if (glyph >= 400 && glyph <= 500) {
@@ -813,8 +838,8 @@ class Nethack3DEngine {
 
   private updateCamera(): void {
     const { x, y } = this.playerPos;
-    const targetX = x * TILE_SIZE;
-    const targetY = -y * TILE_SIZE;
+    const targetX = -x * TILE_SIZE + this.cameraPanX;
+    const targetY = -y * TILE_SIZE + this.cameraPanY;
 
     // Use spherical coordinates for camera positioning
     const sphericalX =
@@ -827,9 +852,12 @@ class Nethack3DEngine {
       Math.sin(this.cameraAngleY);
     const sphericalZ = this.cameraDistance * Math.sin(this.cameraAngleX);
 
+    // Position camera relative to player (with panning offset)
     this.camera.position.x = targetX + sphericalX;
     this.camera.position.y = targetY + sphericalY;
     this.camera.position.z = sphericalZ;
+
+    // Always look at the target position (player + pan offset)
     this.camera.lookAt(targetX, targetY, 0);
   }
 
@@ -845,9 +873,15 @@ class Nethack3DEngine {
 
   private handleMouseDown(event: MouseEvent): void {
     if (event.button === 1) {
-      // Middle mouse button
+      // Middle mouse button - rotation
       event.preventDefault();
       this.isMiddleMouseDown = true;
+      this.lastMouseX = event.clientX;
+      this.lastMouseY = event.clientY;
+    } else if (event.button === 2) {
+      // Right mouse button - panning
+      event.preventDefault();
+      this.isRightMouseDown = true;
       this.lastMouseX = event.clientX;
       this.lastMouseY = event.clientY;
     }
@@ -855,19 +889,32 @@ class Nethack3DEngine {
 
   private handleMouseMove(event: MouseEvent): void {
     if (this.isMiddleMouseDown) {
+      // Middle mouse - rotate camera
       event.preventDefault();
       const deltaX = event.clientX - this.lastMouseX;
       const deltaY = event.clientY - this.lastMouseY;
 
       const rotationSpeed = 0.01;
-      this.cameraAngleY += deltaX * rotationSpeed;
-      this.cameraAngleX += deltaY * rotationSpeed;
+      this.cameraAngleY += deltaY * rotationSpeed;
+      this.cameraAngleX += deltaX * rotationSpeed;
 
       // Clamp vertical rotation to prevent camera flipping
       this.cameraAngleX = Math.max(
         -Math.PI / 2 + 0.1,
         Math.min(Math.PI / 2 - 0.1, this.cameraAngleX)
       );
+
+      this.lastMouseX = event.clientX;
+      this.lastMouseY = event.clientY;
+    } else if (this.isRightMouseDown) {
+      // Right mouse - pan camera
+      event.preventDefault();
+      const deltaX = event.clientX - this.lastMouseX;
+      const deltaY = event.clientY - this.lastMouseY;
+
+      const panSpeed = 0.05;
+      this.cameraPanX += deltaX * panSpeed;
+      this.cameraPanY -= deltaY * panSpeed; // Invert Y for intuitive panning
 
       this.lastMouseX = event.clientX;
       this.lastMouseY = event.clientY;
@@ -878,6 +925,9 @@ class Nethack3DEngine {
     if (event.button === 1) {
       // Middle mouse button
       this.isMiddleMouseDown = false;
+    } else if (event.button === 2) {
+      // Right mouse button
+      this.isRightMouseDown = false;
     }
   }
 
