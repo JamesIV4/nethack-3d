@@ -396,16 +396,6 @@ class Nethack3DEngine {
         );
         break;
 
-      case "clear_window":
-        console.log(`🗑️ Server requested to clear window ${data.windowId}`);
-        this.handleWindowClear(data.windowId);
-        break;
-
-      case "destroy_window":
-        console.log(`🗑️ Server requested to destroy window ${data.windowId}`);
-        this.handleWindowDestroy(data.windowId);
-        break;
-
       default:
         console.log("Unknown message type:", data.type, data);
     }
@@ -1461,47 +1451,6 @@ class Nethack3DEngine {
     }
   }
 
-  private handleWindowClear(windowId: number): void {
-    console.log(`🗑️ Handling window clear for window ${windowId}`);
-
-    // Window IDs: 1=WIN_MESSAGE, 2=WIN_MAP, 3=WIN_STATUS, 4=WIN_INVEN
-    switch (windowId) {
-      case 1: // WIN_MESSAGE - clear any message-related dialogs
-        this.hideQuestion();
-        break;
-      case 4: // WIN_INVEN - clear inventory or menu dialogs
-        this.hideInventoryDialog();
-        this.hideQuestion();
-        break;
-      default:
-        // For any window clear, dismiss all dialogs as a safety measure
-        this.hideQuestion();
-        this.hideDirectionQuestion();
-        break;
-    }
-  }
-
-  private handleWindowDestroy(windowId: number): void {
-    console.log(`🗑️ Handling window destroy for window ${windowId}`);
-
-    // Window IDs: 1=WIN_MESSAGE, 2=WIN_MAP, 3=WIN_STATUS, 4=WIN_INVEN
-    switch (windowId) {
-      case 1: // WIN_MESSAGE - destroy any message-related dialogs
-        this.hideQuestion();
-        break;
-      case 4: // WIN_INVEN - destroy inventory or menu dialogs
-        this.hideInventoryDialog();
-        this.hideQuestion();
-        break;
-      default:
-        // For any window destroy, dismiss all dialogs as a safety measure
-        this.hideQuestion();
-        this.hideDirectionQuestion();
-        this.hideInventoryDialog();
-        break;
-    }
-  }
-
   private sendInput(input: string): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(
@@ -1734,6 +1683,7 @@ class Nethack3DEngine {
 
       // For other questions, send the key directly to answer the question
       this.sendInput(event.key);
+      this.hideQuestion(); // Close the question dialog after sending input
       return; // Don't allow normal movement during questions
     }
 

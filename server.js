@@ -11,14 +11,9 @@ class NetHackSession {
     this.playerPosition = { x: 0, y: 0 };
     this.gameMessages = [];
     this.currentMenuItems = [];
-    this.pendingMenuItems = []; // Store menu items from shim_end_menu for shim_yn_function
     this.currentWindow = null;
     this.hasShownCharacterSelection = false;
     this.lastQuestionText = null; // Store the last question for menu expansion
-
-    // Menu accelerator mapping for fixing pointer values
-    this.menuAcceleratorMap = null;
-    this.menuAcceleratorCounter = 0;
 
     // Simplified input handling with async support
     this.latestInput = null;
@@ -320,21 +315,6 @@ class NetHackSession {
         console.log(
           `🤔 Y/N Question: "${question}" choices: "${choices}" default: ${defaultChoice}`
         );
-        
-        // Full data dump for debugging Y/N questions
-        console.log(`🤔 === FULL Y/N QUESTION DATA DUMP ===`);
-        console.log(`🤔 Question: "${question}"`);
-        console.log(`🤔 Choices: "${choices}"`);
-        console.log(`🤔 Default Choice: "${defaultChoice}"`);
-        console.log(`🤔 Current Menu Items (${this.currentMenuItems.length}):`);
-        this.currentMenuItems.forEach((item, index) => {
-          console.log(`🤔   [${index}] "${item.text}" (key: "${item.accelerator}", category: ${item.isCategory})`);
-        });
-        console.log(`🤔 Pending Menu Items (${this.pendingMenuItems.length}):`);
-        this.pendingMenuItems.forEach((item, index) => {
-          console.log(`🤔   [${index}] "${item.text}" (key: "${item.accelerator}", category: ${item.isCategory})`);
-        });
-        console.log(`🤔 === END Y/N QUESTION DATA DUMP ===`);
 
         // Store the question text for potential menu expansion
         this.lastQuestionText = question;
@@ -345,18 +325,16 @@ class NetHackSession {
             "🧭 Direction question detected - waiting for user input"
           );
 
-          const directionData = {
-            type: "direction_question",
-            text: question,
-            choices: choices,
-            default: defaultChoice,
-          };
-          
-          console.log(`🧭 Sending direction question data to client:`, JSON.stringify(directionData, null, 2));
-
           // Send direction question to web client
           if (this.ws && this.ws.readyState === 1) {
-            this.ws.send(JSON.stringify(directionData));
+            this.ws.send(
+              JSON.stringify({
+                type: "direction_question",
+                text: question,
+                choices: choices,
+                default: defaultChoice,
+              })
+            );
           }
 
           // Wait for actual user input for direction questions
@@ -368,20 +346,17 @@ class NetHackSession {
           });
         }
 
-        // For non-direction questions, send question to web client 
-        // Note: Menu-based questions are handled by shim_select_menu instead
-        const questionData = {
-          type: "question",
-          text: question,
-          choices: choices || "", // Use the actual choices parameter
-          default: defaultChoice || "",
-          menuItems: [], // shim_select_menu handles menu items
-        };
-        
-        console.log(`🤔 Sending Y/N question data to client:`, JSON.stringify(questionData, null, 2));
-        
+        // Send question to web client with available menu items for non-direction questions
         if (this.ws && this.ws.readyState === 1) {
-          this.ws.send(JSON.stringify(questionData));
+          this.ws.send(
+            JSON.stringify({
+              type: "question",
+              text: question,
+              choices: choices,
+              default: defaultChoice,
+              menuItems: this.currentMenuItems,
+            })
+          );
         }
 
         // Wait for actual user input instead of returning default choice automatically
@@ -443,10 +418,6 @@ class NetHackSession {
         this.currentWindow = menuWinId;
         this.lastQuestionText = null; // Clear any previous question text when starting new menu
 
-        // Reset accelerator mapping for each new menu
-        this.menuAcceleratorMap = new Map();
-        this.menuAcceleratorCounter = 0;
-
         // Log window type for debugging
         const windowTypes = {
           1: "WIN_MESSAGE",
@@ -463,20 +434,13 @@ class NetHackSession {
       case "shim_end_menu":
         const [endMenuWinid, menuQuestion] = args;
         console.log("NetHack ending menu:", args);
-        
-        // Full data dump for debugging menu end
-        console.log(`📋 === FULL END MENU DATA DUMP ===`);
-        console.log(`📋 Window ID: ${endMenuWinid}`);
-        console.log(`📋 Menu Question: "${menuQuestion}"`);
-        console.log(`📋 Current Menu Items (${this.currentMenuItems.length}):`);
-        this.currentMenuItems.forEach((item, index) => {
-          console.log(`📋   [${index}] "${item.text}" (key: "${item.accelerator}", category: ${item.isCategory}, glyph: ${item.glyph})`);
-        });
-        console.log(`📋 === END MENU DATA DUMP ===`);
 
         // Check if this is just an inventory update vs an actual question
         const isInventoryWindow = endMenuWinid === 4; // WIN_INVEN = 4
         const hasMenuQuestion = menuQuestion && menuQuestion.trim();
+
+        // Log the menu details for debugging
+        console.log(`📋 Menu ending - Window: ${endMenuWinid}, Question: "${menuQuestion}", Items: ${this.currentMenuItems.length}`);
 
         // If this is an inventory window without a question, it's just an inventory update
         if (isInventoryWindow && !hasMenuQuestion) {
@@ -509,21 +473,60 @@ class NetHackSession {
           return 0; // Don't wait for input - this is just informational
         }
 
-        // Store the menu question and items for potential use by shim_select_menu
+        // Special handling for inventory window WITH questions (like drop, wear, etc.)
+        if (isInventoryWindow && hasMenuQuestion) {
+          console.log(
+            `📋 Inventory action question detected: "${menuQuestion}" with ${this.currentMenuItems.length} items`
+          );
+
+          // Send the inventory question to web client
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(
+              JSON.stringify({
+                type: "question",
+                text: menuQuestion,
+                choices: "",
+                default: "",
+                menuItems: this.currentMenuItems,
+              })
+            );
+          }
+
+          // Wait for actual user input for inventory questions
+          console.log("📋 Waiting for inventory action selection (async)...");
+          return new Promise((resolve) => {
+            this.inputResolver = resolve;
+            this.waitingForInput = true;
+            // No timeout - wait for real user input via WebSocket
+          });
+        }
+
+        // If there's a menu question (like "Pick up what?"), send it to the client
         if (hasMenuQuestion && this.currentMenuItems.length > 0) {
           console.log(
             `📋 Menu question detected: "${menuQuestion}" with ${this.currentMenuItems.length} items`
           );
 
-          // Store this for shim_select_menu to use
-          this.lastQuestionText = menuQuestion;
-          this.pendingMenuItems = [...this.currentMenuItems]; // Copy the array
+          // Send menu question to web client
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(
+              JSON.stringify({
+                type: "question",
+                text: menuQuestion,
+                choices: "",
+                default: "",
+                menuItems: this.currentMenuItems,
+              })
+            );
+          }
 
-          console.log(
-            "📋 Stored menu question and items for shim_select_menu to handle"
-          );
-          console.log(`📋 Pending items now contains ${this.pendingMenuItems.length} items`);
-          return 0; // Let shim_select_menu handle the UI
+          // Wait for actual user input for menu questions
+          console.log("📋 Waiting for menu selection (async)...");
+          return new Promise((resolve) => {
+            this.inputResolver = resolve;
+            this.waitingForInput = true;
+            // No timeout - wait for real user input via WebSocket
+          });
         }
 
         // Check if we have menu items but no explicit question - could be a pickup or action menu
@@ -536,39 +539,98 @@ class NetHackSession {
             `📋 Menu expansion detected with ${this.currentMenuItems.length} items (window ${endMenuWinid})`
           );
 
-          // Store menu items for potential shim_yn_function call
-          this.pendingMenuItems = [...this.currentMenuItems];
-          console.log(`📋 Stored ${this.pendingMenuItems.length} items for potential shim_yn_function call`);
-          return 0; // Let shim_yn_function handle it if it comes
+          // Determine the appropriate question based on context and window type
+          let contextualQuestion = "Please select an option:";
+
+          // Count non-category items to get actual selectable items
+          const selectableItems = this.currentMenuItems.filter(
+            (item) => !item.isCategory
+          );
+          console.log(
+            `📋 Found ${selectableItems.length} selectable items out of ${this.currentMenuItems.length} total`
+          );
+
+          // Try to infer the action from the menu items and context
+          if (
+            selectableItems.some(
+              (item) =>
+                item.text &&
+                typeof item.text === "string" &&
+                (item.text.includes("gold pieces") ||
+                  item.text.includes("corpse") ||
+                  item.text.includes("here"))
+            )
+          ) {
+            contextualQuestion = "What would you like to pick up?";
+          } else if (
+            selectableItems.some(
+              (item) =>
+                item.text &&
+                typeof item.text === "string" &&
+                (item.text.includes("spell") || item.text.includes("magic"))
+            )
+          ) {
+            contextualQuestion = "Which spell would you like to cast?";
+          } else if (
+            selectableItems.some(
+              (item) =>
+                item.text &&
+                typeof item.text === "string" &&
+                (item.text.includes("wear") ||
+                  item.text.includes("wield") ||
+                  item.text.includes("armor"))
+            )
+          ) {
+            contextualQuestion = "What would you like to use?";
+          }
+
+          // Only show dialog if we have actual selectable items
+          if (selectableItems.length > 0) {
+            // Send expanded question to web client
+            if (this.ws && this.ws.readyState === 1) {
+              this.ws.send(
+                JSON.stringify({
+                  type: "question",
+                  text: contextualQuestion,
+                  choices: "",
+                  default: "",
+                  menuItems: this.currentMenuItems,
+                })
+              );
+            }
+
+            // Wait for actual user input for expanded questions
+            console.log("📋 Waiting for expanded menu selection (async)...");
+            return new Promise((resolve) => {
+              this.inputResolver = resolve;
+              this.waitingForInput = true;
+              // No timeout - wait for real user input via WebSocket
+            });
+          } else {
+            console.log(
+              "📋 Menu has no selectable items - treating as informational"
+            );
+          }
         }
 
-        console.log(`📋 No special handling needed for this menu end`);
         return 0;
       case "shim_display_nhwindow":
         const [winid, blocking] = args;
         console.log(`🖥️ DISPLAY WINDOW [Win ${winid}], blocking: ${blocking}`);
         return 0;
       case "shim_add_menu":
-        // Log the raw arguments to understand the structure
-        console.log(`📋 Raw shim_add_menu args:`, args);
-
         const [
           menuWinid,
           menuGlyph,
           accelerator,
           groupacc,
           menuAttr,
-          menuColor,
           menuStr,
           preselected,
         ] = args;
 
-        // Use the properly destructured menuStr
-        const menuText = String(menuStr || "");
-
-        console.log(
-          `📋 Parsed: winid=${menuWinid}, glyph=${menuGlyph}, accelerator=${accelerator}, text="${menuText}"`
-        );
+        // Fix: menuStr is actually at index 6, not 5
+        const menuText = String(args[6] || "");
 
         // Determine if this is a category header and the correct accelerator
         const isCategory =
@@ -576,36 +638,10 @@ class NetHackSession {
         let menuChar = "";
 
         if (!isCategory && accelerator > 0) {
-          // Handle large pointer values that should be ASCII character codes
-          if (accelerator > 255) {
-            // This appears to be a pointer value instead of an ASCII code
-            // We need to map these to sequential letters for menu items
-            if (!this.menuAcceleratorMap) {
-              this.menuAcceleratorMap = new Map();
-              this.menuAcceleratorCounter = 0;
-            }
-
-            if (!this.menuAcceleratorMap.has(accelerator)) {
-              // Assign sequential letters starting from 'a'
-              const charCode = 97 + (this.menuAcceleratorCounter % 26); // 'a' to 'z'
-              this.menuAcceleratorMap.set(
-                accelerator,
-                String.fromCharCode(charCode)
-              );
-              this.menuAcceleratorCounter++;
-            }
-
-            menuChar = this.menuAcceleratorMap.get(accelerator);
-            console.log(
-              `📋 MENU ITEM: "${menuText}" (key: ${menuChar}) - normalized from pointer ${accelerator}`
-            );
-          } else {
-            // Normal ASCII character code
-            menuChar = String.fromCharCode(accelerator);
-            console.log(
-              `📋 MENU ITEM: "${menuText}" (key: ${menuChar}) - accelerator code: ${accelerator}`
-            );
-          }
+          menuChar = String.fromCharCode(accelerator);
+          console.log(
+            `📋 MENU ITEM: "${menuText}" (key: ${menuChar}) - accelerator code: ${accelerator}`
+          );
         } else {
           console.log(
             `📋 CATEGORY HEADER: "${menuText}" - accelerator code: ${accelerator}`
@@ -809,71 +845,9 @@ class NetHackSession {
         console.log(
           `📋 Menu selection request for window ${menuSelectWinid}, how: ${menuSelectHow}, ptr: ${menuPtr}`
         );
-        
-        // Full data dump for debugging
-        console.log(`📋 === FULL QUESTION DATA DUMP ===`);
-        console.log(`📋 Window ID: ${menuSelectWinid}`);
-        console.log(`📋 Selection How: ${menuSelectHow}`);
-        console.log(`📋 Menu Pointer: ${menuPtr}`);
-        console.log(`📋 Last Question Text: "${this.lastQuestionText}"`);
-        console.log(`📋 Current Menu Items (${this.currentMenuItems.length}):`);
-        this.currentMenuItems.forEach((item, index) => {
-          console.log(`📋   [${index}] "${item.text}" (key: "${item.accelerator}", category: ${item.isCategory})`);
-        });
-        console.log(`📋 Pending Menu Items (${this.pendingMenuItems.length}):`);
-        this.pendingMenuItems.forEach((item, index) => {
-          console.log(`📋   [${index}] "${item.text}" (key: "${item.accelerator}", category: ${item.isCategory})`);
-        });
-        console.log(`📋 === END QUESTION DATA DUMP ===`);
 
-        // Check if this is just an inventory display (how=0) vs actual selection request
-        if (menuSelectHow === 0) {
-          console.log(`📋 Inventory display only (how=0) - returning 0 immediately`);
-          return 0;
-        }
-
-        // For actual selection requests (how > 0), check if we have menu items to show
-        if (this.pendingMenuItems.length > 0 || this.currentMenuItems.length > 0) {
-          const menuItemsToShow = this.pendingMenuItems.length > 0 ? this.pendingMenuItems : this.currentMenuItems;
-          
-          console.log(`📋 Showing menu selection dialog with ${menuItemsToShow.length} items (how=${menuSelectHow})`);
-          
-          // Send the menu question to the client with proper context
-          const questionText = this.lastQuestionText || "What would you like to select?";
-          
-          // Build choices string from menu items for better debugging
-          const nonCategoryItems = menuItemsToShow.filter(item => !item.isCategory);
-          const choicesString = nonCategoryItems.map(item => item.accelerator).join('');
-          console.log(`📋 Generated choices string: "${choicesString}"`);
-          
-          if (this.ws && this.ws.readyState === 1) {
-            const questionData = {
-              type: "question",
-              text: questionText,
-              choices: choicesString, // Use generated choices from menu items
-              default: "",
-              menuItems: menuItemsToShow,
-            };
-            
-            console.log(`📋 Sending question data to client:`, JSON.stringify(questionData, null, 2));
-            
-            this.ws.send(JSON.stringify(questionData));
-          }
-
-          // Clear pending items since we're using them now
-          this.pendingMenuItems = [];
-
-          // Wait for actual user input for menu selection
-          console.log("📋 Waiting for menu selection (async)...");
-          return new Promise((resolve) => {
-            this.inputResolver = resolve;
-            this.waitingForInput = true;
-            // No timeout - wait for real user input via WebSocket
-          });
-        }
-
-        // If no menu items, return 0 (no selection)
-        console.log("📋 No menu items available, returning 0 (no selection)");
+        // Try returning 0 (no selection) to avoid segfault
+        console.log("Returning 0 (no selection) to skip this step");
         return 0;
 
       case "shim_askname":
@@ -934,23 +908,13 @@ class NetHackSession {
         return 0;
 
       case "shim_clear_nhwindow":
-        const [clearWindowId] = args;
-        console.log(`🗑️ Clearing window ${clearWindowId}`);
+        const [clearWinId] = args;
+        console.log(`🗑️ Clearing window ${clearWinId}`);
 
         // If clearing the map window, we might need to refresh the display
-        if (clearWindowId === 2) {
+        if (clearWinId === 2) {
           // WIN_MAP = 2
           console.log("Map window cleared - preparing for redraw");
-        }
-
-        // Send clear window message to client to dismiss relevant dialogs
-        if (this.ws && this.ws.readyState === 1) {
-          this.ws.send(
-            JSON.stringify({
-              type: "clear_window",
-              windowId: clearWindowId,
-            })
-          );
         }
         return 0;
 
@@ -970,22 +934,6 @@ class NetHackSession {
       case "shim_exit_nhwindows":
         console.log("Exiting NetHack windows");
         return 0;
-
-      case "shim_destroy_nhwindow":
-        const [destroyWindowId] = args;
-        console.log(`🗑️ Destroying window ${destroyWindowId}`);
-
-        // Send destroy window message to client to dismiss relevant dialogs
-        if (this.ws && this.ws.readyState === 1) {
-          this.ws.send(
-            JSON.stringify({
-              type: "destroy_window",
-              windowId: destroyWindowId,
-            })
-          );
-        }
-        return 0;
-
       default:
         console.log(`Unknown callback: ${name}`, args);
         return 0;
