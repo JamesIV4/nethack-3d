@@ -25728,6 +25728,17 @@ void main() {
           this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
           break;
         case "question":
+          if (data.text && (data.text.includes("character") || data.text.includes("class") || data.text.includes("race") || data.text.includes("gender") || data.text.includes("alignment"))) {
+            console.log("Auto-handling character creation:", data.text);
+            if (data.menuItems && data.menuItems.length > 0) {
+              this.sendInput(data.menuItems[0].accelerator);
+            } else if (data.default) {
+              this.sendInput(data.default);
+            } else {
+              this.sendInput("a");
+            }
+            return;
+          }
           this.showQuestion(
             data.text,
             data.choices,
@@ -25741,7 +25752,8 @@ void main() {
           }
           break;
         case "name_request":
-          this.showNameRequest(data.text, data.maxLength);
+          console.log("Auto-providing default name for:", data.text);
+          this.sendInput("Player");
           break;
         default:
           console.log("Unknown message type:", data.type, data);

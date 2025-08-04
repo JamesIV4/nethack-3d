@@ -14,52 +14,18 @@ class NetHackSession {
     this.currentWindow = null;
     this.hasShownCharacterSelection = false;
 
-    // Async input handling
-    this.inputQueue = [];
-    this.inputResolver = null;
-    this.inputTimeout = null;
+    // Simplified input handling - just store the latest input
+    this.latestInput = null;
+    this.waitingForInput = false;
 
     this.initializeNetHack();
   }
 
-  // Promise-based input waiting
-  async waitForInput(timeoutMs = 60000) {
-    return new Promise((resolve) => {
-      this.inputResolver = resolve;
-      this.inputTimeout = setTimeout(() => {
-        if (this.inputResolver) {
-          this.inputResolver = null;
-          console.log("Input timeout, resolving with Escape");
-          resolve(String.fromCharCode(27));
-        }
-      }, timeoutMs);
-    });
-  }
-
-  // Resolve pending input promise
-  resolveInput(input) {
-    if (this.inputResolver) {
-      clearTimeout(this.inputTimeout);
-      this.inputResolver(input);
-      this.inputResolver = null;
-      this.inputTimeout = null;
-      return true;
-    }
-    return false;
-  }
-
-  // Add input to queue for processing
-  queueInput(input) {
-    console.log(`Queueing input: ${input}`);
-    this.inputQueue.push(input);
-  }
-
   // Handle incoming input from the client
   handleClientInput(input) {
-    console.log("Handling client input:", input);
-    if (!this.resolveInput(input)) {
-      this.queueInput(input);
-    }
+    console.log("Received client input:", input);
+    this.latestInput = input;
+    // NetHack will naturally pick this up when it needs input
   }
 
   async initializeNetHack() {
@@ -122,12 +88,12 @@ class NetHackSession {
             Module.ENV.NETHACKOPTIONS = "";
           },
         ],
-        onRuntimeInitialized: () => {
+        onRuntimeInitialized: async () => {
           console.log("NetHack WASM runtime initialized!");
           this.nethackModule = Module;
           try {
             console.log("Setting up graphics callback...");
-            Module.ccall(
+            await Module.ccall(
               "shim_graphics_set_callback",
               null,
               ["string"],
@@ -135,9 +101,19 @@ class NetHackSession {
               { async: true }
             );
             console.log("Graphics callback set up successfully");
-            console.log("Waiting for NetHack to start naturally...");
+
+            // Start the main NetHack loop - this will naturally pause when input is needed
+            console.log("Starting NetHack main loop...");
+            setTimeout(async () => {
+              try {
+                await Module.ccall("main", "number", [], [], { async: true });
+                console.log("NetHack main loop completed successfully");
+              } catch (error) {
+                console.log("NetHack main loop error:", error);
+              }
+            }, 100);
           } catch (error) {
-            console.error("Error setting up graphics callback:", error);
+            console.error("Error setting up NetHack:", error);
           }
         },
       };
@@ -168,21 +144,25 @@ class NetHackSession {
 
     switch (name) {
       case "shim_get_nh_event":
-        if (this.inputQueue.length > 0) {
-          const input = this.inputQueue.shift();
-          console.log(`Returning queued input event: ${input}`);
+        // Simply return the latest input if available, otherwise wait
+        if (this.latestInput) {
+          const input = this.latestInput;
+          this.latestInput = null; // Clear it after use
+          console.log(`Returning input: ${input}`);
           return processKey(input);
         }
-        // Non-blocking check with a very short timeout to prevent busy-looping.
-        // On timeout, it will resolve with Escape, which should be safe.
-        const userInput = await this.waitForInput(1);
-        return processKey(userInput);
+
+        // NetHack is asking for input but we don't have any
+        // Since we're using Asyncify, we can just return a default and NetHack will call again
+        console.log("No input available, returning space as default");
+        return 32; // space
 
       case "shim_yn_function":
         const [question, choices, defaultChoice] = args;
         console.log(
           `🤔 Y/N Question: "${question}" choices: "${choices}" default: ${defaultChoice}`
         );
+
         if (this.ws && this.ws.readyState === 1) {
           this.ws.send(
             JSON.stringify({
@@ -194,30 +174,38 @@ class NetHackSession {
             })
           );
         }
-        if (this.inputQueue.length > 0) {
-          const input = this.inputQueue.shift();
-          console.log(`Using queued input for question: ${input}`);
+
+        // If we have input, use it, otherwise return default
+        if (this.latestInput) {
+          const input = this.latestInput;
+          this.latestInput = null;
+          console.log(`Using input for question: ${input}`);
           this.currentMenuItems = [];
           return input.charCodeAt(0);
         }
-        console.log(`Waiting for user input for question: "${question}"`);
-        const ynInput = await this.waitForInput();
-        console.log(`Resuming with user input for question: ${ynInput}`);
+
+        // Return default choice or 'y' if no default
+        const defaultReturn = defaultChoice || "y";
+        console.log(`No input, using default: ${defaultReturn}`);
         this.currentMenuItems = [];
-        return ynInput.charCodeAt(0);
+        return defaultReturn.charCodeAt(0);
 
       case "shim_nh_poskey":
         const [xPtr, yPtr, modPtr] = args;
         console.log(
           `🖱️ Position key request at pointers: ${xPtr}, ${yPtr}, ${modPtr}`
         );
-        if (this.inputQueue.length > 0) {
-          const input = this.inputQueue.shift();
-          console.log(`Using queued input for position: ${input}`);
+
+        if (this.latestInput) {
+          const input = this.latestInput;
+          this.latestInput = null;
+          console.log(`Using input for position: ${input}`);
           return processKey(input);
         }
-        // Do not wait for input here. Return immediately.
-        return 0;
+
+        // Return a movement command as default
+        console.log("No input for position, returning right movement");
+        return "l".charCodeAt(0);
 
       case "shim_init_nhwindows":
         console.log("Initializing NetHack windows");
@@ -330,60 +318,62 @@ class NetHackSession {
               })
             );
           }
-          if (!this.hasShownCharacterSelection) {
-            this.hasShownCharacterSelection = true;
-            console.log(
-              "🎯 Game started - showing interactive character selection"
-            );
-            if (this.ws && this.ws.readyState === 1) {
-              this.ws.send(
-                JSON.stringify({
-                  type: "question",
-                  text: "Welcome to NetHack! Would you like to create a new character?",
-                  choices: "yn",
-                  default: "y",
-                  menuItems: [
-                    {
-                      accelerator: "y",
-                      text: "Yes - Choose character class and race",
-                    },
-                    {
-                      accelerator: "n",
-                      text: "No - Continue with current character",
-                    },
-                  ],
-                })
-              );
-            }
-          }
+          // Comment out automatic character selection prompts for now
+          // if (!this.hasShownCharacterSelection) {
+          //   this.hasShownCharacterSelection = true;
+          //   console.log(
+          //     "🎯 Game started - showing interactive character selection"
+          //   );
+          //   if (this.ws && this.ws.readyState === 1) {
+          //     this.ws.send(
+          //       JSON.stringify({
+          //         type: "question",
+          //         text: "Welcome to NetHack! Would you like to create a new character?",
+          //         choices: "yn",
+          //         default: "y",
+          //         menuItems: [
+          //           {
+          //             accelerator: "y",
+          //             text: "Yes - Choose character class and race",
+          //           },
+          //           {
+          //             accelerator: "n",
+          //             text: "No - Continue with current character",
+          //           },
+          //         ],
+          //       })
+          //     );
+          //   }
+          // }
         }
         return 0;
       case "shim_player_selection":
         console.log("NetHack player selection started");
-        if (this.ws && this.ws.readyState === 1) {
-          this.ws.send(
-            JSON.stringify({
-              type: "question",
-              text: "Choose your character class:",
-              choices: "",
-              default: "",
-              menuItems: [
-                { accelerator: "a", text: "Archeologist" },
-                { accelerator: "b", text: "Barbarian" },
-                { accelerator: "c", text: "Caveman" },
-                { accelerator: "h", text: "Healer" },
-                { accelerator: "k", text: "Knight" },
-                { accelerator: "m", text: "Monk" },
-                { accelerator: "p", text: "Priest" },
-                { accelerator: "r", text: "Rogue" },
-                { accelerator: "s", text: "Samurai" },
-                { accelerator: "t", text: "Tourist" },
-                { accelerator: "v", text: "Valkyrie" },
-                { accelerator: "w", text: "Wizard" },
-              ],
-            })
-          );
-        }
+        // Comment out character selection UI for automatic play
+        // if (this.ws && this.ws.readyState === 1) {
+        //   this.ws.send(
+        //     JSON.stringify({
+        //       type: "question",
+        //       text: "Choose your character class:",
+        //       choices: "",
+        //       default: "",
+        //       menuItems: [
+        //         { accelerator: "a", text: "Archeologist" },
+        //         { accelerator: "b", text: "Barbarian" },
+        //         { accelerator: "c", text: "Caveman" },
+        //         { accelerator: "h", text: "Healer" },
+        //         { accelerator: "k", text: "Knight" },
+        //         { accelerator: "m", text: "Monk" },
+        //         { accelerator: "p", text: "Priest" },
+        //         { accelerator: "r", text: "Rogue" },
+        //         { accelerator: "s", text: "Samurai" },
+        //         { accelerator: "t", text: "Tourist" },
+        //         { accelerator: "v", text: "Valkyrie" },
+        //         { accelerator: "w", text: "Wizard" },
+        //       ],
+        //     })
+        //   );
+        // }
         return 0;
       case "shim_raw_print":
         const [rawText] = args;
@@ -397,9 +387,11 @@ class NetHackSession {
         console.log(
           `📋 Menu selection request for window ${menuSelectWinid}, how: ${menuSelectHow}, ptr: ${menuPtr}`
         );
-        if (this.inputQueue.length > 0) {
-          const input = this.inputQueue.shift();
-          console.log(`Using queued input for menu selection: ${input}`);
+
+        if (this.latestInput) {
+          const input = this.latestInput;
+          this.latestInput = null;
+          console.log(`Using input for menu selection: ${input}`);
           const selectedItem = this.currentMenuItems.find(
             (item) =>
               item.accelerator === input ||
@@ -410,53 +402,14 @@ class NetHackSession {
             return input.charCodeAt(0);
           }
         }
+
         if (menuSelectHow === 1) {
           console.log("Character selection - returning 0 for now");
           return 0;
         }
         console.log("Returning 0 (no selection) for menu");
         return 0;
-      case "shim_getmsghistory":
-        const [init] = args;
-        console.log(`Getting message history, init: ${init}`);
-        return "";
-      case "shim_putmsghistory":
-        const [msg, attr] = args;
-        console.log(`Put message history: "${msg}", attr: ${attr}`);
-        return 0;
-      case "shim_mark_synch":
-        console.log("Mark synchronization");
-        return 0;
-      case "shim_destroy_nhwindow":
-        const [destroyWin] = args;
-        console.log(`Destroying window ${destroyWin}`);
-        return 0;
-      case "shim_clear_nhwindow":
-        const [clearWin] = args;
-        console.log(`Clearing window ${clearWin}`);
-        return 0;
-      case "shim_curs":
-        const [cursWin, cursX, cursY] = args;
-        console.log(
-          `Setting cursor in window ${cursWin} to (${cursX}, ${cursY})`
-        );
-        if (cursWin === 3) {
-          this.playerPosition = { x: cursX, y: cursY };
-          if (this.ws && this.ws.readyState === 1) {
-            this.ws.send(
-              JSON.stringify({ type: "player_position", x: cursX, y: cursY })
-            );
-          }
-        }
-        return 0;
-      case "shim_cliparound":
-        const [clipX, clipY] = args;
-        console.log(`Clipping around (${clipX}, ${clipY})`);
-        return 0;
-      case "shim_status_update":
-        const [field, ptr, chg, percent, color, colormasks] = args;
-        console.log(`Status update field ${field}, ptr: ${ptr}`);
-        return 0;
+
       case "shim_askname":
         console.log("NetHack is asking for player name, args:", args);
         if (this.ws && this.ws.readyState === 1) {
@@ -468,13 +421,16 @@ class NetHackSession {
             })
           );
         }
-        if (this.inputQueue.length > 0) {
-          const name = this.inputQueue.shift();
+
+        if (this.latestInput) {
+          const name = this.latestInput;
+          this.latestInput = null;
           console.log(`Using player name from input: ${name}`);
           return name;
         }
-        console.log("Waiting for user to enter name");
-        return null;
+
+        console.log("No name provided, using default");
+        return "Player";
       case "shim_exit_nhwindows":
         console.log("Exiting NetHack windows");
         return 0;

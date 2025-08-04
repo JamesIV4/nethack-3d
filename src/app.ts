@@ -262,6 +262,29 @@ class Nethack3DEngine {
         break;
 
       case "question":
+        // Auto-handle character creation questions to avoid user interaction
+        if (
+          data.text &&
+          (data.text.includes("character") ||
+            data.text.includes("class") ||
+            data.text.includes("race") ||
+            data.text.includes("gender") ||
+            data.text.includes("alignment"))
+        ) {
+          console.log("Auto-handling character creation:", data.text);
+          // Send default character choices
+          if (data.menuItems && data.menuItems.length > 0) {
+            // Pick the first available option
+            this.sendInput(data.menuItems[0].accelerator);
+          } else if (data.default) {
+            this.sendInput(data.default);
+          } else {
+            this.sendInput("a"); // Default to 'a' (often Archeologist)
+          }
+          return; // Don't show the dialog
+        }
+
+        // For non-character creation questions, show normal dialog
         this.showQuestion(
           data.text,
           data.choices,
@@ -283,7 +306,9 @@ class Nethack3DEngine {
         break;
 
       case "name_request":
-        this.showNameRequest(data.text, data.maxLength);
+        // Auto-provide a default name to avoid user interaction
+        console.log("Auto-providing default name for:", data.text);
+        this.sendInput("Player");
         break;
 
       default:
