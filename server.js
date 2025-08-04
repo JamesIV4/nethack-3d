@@ -112,7 +112,6 @@ class NetHackSession {
 
       const Module = {
         wasmBinary: wasmBinary,
-        ENV: { NETHACKOPTIONS: 'pickup_types:$"=/!?+' },
         locateFile: (path, scriptDirectory) => {
           console.log(
             "locateFile called with:",
@@ -128,7 +127,7 @@ class NetHackSession {
         preRun: [
           () => {
             console.log("PreRun: Setting up NETHACKOPTIONS");
-            Module.ENV.NETHACKOPTIONS = "";
+            Module.ENV.NETHACKOPTIONS = "pickup_types:$";
           },
         ],
         onRuntimeInitialized: async () => {
@@ -144,6 +143,26 @@ class NetHackSession {
               { async: true }
             );
             console.log("Graphics callback set up successfully");
+
+            // Initialize JS helpers to make mapglyphHelper available
+            if (Module.js_helpers_init) {
+              console.log("Initializing JS helpers...");
+              Module.js_helpers_init();
+              console.log("JS helpers initialized");
+
+              // Verify mapglyphHelper is available
+              if (
+                globalThis.nethackGlobal &&
+                globalThis.nethackGlobal.helpers &&
+                globalThis.nethackGlobal.helpers.mapglyphHelper
+              ) {
+                console.log("✅ mapglyphHelper is available");
+              } else {
+                console.log("⚠️ mapglyphHelper not found in global helpers");
+              }
+            } else {
+              console.log("⚠️ js_helpers_init function not found");
+            }
 
             // Don't call main() automatically - wait for it to be called naturally
             console.log("Waiting for NetHack to start naturally...");
@@ -343,10 +362,43 @@ class NetHackSession {
         console.log(`🎨 GLYPH [Win ${printWin}] at (${x},${y}): ${printGlyph}`);
         if (printWin === 3) {
           const key = `${x},${y}`;
+
+          // Use NetHack's mapglyph function to get the proper ASCII character
+          let glyphChar = null;
+          let glyphColor = null;
+          if (
+            globalThis.nethackGlobal &&
+            globalThis.nethackGlobal.helpers &&
+            globalThis.nethackGlobal.helpers.mapglyphHelper
+          ) {
+            try {
+              const glyphInfo = globalThis.nethackGlobal.helpers.mapglyphHelper(
+                printGlyph,
+                x,
+                y,
+                0
+              );
+              if (glyphInfo && glyphInfo.ch !== undefined) {
+                glyphChar = String.fromCharCode(glyphInfo.ch);
+                glyphColor = glyphInfo.color;
+                console.log(
+                  `🔤 Glyph ${printGlyph} -> "${glyphChar}" (ASCII ${glyphInfo.ch}) color ${glyphColor}`
+                );
+              }
+            } catch (error) {
+              console.log(
+                `⚠️ Error getting glyph info for ${printGlyph}:`,
+                error
+              );
+            }
+          }
+
           this.gameMap.set(key, {
             x: x,
             y: y,
             glyph: printGlyph,
+            char: glyphChar,
+            color: glyphColor,
             timestamp: Date.now(),
           });
           if (this.ws && this.ws.readyState === 1) {
@@ -356,6 +408,8 @@ class NetHackSession {
                 x: x,
                 y: y,
                 glyph: printGlyph,
+                char: glyphChar,
+                color: glyphColor,
                 window: printWin,
               })
             );

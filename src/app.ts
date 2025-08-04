@@ -258,7 +258,7 @@ class Nethack3DEngine {
   private handleServerMessage(data: any): void {
     switch (data.type) {
       case "map_glyph":
-        this.updateTile(data.x, data.y, data.glyph);
+        this.updateTile(data.x, data.y, data.glyph, data.char, data.color);
         break;
 
       case "player_position":
@@ -270,12 +270,12 @@ class Nethack3DEngine {
         break;
 
       case "raw_print":
-        this.addGameMessage(`RAW: ${data.text}`);
+        this.addGameMessage(data.text);
         break;
 
-      case "menu_item":
-        this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
-        break;
+      // case "menu_item":
+      //   this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
+      //   break;
 
       case "question":
         // Auto-handle character creation questions to avoid user interaction
@@ -377,6 +377,7 @@ class Nethack3DEngine {
 
   private glyphToChar(glyph: number): string {
     // Convert NetHack glyph numbers to ASCII characters
+    // This is a fallback for when the server doesn't provide the proper character
     // Based on NetHack's glyph system
 
     // Floor glyphs (2395-2397)
@@ -406,9 +407,9 @@ class Nethack3DEngine {
       }
     }
 
-    // Player character (specific glyph numbers for player)
-    if (glyph === 335 || glyph === 342 || glyph === 339 || glyph === 331)
-      return "@";
+    // Player character (broad range to cover all classes/races/genders)
+    // NetHack player glyphs are typically in the range 331-360+
+    if (glyph >= 331 && glyph <= 360) return "@";
 
     // Monster glyphs (approximate ranges)
     if (glyph >= 400 && glyph <= 500) {
@@ -434,19 +435,27 @@ class Nethack3DEngine {
     if (glyph === 2334) return "#"; // solid rock
     if (glyph === 2223) return "\\"; // throne
 
-    // Default: show glyph number for debugging
-    return glyph.toString();
+    // Fallback: For unknown glyphs, show a generic character instead of the number
+    return "?";
   }
 
-  private updateTile(x: number, y: number, glyph: number): void {
+  private updateTile(
+    x: number,
+    y: number,
+    glyph: number,
+    char?: string,
+    color?: number
+  ): void {
     const key = `${x},${y}`;
     let mesh = this.tileMap.get(key);
     let textSprite = this.textSpriteMap.get(key);
 
     // Check if this is the player glyph and update player position
-    if (glyph === 335 || glyph === 342 || glyph === 339 || glyph === 331) {
+    // Use the provided char if available, otherwise fall back to glyph range detection
+    const isPlayerGlyph = char === "@" || (glyph >= 331 && glyph <= 360);
+    if (isPlayerGlyph) {
       console.log(
-        `🎯 Player detected at position (${x}, ${y}) with glyph ${glyph}`
+        `🎯 Player detected at position (${x}, ${y}) with glyph ${glyph}, char: "${char}"`
       );
       this.playerPos = { x, y };
       this.updateStatus(`Player at (${x}, ${y}) - NetHack 3D`);
@@ -466,13 +475,8 @@ class Nethack3DEngine {
       // Floor glyphs
       material = this.materials.floor;
       geometry = this.floorGeometry;
-    } else if (
-      glyph === 335 ||
-      glyph === 342 ||
-      glyph === 339 ||
-      glyph === 331
-    ) {
-      // Player glyphs
+    } else if (isPlayerGlyph) {
+      // Player glyphs (using broader range)
       material = this.materials.player;
       geometry = this.floorGeometry;
     } else if (glyph >= 400 && glyph <= 500) {
@@ -509,7 +513,8 @@ class Nethack3DEngine {
     }
 
     // Create or update text sprite showing glyph character
-    const glyphChar = this.glyphToChar(glyph);
+    // Use the character provided by NetHack's mapglyph function if available
+    const glyphChar = char || this.glyphToChar(glyph);
     if (!textSprite) {
       textSprite = this.createTextSprite(glyphChar);
       this.scene.add(textSprite);
@@ -838,7 +843,7 @@ class Nethack3DEngine {
 
   private updateCamera(): void {
     const { x, y } = this.playerPos;
-    const targetX = -x * TILE_SIZE + this.cameraPanX;
+    const targetX = x * TILE_SIZE + this.cameraPanX;
     const targetY = -y * TILE_SIZE + this.cameraPanY;
 
     // Use spherical coordinates for camera positioning

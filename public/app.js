@@ -25725,7 +25725,7 @@ void main() {
     handleServerMessage(data) {
       switch (data.type) {
         case "map_glyph":
-          this.updateTile(data.x, data.y, data.glyph);
+          this.updateTile(data.x, data.y, data.glyph, data.char, data.color);
           break;
         case "player_position":
           this.playerPos = { x: data.x, y: data.y };
@@ -25734,11 +25734,11 @@ void main() {
           this.addGameMessage(data.text);
           break;
         case "raw_print":
-          this.addGameMessage(`RAW: ${data.text}`);
+          this.addGameMessage(data.text);
           break;
-        case "menu_item":
-          this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
-          break;
+        // case "menu_item":
+        //   this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
+        //   break;
         case "question":
           if (data.text && (data.text.includes("character") || data.text.includes("class") || data.text.includes("race") || data.text.includes("gender") || data.text.includes("alignment"))) {
             console.log("Auto-handling character creation:", data.text);
@@ -25827,8 +25827,7 @@ void main() {
             return "#";
         }
       }
-      if (glyph === 335 || glyph === 342 || glyph === 339 || glyph === 331)
-        return "@";
+      if (glyph >= 331 && glyph <= 360) return "@";
       if (glyph >= 400 && glyph <= 500) {
         if (glyph >= 400 && glyph <= 410) return "d";
         if (glyph >= 411 && glyph <= 420) return "k";
@@ -25846,15 +25845,16 @@ void main() {
       if (glyph === 238) return ">";
       if (glyph === 2334) return "#";
       if (glyph === 2223) return "\\";
-      return glyph.toString();
+      return "?";
     }
-    updateTile(x, y, glyph) {
+    updateTile(x, y, glyph, char, color) {
       const key = `${x},${y}`;
       let mesh = this.tileMap.get(key);
       let textSprite = this.textSpriteMap.get(key);
-      if (glyph === 335 || glyph === 342 || glyph === 339 || glyph === 331) {
+      const isPlayerGlyph = char === "@" || glyph >= 331 && glyph <= 360;
+      if (isPlayerGlyph) {
         console.log(
-          `\u{1F3AF} Player detected at position (${x}, ${y}) with glyph ${glyph}`
+          `\u{1F3AF} Player detected at position (${x}, ${y}) with glyph ${glyph}, char: "${char}"`
         );
         this.playerPos = { x, y };
         this.updateStatus(`Player at (${x}, ${y}) - NetHack 3D`);
@@ -25869,7 +25869,7 @@ void main() {
       } else if (glyph >= 2395 && glyph <= 2397) {
         material = this.materials.floor;
         geometry = this.floorGeometry;
-      } else if (glyph === 335 || glyph === 342 || glyph === 339 || glyph === 331) {
+      } else if (isPlayerGlyph) {
         material = this.materials.player;
         geometry = this.floorGeometry;
       } else if (glyph >= 400 && glyph <= 500) {
@@ -25898,7 +25898,7 @@ void main() {
         mesh.geometry = geometry;
         mesh.position.z = isWall ? WALL_HEIGHT / 2 : 0;
       }
-      const glyphChar = this.glyphToChar(glyph);
+      const glyphChar = char || this.glyphToChar(glyph);
       if (!textSprite) {
         textSprite = this.createTextSprite(glyphChar);
         this.scene.add(textSprite);
@@ -26172,7 +26172,7 @@ void main() {
     }
     updateCamera() {
       const { x, y } = this.playerPos;
-      const targetX = -x * TILE_SIZE + this.cameraPanX;
+      const targetX = x * TILE_SIZE + this.cameraPanX;
       const targetY = -y * TILE_SIZE + this.cameraPanY;
       const sphericalX = this.cameraDistance * Math.cos(this.cameraAngleX) * Math.cos(this.cameraAngleY);
       const sphericalY = this.cameraDistance * Math.cos(this.cameraAngleX) * Math.sin(this.cameraAngleY);
