@@ -25811,6 +25811,14 @@ void main() {
             `\u26A0\uFE0F Tile not found at (${data.x}, ${data.y}): ${data.message}`
           );
           break;
+        case "clear_window":
+          console.log(`\u{1F5D1}\uFE0F Server requested to clear window ${data.windowId}`);
+          this.handleWindowClear(data.windowId);
+          break;
+        case "destroy_window":
+          console.log(`\u{1F5D1}\uFE0F Server requested to destroy window ${data.windowId}`);
+          this.handleWindowDestroy(data.windowId);
+          break;
         default:
           console.log("Unknown message type:", data.type, data);
       }
@@ -26631,6 +26639,39 @@ void main() {
       if (questionDialog) {
         questionDialog.style.display = "none";
         questionDialog.innerHTML = "";
+      }
+    }
+    handleWindowClear(windowId) {
+      console.log(`\u{1F5D1}\uFE0F Handling window clear for window ${windowId}`);
+      switch (windowId) {
+        case 1:
+          this.hideQuestion();
+          break;
+        case 4:
+          this.hideInventoryDialog();
+          this.hideQuestion();
+          break;
+        default:
+          this.hideQuestion();
+          this.hideDirectionQuestion();
+          break;
+      }
+    }
+    handleWindowDestroy(windowId) {
+      console.log(`\u{1F5D1}\uFE0F Handling window destroy for window ${windowId}`);
+      switch (windowId) {
+        case 1:
+          this.hideQuestion();
+          break;
+        case 4:
+          this.hideInventoryDialog();
+          this.hideQuestion();
+          break;
+        default:
+          this.hideQuestion();
+          this.hideDirectionQuestion();
+          this.hideInventoryDialog();
+          break;
       }
     }
     sendInput(input) {
