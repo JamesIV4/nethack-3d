@@ -1046,7 +1046,7 @@ class Nethack3DEngine {
         ".top-left-ui"
       ) as HTMLElement;
       if (gameLogContainer) {
-        gameLogContainer.style.top = "70px"; // Move down below stats bar
+        gameLogContainer.style.top = "65px"; // Move down below stats bar
       }
     }
 

@@ -26299,7 +26299,7 @@ void main() {
           ".top-left-ui"
         );
         if (gameLogContainer) {
-          gameLogContainer.style.top = "70px";
+          gameLogContainer.style.top = "65px";
         }
       }
       const hpPercentage = this.playerStats.maxHp > 0 ? this.playerStats.hp / this.playerStats.maxHp * 100 : 0;
