@@ -42,6 +42,9 @@ class Nethack3DEngine {
   private minDistance: number = 5;
   private maxDistance: number = 50;
 
+  // Direction question handling
+  private isInDirectionQuestion: boolean = false;
+
   // Camera panning
   private cameraPanX: number = 0;
   private cameraPanY: number = 0;
@@ -59,6 +62,8 @@ class Nethack3DEngine {
     floor: new THREE.MeshLambertMaterial({ color: 0x8b4513 }), // Brown floor
     wall: new THREE.MeshLambertMaterial({ color: 0x666666 }), // Gray wall
     door: new THREE.MeshLambertMaterial({ color: 0x8b4513 }), // Brown door
+    dark: new THREE.MeshLambertMaterial({ color: 0x000055 }), // Dark blue for unseen areas
+    fountain: new THREE.MeshLambertMaterial({ color: 0x0088ff }), // Light blue for water fountains
     player: new THREE.MeshLambertMaterial({
       color: 0x00ff00,
       emissive: 0x004400,
@@ -241,6 +246,11 @@ class Nethack3DEngine {
       //   this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
       //   break;
 
+      case "direction_question":
+        // Special handling for direction questions - show UI and pause movement
+        this.showDirectionQuestion(data.text);
+        break;
+
       case "question":
         // Auto-handle character creation questions to avoid user interaction
         if (
@@ -296,7 +306,7 @@ class Nethack3DEngine {
     }
   }
 
-  private createTextSprite(text: string, size: number = 128): THREE.Sprite {
+  private createTextSprite(text: string, size: number = 128, textColor: string = "yellow"): THREE.Sprite {
     // Create a canvas to draw text on
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d")!;
@@ -306,7 +316,7 @@ class Nethack3DEngine {
     canvas.height = size;
 
     // Configure text rendering
-    context.fillStyle = "yellow";
+    context.fillStyle = textColor;
     context.font = "bold 24px monospace"; // Larger, monospace font
     context.textAlign = "center";
     context.textBaseline = "middle";
@@ -319,7 +329,7 @@ class Nethack3DEngine {
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw the text
-    context.fillStyle = "yellow";
+    context.fillStyle = textColor;
     context.fillText(text, canvas.width / 2, canvas.height / 2);
 
     // Create texture from canvas
@@ -410,6 +420,9 @@ class Nethack3DEngine {
     char?: string,
     color?: number
   ): void {
+    // Debug logging to see what character data we're receiving
+    console.log(`🎨 updateTile(${x},${y}) glyph=${glyph} char="${char}" color=${color}`);
+    
     const key = `${x},${y}`;
     let mesh = this.tileMap.get(key);
     let textSprite = this.textSpriteMap.get(key);
@@ -425,36 +438,122 @@ class Nethack3DEngine {
       this.updateStatus(`Player at (${x}, ${y}) - NetHack 3D`);
     }
 
-    // Determine tile type based on glyph ID ranges (these are NetHack-specific)
+    // Determine tile type based on character first, then fall back to glyph ID ranges
     let material = this.materials.default;
     let geometry = this.floorGeometry;
     let isWall = false;
 
-    if (glyph >= 2378 && glyph <= 2394) {
-      // Wall glyphs
-      material = this.materials.wall;
-      geometry = this.wallGeometry;
-      isWall = true;
-    } else if (glyph >= 2395 && glyph <= 2397) {
-      // Floor glyphs
-      material = this.materials.floor;
-      geometry = this.floorGeometry;
-    } else if (isPlayerGlyph) {
-      // Player glyphs (using broader range)
-      material = this.materials.player;
-      geometry = this.floorGeometry;
-    } else if (glyph >= 400 && glyph <= 500) {
-      // Monster glyphs (approximate range)
-      material = this.materials.monster;
-      geometry = this.floorGeometry;
-    } else if (glyph >= 1900 && glyph <= 2400) {
-      // Item glyphs (approximate range)
-      material = this.materials.item;
-      geometry = this.floorGeometry;
+    // Prioritize the character provided by NetHack over glyph number
+    // BUT check for special cases first (like doors) where glyph number is more reliable
+    if (char) {
+      console.log(`🔤 Using character-based detection: "${char}"`);
+      
+      // Special case: Check for door glyphs, but respect the character
+      if (glyph === 2389 || glyph === 2390) {
+        // Door glyphs - but the character tells us the actual state
+        if (char === ".") {
+          // Open doorway - character "." means it's passable floor
+          console.log(`  -> Open doorway (glyph ${glyph}, char ".")`);
+          material = this.materials.floor;
+          geometry = this.floorGeometry;
+          isWall = false;
+        } else if (char === "+") {
+          // Closed door - character "+" means it's blocking
+          console.log(`  -> Closed door (glyph ${glyph}, char "+")`);
+          material = this.materials.door;
+          geometry = this.wallGeometry;
+          isWall = true;
+        } else {
+          // Other door states - default to open
+          console.log(`  -> Door with character "${char}" - defaulting to open`);
+          material = this.materials.floor;
+          geometry = this.floorGeometry;
+          isWall = false;
+        }
+      } else if (char === ".") {
+        // Floor/corridor
+        console.log(`  -> Floor/corridor`);
+        material = this.materials.floor;
+        geometry = this.floorGeometry;
+        isWall = false;
+      } else if (char === " ") {
+        // Blank space - in NetHack this typically represents dark/unseen areas (walls)
+        console.log(`  -> Dark area/unseen wall`);
+        material = this.materials.wall;
+        geometry = this.wallGeometry;
+        isWall = true;
+      } else if (char === "#") {
+        // In NetHack, # represents dark/unexplored areas (flat floor, not walls)
+        console.log(`  -> Dark area (flat)`);
+        material = this.materials.dark; // Dark blue for unseen areas
+        geometry = this.floorGeometry; // Should be flat, not wall blocks
+        isWall = false;
+      } else if (char === "|" || char === "-") {
+        // Explicit wall characters (but not doors, which were checked above)
+        console.log(`  -> Wall`);
+        material = this.materials.wall;
+        geometry = this.wallGeometry;
+        isWall = true;
+      } else if (char === "@") {
+        // Player character
+        console.log(`  -> Player`);
+        material = this.materials.player;
+        geometry = this.floorGeometry;
+        isWall = false;
+      } else if (char === "{") {
+        // Water fountain
+        console.log(`  -> Water fountain`);
+        material = this.materials.fountain;
+        geometry = this.floorGeometry;
+        isWall = false;
+      } else if (char.match(/[a-zA-Z]/)) {
+        // Letters are usually monsters
+        console.log(`  -> Monster`);
+        material = this.materials.monster;
+        geometry = this.floorGeometry;
+        isWall = false;
+      } else if (char.match(/[)(\[%*$?!=/\\<>]/)) {
+        // Items and special characters
+        console.log(`  -> Item`);
+        material = this.materials.item;
+        geometry = this.floorGeometry;
+        isWall = false;
+      } else {
+        // Default to floor for unknown characters
+        console.log(`  -> Default to floor`);
+        material = this.materials.floor;
+        geometry = this.floorGeometry;
+        isWall = false;
+      }
     } else {
-      // Default floor for unknown glyphs
-      material = this.materials.floor;
-      geometry = this.floorGeometry;
+      console.log(`🔢 Using glyph-based detection: ${glyph}`);
+      // Fall back to glyph ID ranges when no character is provided
+      if (glyph >= 2378 && glyph <= 2394) {
+        // Wall glyphs
+        material = this.materials.wall;
+        geometry = this.wallGeometry;
+        isWall = true;
+      } else if (glyph >= 2395 && glyph <= 2397) {
+        // Floor glyphs
+        material = this.materials.floor;
+        geometry = this.floorGeometry;
+      } else if (isPlayerGlyph) {
+        // Player glyphs (using broader range)
+        material = this.materials.player;
+        geometry = this.floorGeometry;
+      } else if (glyph >= 400 && glyph <= 500) {
+        // Monster glyphs (approximate range)
+        material = this.materials.monster;
+        geometry = this.floorGeometry;
+      } else if (glyph >= 1900 && glyph <= 2400) {
+        // Item glyphs (approximate range)
+        material = this.materials.item;
+        geometry = this.floorGeometry;
+      } else {
+        // Default floor for unknown glyphs
+        material = this.materials.floor;
+        geometry = this.floorGeometry;
+      }
     }
 
     if (!mesh) {
@@ -479,13 +578,42 @@ class Nethack3DEngine {
     // Create or update text sprite showing glyph character
     // Use the character provided by NetHack's mapglyph function if available
     const glyphChar = char || this.glyphToChar(glyph);
+    
+    // Determine text color based on glyph type (more comprehensive and robust)
+    let textColor = "yellow"; // Default color
+    
+    // NetHack glyph categories (based on NetHack source code glyph ranges)
+    if (glyph >= 2378 && glyph <= 2399) {
+      // Structural glyphs: walls, floors, corridors, doors
+      // This includes: walls (2378-2394), floors (2395-2397), corridors (2398-2399)
+      textColor = "white";
+    } else if (glyph === 2408) {
+      // Water fountain (specific glyph) - override structural color
+      textColor = "lightblue";
+    } else if (glyph >= 331 && glyph <= 360) {
+      // Player glyphs
+      textColor = "lime"; // Bright green for player
+    } else if (glyph >= 400 && glyph <= 600) {
+      // Monster glyphs (expanded range for better coverage)
+      textColor = "red";
+    } else if (glyph >= 1900 && glyph < 2378) {
+      // Item glyphs (excluding structural elements)
+      textColor = "cyan";
+    } else if (glyph >= 2400 && glyph <= 2500) {
+      // Special terrain and features
+      textColor = "magenta";
+    } else if (glyph >= 1 && glyph <= 330) {
+      // Miscellaneous objects and terrain
+      textColor = "white";
+    }
+    
     if (!textSprite) {
-      textSprite = this.createTextSprite(glyphChar);
+      textSprite = this.createTextSprite(glyphChar, 128, textColor);
       this.scene.add(textSprite);
       this.textSpriteMap.set(key, textSprite);
     } else {
       // Update existing sprite with new glyph character
-      const newSprite = this.createTextSprite(glyphChar);
+      const newSprite = this.createTextSprite(glyphChar, 128, textColor);
       this.scene.remove(textSprite);
       textSprite = newSprite;
       this.scene.add(textSprite);
@@ -645,6 +773,131 @@ class Nethack3DEngine {
     questionDialog.style.display = "block";
   }
 
+  private showDirectionQuestion(question: string): void {
+    // Set direction question state to pause movement
+    this.isInDirectionQuestion = true;
+
+    // Create or get direction dialog
+    let directionDialog = document.getElementById("direction-dialog");
+    if (!directionDialog) {
+      directionDialog = document.createElement("div");
+      directionDialog.id = "direction-dialog";
+      directionDialog.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: #ffff00;
+        padding: 20px;
+        border: 2px solid #ffff00;
+        border-radius: 10px;
+        z-index: 2000;
+        font-family: 'Courier New', monospace;
+        text-align: center;
+        min-width: 350px;
+      `;
+      document.body.appendChild(directionDialog);
+    }
+
+    // Clear previous content
+    directionDialog.innerHTML = "";
+
+    // Add question text
+    const questionText = document.createElement("div");
+    questionText.style.cssText = `
+      font-size: 16px;
+      margin-bottom: 20px;
+      line-height: 1.4;
+      color: #ffff00;
+    `;
+    questionText.textContent = question;
+    directionDialog.appendChild(questionText);
+
+    // Add direction buttons
+    const directionsContainer = document.createElement("div");
+    directionsContainer.style.cssText = `
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      gap: 5px;
+      justify-content: center;
+      margin: 20px 0;
+    `;
+
+    const directions = [
+      { key: '7', label: '↖', name: 'NW' },
+      { key: '8', label: '↑', name: 'N' },
+      { key: '9', label: '↗', name: 'NE' },
+      { key: '4', label: '←', name: 'W' },
+      { key: '5', label: '•', name: 'Wait' },
+      { key: '6', label: '→', name: 'E' },
+      { key: '1', label: '↙', name: 'SW' },
+      { key: '2', label: '↓', name: 'S' },
+      { key: '3', label: '↘', name: 'SE' }
+    ];
+
+    directions.forEach(dir => {
+      const button = document.createElement("button");
+      button.style.cssText = `
+        width: 80px;
+        height: 80px;
+        background: #444;
+        color: #ffff00;
+        border: 2px solid #666;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+        line-height: 1.2;
+      `;
+      
+      button.innerHTML = `<div style="font-size: 24px; margin-bottom: 2px;">${dir.label}</div><div style="font-size: 14px;">${dir.key}</div>`;
+      
+      button.onmouseover = () => {
+        button.style.backgroundColor = "#666";
+      };
+      
+      button.onmouseout = () => {
+        button.style.backgroundColor = "#444";
+      };
+      
+      button.onclick = () => {
+        this.sendInput(dir.key);
+        this.hideDirectionQuestion();
+      };
+      
+      directionsContainer.appendChild(button);
+    });
+
+    directionDialog.appendChild(directionsContainer);
+
+    // Add escape instruction
+    const escapeText = document.createElement("div");
+    escapeText.style.cssText = `
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 15px;
+    `;
+    escapeText.textContent = "Use numpad (1-9), arrow keys, or click a direction. Press ESC to cancel";
+    directionDialog.appendChild(escapeText);
+
+    // Show the dialog
+    directionDialog.style.display = "block";
+  }
+
+  private hideDirectionQuestion(): void {
+    this.isInDirectionQuestion = false;
+    const directionDialog = document.getElementById("direction-dialog");
+    if (directionDialog) {
+      directionDialog.style.display = "none";
+    }
+  }
+
   private showPositionRequest(text: string): void {
     // Create or get position dialog
     let posDialog = document.getElementById("position-dialog");
@@ -788,13 +1041,62 @@ class Nethack3DEngine {
     // Handle escape key to close dialogs
     if (event.key === "Escape") {
       this.hideQuestion();
+      this.hideDirectionQuestion();
       const posDialog = document.getElementById("position-dialog");
       if (posDialog) {
         posDialog.style.display = "none";
       }
+      return;
     }
 
-    // Send input to server
+    // If we're in a direction question, handle direction input specially
+    if (this.isInDirectionQuestion) {
+      // With number_pad:1 option, we can pass numpad keys and arrow keys directly
+      let keyToSend = null;
+      
+      switch (event.key) {
+        // Arrow keys - map to numpad equivalents
+        case 'ArrowUp':
+          keyToSend = '8';
+          break;
+        case 'ArrowDown':
+          keyToSend = '2';
+          break;
+        case 'ArrowLeft':
+          keyToSend = '4';
+          break;
+        case 'ArrowRight':
+          keyToSend = '6';
+          break;
+        
+        // Numpad keys - pass through directly
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+          keyToSend = event.key;
+          break;
+        
+        // Space or period for wait (center/5)
+        case ' ':
+        case '.':
+          keyToSend = '5';
+          break;
+      }
+      
+      if (keyToSend) {
+        this.sendInput(keyToSend);
+        this.hideDirectionQuestion();
+      }
+      return; // Don't send other keys when in direction question mode
+    }
+
+    // Send input to server for normal gameplay
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(
         JSON.stringify({

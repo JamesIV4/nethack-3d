@@ -25541,6 +25541,8 @@ void main() {
       this.lastMouseY = 0;
       this.minDistance = 5;
       this.maxDistance = 50;
+      // Direction question handling
+      this.isInDirectionQuestion = false;
       // Camera panning
       this.cameraPanX = 0;
       this.cameraPanY = 0;
@@ -25559,6 +25561,10 @@ void main() {
         // Gray wall
         door: new MeshLambertMaterial({ color: 9127187 }),
         // Brown door
+        dark: new MeshLambertMaterial({ color: 85 }),
+        // Dark blue for unseen areas
+        fountain: new MeshLambertMaterial({ color: 35071 }),
+        // Light blue for water fountains
         player: new MeshLambertMaterial({
           color: 65280,
           emissive: 17408
@@ -25705,6 +25711,9 @@ void main() {
         // case "menu_item":
         //   this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
         //   break;
+        case "direction_question":
+          this.showDirectionQuestion(data.text);
+          break;
         case "question":
           if (data.text && (data.text.includes("character") || data.text.includes("class") || data.text.includes("race") || data.text.includes("gender") || data.text.includes("alignment"))) {
             console.log("Auto-handling character creation:", data.text);
@@ -25737,19 +25746,19 @@ void main() {
           console.log("Unknown message type:", data.type, data);
       }
     }
-    createTextSprite(text, size = 128) {
+    createTextSprite(text, size = 128, textColor = "yellow") {
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
       canvas.width = size;
       canvas.height = size;
-      context.fillStyle = "yellow";
+      context.fillStyle = textColor;
       context.font = "bold 24px monospace";
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.clearRect(0, 0, canvas.width, canvas.height);
       context.fillStyle = "rgba(0, 0, 0, 0.7)";
       context.fillRect(0, 0, canvas.width, canvas.height);
-      context.fillStyle = "yellow";
+      context.fillStyle = textColor;
       context.fillText(text, canvas.width / 2, canvas.height / 2);
       const texture = new CanvasTexture(canvas);
       texture.needsUpdate = true;
@@ -25814,6 +25823,7 @@ void main() {
       return "?";
     }
     updateTile(x, y, glyph, char, color) {
+      console.log(`\u{1F3A8} updateTile(${x},${y}) glyph=${glyph} char="${char}" color=${color}`);
       const key = `${x},${y}`;
       let mesh = this.tileMap.get(key);
       let textSprite = this.textSpriteMap.get(key);
@@ -25828,25 +25838,93 @@ void main() {
       let material = this.materials.default;
       let geometry = this.floorGeometry;
       let isWall = false;
-      if (glyph >= 2378 && glyph <= 2394) {
-        material = this.materials.wall;
-        geometry = this.wallGeometry;
-        isWall = true;
-      } else if (glyph >= 2395 && glyph <= 2397) {
-        material = this.materials.floor;
-        geometry = this.floorGeometry;
-      } else if (isPlayerGlyph) {
-        material = this.materials.player;
-        geometry = this.floorGeometry;
-      } else if (glyph >= 400 && glyph <= 500) {
-        material = this.materials.monster;
-        geometry = this.floorGeometry;
-      } else if (glyph >= 1900 && glyph <= 2400) {
-        material = this.materials.item;
-        geometry = this.floorGeometry;
+      if (char) {
+        console.log(`\u{1F524} Using character-based detection: "${char}"`);
+        if (glyph === 2389 || glyph === 2390) {
+          if (char === ".") {
+            console.log(`  -> Open doorway (glyph ${glyph}, char ".")`);
+            material = this.materials.floor;
+            geometry = this.floorGeometry;
+            isWall = false;
+          } else if (char === "+") {
+            console.log(`  -> Closed door (glyph ${glyph}, char "+")`);
+            material = this.materials.door;
+            geometry = this.wallGeometry;
+            isWall = true;
+          } else {
+            console.log(`  -> Door with character "${char}" - defaulting to open`);
+            material = this.materials.floor;
+            geometry = this.floorGeometry;
+            isWall = false;
+          }
+        } else if (char === ".") {
+          console.log(`  -> Floor/corridor`);
+          material = this.materials.floor;
+          geometry = this.floorGeometry;
+          isWall = false;
+        } else if (char === " ") {
+          console.log(`  -> Dark area/unseen wall`);
+          material = this.materials.wall;
+          geometry = this.wallGeometry;
+          isWall = true;
+        } else if (char === "#") {
+          console.log(`  -> Dark area (flat)`);
+          material = this.materials.dark;
+          geometry = this.floorGeometry;
+          isWall = false;
+        } else if (char === "|" || char === "-") {
+          console.log(`  -> Wall`);
+          material = this.materials.wall;
+          geometry = this.wallGeometry;
+          isWall = true;
+        } else if (char === "@") {
+          console.log(`  -> Player`);
+          material = this.materials.player;
+          geometry = this.floorGeometry;
+          isWall = false;
+        } else if (char === "{") {
+          console.log(`  -> Water fountain`);
+          material = this.materials.fountain;
+          geometry = this.floorGeometry;
+          isWall = false;
+        } else if (char.match(/[a-zA-Z]/)) {
+          console.log(`  -> Monster`);
+          material = this.materials.monster;
+          geometry = this.floorGeometry;
+          isWall = false;
+        } else if (char.match(/[)(\[%*$?!=/\\<>]/)) {
+          console.log(`  -> Item`);
+          material = this.materials.item;
+          geometry = this.floorGeometry;
+          isWall = false;
+        } else {
+          console.log(`  -> Default to floor`);
+          material = this.materials.floor;
+          geometry = this.floorGeometry;
+          isWall = false;
+        }
       } else {
-        material = this.materials.floor;
-        geometry = this.floorGeometry;
+        console.log(`\u{1F522} Using glyph-based detection: ${glyph}`);
+        if (glyph >= 2378 && glyph <= 2394) {
+          material = this.materials.wall;
+          geometry = this.wallGeometry;
+          isWall = true;
+        } else if (glyph >= 2395 && glyph <= 2397) {
+          material = this.materials.floor;
+          geometry = this.floorGeometry;
+        } else if (isPlayerGlyph) {
+          material = this.materials.player;
+          geometry = this.floorGeometry;
+        } else if (glyph >= 400 && glyph <= 500) {
+          material = this.materials.monster;
+          geometry = this.floorGeometry;
+        } else if (glyph >= 1900 && glyph <= 2400) {
+          material = this.materials.item;
+          geometry = this.floorGeometry;
+        } else {
+          material = this.materials.floor;
+          geometry = this.floorGeometry;
+        }
       }
       if (!mesh) {
         mesh = new Mesh(geometry, material);
@@ -25865,12 +25943,28 @@ void main() {
         mesh.position.z = isWall ? WALL_HEIGHT / 2 : 0;
       }
       const glyphChar = char || this.glyphToChar(glyph);
+      let textColor = "yellow";
+      if (glyph >= 2378 && glyph <= 2399) {
+        textColor = "white";
+      } else if (glyph === 2408) {
+        textColor = "lightblue";
+      } else if (glyph >= 331 && glyph <= 360) {
+        textColor = "lime";
+      } else if (glyph >= 400 && glyph <= 600) {
+        textColor = "red";
+      } else if (glyph >= 1900 && glyph < 2378) {
+        textColor = "cyan";
+      } else if (glyph >= 2400 && glyph <= 2500) {
+        textColor = "magenta";
+      } else if (glyph >= 1 && glyph <= 330) {
+        textColor = "white";
+      }
       if (!textSprite) {
-        textSprite = this.createTextSprite(glyphChar);
+        textSprite = this.createTextSprite(glyphChar, 128, textColor);
         this.scene.add(textSprite);
         this.textSpriteMap.set(key, textSprite);
       } else {
-        const newSprite = this.createTextSprite(glyphChar);
+        const newSprite = this.createTextSprite(glyphChar, 128, textColor);
         this.scene.remove(textSprite);
         textSprite = newSprite;
         this.scene.add(textSprite);
@@ -26002,6 +26096,108 @@ void main() {
       questionDialog.appendChild(escapeText);
       questionDialog.style.display = "block";
     }
+    showDirectionQuestion(question) {
+      this.isInDirectionQuestion = true;
+      let directionDialog = document.getElementById("direction-dialog");
+      if (!directionDialog) {
+        directionDialog = document.createElement("div");
+        directionDialog.id = "direction-dialog";
+        directionDialog.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: #ffff00;
+        padding: 20px;
+        border: 2px solid #ffff00;
+        border-radius: 10px;
+        z-index: 2000;
+        font-family: 'Courier New', monospace;
+        text-align: center;
+        min-width: 350px;
+      `;
+        document.body.appendChild(directionDialog);
+      }
+      directionDialog.innerHTML = "";
+      const questionText = document.createElement("div");
+      questionText.style.cssText = `
+      font-size: 16px;
+      margin-bottom: 20px;
+      line-height: 1.4;
+      color: #ffff00;
+    `;
+      questionText.textContent = question;
+      directionDialog.appendChild(questionText);
+      const directionsContainer = document.createElement("div");
+      directionsContainer.style.cssText = `
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      gap: 5px;
+      justify-content: center;
+      margin: 20px 0;
+    `;
+      const directions = [
+        { key: "7", label: "\u2196", name: "NW" },
+        { key: "8", label: "\u2191", name: "N" },
+        { key: "9", label: "\u2197", name: "NE" },
+        { key: "4", label: "\u2190", name: "W" },
+        { key: "5", label: "\u2022", name: "Wait" },
+        { key: "6", label: "\u2192", name: "E" },
+        { key: "1", label: "\u2199", name: "SW" },
+        { key: "2", label: "\u2193", name: "S" },
+        { key: "3", label: "\u2198", name: "SE" }
+      ];
+      directions.forEach((dir) => {
+        const button = document.createElement("button");
+        button.style.cssText = `
+        width: 80px;
+        height: 80px;
+        background: #444;
+        color: #ffff00;
+        border: 2px solid #666;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+        line-height: 1.2;
+      `;
+        button.innerHTML = `<div style="font-size: 24px; margin-bottom: 2px;">${dir.label}</div><div style="font-size: 14px;">${dir.key}</div>`;
+        button.onmouseover = () => {
+          button.style.backgroundColor = "#666";
+        };
+        button.onmouseout = () => {
+          button.style.backgroundColor = "#444";
+        };
+        button.onclick = () => {
+          this.sendInput(dir.key);
+          this.hideDirectionQuestion();
+        };
+        directionsContainer.appendChild(button);
+      });
+      directionDialog.appendChild(directionsContainer);
+      const escapeText = document.createElement("div");
+      escapeText.style.cssText = `
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 15px;
+    `;
+      escapeText.textContent = "Use numpad (1-9), arrow keys, or click a direction. Press ESC to cancel";
+      directionDialog.appendChild(escapeText);
+      directionDialog.style.display = "block";
+    }
+    hideDirectionQuestion() {
+      this.isInDirectionQuestion = false;
+      const directionDialog = document.getElementById("direction-dialog");
+      if (directionDialog) {
+        directionDialog.style.display = "none";
+      }
+    }
     showPositionRequest(text) {
       let posDialog = document.getElementById("position-dialog");
       if (!posDialog) {
@@ -26122,10 +26318,52 @@ void main() {
     handleKeyDown(event) {
       if (event.key === "Escape") {
         this.hideQuestion();
+        this.hideDirectionQuestion();
         const posDialog = document.getElementById("position-dialog");
         if (posDialog) {
           posDialog.style.display = "none";
         }
+        return;
+      }
+      if (this.isInDirectionQuestion) {
+        let keyToSend = null;
+        switch (event.key) {
+          // Arrow keys - map to numpad equivalents
+          case "ArrowUp":
+            keyToSend = "8";
+            break;
+          case "ArrowDown":
+            keyToSend = "2";
+            break;
+          case "ArrowLeft":
+            keyToSend = "4";
+            break;
+          case "ArrowRight":
+            keyToSend = "6";
+            break;
+          // Numpad keys - pass through directly
+          case "1":
+          case "2":
+          case "3":
+          case "4":
+          case "5":
+          case "6":
+          case "7":
+          case "8":
+          case "9":
+            keyToSend = event.key;
+            break;
+          // Space or period for wait (center/5)
+          case " ":
+          case ".":
+            keyToSend = "5";
+            break;
+        }
+        if (keyToSend) {
+          this.sendInput(keyToSend);
+          this.hideDirectionQuestion();
+        }
+        return;
       }
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         this.ws.send(

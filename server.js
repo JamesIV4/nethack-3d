@@ -62,10 +62,11 @@ class NetHackSession {
 
   // Helper method for key processing
   processKey(key) {
-    if (key === "ArrowLeft" || key === "h") return "h".charCodeAt(0);
-    if (key === "ArrowRight" || key === "l") return "l".charCodeAt(0);
-    if (key === "ArrowUp" || key === "k") return "k".charCodeAt(0);
-    if (key === "ArrowDown" || key === "j") return "j".charCodeAt(0);
+    // With number_pad:1 option, translate arrow keys to numpad equivalents
+    if (key === "ArrowLeft") return "4".charCodeAt(0);
+    if (key === "ArrowRight") return "6".charCodeAt(0);
+    if (key === "ArrowUp") return "8".charCodeAt(0);
+    if (key === "ArrowDown") return "2".charCodeAt(0);
     if (key === "Escape") return 27;
     if (key.length > 0) return key.charCodeAt(0);
     return 0; // Default for empty/unknown input
@@ -127,7 +128,7 @@ class NetHackSession {
         preRun: [
           () => {
             console.log("PreRun: Setting up NETHACKOPTIONS");
-            Module.ENV.NETHACKOPTIONS = "pickup_types:$";
+            Module.ENV.NETHACKOPTIONS = "pickup_types:$,number_pad:1";
           },
         ],
         onRuntimeInitialized: async () => {
@@ -217,7 +218,32 @@ class NetHackSession {
           `🤔 Y/N Question: "${question}" choices: "${choices}" default: ${defaultChoice}`
         );
 
-        // Send question to web client with available menu items
+        // Check if this is a direction question that needs special handling
+        if (question && question.toLowerCase().includes("direction")) {
+          console.log("🧭 Direction question detected - waiting for user input");
+          
+          // Send direction question to web client
+          if (this.ws && this.ws.readyState === 1) {
+            this.ws.send(
+              JSON.stringify({
+                type: "direction_question",
+                text: question,
+                choices: choices,
+                default: defaultChoice,
+              })
+            );
+          }
+
+          // Wait for actual user input for direction questions
+          console.log("🧭 Waiting for direction input (async)...");
+          return new Promise((resolve) => {
+            this.inputResolver = resolve;
+            this.waitingForInput = true;
+            // No timeout - wait for real user input via WebSocket
+          });
+        }
+
+        // Send question to web client with available menu items for non-direction questions
         if (this.ws && this.ws.readyState === 1) {
           this.ws.send(
             JSON.stringify({
@@ -378,12 +404,15 @@ class NetHackSession {
                 y,
                 0
               );
+              console.log(`🔍 Raw glyphInfo for glyph ${printGlyph}:`, glyphInfo);
               if (glyphInfo && glyphInfo.ch !== undefined) {
                 glyphChar = String.fromCharCode(glyphInfo.ch);
                 glyphColor = glyphInfo.color;
                 console.log(
                   `🔤 Glyph ${printGlyph} -> "${glyphChar}" (ASCII ${glyphInfo.ch}) color ${glyphColor}`
                 );
+              } else {
+                console.log(`⚠️ No character info for glyph ${printGlyph}, glyphInfo:`, glyphInfo);
               }
             } catch (error) {
               console.log(
@@ -391,6 +420,8 @@ class NetHackSession {
                 error
               );
             }
+          } else {
+            console.log(`⚠️ mapglyphHelper not available`);
           }
 
           this.gameMap.set(key, {
