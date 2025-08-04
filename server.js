@@ -420,6 +420,16 @@ class NetHackSession {
       case "shim_raw_print":
         const [rawText] = args;
         console.log(`📢 RAW PRINT: "${rawText}"`);
+
+        // Send raw print messages to the UI log
+        if (this.ws && this.ws.readyState === 1 && rawText && rawText.trim()) {
+          this.ws.send(
+            JSON.stringify({
+              type: "raw_print",
+              text: rawText.trim(),
+            })
+          );
+        }
         return 0;
       case "shim_wait_synch":
         console.log("NetHack waiting for synchronization");

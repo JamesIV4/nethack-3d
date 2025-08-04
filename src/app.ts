@@ -134,8 +134,8 @@ class Nethack3DEngine {
       position: fixed;
       top: 10px;
       left: 10px;
-      width: 400px;
-      height: 200px;
+      width: 500px;
+      height: 300px;
       background: rgba(0, 0, 0, 0.8);
       color: #00ff00;
       font-family: 'Courier New', monospace;
@@ -169,7 +169,7 @@ class Nethack3DEngine {
     statusContainer.innerHTML = "Connecting to NetHack server...";
     document.body.appendChild(statusContainer);
 
-    // Create connection status
+    // Create connection status (smaller, top-right corner)
     const connStatus = document.createElement("div");
     connStatus.id = "connection-status";
     connStatus.style.cssText = `
@@ -199,6 +199,7 @@ class Nethack3DEngine {
       console.log("Connected to NetHack server");
       this.updateConnectionStatus("Connected", "#00aa00");
       this.updateStatus("Connected to NetHack - Game starting...");
+      this.addGameMessage("Connected to NetHack - Game starting...");
 
       // Hide loading screen
       const loading = document.getElementById("loading");
@@ -220,6 +221,7 @@ class Nethack3DEngine {
       console.log("Disconnected from NetHack server");
       this.updateConnectionStatus("Disconnected", "#aa0000");
       this.updateStatus("Disconnected from server");
+      this.addGameMessage("Disconnected from server");
 
       // Show loading screen
       const loading = document.getElementById("loading");
@@ -255,6 +257,10 @@ class Nethack3DEngine {
 
       case "text":
         this.addGameMessage(data.text);
+        break;
+
+      case "raw_print":
+        this.addGameMessage(`RAW: ${data.text}`);
         break;
 
       case "menu_item":

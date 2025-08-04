@@ -25622,8 +25622,8 @@ void main() {
       position: fixed;
       top: 10px;
       left: 10px;
-      width: 400px;
-      height: 200px;
+      width: 500px;
+      height: 300px;
       background: rgba(0, 0, 0, 0.8);
       color: #00ff00;
       font-family: 'Courier New', monospace;
@@ -25680,6 +25680,7 @@ void main() {
         console.log("Connected to NetHack server");
         this.updateConnectionStatus("Connected", "#00aa00");
         this.updateStatus("Connected to NetHack - Game starting...");
+        this.addGameMessage("Connected to NetHack - Game starting...");
         const loading = document.getElementById("loading");
         if (loading) {
           loading.style.display = "none";
@@ -25697,6 +25698,7 @@ void main() {
         console.log("Disconnected from NetHack server");
         this.updateConnectionStatus("Disconnected", "#aa0000");
         this.updateStatus("Disconnected from server");
+        this.addGameMessage("Disconnected from server");
         const loading = document.getElementById("loading");
         if (loading) {
           loading.style.display = "block";
@@ -25723,6 +25725,9 @@ void main() {
           break;
         case "text":
           this.addGameMessage(data.text);
+          break;
+        case "raw_print":
+          this.addGameMessage(`RAW: ${data.text}`);
           break;
         case "menu_item":
           this.addGameMessage(`Menu: ${data.text} (${data.accelerator})`);
