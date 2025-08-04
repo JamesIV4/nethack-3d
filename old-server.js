@@ -74,15 +74,14 @@ class NetHackSession {
 
   async initializeNetHack() {
     try {
-      console.log("Starting NetHack session with original package files...");
+      console.log("Starting NetHack session...");
 
-      // Use the original package files directly
-      const factory = require("./public/nethack-original.js");
-      const wasmPath = path.join(__dirname, "public", "nethack-original.wasm");
+      const factory = require("./public/nethack.js");
+      const wasmPath = path.join(__dirname, "public", "nethack.wasm");
 
-      console.log("Loading original WASM from:", wasmPath);
+      console.log("Loading WASM from:", wasmPath);
       const wasmBinary = fs.readFileSync(wasmPath);
-      console.log("Original WASM binary loaded, size:", wasmBinary.length);
+      console.log("WASM binary loaded, size:", wasmBinary.length);
 
       // Set up global callback first
       globalThis.nethackCallback = (name, ...args) => {

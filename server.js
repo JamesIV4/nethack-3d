@@ -31,11 +31,11 @@ class NetHackSession {
   // Handle incoming input from the client
   handleClientInput(input) {
     console.log("🎮 Received client input:", input);
-    
+
     // Store the input for potential reuse
     this.latestInput = input;
     this.lastInputTime = Date.now();
-    
+
     // If we're waiting for general input, resolve the promise immediately
     if (this.waitingForInput && this.inputResolver) {
       console.log("🎮 Resolving waiting input promise with:", input);
@@ -45,7 +45,7 @@ class NetHackSession {
       resolver(this.processKey(input));
       return;
     }
-    
+
     // If we're waiting for position input, resolve that promise
     if (this.waitingForPosition && this.positionResolver) {
       console.log("🎮 Resolving waiting position promise with:", input);
@@ -55,7 +55,7 @@ class NetHackSession {
       resolver(this.processKey(input));
       return;
     }
-    
+
     // Otherwise, just store for later use (for synchronous phases like character creation)
     console.log("🎮 Storing input for later use:", input);
   }
@@ -73,12 +73,12 @@ class NetHackSession {
 
   async initializeNetHack() {
     try {
-      console.log("Starting NetHack session with original package files...");
-      const factory = require("./public/nethack-original.js");
-      const wasmPath = path.join(__dirname, "public", "nethack-original.wasm");
-      console.log("Loading original WASM from:", wasmPath);
+      console.log("Starting NetHack session...");
+      const factory = require("./public/nethack.js");
+      const wasmPath = path.join(__dirname, "public", "nethack.wasm");
+      console.log("Loading WASM from:", wasmPath);
       const wasmBinary = fs.readFileSync(wasmPath);
-      console.log("Original WASM binary loaded, size:", wasmBinary.length);
+      console.log("WASM binary loaded, size:", wasmBinary.length);
 
       globalThis.nethackCallback = (name, ...args) => {
         return this.handleUICallback(name, args);
@@ -178,7 +178,9 @@ class NetHackSession {
         if (this.latestInput && timeSinceInput < this.inputCooldown) {
           const input = this.latestInput;
           this.latestInput = null; // Clear it after use
-          console.log(`🎮 Reusing recent input for event: ${input} (${timeSinceInput}ms ago)`);
+          console.log(
+            `🎮 Reusing recent input for event: ${input} (${timeSinceInput}ms ago)`
+          );
           return processKey(input);
         }
 
@@ -227,7 +229,9 @@ class NetHackSession {
         if (this.latestInput && timeSincePositionInput < this.inputCooldown) {
           const input = this.latestInput;
           // Don't clear it yet - let shim_get_nh_event potentially reuse it
-          console.log(`🎮 Using recent input for position: ${input} (${timeSincePositionInput}ms ago)`);
+          console.log(
+            `🎮 Using recent input for position: ${input} (${timeSincePositionInput}ms ago)`
+          );
           return processKey(input);
         }
 
