@@ -137,47 +137,11 @@ class Nethack3DEngine {
   }
 
   private initUI(): void {
-    // Create game log overlay
-    const logContainer = document.createElement("div");
-    logContainer.id = "game-log";
-    logContainer.style.cssText = `
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      width: 500px;
-      height: 300px;
-      background: rgba(0, 0, 0, 0.8);
-      color: #00ff00;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      padding: 10px;
-      border: 1px solid #333;
-      border-radius: 5px;
-      overflow-y: auto;
-      z-index: 1000;
-      pointer-events: none;
-    `;
-    document.body.appendChild(logContainer);
-
-    // Create status overlay
-    const statusContainer = document.createElement("div");
-    statusContainer.id = "game-status";
-    statusContainer.style.cssText = `
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      background: rgba(0, 0, 0, 0.8);
-      color: #ffffff;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      padding: 10px;
-      border: 1px solid #333;
-      border-radius: 5px;
-      z-index: 1000;
-      pointer-events: none;
-    `;
-    statusContainer.innerHTML = "Connecting to NetHack server...";
-    document.body.appendChild(statusContainer);
+    // Use existing game log and status elements from HTML instead of creating new ones
+    const statusElement = document.getElementById("game-status");
+    if (statusElement) {
+      statusElement.innerHTML = "Connecting to NetHack server...";
+    }
 
     // Create connection status (smaller, top-right corner)
     const connStatus = document.createElement("div");
