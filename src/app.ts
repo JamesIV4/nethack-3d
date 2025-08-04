@@ -272,9 +272,12 @@ class Nethack3DEngine {
 
       case "position_request":
         // Only show meaningful position requests, filter out spam
-        if (data.text && data.text.trim() && 
-            !data.text.includes("cursor") && 
-            !data.text.includes("Select a position")) {
+        if (
+          data.text &&
+          data.text.trim() &&
+          !data.text.includes("cursor") &&
+          !data.text.includes("Select a position")
+        ) {
           this.showPositionRequest(data.text);
         }
         break;
