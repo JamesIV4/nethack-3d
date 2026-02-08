@@ -6646,6 +6646,9 @@ var Nethack3DEngine = class {
     this.isInDirectionQuestion = false;
     // General question handling (pauses all movement)
     this.isInQuestion = false;
+    this.isFarLookActive = false;
+    this.farLookTarget = { x: 0, y: 0 };
+    this.farLookIndicator = null;
     // Camera panning
     this.cameraPanX = 0;
     this.cameraPanY = 0;
@@ -7102,6 +7105,22 @@ var Nethack3DEngine = class {
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
     this.scene.add(directionalLight);
+    const farLookGeometry = new THREE.RingGeometry(
+      TILE_SIZE * 0.34,
+      TILE_SIZE * 0.45,
+      32
+    );
+    const farLookMaterial = new THREE.MeshBasicMaterial({
+      color: 16774238,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false
+    });
+    this.farLookIndicator = new THREE.Mesh(farLookGeometry, farLookMaterial);
+    this.farLookIndicator.rotation.x = Math.PI / 2;
+    this.farLookIndicator.visible = false;
+    this.scene.add(this.farLookIndicator);
     window.addEventListener("resize", this.onWindowResize.bind(this), false);
     window.addEventListener("keydown", this.handleKeyDown.bind(this), false);
     window.addEventListener("keyup", this.handleKeyUp.bind(this), false);
@@ -9113,6 +9132,9 @@ var Nethack3DEngine = class {
       this.sendInput(modifiedInput);
       return;
     }
+    if (this.handleFarLookInput(event)) {
+      return;
+    }
     if (event.ctrlKey) {
       switch (event.key.toLowerCase()) {
         case "r":
@@ -9335,6 +9357,104 @@ var Nethack3DEngine = class {
       return;
     }
     this.sendInput(event.key);
+  }
+  handleFarLookInput(event) {
+    if (this.isInQuestion || this.isInDirectionQuestion) {
+      return false;
+    }
+    if (event.key === ";") {
+      event.preventDefault();
+      if (this.isFarLookActive) {
+        this.deactivateFarLook();
+      } else {
+        this.activateFarLook();
+      }
+      this.sendInput(";");
+      return true;
+    }
+    if (!this.isFarLookActive) {
+      return false;
+    }
+    const movement = this.getFarLookMovement(event.key);
+    if (!movement) {
+      return false;
+    }
+    event.preventDefault();
+    this.farLookTarget.x += movement.dx;
+    this.farLookTarget.y += movement.dy;
+    this.updateFarLookIndicatorPosition();
+    this.sendInput(movement.input);
+    return true;
+  }
+  activateFarLook() {
+    this.isFarLookActive = true;
+    this.farLookTarget = { ...this.playerPos };
+    this.updateFarLookIndicatorPosition();
+    this.addGameMessage("Far look enabled");
+  }
+  deactivateFarLook() {
+    this.isFarLookActive = false;
+    if (this.farLookIndicator) {
+      this.farLookIndicator.visible = false;
+    }
+    this.addGameMessage("Far look disabled");
+  }
+  updateFarLookIndicatorPosition() {
+    if (!this.farLookIndicator || !this.isFarLookActive) {
+      return;
+    }
+    this.farLookIndicator.visible = true;
+    this.farLookIndicator.position.set(
+      this.farLookTarget.x * TILE_SIZE,
+      -this.farLookTarget.y * TILE_SIZE,
+      0.04
+    );
+  }
+  getFarLookMovement(key) {
+    switch (key) {
+      case "h":
+      case "H":
+      case "ArrowLeft":
+      case "4":
+        return { dx: -1, dy: 0, input: key === "ArrowLeft" ? "4" : key };
+      case "l":
+      case "L":
+      case "ArrowRight":
+      case "6":
+        return { dx: 1, dy: 0, input: key === "ArrowRight" ? "6" : key };
+      case "k":
+      case "K":
+      case "ArrowUp":
+      case "8":
+        return { dx: 0, dy: -1, input: key === "ArrowUp" ? "8" : key };
+      case "j":
+      case "J":
+      case "ArrowDown":
+      case "2":
+        return { dx: 0, dy: 1, input: key === "ArrowDown" ? "2" : key };
+      case "y":
+      case "Y":
+      case "Home":
+      case "7":
+        return { dx: -1, dy: -1, input: key === "Home" ? "7" : key };
+      case "u":
+      case "U":
+      case "PageUp":
+      case "9":
+        return { dx: 1, dy: -1, input: key === "PageUp" ? "9" : key };
+      case "b":
+      case "B":
+      case "End":
+      case "1":
+        return { dx: -1, dy: 1, input: key === "End" ? "1" : key };
+      case "n":
+      case "N":
+      case "PageDown":
+      case "3":
+        return { dx: 1, dy: 1, input: key === "PageDown" ? "3" : key };
+      default:
+        return null;
+    }
   }
   updateCamera(deltaSeconds) {
     const { x, y } = this.playerPos;

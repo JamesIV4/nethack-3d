@@ -154,6 +154,9 @@ class Nethack3DEngine {
 
   // General question handling (pauses all movement)
   private isInQuestion: boolean = false;
+  private isFarLookActive: boolean = false;
+  private farLookTarget = { x: 0, y: 0 };
+  private farLookIndicator: THREE.Mesh | null = null;
 
   // Camera panning
   private cameraPanX: number = 0;
@@ -688,6 +691,23 @@ class Nethack3DEngine {
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
     this.scene.add(directionalLight);
+
+    const farLookGeometry = new THREE.RingGeometry(
+      TILE_SIZE * 0.34,
+      TILE_SIZE * 0.45,
+      32,
+    );
+    const farLookMaterial = new THREE.MeshBasicMaterial({
+      color: 0xfff45e,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+    });
+    this.farLookIndicator = new THREE.Mesh(farLookGeometry, farLookMaterial);
+    this.farLookIndicator.rotation.x = Math.PI / 2;
+    this.farLookIndicator.visible = false;
+    this.scene.add(this.farLookIndicator);
 
     // --- Event Listeners ---
     window.addEventListener("resize", this.onWindowResize.bind(this), false);
@@ -3376,6 +3396,10 @@ class Nethack3DEngine {
       return;
     }
 
+    if (this.handleFarLookInput(event)) {
+      return;
+    }
+
     // Handle tile refresh shortcuts (Ctrl + key combinations)
     if (event.ctrlKey) {
       switch (event.key.toLowerCase()) {
@@ -3645,6 +3669,116 @@ class Nethack3DEngine {
 
     // Send input to local runtime for normal gameplay
     this.sendInput(event.key);
+  }
+
+  private handleFarLookInput(event: KeyboardEvent): boolean {
+    if (this.isInQuestion || this.isInDirectionQuestion) {
+      return false;
+    }
+
+    if (event.key === ";") {
+      event.preventDefault();
+      if (this.isFarLookActive) {
+        this.deactivateFarLook();
+      } else {
+        this.activateFarLook();
+      }
+      this.sendInput(";");
+      return true;
+    }
+
+    if (!this.isFarLookActive) {
+      return false;
+    }
+
+    const movement = this.getFarLookMovement(event.key);
+    if (!movement) {
+      return false;
+    }
+
+    event.preventDefault();
+    this.farLookTarget.x += movement.dx;
+    this.farLookTarget.y += movement.dy;
+    this.updateFarLookIndicatorPosition();
+    this.sendInput(movement.input);
+    return true;
+  }
+
+  private activateFarLook(): void {
+    this.isFarLookActive = true;
+    this.farLookTarget = { ...this.playerPos };
+    this.updateFarLookIndicatorPosition();
+    this.addGameMessage("Far look enabled");
+  }
+
+  private deactivateFarLook(): void {
+    this.isFarLookActive = false;
+    if (this.farLookIndicator) {
+      this.farLookIndicator.visible = false;
+    }
+    this.addGameMessage("Far look disabled");
+  }
+
+  private updateFarLookIndicatorPosition(): void {
+    if (!this.farLookIndicator || !this.isFarLookActive) {
+      return;
+    }
+
+    this.farLookIndicator.visible = true;
+    this.farLookIndicator.position.set(
+      this.farLookTarget.x * TILE_SIZE,
+      -this.farLookTarget.y * TILE_SIZE,
+      0.04,
+    );
+  }
+
+  private getFarLookMovement(
+    key: string,
+  ): { dx: number; dy: number; input: string } | null {
+    switch (key) {
+      case "h":
+      case "H":
+      case "ArrowLeft":
+      case "4":
+        return { dx: -1, dy: 0, input: key === "ArrowLeft" ? "4" : key };
+      case "l":
+      case "L":
+      case "ArrowRight":
+      case "6":
+        return { dx: 1, dy: 0, input: key === "ArrowRight" ? "6" : key };
+      case "k":
+      case "K":
+      case "ArrowUp":
+      case "8":
+        return { dx: 0, dy: -1, input: key === "ArrowUp" ? "8" : key };
+      case "j":
+      case "J":
+      case "ArrowDown":
+      case "2":
+        return { dx: 0, dy: 1, input: key === "ArrowDown" ? "2" : key };
+      case "y":
+      case "Y":
+      case "Home":
+      case "7":
+        return { dx: -1, dy: -1, input: key === "Home" ? "7" : key };
+      case "u":
+      case "U":
+      case "PageUp":
+      case "9":
+        return { dx: 1, dy: -1, input: key === "PageUp" ? "9" : key };
+      case "b":
+      case "B":
+      case "End":
+      case "1":
+        return { dx: -1, dy: 1, input: key === "End" ? "1" : key };
+      case "n":
+      case "N":
+      case "PageDown":
+      case "3":
+        return { dx: 1, dy: 1, input: key === "PageDown" ? "3" : key };
+      default:
+        return null;
+    }
   }
 
   private updateCamera(deltaSeconds: number): void {
