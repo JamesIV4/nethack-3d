@@ -379,6 +379,7 @@
         this.waitingForInput = false;
         const resolver = this.inputResolver;
         this.inputResolver = null;
+        this.latestInput = null;
         resolver(this.processKey(input));
         return;
       }
@@ -387,6 +388,7 @@
         this.waitingForPosition = false;
         const resolver = this.positionResolver;
         this.positionResolver = null;
+        this.latestInput = null;
         resolver(this.processKey(input));
         return;
       }
@@ -989,10 +991,17 @@
           const timeSincePositionInput = Date.now() - this.lastInputTime;
           if (this.latestInput && !this.isMetaInput(this.latestInput) && timeSincePositionInput < this.inputCooldown) {
             const input = this.latestInput;
-            console.log(
-              `\u{1F3AE} Using recent input for position: ${input} (${timeSincePositionInput}ms ago)`
-            );
-            return processKey(input);
+            if (input === ";") {
+              console.log(
+                "\u{1F3AE} Ignoring recent ';' for position input to keep far-look active"
+              );
+            } else {
+              this.latestInput = null;
+              console.log(
+                `\u{1F3AE} Using recent input for position: ${input} (${timeSincePositionInput}ms ago)`
+              );
+              return processKey(input);
+            }
           }
           console.log("\u{1F3AE} Waiting for position input (async)...");
           return new Promise((resolve) => {

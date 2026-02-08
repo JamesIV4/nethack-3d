@@ -376,6 +376,7 @@ class LocalNetHackRuntime {
       this.waitingForInput = false;
       const resolver = this.inputResolver;
       this.inputResolver = null;
+      this.latestInput = null;
       resolver(this.processKey(input));
       return;
     }
@@ -386,6 +387,7 @@ class LocalNetHackRuntime {
       this.waitingForPosition = false;
       const resolver = this.positionResolver;
       this.positionResolver = null;
+      this.latestInput = null;
       resolver(this.processKey(input));
       return;
     }
@@ -1174,11 +1176,19 @@ class LocalNetHackRuntime {
           timeSincePositionInput < this.inputCooldown
         ) {
           const input = this.latestInput;
-          // Don't clear it yet - let shim_get_nh_event potentially reuse it
-          console.log(
-            `🎮 Using recent input for position: ${input} (${timeSincePositionInput}ms ago)`,
-          );
-          return processKey(input);
+          // Starting far-look with ';' must not immediately satisfy the first position prompt.
+          if (input === ";") {
+            console.log(
+              "🎮 Ignoring recent ';' for position input to keep far-look active",
+            );
+          } else {
+            // Consume when reused here so it is not double-consumed by shim_get_nh_event.
+            this.latestInput = null;
+            console.log(
+              `🎮 Using recent input for position: ${input} (${timeSincePositionInput}ms ago)`,
+            );
+            return processKey(input);
+          }
         }
 
         // We're now in gameplay mode - use Asyncify to wait for real user input
