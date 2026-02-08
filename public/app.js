@@ -6584,6 +6584,7 @@ var Nethack3DEngine = class {
     this.gameMessages = [];
     this.floatingMessageLayer = null;
     this.floatingMessageEntries = [];
+    this.metaCommandOverlay = null;
     this.hasSeenPlayerPosition = false;
     this.hasPlayerMovedOnce = false;
     this.lastMovementInputAtMs = 0;
@@ -6626,6 +6627,8 @@ var Nethack3DEngine = class {
     };
     this.session = null;
     this.metaInputPrefix = "__META__:";
+    this.isInMetaCommandInput = false;
+    this.metaCommandBuffer = "";
     this.altOrMetaHeld = false;
     // Camera controls
     this.cameraDistance = 20;
@@ -8256,9 +8259,11 @@ var Nethack3DEngine = class {
     );
   }
   relayoutFloatingMessages() {
+    const offsetIndex = this.metaCommandOverlay ? 1 : 0;
     for (let i = 0; i < this.floatingMessageEntries.length; i += 1) {
       const entry = this.floatingMessageEntries[i];
-      entry.container.style.top = `${-i * this.floatingMessageStackSpacingPx}px`;
+      const stackIndex = i + offsetIndex;
+      entry.container.style.top = `${-stackIndex * this.floatingMessageStackSpacingPx}px`;
     }
   }
   removeFloatingMessageEntry(entry, relayout = true) {
@@ -8272,6 +8277,54 @@ var Nethack3DEngine = class {
     if (relayout) {
       this.relayoutFloatingMessages();
     }
+  }
+  beginMetaCommandInput() {
+    if (this.isInQuestion || this.isInDirectionQuestion) {
+      return;
+    }
+    this.isInMetaCommandInput = true;
+    this.metaCommandBuffer = "";
+    this.renderMetaCommandOverlay();
+  }
+  endMetaCommandInput() {
+    this.isInMetaCommandInput = false;
+    this.metaCommandBuffer = "";
+    if (this.metaCommandOverlay) {
+      this.metaCommandOverlay.container.remove();
+      this.metaCommandOverlay = null;
+    }
+    this.relayoutFloatingMessages();
+  }
+  renderMetaCommandOverlay() {
+    if (!this.floatingMessageLayer || !document.body.contains(this.floatingMessageLayer)) {
+      return;
+    }
+    if (!this.metaCommandOverlay) {
+      const messageContainer = document.createElement("div");
+      messageContainer.className = "floating-message-container floating-message-container-persistent";
+      messageContainer.style.top = "0px";
+      const floatingText = document.createElement("div");
+      floatingText.className = "floating-message-text floating-message-text-persistent";
+      messageContainer.appendChild(floatingText);
+      this.floatingMessageLayer.appendChild(messageContainer);
+      this.metaCommandOverlay = {
+        container: messageContainer,
+        text: floatingText
+      };
+    }
+    this.metaCommandOverlay.text.textContent = `#${this.metaCommandBuffer}`;
+    this.relayoutFloatingMessages();
+  }
+  submitMetaCommandInput() {
+    this.sendInput("#");
+    for (const char of this.metaCommandBuffer) {
+      this.sendInput(char);
+    }
+    this.sendInput("Enter");
+    this.endMetaCommandInput();
+  }
+  cancelMetaCommandInput() {
+    this.endMetaCommandInput();
   }
   updateStatus(status) {
     const statusElement = document.getElementById("game-status");
@@ -9079,6 +9132,39 @@ var Nethack3DEngine = class {
   handleKeyDown(event) {
     if (event.key === "Alt" || event.key === "Meta") {
       this.altOrMetaHeld = true;
+      event.preventDefault();
+      return;
+    }
+    if (!this.isInMetaCommandInput && event.key === "#" && !event.ctrlKey && !event.altKey && !event.metaKey) {
+      event.preventDefault();
+      this.beginMetaCommandInput();
+      return;
+    }
+    if (this.isInMetaCommandInput) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.cancelMetaCommandInput();
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        this.submitMetaCommandInput();
+        return;
+      }
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        if (this.metaCommandBuffer.length > 0) {
+          this.metaCommandBuffer = this.metaCommandBuffer.slice(0, -1);
+          this.renderMetaCommandOverlay();
+        }
+        return;
+      }
+      if (/^[a-zA-Z]$/.test(event.key)) {
+        event.preventDefault();
+        this.metaCommandBuffer += event.key.toLowerCase();
+        this.renderMetaCommandOverlay();
+        return;
+      }
       event.preventDefault();
       return;
     }

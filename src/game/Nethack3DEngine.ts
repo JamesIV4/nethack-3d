@@ -37,6 +37,11 @@ type FloatingMessageEntry = {
   removeTimerId: number;
 };
 
+type MetaCommandOverlay = {
+  container: HTMLDivElement;
+  text: HTMLDivElement;
+};
+
 type PendingCharacterDamage = {
   amount: number;
   createdAtMs: number;
@@ -91,6 +96,7 @@ class Nethack3DEngine {
   private gameMessages: string[] = [];
   private floatingMessageLayer: HTMLDivElement | null = null;
   private floatingMessageEntries: FloatingMessageEntry[] = [];
+  private metaCommandOverlay: MetaCommandOverlay | null = null;
   private hasSeenPlayerPosition: boolean = false;
   private hasPlayerMovedOnce: boolean = false;
   private lastMovementInputAtMs: number = 0;
@@ -133,6 +139,8 @@ class Nethack3DEngine {
 
   private session: RuntimeBridge | null = null;
   private readonly metaInputPrefix = "__META__:";
+  private isInMetaCommandInput: boolean = false;
+  private metaCommandBuffer: string = "";
   private altOrMetaHeld: boolean = false;
 
   // Camera controls
@@ -2200,9 +2208,12 @@ class Nethack3DEngine {
   }
 
   private relayoutFloatingMessages(): void {
+    const offsetIndex = this.metaCommandOverlay ? 1 : 0;
+
     for (let i = 0; i < this.floatingMessageEntries.length; i += 1) {
       const entry = this.floatingMessageEntries[i];
-      entry.container.style.top = `${-i * this.floatingMessageStackSpacingPx}px`;
+      const stackIndex = i + offsetIndex;
+      entry.container.style.top = `${-stackIndex * this.floatingMessageStackSpacingPx}px`;
     }
   }
 
@@ -2223,6 +2234,73 @@ class Nethack3DEngine {
     if (relayout) {
       this.relayoutFloatingMessages();
     }
+  }
+
+  private beginMetaCommandInput(): void {
+    if (this.isInQuestion || this.isInDirectionQuestion) {
+      return;
+    }
+    this.isInMetaCommandInput = true;
+    this.metaCommandBuffer = "";
+    this.renderMetaCommandOverlay();
+  }
+
+  private endMetaCommandInput(): void {
+    this.isInMetaCommandInput = false;
+    this.metaCommandBuffer = "";
+
+    if (this.metaCommandOverlay) {
+      this.metaCommandOverlay.container.remove();
+      this.metaCommandOverlay = null;
+    }
+
+    this.relayoutFloatingMessages();
+  }
+
+  private renderMetaCommandOverlay(): void {
+    if (
+      !this.floatingMessageLayer ||
+      !document.body.contains(this.floatingMessageLayer)
+    ) {
+      return;
+    }
+
+    if (!this.metaCommandOverlay) {
+      const messageContainer = document.createElement("div");
+      messageContainer.className =
+        "floating-message-container floating-message-container-persistent";
+      messageContainer.style.top = "0px";
+
+      const floatingText = document.createElement("div");
+      floatingText.className =
+        "floating-message-text floating-message-text-persistent";
+
+      messageContainer.appendChild(floatingText);
+      this.floatingMessageLayer.appendChild(messageContainer);
+
+      this.metaCommandOverlay = {
+        container: messageContainer,
+        text: floatingText,
+      };
+    }
+
+    this.metaCommandOverlay.text.textContent = `#${this.metaCommandBuffer}`;
+    this.relayoutFloatingMessages();
+  }
+
+  private submitMetaCommandInput(): void {
+    this.sendInput("#");
+
+    for (const char of this.metaCommandBuffer) {
+      this.sendInput(char);
+    }
+
+    this.sendInput("Enter");
+    this.endMetaCommandInput();
+  }
+
+  private cancelMetaCommandInput(): void {
+    this.endMetaCommandInput();
   }
 
   private updateStatus(status: string): void {
@@ -3330,6 +3408,51 @@ class Nethack3DEngine {
   private handleKeyDown(event: KeyboardEvent): void {
     if (event.key === "Alt" || event.key === "Meta") {
       this.altOrMetaHeld = true;
+      event.preventDefault();
+      return;
+    }
+
+    if (
+      !this.isInMetaCommandInput &&
+      event.key === "#" &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.metaKey
+    ) {
+      event.preventDefault();
+      this.beginMetaCommandInput();
+      return;
+    }
+
+    if (this.isInMetaCommandInput) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.cancelMetaCommandInput();
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        this.submitMetaCommandInput();
+        return;
+      }
+
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        if (this.metaCommandBuffer.length > 0) {
+          this.metaCommandBuffer = this.metaCommandBuffer.slice(0, -1);
+          this.renderMetaCommandOverlay();
+        }
+        return;
+      }
+
+      if (/^[a-zA-Z]$/.test(event.key)) {
+        event.preventDefault();
+        this.metaCommandBuffer += event.key.toLowerCase();
+        this.renderMetaCommandOverlay();
+        return;
+      }
+
       event.preventDefault();
       return;
     }

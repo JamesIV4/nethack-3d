@@ -253,6 +253,15 @@ canvas {
   will-change: transform, opacity;
 }
 
+.floating-message-container-persistent {
+  transition: none;
+}
+
+.floating-message-text-persistent {
+  transition: none;
+  opacity: 1;
+}
+
 .nh3d-dialog {
   position: fixed;
   top: 50%;
