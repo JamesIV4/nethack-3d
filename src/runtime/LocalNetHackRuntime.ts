@@ -1,7 +1,6 @@
 // @ts-nocheck
-import { loadNethackFactory } from "./factory-loader";
+import createModule from "@neth4ck/wasm-367";
 import RuntimeInputBroker from "./input/RuntimeInputBroker";
-import { resolveRuntimeAssetUrl } from "./runtime-assets";
 
 const process =
   typeof globalThis !== "undefined" && globalThis.process
@@ -2381,12 +2380,23 @@ class LocalNetHackRuntime {
     }
   }
 
+  resolveWasmAssetUrl(assetPath) {
+    const normalizedAsset = String(assetPath || "").replace(/^\/+/, "");
+    const baseUrl =
+      typeof import.meta !== "undefined" &&
+      import.meta.env &&
+      typeof import.meta.env.BASE_URL === "string"
+        ? import.meta.env.BASE_URL
+        : "/";
+    const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+    return `${normalizedBase}${normalizedAsset}`;
+  }
+
   async initializeNetHack() {
     try {
       console.log("Starting local NetHack session...");
-      const factory = await loadNethackFactory();
 
-      globalThis.nethackCallback = (name, ...args) => {
+      globalThis.nethackCallback = async (name, ...args) => {
         return this.handleUICallback(name, args);
       };
 
@@ -2468,77 +2478,69 @@ class LocalNetHackRuntime {
         };
       }
 
-      let moduleConfig = null;
-      moduleConfig = {
+      const runtimeOptions = [
+        // Input/menu behavior expected by the browser port.
+        "pickup_types:$",
+        "number_pad:1",
+        "mouse_support:1",
+        "clicklook:1",
+        // Status tracking fields consumed by the HUD.
+        "time",
+        "showexp",
+        "showscore",
+        // Enable status highlight metadata in status callbacks.
+        "statushilites",
+        "force_invmenu",
+        "boulder:0",
+      ];
+      const characterRuntimeOptions =
+        this.buildCharacterCreationRuntimeOptions();
+      if (characterRuntimeOptions.length > 0) {
+        runtimeOptions.push(...characterRuntimeOptions);
+      }
+
+      this.nethackInstance = await createModule({
+        noInitialRun: true,
         locateFile: (assetPath) => {
           if (assetPath.endsWith(".wasm")) {
-            return resolveRuntimeAssetUrl("nethack.wasm");
+            return this.resolveWasmAssetUrl("nethack.wasm");
           }
-          return resolveRuntimeAssetUrl(assetPath);
+          return this.resolveWasmAssetUrl(assetPath);
         },
         preRun: [
-          () => {
-            if (!moduleConfig.ENV) {
-              moduleConfig.ENV = {};
-            }
-            const runtimeOptions = [
-              // Input/menu behavior expected by the browser port.
-              "pickup_types:$",
-              "number_pad:1",
-              "mouse_support:1",
-              "clicklook:1",
-              // Status tracking fields consumed by the HUD.
-              "time",
-              "showexp",
-              "showscore",
-              // Enable status highlight metadata in status callbacks.
-              "statushilites",
-              "force_invmenu",
-              "boulder:0",
-            ];
-            const characterRuntimeOptions =
-              this.buildCharacterCreationRuntimeOptions();
-            if (characterRuntimeOptions.length > 0) {
-              runtimeOptions.push(...characterRuntimeOptions);
-            }
+          (mod) => {
+            mod.ENV = mod.ENV || {};
             const existingOptions =
-              typeof moduleConfig.ENV.NETHACKOPTIONS === "string"
-                ? moduleConfig.ENV.NETHACKOPTIONS.trim()
+              typeof mod.ENV.NETHACKOPTIONS === "string"
+                ? mod.ENV.NETHACKOPTIONS.trim()
                 : "";
-            moduleConfig.ENV.NETHACKOPTIONS = existingOptions
+            mod.ENV.NETHACKOPTIONS = existingOptions
               ? `${existingOptions},${runtimeOptions.join(",")}`
               : runtimeOptions.join(",");
             console.log(
-              `Configured NETHACKOPTIONS: ${moduleConfig.ENV.NETHACKOPTIONS}`,
+              `Configured NETHACKOPTIONS: ${mod.ENV.NETHACKOPTIONS}`,
             );
           },
         ],
-        onRuntimeInitialized: async () => {
-          this.nethackModule = moduleConfig;
-          try {
-            await moduleConfig.ccall(
-              "shim_graphics_set_callback",
-              null,
-              ["string"],
-              ["nethackCallback"],
-              { async: true },
-            );
+      });
 
-            if (moduleConfig.js_helpers_init) {
-              moduleConfig.js_helpers_init();
-            }
+      this.nethackModule = this.nethackInstance;
 
-            // NetHack's generated helper may reject "v" (void) arg types in
-            // local_callback argument decoding (observed in shim_get_ext_cmd).
-            // Treat those as a no-op value to avoid worker crashes.
-            this.installHelperCompatibilityShims();
-          } catch (error) {
-            console.error("Error setting up local NetHack runtime:", error);
-          }
-        },
-      };
+      // Register the UI callback and start the game loop
+      const setCallback = this.nethackInstance.cwrap(
+        "shim_graphics_set_callback",
+        null,
+        ["string"],
+      );
+      setCallback("nethackCallback");
 
-      this.nethackInstance = await factory(moduleConfig);
+      // NetHack's generated helper may reject "v" (void) arg types in
+      // local_callback argument decoding (observed in shim_get_ext_cmd).
+      // Treat those as a no-op value to avoid worker crashes.
+      this.installHelperCompatibilityShims();
+
+      // Start the game — ASYNCIFY pauses/resumes at each async callback boundary
+      this.nethackInstance._main(0, 0);
     } catch (error) {
       console.error("Error initializing local NetHack:", error);
       throw error;
@@ -3667,6 +3669,22 @@ class LocalNetHackRuntime {
             type: "number_pad_mode",
             enabled: this.numberPadModeEnabled,
             mode: numberPadMode,
+          });
+        }
+        return 0;
+
+      case "shim_start_screen":
+        console.log("NetHack start_screen (no-op)");
+        return 0;
+      case "shim_end_screen":
+        console.log("NetHack end_screen (no-op)");
+        return 0;
+      case "shim_outrip":
+        console.log("NetHack outrip (tombstone)", args);
+        if (this.eventHandler) {
+          this.emit({
+            type: "outrip",
+            args: args,
           });
         }
         return 0;

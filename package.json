@@ -9,6 +9,7 @@
     "start": "vite",
     "start:preview": "vite preview",
     "preview": "vite preview",
+    "copy-wasm": "cp node_modules/@neth4ck/wasm-367/build/nethack.wasm public/nethack.wasm",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,7 +17,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@neth4ck/neth4ck": "^1.0.4",
+    "@neth4ck/wasm-367": "file:../neth4ck-monorepo/packages/wasm-367",
     "@types/three": "^0.178.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

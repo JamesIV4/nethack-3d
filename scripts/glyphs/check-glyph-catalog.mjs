@@ -30,8 +30,6 @@ function validateGeneratedSource(source) {
     "swallow",
     "warning",
     "statue",
-    "unexplored",
-    "nothing",
   ]);
   for (const kind of expectedKinds) {
     if (!seenKinds.has(kind)) {

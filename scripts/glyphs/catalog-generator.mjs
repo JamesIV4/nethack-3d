@@ -1,19 +1,15 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
-const require = createRequire(import.meta.url);
-
-const SOURCE_JS_RELATIVE_PATH = "public/nethack.js";
 const SOURCE_WASM_RELATIVE_PATH = "public/nethack.wasm";
 const GENERATED_RELATIVE_PATH = "src/game/glyphs/glyph-catalog.generated.ts";
 
 /**
  * @typedef {(
  *  "mon" | "pet" | "invis" | "detect" | "body" | "ridden" | "obj" | "cmap" |
- *  "explode" | "zap" | "swallow" | "warning" | "statue" | "unexplored" | "nothing"
+ *  "explode" | "zap" | "swallow" | "warning" | "statue"
  * )} GlyphKind
  */
 
@@ -50,8 +46,6 @@ const KNOWN_GLYPH_KINDS = new Set([
   "swallow",
   "warning",
   "statue",
-  "unexplored",
-  "nothing",
 ]);
 
 const SAFE_NAME = "GlyphCatalog";
@@ -77,6 +71,9 @@ function normalizeNumber(value, fallback = 0) {
 }
 
 function createRuntimeCallback() {
+  // Intentionally synchronous: _main() will throw at the ASYNCIFY boundary,
+  // but js_helpers_init / js_constants_init / js_globals_init have already run
+  // by that point, giving us access to mapglyphHelper and glyph constants.
   return function glyphCatalogCallback(name) {
     switch (name) {
       case "shim_get_nh_event":
@@ -91,95 +88,62 @@ function createRuntimeCallback() {
       case "shim_askname":
       case "shim_getlin":
         return SAFE_NAME;
+      case "shim_create_nhwindow":
+        return 1;
       default:
         return 0;
     }
   };
 }
 
-async function waitFor(predicate, timeoutMs, intervalMs = 20) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    if (predicate()) {
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-  }
-  throw new Error(`Timed out waiting for runtime bootstrap after ${timeoutMs}ms`);
-}
-
 /**
  * @param {string} projectRoot
  */
 async function bootCatalogRuntime(projectRoot) {
-  const jsPath = path.join(projectRoot, SOURCE_JS_RELATIVE_PATH);
   const wasmPath = path.join(projectRoot, SOURCE_WASM_RELATIVE_PATH);
   const wasmBinary = await fs.readFile(wasmPath);
 
-  const factory = require(jsPath);
+  const { default: factory } = await import("@neth4ck/wasm-367");
   if (typeof factory !== "function") {
-    throw new Error(`NetHack factory not found in ${jsPath}`);
+    throw new Error("NetHack factory not found in @neth4ck/wasm-367");
   }
 
   globalThis.nethackCallback = createRuntimeCallback();
 
   /** @type {any} */
-  const moduleConfig = {
+  const Module = await factory({
+    noInitialRun: true,
     wasmBinary,
     locateFile: (assetPath) => assetPath,
     print: () => {},
     printErr: () => {},
     preRun: [
-      () => {
-        moduleConfig.ENV = moduleConfig.ENV || {};
-        moduleConfig.ENV.NETHACKOPTIONS = `autoquiver,name:${SAFE_NAME}`;
+      (mod) => {
+        mod.ENV = mod.ENV || {};
+        mod.ENV.NETHACKOPTIONS = `autoquiver,name:${SAFE_NAME}`;
       },
     ],
-    onRuntimeInitialized: () => {
-      try {
-        moduleConfig.ccall(
-          "shim_graphics_set_callback",
-          null,
-          ["string"],
-          ["nethackCallback"],
-          { async: true }
-        );
-      } catch (error) {
-        throw new Error(
-          `Failed calling shim_graphics_set_callback: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        );
-      }
-    },
-  };
-  let bootError = null;
+  });
+
+  const setCallback = Module.cwrap("shim_graphics_set_callback", null, ["string"]);
+  setCallback("nethackCallback");
+
+  // Start main() — with a synchronous callback, _main() will throw at the first
+  // ASYNCIFY boundary. By then, js_helpers_init / js_constants_init / js_globals_init
+  // have already run, giving us access to mapglyphHelper and glyph constants.
   try {
-    const maybePromise = factory(moduleConfig);
-    if (maybePromise && typeof maybePromise.then === "function") {
-      maybePromise.catch((error) => {
-        bootError = error;
-      });
-    }
-  } catch (error) {
-    bootError = error;
+    Module._main(0, 0);
+  } catch {
+    // Expected: ASYNCIFY requires async callbacks, but we only need the
+    // initialization that runs before the first async suspension point.
   }
 
-  await waitFor(
-    () =>
-      Boolean(
-        !bootError &&
-        globalThis.nethackGlobal &&
-          globalThis.nethackGlobal.constants &&
-          globalThis.nethackGlobal.constants.GLYPH &&
-          globalThis.nethackGlobal.helpers &&
-          typeof globalThis.nethackGlobal.helpers.mapglyphHelper === "function"
-      ),
-    15000
-  );
-
-  if (bootError) {
-    throw bootError;
+  if (
+    !globalThis.nethackGlobal ||
+    !globalThis.nethackGlobal.constants?.GLYPH ||
+    typeof globalThis.nethackGlobal.helpers?.mapglyphHelper !== "function"
+  ) {
+    throw new Error("Runtime did not expose required glyph constants/helpers after _main()");
   }
 
   return {
@@ -313,8 +277,13 @@ export function getGeneratedCatalogPath(projectRoot) {
 /**
  * @param {string} projectRoot
  */
+function resolvePackageJsPath(projectRoot) {
+  const candidate = path.join(projectRoot, "node_modules/@neth4ck/wasm-367/build/nethack.js");
+  return candidate;
+}
+
 export async function generateGlyphCatalogSource(projectRoot) {
-  const jsPath = path.join(projectRoot, SOURCE_JS_RELATIVE_PATH);
+  const jsPath = resolvePackageJsPath(projectRoot);
   const wasmPath = path.join(projectRoot, SOURCE_WASM_RELATIVE_PATH);
 
   const [jsBuffer, runtimeInfo] = await Promise.all([
@@ -335,7 +304,7 @@ export async function generateGlyphCatalogSource(projectRoot) {
   const entries = buildGlyphEntries(nethackGlobal.helpers, ranges, maxGlyph);
 
   return renderGlyphCatalogModule({
-    sourceJsPath: toPosixPath(SOURCE_JS_RELATIVE_PATH),
+    sourceJsPath: "@neth4ck/wasm-367/build/nethack.js",
     sourceWasmPath: toPosixPath(SOURCE_WASM_RELATIVE_PATH),
     sourceJsSha256: hashBuffer(jsBuffer),
     sourceWasmSha256: hashBuffer(wasmBinary),

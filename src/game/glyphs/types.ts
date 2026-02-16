@@ -11,9 +11,7 @@ export type GlyphKind =
   | "zap"
   | "swallow"
   | "warning"
-  | "statue"
-  | "unexplored"
-  | "nothing";
+  | "statue";
 
 export interface GlyphCatalogEntry {
   glyph: number;

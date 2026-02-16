@@ -137,9 +137,6 @@ function textColorFor(
       return "#FFF7D6";
     case "cmap":
       return "#F4F4F4";
-    case "unexplored":
-    case "nothing":
-      return "#D9DDE8";
     default:
       break;
   }
@@ -322,14 +319,6 @@ function classifyByKind(effective: ResolvedGlyph, isPlayer: boolean): {
         isWall: false,
         effectKind: "swallow",
       };
-    case "unexplored":
-    case "nothing":
-      return {
-        materialKind: "dark",
-        geometryKind: "floor",
-        isWall: false,
-        effectKind: null,
-      };
     case "statue":
       return {
         materialKind: "monster_neutral",
@@ -374,10 +363,7 @@ export function classifyTileBehavior(input: {
     resolved.kind === "cmap" ? CMAP_SEMANTICS[resolved.glyph] ?? null : null;
   const isDeterministicDarkCmap =
     resolvedCmapSemantic === "dark_floor" || resolvedCmapSemantic === "dark_wall";
-  const isDarkOverlay =
-    DARK_OVERLAY_GLYPHS.has(input.glyph) ||
-    resolved.kind === "unexplored" ||
-    resolved.kind === "nothing";
+  const isDarkOverlay = DARK_OVERLAY_GLYPHS.has(input.glyph);
   const isPlayer = isPlayerGlyph(input.glyph, runtimeChar);
 
   let effective = resolved;

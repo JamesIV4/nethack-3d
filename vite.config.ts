@@ -6,4 +6,7 @@ const isGitHubActions = process.env.GITHUB_ACTIONS === "true";
 export default defineConfig({
   plugins: [react()],
   base: isGitHubActions ? "/nethack-3d/" : "/",
+  server: {
+    allowedHosts: true,
+  },
 });
