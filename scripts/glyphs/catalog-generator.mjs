@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { copyWasm } from "../wasm/copy-wasm.mjs";
 
 const SOURCE_WASM_RELATIVE_PATH = "public/nethack.wasm";
 const GENERATED_RELATIVE_PATH = "src/game/glyphs/glyph-catalog.generated.ts";
@@ -100,6 +101,7 @@ function createRuntimeCallback() {
  * @param {string} projectRoot
  */
 async function bootCatalogRuntime(projectRoot) {
+  copyWasm();
   const wasmPath = path.join(projectRoot, SOURCE_WASM_RELATIVE_PATH);
   const wasmBinary = await fs.readFile(wasmPath);
 
