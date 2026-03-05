@@ -56,6 +56,7 @@ import { resetNh3dDefaultSoundPackVolumeLevelsToDefaults } from "../audio/sound-
 import SoundPackSettings, {
   type SoundPackDialogActions,
 } from "./SoundPackSettings";
+import VrHudFrame from "./vr/VrHudFrame";
 
 type DirectionChoice = {
   key?: string;
@@ -1114,7 +1115,11 @@ type ClientOptionToggle = {
 };
 
 type ClientOptionSelect = {
-  key: "tilesetMode" | "tilesetPath" | "antialiasing";
+  key:
+    | "tilesetMode"
+    | "tilesetPath"
+    | "antialiasing"
+    | "vrPreferredPointerHand";
   label: string;
   description: string;
   type: "select";
@@ -1172,6 +1177,9 @@ type ClientOptionsTab = {
 
 type ClientOptionToggleKey =
   | "fpsMode"
+  | "vrOfferOnSupportedDevice"
+  | "vrFollowPlayer"
+  | "vrShowLevelBoundaries"
   | "invertLookYAxis"
   | "invertTouchPanningDirection"
   | "minimap"
@@ -1425,6 +1433,37 @@ const clientOptionsConfig: ClientOption[] = [
     label: "FPS mode",
     description: "Use first-person controls and mouselook.",
     type: "boolean",
+  },
+  {
+    key: "vrOfferOnSupportedDevice",
+    label: "Offer VR mode",
+    description:
+      "Show VR entry controls on supported browsers and Quest-class devices.",
+    type: "boolean",
+  },
+  {
+    key: "vrFollowPlayer",
+    label: "VR tabletop follow player",
+    description:
+      "Keep the tabletop board centered on the player when not gripping it.",
+    type: "boolean",
+  },
+  {
+    key: "vrShowLevelBoundaries",
+    label: "VR level boundaries",
+    description:
+      "Show the level footprint outline while using tabletop VR mode.",
+    type: "boolean",
+  },
+  {
+    key: "vrPreferredPointerHand",
+    label: "VR primary hand",
+    description: "Choose which controller ray is treated as the primary pointer.",
+    type: "select",
+    options: [
+      { value: "right", label: "Right" },
+      { value: "left", label: "Left" },
+    ],
   },
   {
     key: "invertLookYAxis",
@@ -2262,6 +2301,7 @@ async function deleteSavedGame(filename: string): Promise<void> {
 
 export default function App(): JSX.Element {
   const canvasRootRef = useRef<HTMLDivElement | null>(null);
+  const vrDomOverlayRootRef = useRef<HTMLDivElement | null>(null);
   const textInputRef = useRef<HTMLInputElement | null>(null);
   const [characterCreationConfig, setCharacterCreationConfig] =
     useState<CharacterCreationConfig | null>(null);
@@ -2439,6 +2479,11 @@ export default function App(): JSX.Element {
   const extendedCommands = useGameStore((state) => state.extendedCommands);
   const controller = useGameStore((state) => state.engineController);
   const newGamePrompt = useGameStore((state) => state.newGamePrompt);
+  const xrAvailability = useGameStore((state) => state.xrAvailability);
+  const xrSessionState = useGameStore((state) => state.xrSessionState);
+  const vrQuickPanelVisible = useGameStore(
+    (state) => state.vrQuickPanelVisible,
+  );
   const floatingMessageTextStyle = useMemo(
     () =>
       ({
@@ -2477,6 +2522,17 @@ export default function App(): JSX.Element {
     clientOptions.liveMessageLogFontScale,
     clientOptions.minimapScale,
   ]);
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+    const root = document.documentElement;
+    const immersive = xrSessionState === "immersive";
+    root.classList.toggle("nh3d-vr-active", immersive);
+    return () => {
+      root.classList.remove("nh3d-vr-active");
+    };
+  }, [xrSessionState]);
   useEffect(() => {
     if (typeof window === "undefined" || typeof document === "undefined") {
       return;
@@ -3075,6 +3131,7 @@ export default function App(): JSX.Element {
     }
     const engine = new Nethack3DEngine({
       mountElement: canvasRootRef.current,
+      vrDomOverlayRoot: vrDomOverlayRootRef.current,
       uiAdapter: adapter,
       characterCreationConfig,
       clientOptions,
@@ -3082,6 +3139,7 @@ export default function App(): JSX.Element {
     setEngineController(engine);
     registerDebugHelpers(engine);
     return () => {
+      engine.destroy();
       setEngineController(null);
     };
   }, [adapter, characterCreationConfig, setEngineController]);
@@ -4790,6 +4848,51 @@ export default function App(): JSX.Element {
     });
   };
 
+  const updateLiveClientOptions = useCallback(
+    (updater: (current: Nh3dClientOptions) => Nh3dClientOptions): void => {
+      setClientOptions((current) => {
+        const next = normalizeNh3dClientOptions(updater(current));
+        setClientOptionsDraft(next);
+        controller?.setClientOptions(next);
+        return next;
+      });
+    },
+    [controller],
+  );
+
+  const handleVrSessionAction = useCallback((): void => {
+    void controller?.toggleVr();
+  }, [controller]);
+
+  const handleVrExitToFlat = useCallback((): void => {
+    void controller?.exitVr();
+  }, [controller]);
+
+  const handleVrToggleQuickPanel = useCallback((): void => {
+    controller?.toggleVrQuickPanel();
+  }, [controller]);
+
+  const handleVrTogglePlayMode = useCallback((): void => {
+    updateLiveClientOptions((current) => ({
+      ...current,
+      fpsMode: !current.fpsMode,
+    }));
+  }, [updateLiveClientOptions]);
+
+  const handleVrToggleFollowPlayer = useCallback((): void => {
+    updateLiveClientOptions((current) => ({
+      ...current,
+      vrFollowPlayer: !current.vrFollowPlayer,
+    }));
+  }, [updateLiveClientOptions]);
+
+  const handleVrToggleBoundaries = useCallback((): void => {
+    updateLiveClientOptions((current) => ({
+      ...current,
+      vrShowLevelBoundaries: !current.vrShowLevelBoundaries,
+    }));
+  }, [updateLiveClientOptions]);
+
   useEffect(() => {
     if (!inventory.visible) {
       setInventoryContextMenu(null);
@@ -5235,6 +5338,25 @@ export default function App(): JSX.Element {
   return (
     <>
       <div className="nh3d-canvas-root" ref={canvasRootRef} />
+      <div
+        className={`nh3d-dom-overlay-root${
+          xrSessionState === "immersive" ? " nh3d-vr-overlay-active" : ""
+        }`}
+        id="nh3d-vr-dom-overlay-root"
+        ref={vrDomOverlayRootRef}
+      >
+        <VrHudFrame
+          availability={xrAvailability}
+          clientOptions={clientOptions}
+          onExitVr={handleVrExitToFlat}
+          onSessionAction={handleVrSessionAction}
+          onToggleBoundaries={handleVrToggleBoundaries}
+          onToggleFollowPlayer={handleVrToggleFollowPlayer}
+          onTogglePlayMode={handleVrTogglePlayMode}
+          onToggleQuickPanel={handleVrToggleQuickPanel}
+          quickPanelVisible={vrQuickPanelVisible}
+          sessionState={xrSessionState}
+        />
       {renderPauseMenu()}
       {startup && (
         <div className="logo-container">
@@ -6244,6 +6366,13 @@ export default function App(): JSX.Element {
                           }
                           if (option.key === "tilesetPath") {
                             updateTilesetPathDraft(event.target.value);
+                            return;
+                          }
+                          if (option.key === "vrPreferredPointerHand") {
+                            updateClientOptionDraft(
+                              option.key,
+                              event.target.value === "left" ? "left" : "right",
+                            );
                             return;
                           }
                           updateClientOptionDraft(
@@ -7705,6 +7834,7 @@ export default function App(): JSX.Element {
           ) : null}
           {positionRequest}
         </div>
+      </div>
       </div>
     </>
   );

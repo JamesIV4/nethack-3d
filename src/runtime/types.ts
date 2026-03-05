@@ -15,6 +15,7 @@ export interface RuntimeBridge {
   requestTileUpdate(x: number, y: number): void;
   requestAreaUpdate(centerX: number, centerY: number, radius: number): void;
   setLoggingEnabled(enabled: boolean): void;
+  destroy(): void;
 }
 
 export type RuntimeCharacterCreationConfig = {

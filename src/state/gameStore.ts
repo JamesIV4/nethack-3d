@@ -1,15 +1,18 @@
 import { create } from "zustand";
-import type {
-  GameOverState,
-  InfoMenuState,
-  InventoryDialogState,
-  Nethack3DEngineController,
-  NethackConnectionState,
-  FpsCrosshairContextState,
-  NewGamePromptState,
-  PlayerStatsSnapshot,
-  QuestionDialogState,
-  TextInputRequestState,
+import {
+  defaultXrAvailabilityState,
+  type GameOverState,
+  type InfoMenuState,
+  type InventoryDialogState,
+  type Nethack3DEngineController,
+  type NethackConnectionState,
+  type FpsCrosshairContextState,
+  type NewGamePromptState,
+  type PlayerStatsSnapshot,
+  type QuestionDialogState,
+  type TextInputRequestState,
+  type XrAvailabilityState,
+  type XrSessionState,
 } from "../game/ui-types";
 
 export type FloatingMessage = {
@@ -64,6 +67,9 @@ type GameStore = {
   positionRequest: string | null;
   newGamePrompt: NewGamePromptState;
   gameOver: GameOverState;
+  xrAvailability: XrAvailabilityState;
+  xrSessionState: XrSessionState;
+  vrQuickPanelVisible: boolean;
   engineController: Nethack3DEngineController | null;
   nextFloatingMessageId: number;
   setLoadingVisible: (visible: boolean) => void;
@@ -86,6 +92,9 @@ type GameStore = {
   setPositionRequest: (text: string | null) => void;
   setNewGamePrompt: (prompt: NewGamePromptState) => void;
   setGameOver: (state: GameOverState) => void;
+  setXrAvailability: (state: XrAvailabilityState) => void;
+  setXrSessionState: (state: XrSessionState) => void;
+  setVrQuickPanelVisible: (visible: boolean) => void;
   setEngineController: (controller: Nethack3DEngineController | null) => void;
 };
 
@@ -120,6 +129,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   positionRequest: null,
   newGamePrompt: { visible: false, reason: null },
   gameOver: { active: false, deathMessage: null },
+  xrAvailability: { ...defaultXrAvailabilityState },
+  xrSessionState: "inactive",
+  vrQuickPanelVisible: false,
   engineController: null,
   nextFloatingMessageId: 1,
   setLoadingVisible: (visible) => {
@@ -216,6 +228,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   setGameOver: (state) => {
     set({ gameOver: state });
+  },
+  setXrAvailability: (state) => {
+    set({ xrAvailability: { ...state } });
+  },
+  setXrSessionState: (state) => {
+    set({ xrSessionState: state });
+  },
+  setVrQuickPanelVisible: (visible) => {
+    set({ vrQuickPanelVisible: Boolean(visible) });
   },
   setEngineController: (controller) => {
     set({ engineController: controller });

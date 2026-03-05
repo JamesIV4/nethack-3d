@@ -70,6 +70,8 @@ import {
 } from "./tilesets";
 import { getItemTextClassName } from "./helpers";
 import { MessageSoundHooks } from "./message-sound-hooks";
+import { VrSessionController } from "./vr";
+import type { VrEngineBridge, VrTileTarget } from "./vr";
 
 type PendingCharacterDamage = {
   amount: number;
@@ -337,9 +339,16 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private fxaaPass: FXAAPass | null = null;
   private toneAdjustPass: ShaderPass | null = null;
   private scene!: THREE.Scene;
+  private worldRoot!: THREE.Group;
   private camera!: THREE.PerspectiveCamera;
   private readonly mountElement: HTMLElement | null;
+  private readonly vrDomOverlayRoot: HTMLElement | null;
   private readonly uiAdapter: Nethack3DEngineUIAdapter;
+  private vrSessionController: VrSessionController | null = null;
+  private vrHoveredTile: TileContextTarget | null = null;
+  private vrTileContextMode: boolean = false;
+  private vrQuickPanelVisible: boolean = false;
+  private destroyed: boolean = false;
 
   private tileMap: TileMap = new Map();
   private glyphOverlayMap: GlyphOverlayMap = new Map();
@@ -912,6 +921,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private ambientLight: THREE.AmbientLight | null = null;
   private directionalLight: THREE.DirectionalLight | null = null;
   private fpsPlayerLight: THREE.PointLight | null = null;
+  private readonly activeViewDirection = new THREE.Vector3();
 
   private isPersistentTerrainKind(kind: string): boolean {
     switch (kind) {
@@ -973,9 +983,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (this.isFpsMode()) {
       // In FPS mode, keep the vignette centered on the camera/player position in world space.
       // (World space in this renderer uses X/Y as the horizontal plane.)
+      const viewCamera = this.getActiveViewCamera();
       this.vignetteUniforms.uLightingCenter.value.set(
-        this.camera.position.x,
-        this.camera.position.y,
+        viewCamera.position.x,
+        viewCamera.position.y,
         0,
       );
       this.vignetteUniforms.uIsFpsMode.value = true;
@@ -1021,7 +1032,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
   private disposeLightingOverlay(): void {
     if (this.lightingOverlayMesh) {
-      this.scene.remove(this.lightingOverlayMesh);
+      this.removeWorldObject(this.lightingOverlayMesh);
       this.lightingOverlayMesh.geometry.dispose();
       const material = this.lightingOverlayMesh.material;
       if (Array.isArray(material)) {
@@ -1032,7 +1043,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.lightingOverlayMesh = null;
     }
     if (this.lightingWallOverlayMesh) {
-      this.scene.remove(this.lightingWallOverlayMesh);
+      this.removeWorldObject(this.lightingWallOverlayMesh);
       this.lightingWallOverlayMesh.geometry.dispose();
       const material = this.lightingWallOverlayMesh.material;
       if (Array.isArray(material)) {
@@ -1085,8 +1096,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!this.fpsPlayerLight || !this.isFpsMode()) {
       return;
     }
-    this.fpsPlayerLight.position.copy(this.camera.position);
-    this.fpsPlayerLight.position.z = this.camera.position.z + 0.04;
+    const viewCamera = this.getActiveViewCamera();
+    this.fpsPlayerLight.position.copy(viewCamera.position);
+    this.fpsPlayerLight.position.z = viewCamera.position.z + 0.04;
   }
 
   private resolveFpsCameraFov(): number {
@@ -1197,6 +1209,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
   constructor(options: Nethack3DEngineOptions) {
     this.mountElement = options.mountElement ?? null;
+    this.vrDomOverlayRoot = options.vrDomOverlayRoot ?? null;
     this.uiAdapter = options.uiAdapter;
     this.characterCreationConfig = options.characterCreationConfig ?? {
       mode: "create",
@@ -1221,6 +1234,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.messageSoundHooks.setEnabled(this.clientOptions.soundEnabled);
     this.initThreeJS();
     this.initUI();
+    this.initVr();
     this.connectToRuntime();
     this.uiAdapter.setNumberPadModeEnabled(this.numberPadModeEnabled);
     this.uiAdapter.setRepeatActionVisible(false);
@@ -1252,6 +1266,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
     // --- Basic Three.js setup ---
     const viewport = this.getRendererViewportSize();
     this.scene = new THREE.Scene();
+    this.worldRoot = new THREE.Group();
+    this.worldRoot.name = "nh3d-world-root";
+    this.scene.add(this.worldRoot);
     this.camera = new THREE.PerspectiveCamera(
       75,
       viewport.width / viewport.height,
@@ -1262,6 +1279,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     // Post-processing AA is driven by the client option (TAA/FXAA).
     // Use transparent clear so post-processing can affect scene content only.
     this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+    this.renderer.xr.enabled = true;
     this.initAntialiasingPipeline();
     this.updateRendererResolution();
     this.renderer.setClearColor(0x000000, 0);
@@ -1339,7 +1357,124 @@ class Nethack3DEngine implements Nethack3DEngineController {
     window.addEventListener("contextmenu", (e) => e.preventDefault(), false); // Prevent right-click menu
 
     // Start render loop
-    this.animate();
+    this.renderer.setAnimationLoop(this.animateFrameCallback);
+  }
+
+  private initVr(): void {
+    const bridge: VrEngineBridge = {
+      getPlayMode: () => this.playMode,
+      getPlayerTilePosition: () => ({ ...this.playerPos }),
+      getClientOptions: () => this.clientOptions,
+      setClientOptions: (options) => {
+        this.applyClientOptions(options);
+      },
+      resolveTileTargetFromRay: (raycaster, requireMesh) =>
+        this.resolveTileTargetFromRaycaster(raycaster, requireMesh),
+      runVrPrimaryAction: (target) => {
+        this.runVrPrimaryAction(target);
+      },
+      runVrSecondaryAction: (target) => {
+        this.runVrSecondaryAction(target);
+      },
+      setVrHoveredTile: (target) => {
+        this.setVrHoveredTile(target);
+      },
+      setVrQuickPanelVisible: (visible) => {
+        this.setVrQuickPanelVisibleState(visible);
+      },
+      getVrQuickPanelVisible: () => this.vrQuickPanelVisible,
+      setXrAvailability: (state) => {
+        this.uiAdapter.setXrAvailability(state);
+      },
+      setXrSessionState: (state) => {
+        this.uiAdapter.setXrSessionState(state);
+      },
+      setPlayerUiNumbersWorldProjection: (enabled) => {
+        this.playerUiNumbersUseWorldProjectionForVr = enabled;
+      },
+      clearPointerLockForVr: () => {
+        this.clearPointerLockForVr();
+      },
+      shouldSuspendVrForUi: () => this.isTextInputActive,
+    };
+
+    this.vrSessionController = new VrSessionController({
+      renderer: this.renderer,
+      scene: this.scene,
+      worldRoot: this.worldRoot,
+      bridge,
+      domOverlayRoot: this.vrDomOverlayRoot,
+    });
+    void this.refreshVrAvailability();
+  }
+
+  private async refreshVrAvailability(): Promise<void> {
+    if (!this.vrSessionController) {
+      return;
+    }
+    await this.vrSessionController.refreshAvailability(this.clientOptions);
+  }
+
+  private isVrPresenting(): boolean {
+    return Boolean(this.renderer?.xr?.isPresenting);
+  }
+
+  private getActiveViewCamera(): THREE.Camera & THREE.Object3D {
+    if (this.isVrPresenting()) {
+      return this.renderer.xr.getCamera() as THREE.Camera & THREE.Object3D;
+    }
+    return this.camera;
+  }
+
+  private getActivePerspectiveViewCamera(): THREE.PerspectiveCamera {
+    if (!this.isVrPresenting()) {
+      return this.camera;
+    }
+    const xrCamera = this.renderer.xr.getCamera();
+    if (xrCamera instanceof THREE.ArrayCamera) {
+      const eyeCamera = xrCamera.cameras[0];
+      if (eyeCamera) {
+        return eyeCamera as THREE.PerspectiveCamera;
+      }
+    }
+    return xrCamera as THREE.PerspectiveCamera;
+  }
+
+  private addWorldObject(object: THREE.Object3D): void {
+    this.worldRoot.add(object);
+  }
+
+  private removeWorldObject(object: THREE.Object3D): void {
+    this.worldRoot.remove(object);
+  }
+
+  private setVrQuickPanelVisibleState(visible: boolean): void {
+    this.vrQuickPanelVisible = Boolean(visible);
+    this.uiAdapter.setVrQuickPanelVisible(this.vrQuickPanelVisible);
+  }
+
+  private clearPointerLockForVr(): void {
+    if (document.pointerLockElement === this.renderer.domElement) {
+      document.exitPointerLock?.();
+    }
+    this.fpsPointerLockActive = false;
+    this.fpsPointerLockRestorePending = false;
+  }
+
+  private syncVrCameraAimFromHeadset(): void {
+    if (!this.isVrPresenting() || !this.isFpsMode()) {
+      return;
+    }
+    const viewCamera = this.getActiveViewCamera();
+    viewCamera.getWorldDirection(this.activeViewDirection);
+    this.cameraYaw = this.wrapAngle(
+      Math.atan2(-this.activeViewDirection.x, -this.activeViewDirection.y),
+    );
+    this.cameraPitch = THREE.MathUtils.clamp(
+      Math.asin(THREE.MathUtils.clamp(this.activeViewDirection.z, -1, 1)),
+      this.firstPersonPitchMin,
+      this.firstPersonPitchMax,
+    );
   }
 
   private loadCameraSmoothingFromCSS(): void {
@@ -2057,7 +2192,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
 
     this.disposeWallSideTileOverlay(mesh);
-    this.scene.remove(mesh);
+    this.removeWorldObject(mesh);
     this.tileMap.delete(key);
     this.tileRevealStartMs.delete(key);
     this.activeEffectTileKeys.delete(key);
@@ -2336,6 +2471,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const normalized = normalizeNh3dClientOptions(nextOptions);
     const previous = this.clientOptions;
     const playModeChanged = previous.fpsMode !== normalized.fpsMode;
+    const vrAvailabilityChanged =
+      previous.vrOfferOnSupportedDevice !== normalized.vrOfferOnSupportedDevice;
     const fpsFovChanged = previous.fpsFov !== normalized.fpsFov;
     const minimapChanged = previous.minimap !== normalized.minimap;
     const damageNumbersChanged =
@@ -2386,6 +2523,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     if (playModeChanged) {
       this.applyPlayMode(normalized.fpsMode ? "fps" : "normal");
+    }
+    if (vrAvailabilityChanged) {
+      void this.refreshVrAvailability();
     }
     if (fpsFovChanged && this.playMode === "fps") {
       this.camera.fov = this.resolveFpsCameraFov();
@@ -2667,6 +2807,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private computeMinimapViewportRect(): MinimapViewportRect {
+    const viewCamera = this.getActivePerspectiveViewCamera();
     const centerWorldX = this.cameraFollowInitialized
       ? this.cameraFollowCurrent.x
       : this.playerPos.x * TILE_SIZE + this.cameraPanTargetX;
@@ -2676,11 +2817,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const centerTileX = centerWorldX / TILE_SIZE;
     const centerTileY = -centerWorldY / TILE_SIZE;
 
-    const fovRadians = THREE.MathUtils.degToRad(this.camera.fov);
+    const fovRadians = THREE.MathUtils.degToRad(viewCamera.fov);
     const baseViewHeightWorld =
       2 * Math.tan(fovRadians / 2) * Math.max(1, this.cameraDistance);
     const baseViewWidthWorld =
-      baseViewHeightWorld * Math.max(1, this.camera.aspect);
+      baseViewHeightWorld * Math.max(1, viewCamera.aspect);
     const pitchScale = 1 / Math.max(0.45, Math.sin(this.cameraPitch));
 
     const viewWidthTiles = THREE.MathUtils.clamp(
@@ -2709,6 +2850,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     const viewport = this.computeMinimapViewportRect();
     const fpsMode = this.isFpsMode();
+    const viewCamera = this.getActivePerspectiveViewCamera();
 
     const context = this.minimapViewportContext;
     context.clearRect(0, 0, MINIMAP_WIDTH_TILES, MINIMAP_HEIGHT_TILES);
@@ -2757,12 +2899,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
         const forwardX = -Math.sin(this.cameraYaw);
         const forwardY = Math.cos(this.cameraYaw);
         const facingAngle = Math.atan2(forwardY, forwardX);
-        const verticalFovRadians = THREE.MathUtils.degToRad(this.camera.fov);
+        const verticalFovRadians = THREE.MathUtils.degToRad(viewCamera.fov);
         const horizontalFovRadians =
           2 *
           Math.atan(
             Math.tan(verticalFovRadians * 0.5) *
-              Math.max(0.1, this.camera.aspect),
+              Math.max(0.1, viewCamera.aspect),
           );
         // Keep cone angle matched to the actual rendered camera FOV.
         const halfConeRadians = horizontalFovRadians * 0.5;
@@ -3020,7 +3162,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     worldZ: number,
   ): { x: number; y: number; visible: boolean } {
     const vector = new THREE.Vector3(worldX, worldY, worldZ);
-    vector.project(this.camera);
+    vector.project(this.getActivePerspectiveViewCamera());
 
     if (
       !Number.isFinite(vector.x) ||
@@ -6381,7 +6523,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     );
     this.alignPlayerDamageNumberToCamera(sprite);
     sprite.renderOrder = 940;
-    this.scene.add(sprite);
+    this.addWorldObject(sprite);
 
     let fpsCameraLocalAnchor: THREE.Vector3 | null = null;
     if (useFpsFloating && !this.playerUiNumbersUseWorldProjectionForVr) {
@@ -6536,7 +6678,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
 
-    this.camera.getWorldDirection(this.playerDamageNumberForwardDirection);
+    const viewCamera = this.getActiveViewCamera();
+    viewCamera.getWorldDirection(this.playerDamageNumberForwardDirection);
     this.playerDamageNumberForwardDirection.z = 0;
     const lengthSq = this.playerDamageNumberForwardDirection.lengthSq();
     if (lengthSq > 1e-8) {
@@ -6572,19 +6715,20 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private alignPlayerDamageNumberToCamera(sprite: THREE.Sprite): void {
-    sprite.quaternion.copy(this.camera.quaternion);
+    sprite.quaternion.copy(this.getActiveViewCamera().quaternion);
   }
 
   private toCameraLocalOffset(
     worldPosition: THREE.Vector3,
     target: THREE.Vector3,
   ): THREE.Vector3 {
+    const viewCamera = this.getActiveViewCamera();
     this.playerDamageNumberCameraInverseQuaternion
-      .copy(this.camera.quaternion)
+      .copy(viewCamera.quaternion)
       .invert();
     return target
       .copy(worldPosition)
-      .sub(this.camera.position)
+      .sub(viewCamera.position)
       .applyQuaternion(this.playerDamageNumberCameraInverseQuaternion);
   }
 
@@ -6592,10 +6736,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
     cameraLocalOffset: THREE.Vector3,
     target: THREE.Vector3,
   ): THREE.Vector3 {
+    const viewCamera = this.getActiveViewCamera();
     return target
       .copy(cameraLocalOffset)
-      .applyQuaternion(this.camera.quaternion)
-      .add(this.camera.position);
+      .applyQuaternion(viewCamera.quaternion)
+      .add(viewCamera.position);
   }
 
   private resolveThirdPersonZoomFactor(): number {
@@ -6689,7 +6834,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         this.damageParticleFloorZ + 0.16 + Math.random() * 0.24,
       );
       sprite.renderOrder = 930;
-      this.scene.add(sprite);
+      this.addWorldObject(sprite);
 
       const directionAngle =
         Math.atan2(awayFromPlayer.y, awayFromPlayer.x) +
@@ -6726,7 +6871,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
 
     const [particle] = this.monsterBillboardShardParticles.splice(index, 1);
-    this.scene.remove(particle.mesh);
+    this.removeWorldObject(particle.mesh);
     if (particle.mesh.material.map) {
       particle.mesh.material.map.dispose();
     }
@@ -6740,7 +6885,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
 
     const [particle] = this.damageParticles.splice(index, 1);
-    this.scene.remove(particle.sprite);
+    this.removeWorldObject(particle.sprite);
 
     const material = particle.sprite.material;
     if (material instanceof THREE.SpriteMaterial) {
@@ -6757,7 +6902,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
 
     const [particle] = this.playerDamageNumberParticles.splice(index, 1);
-    this.scene.remove(particle.sprite);
+    this.removeWorldObject(particle.sprite);
 
     const material = particle.sprite.material;
     if (material instanceof THREE.SpriteMaterial) {
@@ -7294,7 +7439,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     this.playerUiNumberScreenAnchor
       .copy(this.playerUiNumberAnchor)
-      .project(this.camera);
+      .project(this.getActivePerspectiveViewCamera());
     const ndc = this.playerUiNumberScreenAnchor;
     return {
       screenX: (ndc.x + 1) * 0.5 * viewportRect.width,
@@ -8482,7 +8627,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!overlay) {
       return;
     }
-    this.scene.remove(overlay);
+    this.removeWorldObject(overlay);
     if (overlay.material instanceof THREE.MeshBasicMaterial) {
       overlay.material.dispose();
     }
@@ -8533,7 +8678,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       overlay.castShadow = false;
       overlay.receiveShadow = false;
       overlay.renderOrder = 112;
-      this.scene.add(overlay);
+      this.addWorldObject(overlay);
       this.floorBlockAmbientOcclusionOverlays.set(key, overlay);
     } else if (
       overlay.material instanceof THREE.MeshBasicMaterial &&
@@ -8571,7 +8716,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!overlay) {
       return;
     }
-    this.scene.remove(overlay);
+    this.removeWorldObject(overlay);
     if (overlay.material instanceof THREE.MeshBasicMaterial) {
       overlay.material.dispose();
     }
@@ -8618,7 +8763,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       overlay.castShadow = false;
       overlay.receiveShadow = false;
       overlay.renderOrder = chamferFloor.renderOrder + 1;
-      this.scene.add(overlay);
+      this.addWorldObject(overlay);
       this.fpsWallChamferFloorAmbientOcclusionOverlays.set(key, overlay);
     } else {
       if (overlay.geometry !== chamferFloor.geometry) {
@@ -9315,7 +9460,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.removeFpsWallChamferFloorAmbientOcclusionOverlay(key);
       return;
     }
-    this.scene.remove(mesh);
+    this.removeWorldObject(mesh);
     this.fpsWallChamferFloorMeshes.delete(key);
     this.removeFpsWallChamferFloorAmbientOcclusionOverlay(key);
   }
@@ -9353,7 +9498,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       mesh.userData.tileX = tileX;
       mesh.userData.tileY = tileY;
       mesh.userData.fpsWallChamferMask = mask;
-      this.scene.add(mesh);
+      this.addWorldObject(mesh);
       this.fpsWallChamferFloorMeshes.set(key, mesh);
       this.refreshFpsWallChamferFloorAmbientOcclusionAt(tileX, tileY);
       return;
@@ -9515,12 +9660,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
     // Clear all tile meshes
     this.tileMap.forEach((mesh) => {
       this.disposeWallSideTileOverlay(mesh);
-      this.scene.remove(mesh);
+      this.removeWorldObject(mesh);
     });
     this.tileMap.clear();
     this.clearFloorBlockAmbientOcclusion();
     this.fpsWallChamferFloorMeshes.forEach((mesh) => {
-      this.scene.remove(mesh);
+      this.removeWorldObject(mesh);
     });
     this.fpsWallChamferFloorMeshes.clear();
     this.clearFpsWallChamferMaterialCaches();
@@ -9539,7 +9684,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.entityBlobShadows.clear();
 
     if (this.fpsForwardHighlight) {
-      this.scene.remove(this.fpsForwardHighlight);
+      this.removeWorldObject(this.fpsForwardHighlight);
       this.fpsForwardHighlight.geometry.dispose();
       this.fpsForwardHighlightMaterial?.dispose();
       this.fpsForwardHighlight = null;
@@ -9563,6 +9708,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.normalTileContextMenuOpen = false;
     this.normalTileContextSignature = "";
     this.normalTileContextTarget = null;
+    this.vrTileContextMode = false;
+    this.vrHoveredTile = null;
     this.selectedContextHighlightTile = null;
     this.fpsCrosshairGlanceCache.clear();
     this.fpsCrosshairGlanceAttemptedKeys.clear();
@@ -9627,7 +9774,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const outline = new THREE.Line(geometry, material);
     outline.visible = false;
     outline.renderOrder = 1000;
-    this.scene.add(outline);
+    this.addWorldObject(outline);
     this.positionCursorOutline = outline;
     return outline;
   }
@@ -9810,7 +9957,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!shadow) {
       return;
     }
-    this.scene.remove(shadow);
+    this.removeWorldObject(shadow);
     const material = shadow.material;
     if (material instanceof THREE.MeshBasicMaterial) {
       material.dispose();
@@ -9826,7 +9973,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!sprite) {
       return null;
     }
-    this.scene.remove(sprite);
+    this.removeWorldObject(sprite);
     this.monsterBillboards.delete(key);
     return sprite;
   }
@@ -10501,9 +10648,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const basePosition = sprite.position;
     const baseScaleX = Math.max(0.02, sprite.scale.x);
     const baseScaleY = Math.max(0.02, sprite.scale.y);
+    const viewCamera = this.getActiveViewCamera();
     const toCamera = new THREE.Vector2(
-      this.camera.position.x - basePosition.x,
-      this.camera.position.y - basePosition.y,
+      viewCamera.position.x - basePosition.x,
+      viewCamera.position.y - basePosition.y,
     );
     if (toCamera.lengthSq() < 1e-6) {
       toCamera.set(-Math.sin(this.cameraYaw), -Math.cos(this.cameraYaw));
@@ -10565,9 +10713,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
       const shardMesh = new THREE.Mesh(geometry, material);
       shardMesh.position.copy(shardPosition);
       shardMesh.scale.set(scaleX, scaleY, 1);
-      shardMesh.quaternion.copy(this.camera.quaternion);
+      shardMesh.quaternion.copy(viewCamera.quaternion);
       shardMesh.renderOrder = 922;
-      this.scene.add(shardMesh);
+      this.addWorldObject(shardMesh);
 
       const radial = new THREE.Vector3().subVectors(
         shardPosition,
@@ -10758,7 +10906,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       shadow = new THREE.Mesh(geometry, material);
       shadow.renderOrder = 905;
       this.entityBlobShadows.set(key, shadow);
-      this.scene.add(shadow);
+      this.addWorldObject(shadow);
     }
 
     shadow.position.set(
@@ -10812,7 +10960,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       sprite.renderOrder = 910;
       sprite.userData.textureKey = textureKey;
       this.monsterBillboards.set(spriteKey, sprite);
-      this.scene.add(sprite);
+      this.addWorldObject(sprite);
     } else {
       const existingTextureKey =
         typeof sprite.userData?.textureKey === "string"
@@ -10961,7 +11109,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (isUndiscovered) {
       if (mesh) {
         this.disposeWallSideTileOverlay(mesh);
-        this.scene.remove(mesh);
+        this.removeWorldObject(mesh);
         this.tileMap.delete(key);
       }
       this.removeFloorBlockAmbientOcclusionOverlay(key);
@@ -11187,7 +11335,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       mesh.position.set(x * TILE_SIZE, -y * TILE_SIZE, targetZ);
       mesh.castShadow = false;
       mesh.receiveShadow = false;
-      this.scene.add(mesh);
+      this.addWorldObject(mesh);
       this.tileMap.set(key, mesh);
       if (!this.tileRevealStartMs.has(key)) {
         this.tileRevealStartMs.set(key, performance.now());
@@ -13077,6 +13225,195 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.hideInfoMenuDialog();
   }
 
+  public async enterVr(): Promise<void> {
+    await this.vrSessionController?.enter(this.clientOptions);
+  }
+
+  public async exitVr(): Promise<void> {
+    await this.vrSessionController?.exit();
+  }
+
+  public async toggleVr(): Promise<void> {
+    await this.vrSessionController?.toggle(this.clientOptions);
+  }
+
+  public toggleVrQuickPanel(): void {
+    this.vrSessionController?.toggleQuickPanel();
+  }
+
+  public destroy(): void {
+    if (this.destroyed) {
+      return;
+    }
+    this.destroyed = true;
+    this.vrSessionController?.dispose();
+    this.vrSessionController = null;
+    this.renderer.setAnimationLoop(null);
+    this.clearPointerLockForVr();
+    this.session?.destroy();
+    this.session = null;
+    this.setVrQuickPanelVisibleState(false);
+    this.disposeAntialiasingPipeline();
+    this.disposeLightingOverlay();
+    this.renderer.domElement.remove();
+    this.renderer.dispose();
+  }
+
+  private setVrHoveredTile(target: VrTileTarget | null): void {
+    this.vrHoveredTile = target
+      ? {
+          key: target.key,
+          x: target.x,
+          y: target.y,
+          mesh: target.mesh,
+        }
+      : null;
+  }
+
+  private runVrPrimaryAction(target: VrTileTarget): void {
+    if (!this.session) {
+      return;
+    }
+
+    if (this.isInDirectionQuestion) {
+      const dx = target.x - this.playerPos.x;
+      const dy = target.y - this.playerPos.y;
+      if (dx === 0 && dy === 0) {
+        this.submitDirectionAnswer("s");
+        return;
+      }
+      const direction = this.resolveDirectionFromDelta(dx, dy);
+      if (direction) {
+        this.submitDirectionAnswer(direction);
+      }
+      return;
+    }
+
+    if (
+      this.isInQuestion ||
+      this.isTextInputActive ||
+      this.positionInputModeActive ||
+      this.metaCommandModeActive ||
+      this.isInventoryDialogOpen() ||
+      this.isInfoDialogOpen() ||
+      this.isAnyModalVisible()
+    ) {
+      return;
+    }
+
+    if (!this.isFpsMode()) {
+      if (!this.hasPlayerMovedOnce) {
+        this.lastMovementInputAtMs = Date.now();
+      }
+      this.updateDirectionalAttackContextFromTarget(target.x, target.y);
+      this.setPendingPointerAttackTargetFromTile(target.x, target.y);
+      this.logClickLookTileDebug("vr-primary", target.x, target.y);
+      this.sendMouseInput(target.x, target.y, 0);
+      return;
+    }
+
+    this.activeContextActionTile = { x: target.x, y: target.y };
+    if (this.tryRunVrFpsSelfTilePrimaryAction(target)) {
+      return;
+    }
+    if (this.tryRunVrFpsDoorPrimaryAction(target)) {
+      return;
+    }
+
+    const direction = this.resolveDirectionFromDelta(
+      target.x - this.playerPos.x,
+      target.y - this.playerPos.y,
+    );
+    if (direction) {
+      this.armContextAutoDirection(direction);
+    }
+    this.armFpsFireSuppression();
+    this.fpsAimLinePulseUntilMs = Date.now() + 220;
+    this.sendInput("f");
+  }
+
+  private runVrSecondaryAction(target: VrTileTarget): void {
+    if (
+      this.isInQuestion ||
+      this.isTextInputActive ||
+      this.positionInputModeActive ||
+      this.metaCommandModeActive ||
+      this.isInventoryDialogOpen() ||
+      this.isInfoDialogOpen() ||
+      this.isAnyModalVisible()
+    ) {
+      return;
+    }
+
+    if (this.isFpsMode()) {
+      this.openVrTileContextMenuAtTarget(target);
+      return;
+    }
+    this.openNormalTileContextMenuAtTarget(target);
+  }
+
+  private tryRunVrFpsSelfTilePrimaryAction(target: VrTileTarget): boolean {
+    if (
+      target.x !== this.playerPos.x ||
+      target.y !== this.playerPos.y
+    ) {
+      return false;
+    }
+
+    const nowMs = Date.now();
+    const glanceEntry = this.getCachedFpsCrosshairGlanceEntry(target.key, nowMs);
+    const glanceText = glanceEntry?.sourceText ?? "";
+    const normalizedGlanceText = glanceText.toLowerCase();
+    const isContainerLikeLoot =
+      /\b(chest|box|coffer|container|sack|bag)\b/.test(normalizedGlanceText);
+    const actions = this.getFpsCrosshairActionsForTile(
+      target.key,
+      target.mesh,
+      glanceEntry?.hint ?? null,
+      glanceText,
+    );
+    const hasQuickAction = (id: string): boolean =>
+      actions.some((action) => action.kind === "quick" && action.id === id);
+
+    let actionId: string | null = null;
+    if (hasQuickAction("ascend")) {
+      actionId = "ascend";
+    } else if (hasQuickAction("descend")) {
+      actionId = "descend";
+    } else if (isContainerLikeLoot && hasQuickAction("loot")) {
+      actionId = "loot";
+    } else if (hasQuickAction("pickup")) {
+      actionId = "pickup";
+    }
+
+    return actionId ? this.executeQuickAction(actionId, true) : false;
+  }
+
+  private tryRunVrFpsDoorPrimaryAction(target: VrTileTarget): boolean {
+    const dx = target.x - this.playerPos.x;
+    const dy = target.y - this.playerPos.y;
+    if (
+      (dx === 0 && dy === 0) ||
+      Math.abs(dx) > 1 ||
+      Math.abs(dy) > 1
+    ) {
+      return false;
+    }
+
+    const nowMs = Date.now();
+    const glanceEntry = this.getCachedFpsCrosshairGlanceEntry(target.key, nowMs);
+    const glanceHint = glanceEntry?.hint ?? null;
+    const materialKind =
+      typeof target.mesh.userData?.materialKind === "string"
+        ? target.mesh.userData.materialKind
+        : "";
+    if (materialKind !== "door" && glanceHint !== "door") {
+      return false;
+    }
+
+    return this.executeQuickAction("open", true);
+  }
+
   private isLikelyNameInputForDebug(input: string): boolean {
     const trimmed = String(input || "").trim();
     if (trimmed.length < 2 || trimmed.length > 30) {
@@ -13127,7 +13464,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     });
   }
 
-  private sendInput(
+  public sendInput(
     input: string,
     options: { keepContextMenuOpen?: boolean; delayMs?: number } = {},
   ): void {
@@ -14250,7 +14587,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private syncFpsPointerLockForUiState(tryAcquire: boolean): void {
-    if (!this.isFpsMode()) {
+    if (!this.isFpsMode() || this.isVrPresenting()) {
       return;
     }
 
@@ -15001,6 +15338,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private updateCamera(deltaSeconds: number): void {
+    if (this.isVrPresenting()) {
+      this.syncVrCameraAimFromHeadset();
+      return;
+    }
+
     if (this.isFpsMode()) {
       const targetEyeX = this.playerPos.x * TILE_SIZE;
       const targetEyeY = -this.playerPos.y * TILE_SIZE;
@@ -15171,13 +15513,20 @@ class Nethack3DEngine implements Nethack3DEngineController {
       // Keep forward-tile highlight above floor/shadow layers but beneath
       // elevated billboards (monster/loot sprites use renderOrder 910).
       mesh.renderOrder = 907;
-      this.scene.add(mesh);
+      this.addWorldObject(mesh);
       this.fpsForwardHighlight = mesh;
       this.fpsForwardHighlightMaterial = material;
     }
   }
 
   private updateFpsAimVisuals(timeMs: number): void {
+    if (this.isVrPresenting()) {
+      if (this.fpsForwardHighlight) {
+        this.fpsForwardHighlight.visible = false;
+      }
+      return;
+    }
+
     if (!this.isFpsMode()) {
       if (this.fpsForwardHighlight) {
         this.fpsForwardHighlight.visible = false;
@@ -15291,6 +15640,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         Date.now() + this.suppressNextMapPrimaryPointerWindowMs;
     }
     this.normalTileContextMenuOpen = false;
+    this.vrTileContextMode = false;
     this.normalTileContextSignature = "";
     this.normalTileContextTarget = null;
     this.activeContextActionTile = null;
@@ -15337,9 +15687,23 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.fpsCrosshairGlanceIssuedThisOpen = false;
     this.clearAutomaticGlancePendingState();
     this.normalTileContextMenuOpen = true;
+    this.vrTileContextMode = false;
     this.normalTileContextTarget = target;
     this.normalTileContextSignature = "";
     this.setContextSelectionHighlight(target.x, target.y);
+    this.updateNormalTileContextMenu();
+  }
+
+  private openVrTileContextMenuAtTarget(target: TileContextTarget): void {
+    this.fpsCrosshairGlanceCache.clear();
+    this.fpsCrosshairGlanceAttemptedKeys.clear();
+    this.fpsCrosshairGlanceIssuedThisOpen = false;
+    this.clearAutomaticGlancePendingState();
+    this.fpsCrosshairContextMenuOpen = false;
+    this.normalTileContextMenuOpen = true;
+    this.vrTileContextMode = true;
+    this.normalTileContextTarget = target;
+    this.normalTileContextSignature = "";
     this.updateNormalTileContextMenu();
   }
 
@@ -15441,18 +15805,37 @@ class Nethack3DEngine implements Nethack3DEngineController {
     y: number;
     mesh: THREE.Mesh;
   } | null {
-    const tiles = Array.from(this.tileMap.values());
-    const billboards = Array.from(this.monsterBillboards.values());
-    if (tiles.length === 0 && billboards.length === 0) {
+    this.pointerNdc.set(ndcX, ndcY);
+    this.pointerRaycaster.setFromCamera(
+      this.pointerNdc,
+      this.getActivePerspectiveViewCamera(),
+    );
+    return this.resolveTileTargetFromRaycaster(this.pointerRaycaster, requireMesh);
+  }
+
+  private getRaycastableTileObjects(): THREE.Object3D[] {
+    return [
+      ...Array.from(this.monsterBillboards.values()),
+      ...Array.from(this.tileMap.values()),
+    ];
+  }
+
+  private resolveTileTargetFromRaycaster(
+    raycaster: THREE.Raycaster,
+    requireMesh: boolean,
+  ): TileContextTarget | null {
+    const objects = this.getRaycastableTileObjects();
+    if (objects.length === 0) {
       return null;
     }
+    const intersections = raycaster.intersectObjects(objects, false);
+    return this.resolveTileTargetFromIntersections(intersections, requireMesh);
+  }
 
-    this.pointerNdc.set(ndcX, ndcY);
-    this.pointerRaycaster.setFromCamera(this.pointerNdc, this.camera);
-    const intersections = this.pointerRaycaster.intersectObjects(
-      [...billboards, ...tiles],
-      false,
-    );
+  private resolveTileTargetFromIntersections(
+    intersections: THREE.Intersection<THREE.Object3D>[],
+    requireMesh: boolean,
+  ): TileContextTarget | null {
     if (intersections.length === 0) {
       return null;
     }
@@ -15884,7 +16267,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       -target.y * TILE_SIZE,
       z,
     );
-    world.project(this.camera);
+    world.project(this.getActivePerspectiveViewCamera());
     if (!Number.isFinite(world.x) || !Number.isFinite(world.y)) {
       return null;
     }
@@ -16251,7 +16634,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private updateNormalTileContextMenu(): void {
-    if (this.isFpsMode() || !this.normalTileContextMenuOpen) {
+    if ((!this.vrTileContextMode && this.isFpsMode()) || !this.normalTileContextMenuOpen) {
       this.closeNormalTileContextMenu();
       return;
     }
@@ -16354,9 +16737,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private updateContextSelectionHighlight(timeMs: number): void {
-    if (this.selectedContextHighlightTile) {
+    const highlightedTile =
+      this.vrHoveredTile ?? this.selectedContextHighlightTile;
+    if (highlightedTile) {
       this.ensureFpsAimVisuals();
-      const { x, y } = this.selectedContextHighlightTile;
+      const { x, y } = highlightedTile;
       const targetTile = this.tileMap.get(`${x},${y}`) ?? null;
       if (targetTile && this.fpsForwardHighlight) {
         const targetZ = targetTile.userData?.isWall ? WALL_HEIGHT + 0.02 : 0.03;
@@ -16372,10 +16757,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
         }
         return;
       }
-      this.closeAnyTileContextMenu(false);
+      if (!this.vrHoveredTile) {
+        this.closeAnyTileContextMenu(false);
+      }
       return;
     }
-    if (!this.isFpsMode() && this.fpsForwardHighlight) {
+    if ((!this.isFpsMode() || this.isVrPresenting()) && this.fpsForwardHighlight) {
       this.fpsForwardHighlight.visible = false;
     }
   }
@@ -16844,7 +17231,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
       ((clientX - rect.left) / rect.width) * 2 - 1,
       -((clientY - rect.top) / rect.height) * 2 + 1,
     );
-    this.pointerRaycaster.setFromCamera(this.pointerNdc, this.camera);
+    this.pointerRaycaster.setFromCamera(
+      this.pointerNdc,
+      this.getActivePerspectiveViewCamera(),
+    );
 
     const hit = this.pointerRaycaster.ray.intersectPlane(
       this.groundPlane,
@@ -18129,7 +18519,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private animate(timeMs: number = performance.now()): void {
-    requestAnimationFrame(this.animateFrameCallback);
     const rawDeltaMs =
       this.lastFrameTimeMs === null ? 1000 / 60 : timeMs - this.lastFrameTimeMs;
     this.lastFrameTimeMs = timeMs;
@@ -18144,6 +18533,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.updateFpsAimVisuals(timeMs);
     this.updateContextSelectionHighlight(timeMs);
     this.updateLightingCenter(deltaSeconds);
+    this.vrSessionController?.update(deltaSeconds);
     if (this.clientOptions.minimap) {
       this.renderMinimapViewportOverlay();
     }
@@ -18152,7 +18542,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.updateEffectAnimations(timeMs);
     this.updateDamageEffects(deltaSeconds);
     this.updateTileRevealFades(timeMs);
-    if (this.composer) {
+    if (this.composer && !this.isVrPresenting()) {
       this.updateTaaState();
       this.composer.render(deltaSeconds);
       return;

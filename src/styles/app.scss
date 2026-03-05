@@ -354,6 +354,144 @@ select {
   }
 }
 
+.nh3d-dom-overlay-root {
+  --nh3d-vr-frame-shift-x: 0px;
+  --nh3d-vr-frame-shift-y: 0px;
+  --nh3d-vr-frame-tilt: 0deg;
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+}
+
+.nh3d-dom-overlay-root.nh3d-vr-overlay-active {
+  perspective: 1800px;
+  perspective-origin: 50% 18%;
+}
+
+.nh3d-vr-hud-frame {
+  position: fixed;
+  top: calc(var(--nh3d-safe-area-top) + 12px);
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(420px, calc(100vw - 24px));
+  padding: 12px 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 22, 36, 0.88) 0%,
+    rgba(4, 11, 22, 0.78) 100%
+  );
+  border: 1px solid rgba(255, 246, 168, 0.42);
+  border-radius: 18px;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.44),
+    inset 0 0 0 1px rgba(255, 246, 168, 0.08);
+  backdrop-filter: blur(10px);
+  z-index: 2400;
+}
+
+.nh3d-vr-hud-frame.is-immersive {
+  top: calc(var(--nh3d-safe-area-top) + 18px);
+  left: 50%;
+  right: auto;
+  transform:
+    translateX(-50%)
+    translate3d(
+      var(--nh3d-vr-frame-shift-x),
+      var(--nh3d-vr-frame-shift-y),
+      0
+    )
+    rotateZ(var(--nh3d-vr-frame-tilt));
+  transform-origin: top center;
+  width: min(560px, calc(100vw - 28px));
+}
+
+.nh3d-vr-hud-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nh3d-vr-hud-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nh3d-vr-hud-title {
+  color: #fff6a8;
+  font-size: nh3d-scale-font(13px);
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nh3d-vr-hud-status {
+  color: rgba(235, 244, 255, 0.86);
+  font-size: nh3d-scale-font(11px);
+  line-height: 1.4;
+}
+
+.nh3d-vr-hud-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nh3d-vr-hud-button {
+  border: 1px solid rgba(255, 246, 168, 0.28);
+  background: rgba(20, 34, 50, 0.92);
+  color: #eef7ff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-family: "Courier New", monospace;
+  font-size: nh3d-scale-font(12px);
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    transform 140ms ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(28, 46, 68, 0.96);
+    border-color: rgba(255, 246, 168, 0.58);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+}
+
+.nh3d-vr-hud-button-primary {
+  background: rgba(53, 80, 36, 0.96);
+  border-color: rgba(255, 246, 168, 0.52);
+}
+
+.nh3d-vr-hud-button-warn {
+  background: rgba(102, 32, 36, 0.96);
+  border-color: rgba(255, 170, 170, 0.45);
+}
+
+.nh3d-vr-quick-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nh3d-vr-hud-hint {
+  grid-column: 1 / -1;
+  color: rgba(226, 237, 247, 0.74);
+  font-size: nh3d-scale-font(10px);
+  line-height: 1.45;
+}
+
 canvas {
   display: block;
 }
@@ -857,6 +995,31 @@ canvas {
       margin-left: 0;
       margin-top: 2px;
     }
+  }
+}
+
+:root.nh3d-vr-active {
+  #stats-bar {
+    top: calc(var(--nh3d-safe-area-top) + 92px);
+    left: 50%;
+    right: auto;
+    transform:
+      translateX(-50%)
+      translate3d(
+        calc(var(--nh3d-vr-frame-shift-x) * 0.56),
+        calc(var(--nh3d-vr-frame-shift-y) * 0.56),
+        0
+      )
+      rotateZ(var(--nh3d-vr-frame-tilt));
+    transform-origin: top center;
+    width: min(1040px, 94vw);
+    border: 1px solid rgba(255, 246, 168, 0.22);
+    border-radius: 20px;
+    border-bottom-width: 1px;
+    box-shadow:
+      0 18px 34px rgba(0, 0, 0, 0.38),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(10px);
   }
 }
 

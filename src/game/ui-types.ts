@@ -87,6 +87,26 @@ export type NewGamePromptState = {
   reason: string | null;
 };
 
+export type Nh3dVrPointerHand = "left" | "right";
+export type XrLaunchMode = "webxr" | "browser-handoff" | "unavailable";
+export type XrSessionState =
+  | "inactive"
+  | "entering"
+  | "immersive"
+  | "exiting"
+  | "handoff";
+
+export type XrAvailabilityState = {
+  supported: boolean;
+  launchMode: XrLaunchMode;
+  directWebXrAvailable: boolean;
+  isHeadsetShell: boolean;
+  browserHandoffUrl: string | null;
+  buttonLabel: string;
+  statusText: string;
+  usingDomOverlay: boolean;
+};
+
 export type FpsContextAction = {
   id: string;
   label: string;
@@ -135,6 +155,10 @@ export type TilesetSolidChromaKeyColorHexByTileset = Record<string, string>;
 
 export type Nh3dClientOptions = {
   fpsMode: boolean;
+  vrOfferOnSupportedDevice: boolean;
+  vrFollowPlayer: boolean;
+  vrShowLevelBoundaries: boolean;
+  vrPreferredPointerHand: Nh3dVrPointerHand;
   fpsFov: number;
   fpsLookSensitivityX: number;
   fpsLookSensitivityY: number;
@@ -193,8 +217,23 @@ const isMobilePortrait = window.matchMedia(
 );
 const isMobile = window.matchMedia("(pointer: coarse)");
 
+export const defaultXrAvailabilityState: XrAvailabilityState = {
+  supported: false,
+  launchMode: "unavailable",
+  directWebXrAvailable: false,
+  isHeadsetShell: false,
+  browserHandoffUrl: null,
+  buttonLabel: "VR Unavailable",
+  statusText: "VR is unavailable on this device.",
+  usingDomOverlay: false,
+};
+
 export const defaultNh3dClientOptions: Nh3dClientOptions = {
   fpsMode: false,
+  vrOfferOnSupportedDevice: true,
+  vrFollowPlayer: true,
+  vrShowLevelBoundaries: false,
+  vrPreferredPointerHand: "right",
   fpsFov: isMobilePortrait ? 95 : 62,
   fpsLookSensitivityX: isMobile ? 1.5 : 1,
   fpsLookSensitivityY: isMobile ? 1.5 : 1,
@@ -698,6 +737,20 @@ export function normalizeNh3dClientOptions(
       typeof overrides?.fpsMode === "boolean"
         ? overrides.fpsMode
         : defaultNh3dClientOptions.fpsMode,
+    vrOfferOnSupportedDevice:
+      typeof overrides?.vrOfferOnSupportedDevice === "boolean"
+        ? overrides.vrOfferOnSupportedDevice
+        : defaultNh3dClientOptions.vrOfferOnSupportedDevice,
+    vrFollowPlayer:
+      typeof overrides?.vrFollowPlayer === "boolean"
+        ? overrides.vrFollowPlayer
+        : defaultNh3dClientOptions.vrFollowPlayer,
+    vrShowLevelBoundaries:
+      typeof overrides?.vrShowLevelBoundaries === "boolean"
+        ? overrides.vrShowLevelBoundaries
+        : defaultNh3dClientOptions.vrShowLevelBoundaries,
+    vrPreferredPointerHand:
+      overrides?.vrPreferredPointerHand === "left" ? "left" : "right",
     fpsFov,
     fpsLookSensitivityX,
     fpsLookSensitivityY,
@@ -821,9 +874,13 @@ export interface Nethack3DEngineUIAdapter {
   setRepeatActionVisible(visible: boolean): void;
   setNewGamePrompt(state: NewGamePromptState): void;
   setGameOver(state: GameOverState): void;
+  setXrAvailability(state: XrAvailabilityState): void;
+  setXrSessionState(state: XrSessionState): void;
+  setVrQuickPanelVisible(visible: boolean): void;
 }
 
 export interface Nethack3DEngineController {
+  sendInput(input: string): void;
   chooseDirection(directionKey: string): void;
   chooseQuestionChoice(choice: string): void;
   confirmQuestionMenuChoice(): void;
@@ -848,10 +905,16 @@ export interface Nethack3DEngineController {
   setClientOptions(options: Nh3dClientOptions): void;
   closeInventoryDialog(): void;
   closeInfoMenuDialog(): void;
+  enterVr(): Promise<void>;
+  exitVr(): Promise<void>;
+  toggleVr(): Promise<void>;
+  toggleVrQuickPanel(): void;
+  destroy(): void;
 }
 
 export interface Nethack3DEngineOptions {
   mountElement?: HTMLElement | null;
+  vrDomOverlayRoot?: HTMLElement | null;
   uiAdapter: Nethack3DEngineUIAdapter;
   characterCreationConfig?: CharacterCreationConfig;
   clientOptions?: Partial<Nh3dClientOptions>;

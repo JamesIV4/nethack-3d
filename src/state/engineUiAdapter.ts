@@ -70,5 +70,14 @@ export function createEngineUiAdapter(): Nethack3DEngineUIAdapter {
     setGameOver(state: GameOverState): void {
       useGameStore.getState().setGameOver(state);
     },
+    setXrAvailability(state): void {
+      useGameStore.getState().setXrAvailability(state);
+    },
+    setXrSessionState(state): void {
+      useGameStore.getState().setXrSessionState(state);
+    },
+    setVrQuickPanelVisible(visible: boolean): void {
+      useGameStore.getState().setVrQuickPanelVisible(visible);
+    },
   };
 }

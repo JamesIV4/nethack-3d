@@ -1,5 +1,14 @@
 package com.nethack3d.app;
 
-import com.getcapacitor.BridgeActivity;
+import android.os.Bundle;
 
-public class MainActivity extends BridgeActivity {}
+import com.getcapacitor.BridgeActivity;
+import com.nethack3d.app.xr.VrShellPlugin;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(VrShellPlugin.class);
+        super.onCreate(savedInstanceState);
+    }
+}
