@@ -56,6 +56,13 @@ import { resetNh3dDefaultSoundPackVolumeLevelsToDefaults } from "../audio/sound-
 import SoundPackSettings, {
   type SoundPackDialogActions,
 } from "./SoundPackSettings";
+import {
+  mobileActions,
+  resolveMobileCommonExtendedCommandNames,
+  resolveMobileExtendedCommandNames,
+  type MobileActionEntry,
+  type MobileActionSheetMode,
+} from "./mobile/mobile-actions";
 import VrAframeHudFrame from "./vr/VrAframeHudFrame";
 
 type DirectionChoice = {
@@ -1086,13 +1093,6 @@ function pickRandomStartupGender(role: string): string {
   return startupGenderOptions[randomIndex] ?? "male";
 }
 
-type MobileActionEntry = {
-  id: string;
-  label: string;
-  kind: "quick" | "extended";
-  value: string;
-};
-type MobileActionSheetMode = "quick" | "extended";
 type InventoryContextAction = {
   id: string;
   label: string;
@@ -1811,120 +1811,6 @@ const clampTileContextMenuPosition = (
 };
 
 const tileContextMenuAnchorOffsetY = 30;
-
-const mobileActions: MobileActionEntry[] = [
-  { id: "wait", label: "Wait", kind: "quick", value: "wait" },
-  { id: "zap", label: "Zap", kind: "extended", value: "zap" },
-  { id: "cast", label: "Cast", kind: "extended", value: "cast" },
-  { id: "kick", label: "Kick", kind: "extended", value: "kick" },
-  { id: "read", label: "Read", kind: "extended", value: "read" },
-  { id: "quaff", label: "Quaff", kind: "extended", value: "quaff" },
-  { id: "eat", label: "Eat", kind: "extended", value: "eat" },
-  { id: "glance", label: "Glance", kind: "extended", value: "glance" },
-  { id: "loot", label: "Loot", kind: "quick", value: "loot" },
-  { id: "open", label: "Open", kind: "quick", value: "open" },
-  { id: "wield", label: "Wield", kind: "extended", value: "wield" },
-  { id: "wear", label: "Wear", kind: "extended", value: "wear" },
-  { id: "put-on", label: "Put On", kind: "extended", value: "puton" },
-  { id: "take-off", label: "Take Off", kind: "extended", value: "takeoff" },
-  { id: "extended", label: "Extended", kind: "quick", value: "extended" },
-];
-const fallbackExtendedCommandNames = [
-  "adjust",
-  "annotate",
-  "apply",
-  "attributes",
-  "autopickup",
-  "call",
-  "cast",
-  "chat",
-  "close",
-  "conduct",
-  "dip",
-  "drop",
-  "droptype",
-  "eat",
-  "engrave",
-  "enhance",
-  "explode",
-  "fight",
-  "fire",
-  "force",
-  "getpos",
-  "glance",
-  "history",
-  "invoke",
-  "jump",
-  "kick",
-  "known",
-  "knownclass",
-  "look",
-  "loot",
-  "monster",
-  "monsters",
-  "name",
-  "namefloor",
-  "offer",
-  "open",
-  "options",
-  "overview",
-  "pay",
-  "pickup",
-  "pray",
-  "prevmsg",
-  "puton",
-  "quaff",
-  "quit",
-  "quiver",
-  "read",
-  "redraw",
-  "remove",
-  "ride",
-  "rub",
-  "seeall",
-  "seeamulet",
-  "seegold",
-  "seeinv",
-  "seespells",
-  "semicolon",
-  "set",
-  "shell",
-  "sit",
-  "spells",
-  "takeoff",
-  "takeoffall",
-  "teleport",
-  "terrain",
-  "throw",
-  "tip",
-  "travel",
-  "turn",
-  "twoweapon",
-  "untrap",
-  "version",
-  "versionshort",
-  "wield",
-  "wipe",
-  "wear",
-  "whatdoes",
-  "whatis",
-  "wieldquiver",
-  "zap",
-];
-const commonExtendedCommandWhitelist = [
-  "apply",
-  "autopickup",
-  "attributes",
-  "drop",
-  "engrave",
-  "fire",
-  "options",
-  "pray",
-  "quiver",
-  "remove",
-  "throw",
-  "travel",
-];
 
 const overflowGlowClassName = "nh3d-overflow-glow";
 const overflowGlowStartXClassName = "nh3d-overflow-glow-x-start";
@@ -3557,6 +3443,8 @@ export default function App(): JSX.Element {
     characterCreationConfig !== null &&
     connectionState === "running" &&
     !loadingVisible;
+  const shouldRenderDomMobileTouchHud =
+    isMobileGameRunning && !showVrTouchControls;
 
   const isDesktopGameRunning =
     !isMobileGameRunning &&
@@ -3852,34 +3740,15 @@ export default function App(): JSX.Element {
     textInputRequest,
   ]);
 
-  const mobileExtendedCommandNames = useMemo(() => {
-    const rawCommands =
-      Array.isArray(extendedCommands) && extendedCommands.length > 0
-        ? extendedCommands
-        : fallbackExtendedCommandNames;
-    const uniqueCommands: string[] = [];
-    const seen = new Set<string>();
-    for (const rawCommand of rawCommands) {
-      const normalized = String(rawCommand || "")
-        .trim()
-        .toLowerCase();
-      if (!normalized || normalized === "#" || normalized === "?") {
-        continue;
-      }
-      if (seen.has(normalized)) {
-        continue;
-      }
-      seen.add(normalized);
-      uniqueCommands.push(normalized);
-    }
-    return uniqueCommands;
-  }, [extendedCommands]);
-  const mobileCommonExtendedCommandNames = useMemo(() => {
-    const available = new Set(mobileExtendedCommandNames);
-    return commonExtendedCommandWhitelist.filter((command) =>
-      available.has(command),
-    );
-  }, [mobileExtendedCommandNames]);
+  const mobileExtendedCommandNames = useMemo(
+    () => resolveMobileExtendedCommandNames(extendedCommands),
+    [extendedCommands],
+  );
+  const mobileCommonExtendedCommandNames = useMemo(
+    () =>
+      resolveMobileCommonExtendedCommandNames(mobileExtendedCommandNames),
+    [mobileExtendedCommandNames],
+  );
 
   const submitTextInput = (value: string): void => {
     controller?.submitTextInput(value);
@@ -4896,6 +4765,113 @@ export default function App(): JSX.Element {
     }));
   }, [updateLiveClientOptions]);
 
+  const handleMobileSelectAction = useCallback(
+    (action: MobileActionEntry): void => {
+      controller?.dismissFpsCrosshairContextMenu();
+      if (action.id === "extended") {
+        setMobileActionSheetMode("extended");
+        return;
+      }
+      if (action.kind === "quick") {
+        controller?.runQuickAction(action.value);
+      } else {
+        controller?.runExtendedCommand(action.value);
+      }
+      setIsMobileActionSheetVisible(false);
+      setMobileActionSheetMode("quick");
+    },
+    [controller],
+  );
+
+  const handleMobileRunExtendedCommand = useCallback(
+    (command: string): void => {
+      controller?.dismissFpsCrosshairContextMenu();
+      controller?.runExtendedCommand(command);
+      setIsMobileActionSheetVisible(false);
+      setMobileActionSheetMode("quick");
+    },
+    [controller],
+  );
+
+  const handleMobileOpenPauseMenu = useCallback((): void => {
+    setIsMobileActionSheetVisible(false);
+    setMobileActionSheetMode("quick");
+    setIsPauseMenuVisible(true);
+  }, []);
+
+  const handleMobileCloseActionSheet = useCallback((): void => {
+    setIsMobileActionSheetVisible(false);
+    setMobileActionSheetMode("quick");
+  }, []);
+
+  const handleMobileOpenInventory = useCallback((): void => {
+    controller?.dismissFpsCrosshairContextMenu();
+    controller?.toggleInventoryDialog();
+  }, [controller]);
+
+  const handleMobileToggleLog = useCallback((): void => {
+    controller?.dismissFpsCrosshairContextMenu();
+    if (!clientOptions.liveMessageLog) {
+      return;
+    }
+    setIsMobileLogVisible((visible) => {
+      const next = !visible;
+      if (next) {
+        setIsMobileActionSheetVisible(false);
+        setMobileActionSheetMode("quick");
+      }
+      return next;
+    });
+  }, [clientOptions.liveMessageLog, controller]);
+
+  const handleMobilePickup = useCallback((): void => {
+    controller?.dismissFpsCrosshairContextMenu();
+    controller?.runQuickAction("pickup");
+  }, [controller]);
+
+  const handleMobileSearch = useCallback((): void => {
+    controller?.dismissFpsCrosshairContextMenu();
+    controller?.runQuickAction("search");
+  }, [controller]);
+
+  const handleMobileToggleActionSheet = useCallback((): void => {
+    controller?.dismissFpsCrosshairContextMenu();
+    setIsMobileActionSheetVisible((visible) => {
+      const next = !visible;
+      if (next) {
+        setMobileActionSheetMode("quick");
+        setIsMobileLogVisible(false);
+      }
+      return next;
+    });
+  }, [controller]);
+
+  const handleMobileRepeatAction = useCallback((): void => {
+    controller?.dismissFpsCrosshairContextMenu();
+    controller?.repeatLastAction();
+  }, [controller]);
+
+  const handleVrAdjustTilt = useCallback(
+    (deltaDegrees: number): void => {
+      if (!Number.isFinite(deltaDegrees)) {
+        return;
+      }
+      updateLiveClientOptions((current) => {
+        const nextTiltDegrees =
+          (Number.isFinite(current.vrTabletopTiltDegrees)
+            ? current.vrTabletopTiltDegrees
+            : 0) + deltaDegrees;
+        const clampedTiltDegrees = Math.max(0, Math.min(45, nextTiltDegrees));
+        const roundedTiltDegrees = Math.round(clampedTiltDegrees * 2) / 2;
+        return {
+          ...current,
+          vrTabletopTiltDegrees: roundedTiltDegrees,
+        };
+      });
+    },
+    [updateLiveClientOptions],
+  );
+
   useEffect(() => {
     if (!inventory.visible) {
       setInventoryContextMenu(null);
@@ -5360,6 +5336,30 @@ export default function App(): JSX.Element {
           onToggleQuickPanel={handleVrToggleQuickPanel}
           quickPanelVisible={vrQuickPanelVisible}
           sessionState={xrSessionState}
+          touchHud={{
+            actionSheetMode: mobileActionSheetMode,
+            actionSheetVisible: isMobileActionSheetVisible,
+            commonExtendedCommandNames: mobileCommonExtendedCommandNames,
+            extendedCommandNames: mobileExtendedCommandNames,
+            logEnabled: clientOptions.liveMessageLog,
+            logVisible: isMobileLogVisible,
+            onAdjustTilt: handleVrAdjustTilt,
+            onCloseActionSheet: handleMobileCloseActionSheet,
+            onOpenInventory: handleMobileOpenInventory,
+            onPickup: handleMobilePickup,
+            onRepeatAction: handleMobileRepeatAction,
+            onRunExtendedCommand: handleMobileRunExtendedCommand,
+            onSearch: handleMobileSearch,
+            onSelectAction: handleMobileSelectAction,
+            onSetActionSheetMode: setMobileActionSheetMode,
+            onShowPauseMenu: handleMobileOpenPauseMenu,
+            onToggleActionSheet: handleMobileToggleActionSheet,
+            onToggleLog: handleMobileToggleLog,
+            quickActions: mobileActions,
+            repeatActionVisible,
+            tiltDegrees: clientOptions.vrTabletopTiltDegrees,
+            visible: isMobileGameRunning && showVrTouchControls,
+          }}
         />
       {renderPauseMenu()}
       {startup && (
@@ -7584,7 +7584,7 @@ export default function App(): JSX.Element {
         </div>
       ) : null}
 
-      {isMobileGameRunning && isMobileActionSheetVisible ? (
+      {shouldRenderDomMobileTouchHud && isMobileActionSheetVisible ? (
         <div className="nh3d-mobile-actions-sheet">
           <div className="nh3d-mobile-actions-title-row">
             <div className="nh3d-mobile-actions-title">
@@ -7607,13 +7607,7 @@ export default function App(): JSX.Element {
 
               <button
                 className="nh3d-mobile-actions-back"
-                onClick={() => {
-                  setIsMobileActionSheetVisible(false);
-
-                  setMobileActionSheetMode("quick");
-
-                  setIsPauseMenuVisible(true);
-                }}
+                onClick={handleMobileOpenPauseMenu}
                 type="button"
               >
                 Menu
@@ -7621,10 +7615,7 @@ export default function App(): JSX.Element {
 
               <button
                 className="nh3d-mobile-actions-close"
-                onClick={() => {
-                  setIsMobileActionSheetVisible(false);
-                  setMobileActionSheetMode("quick");
-                }}
+                onClick={handleMobileCloseActionSheet}
                 type="button"
               >
                 Close
@@ -7642,20 +7633,7 @@ export default function App(): JSX.Element {
                   <button
                     className="nh3d-mobile-actions-button"
                     key={action.id}
-                    onClick={() => {
-                      controller?.dismissFpsCrosshairContextMenu();
-                      if (action.id === "extended") {
-                        setMobileActionSheetMode("extended");
-                        return;
-                      }
-                      if (action.kind === "quick") {
-                        controller?.runQuickAction(action.value);
-                      } else {
-                        controller?.runExtendedCommand(action.value);
-                      }
-                      setIsMobileActionSheetVisible(false);
-                      setMobileActionSheetMode("quick");
-                    }}
+                    onClick={() => handleMobileSelectAction(action)}
                     type="button"
                   >
                     {action.label}
@@ -7682,12 +7660,9 @@ export default function App(): JSX.Element {
                         <button
                           className="nh3d-mobile-actions-button"
                           key={`common-${command}`}
-                          onClick={() => {
-                            controller?.dismissFpsCrosshairContextMenu();
-                            controller?.runExtendedCommand(command);
-                            setIsMobileActionSheetVisible(false);
-                            setMobileActionSheetMode("quick");
-                          }}
+                          onClick={() =>
+                            handleMobileRunExtendedCommand(command)
+                          }
                           type="button"
                         >
                           {command}
@@ -7707,12 +7682,9 @@ export default function App(): JSX.Element {
                       <button
                         className="nh3d-mobile-actions-button"
                         key={`all-${command}`}
-                        onClick={() => {
-                          controller?.dismissFpsCrosshairContextMenu();
-                          controller?.runExtendedCommand(command);
-                          setIsMobileActionSheetVisible(false);
-                          setMobileActionSheetMode("quick");
-                        }}
+                        onClick={() =>
+                          handleMobileRunExtendedCommand(command)
+                        }
                         type="button"
                       >
                         {command}
@@ -7726,29 +7698,23 @@ export default function App(): JSX.Element {
         </div>
       ) : null}
 
-      {isMobileGameRunning && repeatActionVisible ? (
+      {shouldRenderDomMobileTouchHud && repeatActionVisible ? (
         <button
           className="nh3d-mobile-repeat-button"
-          onClick={() => {
-            controller?.dismissFpsCrosshairContextMenu();
-            controller?.repeatLastAction();
-          }}
+          onClick={handleMobileRepeatAction}
           type="button"
         >
           Repeat
         </button>
       ) : null}
 
-      {isMobileGameRunning ? (
+      {shouldRenderDomMobileTouchHud ? (
         <div
           className={`nh3d-mobile-bottom-bar${showVrTouchControls ? " is-vr-touch" : ""}`}
         >
           <button
             className="nh3d-mobile-bottom-button"
-            onClick={() => {
-              controller?.dismissFpsCrosshairContextMenu();
-              controller?.toggleInventoryDialog();
-            }}
+            onClick={handleMobileOpenInventory}
             type="button"
           >
             Inventory
@@ -7756,40 +7722,21 @@ export default function App(): JSX.Element {
           <button
             className="nh3d-mobile-bottom-button"
             disabled={!clientOptions.liveMessageLog}
-            onClick={() => {
-              controller?.dismissFpsCrosshairContextMenu();
-              if (!clientOptions.liveMessageLog) {
-                return;
-              }
-              setIsMobileLogVisible((visible) => {
-                const next = !visible;
-                if (next) {
-                  setIsMobileActionSheetVisible(false);
-                  setMobileActionSheetMode("quick");
-                }
-                return next;
-              });
-            }}
+            onClick={handleMobileToggleLog}
             type="button"
           >
             Log
           </button>
           <button
             className="nh3d-mobile-bottom-button"
-            onClick={() => {
-              controller?.dismissFpsCrosshairContextMenu();
-              controller?.runQuickAction("pickup");
-            }}
+            onClick={handleMobilePickup}
             type="button"
           >
             Pick Up
           </button>
           <button
             className="nh3d-mobile-bottom-button"
-            onClick={() => {
-              controller?.dismissFpsCrosshairContextMenu();
-              controller?.runQuickAction("search");
-            }}
+            onClick={handleMobileSearch}
             type="button"
           >
             Search
@@ -7798,50 +7745,11 @@ export default function App(): JSX.Element {
             className={`nh3d-mobile-bottom-button${
               isMobileActionSheetVisible ? " is-active" : ""
             }`}
-            onClick={() => {
-              controller?.dismissFpsCrosshairContextMenu();
-              setIsMobileActionSheetVisible((visible) => {
-                const next = !visible;
-                if (next) {
-                  setMobileActionSheetMode("quick");
-                  setIsMobileLogVisible(false);
-                }
-                return next;
-              });
-            }}
+            onClick={handleMobileToggleActionSheet}
             type="button"
           >
             Actions
           </button>
-        </div>
-      ) : null}
-      {isMobileGameRunning && showVrTouchControls ? (
-        <div className="nh3d-vr-tilt-slider">
-          <label className="nh3d-vr-tilt-slider-label" htmlFor="nh3d-vr-tilt-slider-input">
-            Board tilt
-          </label>
-          <input
-            className="nh3d-vr-tilt-slider-input"
-            id="nh3d-vr-tilt-slider-input"
-            max={45}
-            min={0}
-            onChange={(event) => {
-              const nextTiltDegrees = Number.parseFloat(event.target.value);
-              if (!Number.isFinite(nextTiltDegrees)) {
-                return;
-              }
-              updateLiveClientOptions((current) => ({
-                ...current,
-                vrTabletopTiltDegrees: nextTiltDegrees,
-              }));
-            }}
-            step={0.5}
-            type="range"
-            value={clientOptions.vrTabletopTiltDegrees}
-          />
-          <div className="nh3d-vr-tilt-slider-value">
-            {`${Math.round(clientOptions.vrTabletopTiltDegrees)}deg`}
-          </div>
         </div>
       ) : null}
 

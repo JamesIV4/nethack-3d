@@ -6,7 +6,37 @@ import type {
   XrSessionState,
 } from "../../game/ui-types";
 import { isLoggingEnabled, logWithOriginal } from "../../logging";
+import type {
+  MobileActionEntry,
+  MobileActionSheetMode,
+} from "../mobile/mobile-actions";
+import VrAframeMobileHud from "./VrAframeMobileHud";
 import VrHudFrame from "./VrHudFrame";
+
+export type VrAframeTouchHudProps = {
+  visible: boolean;
+  repeatActionVisible: boolean;
+  actionSheetVisible: boolean;
+  actionSheetMode: MobileActionSheetMode;
+  quickActions: MobileActionEntry[];
+  commonExtendedCommandNames: string[];
+  extendedCommandNames: string[];
+  logEnabled: boolean;
+  logVisible: boolean;
+  tiltDegrees: number;
+  onOpenInventory: () => void;
+  onToggleLog: () => void;
+  onPickup: () => void;
+  onSearch: () => void;
+  onToggleActionSheet: () => void;
+  onRepeatAction: () => void;
+  onShowPauseMenu: () => void;
+  onCloseActionSheet: () => void;
+  onSetActionSheetMode: (mode: MobileActionSheetMode) => void;
+  onSelectAction: (action: MobileActionEntry) => void;
+  onRunExtendedCommand: (command: string) => void;
+  onAdjustTilt: (deltaDegrees: number) => void;
+};
 
 type VrAframeHudFrameProps = {
   offerEnabled: boolean;
@@ -23,6 +53,7 @@ type VrAframeHudFrameProps = {
   onToggleFollowPlayer: () => void;
   onToggleBoundaries: () => void;
   onExitVr: () => void;
+  touchHud?: VrAframeTouchHudProps | null;
 };
 
 type WindowWithAframe = Window & {
@@ -167,6 +198,7 @@ export default function VrAframeHudFrame({
   onToggleFollowPlayer,
   onToggleBoundaries,
   onExitVr,
+  touchHud = null,
 }: VrAframeHudFrameProps): JSX.Element | null {
   const aframeReady =
     typeof window !== "undefined" &&
@@ -328,58 +360,97 @@ export default function VrAframeHudFrame({
           camera="active: true"
           cursor="rayOrigin: mouse; fuse: false"
           look-controls="enabled: false"
-          raycaster="objects: .raycastable"
-        />
-        <a-entity position="0 1.6 -2.15">
-          <a-entity
-            geometry={`primitive: plane; width: 1.45; height: ${panelHeight}`}
-            material="color: #08121f; opacity: 0.94; shader: flat"
-            position={`0 ${panelCenterY} -0.01`}
-          />
-          <a-entity
-            geometry="primitive: plane; width: 1.45; height: 0.12"
-            material="color: #10263f; opacity: 0.96; shader: flat"
-            position={`0 ${panelTopY - 0.06} 0`}
-          />
-          <a-entity
-            position={`0 ${panelTopY - 0.08} 0.01`}
-            text="align: center; anchor: center; color: #fff6a8; value: VR; width: 2.1"
-          />
-          <a-entity
-            position={`0 ${panelTopY - 0.21} 0.01`}
-            text={`align: center; anchor: center; color: #dbe9ff; value: ${statusValue}; width: 2.35; wrapCount: 34`}
-          />
-          {buttons.map((button, index) => {
-            const y = firstRowY - index * rowSpacing;
-            const textColor = button.disabled ? "#6f8295" : "#eef7ff";
-            const tone = button.tone;
-            return (
-              <a-entity
-                className="raycastable"
-                geometry="primitive: plane; width: 1.18; height: 0.15"
-                key={button.id}
-                material="color: #132237; opacity: 0.96; shader: flat"
-                nh3d-ui-button={`disabled: ${button.disabled}; tone: ${tone}`}
-                onClick={() => {
-                  if (button.disabled) {
-                    return;
-                  }
-                  button.onClick();
-                }}
-                position={`0 ${y} 0`}
-              >
+          raycaster="objects: .raycastable; interval: 0; far: 6"
+        >
+          <a-entity position="0 0.28 -1.08">
+            <a-entity
+              geometry={`primitive: plane; width: 1.45; height: ${panelHeight}`}
+              material="color: #08121f; opacity: 0.94; shader: flat"
+              position={`0 ${panelCenterY} -0.01`}
+            />
+            <a-entity
+              geometry="primitive: plane; width: 1.45; height: 0.12"
+              material="color: #10263f; opacity: 0.96; shader: flat"
+              position={`0 ${panelTopY - 0.06} 0`}
+            />
+            <a-entity
+              position={`0 ${panelTopY - 0.08} 0.01`}
+              text="align: center; anchor: center; color: #fff6a8; value: VR; width: 2.1"
+            />
+            <a-entity
+              position={`0 ${panelTopY - 0.21} 0.01`}
+              text={`align: center; anchor: center; color: #dbe9ff; value: ${statusValue}; width: 2.35; wrapCount: 34`}
+            />
+            {buttons.map((button, index) => {
+              const y = firstRowY - index * rowSpacing;
+              const textColor = button.disabled ? "#6f8295" : "#eef7ff";
+              const tone = button.tone;
+              return (
                 <a-entity
-                  position="0 0 0.01"
-                  text={`align: center; anchor: center; color: ${textColor}; value: ${escapeAframeTextValue(button.label)}; width: 1.6; wrapCount: 30`}
-                />
-              </a-entity>
-            );
-          })}
-          <a-entity
-            position={`0 ${panelBottomY + 0.08} 0.01`}
-            text="align: center; anchor: center; color: #9db7cf; value: Trigger or A: primary. Secondary face button: context.; width: 2.35; wrapCount: 45"
-          />
+                  className="raycastable"
+                  geometry="primitive: plane; width: 1.18; height: 0.15"
+                  key={button.id}
+                  material="color: #132237; opacity: 0.96; shader: flat"
+                  nh3d-ui-button={`disabled: ${button.disabled}; tone: ${tone}`}
+                  onClick={() => {
+                    if (button.disabled) {
+                      return;
+                    }
+                    button.onClick();
+                  }}
+                  position={`0 ${y} 0`}
+                >
+                  <a-entity
+                    position="0 0 0.01"
+                    text={`align: center; anchor: center; color: ${textColor}; value: ${escapeAframeTextValue(button.label)}; width: 1.6; wrapCount: 30`}
+                  />
+                </a-entity>
+              );
+            })}
+            <a-entity
+              position={`0 ${panelBottomY + 0.08} 0.01`}
+              text="align: center; anchor: center; color: #9db7cf; value: Trigger or A: primary. Secondary face button: context.; width: 2.35; wrapCount: 45"
+            />
+          </a-entity>
+          {touchHud?.visible ? (
+            <VrAframeMobileHud
+              actionSheetMode={touchHud.actionSheetMode}
+              actionSheetVisible={touchHud.actionSheetVisible}
+              commonExtendedCommandNames={touchHud.commonExtendedCommandNames}
+              extendedCommandNames={touchHud.extendedCommandNames}
+              logEnabled={touchHud.logEnabled}
+              logVisible={touchHud.logVisible}
+              onAdjustTilt={touchHud.onAdjustTilt}
+              onCloseActionSheet={touchHud.onCloseActionSheet}
+              onOpenInventory={touchHud.onOpenInventory}
+              onPickup={touchHud.onPickup}
+              onRepeatAction={touchHud.onRepeatAction}
+              onRunExtendedCommand={touchHud.onRunExtendedCommand}
+              onSearch={touchHud.onSearch}
+              onSelectAction={touchHud.onSelectAction}
+              onSetActionSheetMode={touchHud.onSetActionSheetMode}
+              onShowPauseMenu={touchHud.onShowPauseMenu}
+              onToggleActionSheet={touchHud.onToggleActionSheet}
+              onToggleLog={touchHud.onToggleLog}
+              quickActions={touchHud.quickActions}
+              repeatActionVisible={touchHud.repeatActionVisible}
+              tiltDegrees={touchHud.tiltDegrees}
+              visible={touchHud.visible}
+            />
+          ) : null}
         </a-entity>
+        <a-entity
+          cursor="fuse: false; rayOrigin: entity"
+          laser-controls="hand: left"
+          line="color: #78e8ff; opacity: 0.86"
+          raycaster="objects: .raycastable; interval: 0; far: 6"
+        />
+        <a-entity
+          cursor="fuse: false; rayOrigin: entity"
+          laser-controls="hand: right"
+          line="color: #78e8ff; opacity: 0.86"
+          raycaster="objects: .raycastable; interval: 0; far: 6"
+        />
       </a-scene>
     </div>
   );
