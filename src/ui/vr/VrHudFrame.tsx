@@ -5,6 +5,7 @@ import type {
 } from "../../game/ui-types";
 
 type VrHudFrameProps = {
+  offerEnabled: boolean;
   availability: XrAvailabilityState;
   sessionState: XrSessionState;
   quickPanelVisible: boolean;
@@ -21,6 +22,7 @@ type VrHudFrameProps = {
 };
 
 function getSessionButtonLabel(
+  offerEnabled: boolean,
   availability: XrAvailabilityState,
   sessionState: XrSessionState,
 ): string {
@@ -33,13 +35,17 @@ function getSessionButtonLabel(
   if (sessionState === "exiting") {
     return "Leaving VR...";
   }
-  if (sessionState === "handoff") {
-    return "Opening Quest Browser...";
+  if (!offerEnabled) {
+    return "VR Disabled";
+  }
+  if (!availability.supported) {
+    return "Check VR";
   }
   return availability.buttonLabel;
 }
 
 export default function VrHudFrame({
+  offerEnabled,
   availability,
   sessionState,
   quickPanelVisible,
@@ -51,15 +57,23 @@ export default function VrHudFrame({
   onToggleBoundaries,
   onExitVr,
 }: VrHudFrameProps): JSX.Element | null {
-  if (!availability.supported && sessionState === "inactive") {
+  const browserCanProbeVr =
+    typeof navigator !== "undefined" && typeof navigator.xr !== "undefined";
+  const shouldRender =
+    sessionState !== "inactive" ||
+    (offerEnabled &&
+      (availability.supported ||
+        availability.isHeadsetShell ||
+        availability.directWebXrAvailable ||
+        browserCanProbeVr));
+  if (!shouldRender) {
     return null;
   }
 
   const immersive = sessionState === "immersive";
   const busy =
     sessionState === "entering" ||
-    sessionState === "exiting" ||
-    sessionState === "handoff";
+    sessionState === "exiting";
 
   return (
     <div
@@ -76,11 +90,11 @@ export default function VrHudFrame({
         <div className="nh3d-vr-hud-actions">
           <button
             className="nh3d-vr-hud-button nh3d-vr-hud-button-primary"
-            disabled={busy}
+            disabled={busy || !offerEnabled}
             onClick={onSessionAction}
             type="button"
           >
-            {getSessionButtonLabel(availability, sessionState)}
+            {getSessionButtonLabel(offerEnabled, availability, sessionState)}
           </button>
           {immersive ? (
             <button

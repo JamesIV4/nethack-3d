@@ -197,6 +197,11 @@ type BillboardShardParticle = {
   flatOrientation: THREE.Quaternion;
 };
 
+type MonsterBillboardMesh = THREE.Mesh<
+  THREE.PlaneGeometry,
+  THREE.MeshBasicMaterial
+>;
+
 type CharacterCreationQuestionPayload = {
   text: string;
   choices: string;
@@ -349,6 +354,19 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private vrTileContextMode: boolean = false;
   private vrQuickPanelVisible: boolean = false;
   private destroyed: boolean = false;
+  private readonly handleVrAvailabilityRefreshBound = (): void => {
+    if (this.destroyed) {
+      return;
+    }
+    void this.refreshVrAvailability();
+  };
+  private readonly handleVrVisibilityChangeBound = (): void => {
+    if (this.destroyed || document.visibilityState !== "visible") {
+      return;
+    }
+    void this.refreshVrAvailability();
+  };
+  private vrAvailabilityPollingTimerId: number | null = null;
 
   private tileMap: TileMap = new Map();
   private glyphOverlayMap: GlyphOverlayMap = new Map();
@@ -594,7 +612,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private readonly elevatedMonsterZ = WALL_HEIGHT * 0.58;
   private entityBlobShadows: Map<string, THREE.Mesh> = new Map();
   private entityBlobShadowTexture: THREE.CanvasTexture | null = null;
-  private monsterBillboards: Map<string, THREE.Sprite> = new Map();
+  private monsterBillboards: Map<string, MonsterBillboardMesh> = new Map();
   private monsterBillboardTextures: Map<
     string,
     { texture: THREE.CanvasTexture; refCount: number }
@@ -725,6 +743,20 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private playerUiNumberOverlay: HTMLDivElement | null = null;
   private playerUiNumbersUseWorldProjectionForVr: boolean = false;
   private readonly playerUiNumberAnchor = new THREE.Vector3();
+  private readonly billboardParentWorldQuaternion = new THREE.Quaternion();
+  private readonly billboardParentWorldQuaternionInverse =
+    new THREE.Quaternion();
+  private readonly billboardFacingDirection = new THREE.Vector3();
+  private readonly billboardRightDirectionScratch = new THREE.Vector3();
+  private readonly billboardUpDirectionScratch = new THREE.Vector3();
+  private readonly billboardUpHintScratch = new THREE.Vector3();
+  private readonly billboardWorldUpAxisX = new THREE.Vector3(1, 0, 0);
+  private readonly billboardWorldUpAxisY = new THREE.Vector3(0, 1, 0);
+  private readonly billboardWorldUpAxisZ = new THREE.Vector3(0, 0, 1);
+  private readonly billboardWorldQuaternionScratch = new THREE.Quaternion();
+  private readonly billboardBasisMatrixScratch = new THREE.Matrix4();
+  private readonly billboardWorldPositionScratch = new THREE.Vector3();
+  private readonly billboardReferenceCameraPositionScratch = new THREE.Vector3();
   private readonly playerUiNumberScreenAnchor = new THREE.Vector3();
   private playerUiOverlayBounds = {
     left: Number.NaN,
@@ -1384,9 +1416,15 @@ class Nethack3DEngine implements Nethack3DEngineController {
       },
       getVrQuickPanelVisible: () => this.vrQuickPanelVisible,
       setXrAvailability: (state) => {
+        if (isLoggingEnabled()) {
+          logWithOriginal("[NH3D XR] bridge.setXrAvailability", state);
+        }
         this.uiAdapter.setXrAvailability(state);
       },
       setXrSessionState: (state) => {
+        if (isLoggingEnabled()) {
+          logWithOriginal("[NH3D XR] bridge.setXrSessionState", state);
+        }
         this.uiAdapter.setXrSessionState(state);
       },
       setPlayerUiNumbersWorldProjection: (enabled) => {
@@ -1405,14 +1443,59 @@ class Nethack3DEngine implements Nethack3DEngineController {
       bridge,
       domOverlayRoot: this.vrDomOverlayRoot,
     });
+    window.addEventListener("focus", this.handleVrAvailabilityRefreshBound);
+    window.addEventListener("pageshow", this.handleVrAvailabilityRefreshBound);
+    document.addEventListener(
+      "visibilitychange",
+      this.handleVrVisibilityChangeBound,
+    );
+    this.startVrAvailabilityPolling();
     void this.refreshVrAvailability();
   }
 
   private async refreshVrAvailability(): Promise<void> {
-    if (!this.vrSessionController) {
+    if (this.destroyed || !this.vrSessionController) {
       return;
     }
-    await this.vrSessionController.refreshAvailability(this.clientOptions);
+    if (isLoggingEnabled()) {
+      logWithOriginal("[NH3D XR] engine.refreshVrAvailability:start", {
+        vrOfferOnSupportedDevice: this.clientOptions.vrOfferOnSupportedDevice,
+        visibilityState:
+          typeof document === "undefined" ? "unknown" : document.visibilityState,
+      });
+    }
+    try {
+      await this.vrSessionController.refreshAvailability(this.clientOptions);
+      if (isLoggingEnabled()) {
+        logWithOriginal("[NH3D XR] engine.refreshVrAvailability:done");
+      }
+    } catch (error) {
+      logWithOriginal("[NH3D XR] engine.refreshVrAvailability:error", error);
+    }
+  }
+
+  private startVrAvailabilityPolling(): void {
+    if (typeof window === "undefined" || this.vrAvailabilityPollingTimerId !== null) {
+      return;
+    }
+    this.vrAvailabilityPollingTimerId = window.setInterval(() => {
+      if (
+        this.destroyed ||
+        document.visibilityState !== "visible" ||
+        this.isVrPresenting()
+      ) {
+        return;
+      }
+      void this.refreshVrAvailability();
+    }, 2000);
+  }
+
+  private stopVrAvailabilityPolling(): void {
+    if (this.vrAvailabilityPollingTimerId === null || typeof window === "undefined") {
+      return;
+    }
+    window.clearInterval(this.vrAvailabilityPollingTimerId);
+    this.vrAvailabilityPollingTimerId = null;
   }
 
   private isVrPresenting(): boolean {
@@ -1438,6 +1521,124 @@ class Nethack3DEngine implements Nethack3DEngineController {
       }
     }
     return xrCamera as THREE.PerspectiveCamera;
+  }
+
+  private getMonsterBillboardReferenceCamera(): THREE.Camera & THREE.Object3D {
+    if (this.isVrPresenting() && !this.isFpsMode()) {
+      // Tabletop VR keeps billboards aligned to the game's camera direction,
+      // not headset orientation, to avoid per-head-turn billboard yawing.
+      return this.camera;
+    }
+    return this.getActiveViewCamera();
+  }
+
+  private orientMonsterBillboardFromWorldDirection(
+    billboard: MonsterBillboardMesh,
+    worldDirection: THREE.Vector3,
+    worldUpHint: THREE.Vector3,
+  ): void {
+    this.billboardFacingDirection.copy(worldDirection);
+    if (this.billboardFacingDirection.lengthSq() < 1e-7) {
+      return;
+    }
+    this.billboardFacingDirection.normalize();
+
+    this.billboardRightDirectionScratch
+      .crossVectors(worldUpHint, this.billboardFacingDirection);
+    if (this.billboardRightDirectionScratch.lengthSq() < 1e-7) {
+      this.billboardRightDirectionScratch
+        .crossVectors(this.billboardWorldUpAxisZ, this.billboardFacingDirection);
+    }
+    if (this.billboardRightDirectionScratch.lengthSq() < 1e-7) {
+      this.billboardRightDirectionScratch
+        .crossVectors(this.billboardWorldUpAxisY, this.billboardFacingDirection);
+    }
+    if (this.billboardRightDirectionScratch.lengthSq() < 1e-7) {
+      this.billboardRightDirectionScratch
+        .crossVectors(this.billboardWorldUpAxisX, this.billboardFacingDirection);
+    }
+    if (this.billboardRightDirectionScratch.lengthSq() < 1e-7) {
+      return;
+    }
+    this.billboardRightDirectionScratch.normalize();
+
+    this.billboardUpDirectionScratch
+      .crossVectors(this.billboardRightDirectionScratch, this.billboardFacingDirection)
+      .normalize();
+
+    this.billboardBasisMatrixScratch.makeBasis(
+      this.billboardRightDirectionScratch,
+      this.billboardUpDirectionScratch,
+      this.billboardFacingDirection,
+    );
+    this.billboardWorldQuaternionScratch.setFromRotationMatrix(
+      this.billboardBasisMatrixScratch,
+    );
+    billboard.quaternion
+      .copy(this.billboardParentWorldQuaternionInverse)
+      .multiply(this.billboardWorldQuaternionScratch);
+  }
+
+  private updateMonsterBillboardOrientation(): void {
+    if (!this.monsterBillboards.size) {
+      return;
+    }
+
+    const referenceCamera = this.getMonsterBillboardReferenceCamera();
+    this.worldRoot.updateWorldMatrix(true, false);
+    this.worldRoot.getWorldQuaternion(this.billboardParentWorldQuaternion);
+    this.billboardParentWorldQuaternionInverse
+      .copy(this.billboardParentWorldQuaternion)
+      .invert();
+
+    const lockToCameraDirectionOnly = this.isVrPresenting() && !this.isFpsMode();
+    if (lockToCameraDirectionOnly) {
+      // Use the flat game camera direction (not headset pose) so tabletop
+      // billboards stay stable while preserving pitch (no vertical squish).
+      this.camera.getWorldDirection(this.billboardFacingDirection);
+      if (this.billboardFacingDirection.lengthSq() < 1e-7) {
+        this.billboardFacingDirection.set(
+          Math.sin(this.cameraYaw),
+          Math.cos(this.cameraYaw),
+          0,
+        );
+      } else {
+        this.billboardFacingDirection.normalize();
+      }
+      this.billboardFacingDirection.multiplyScalar(-1);
+      this.billboardUpHintScratch.copy(this.billboardWorldUpAxisZ);
+      for (const billboard of this.monsterBillboards.values()) {
+        this.orientMonsterBillboardFromWorldDirection(
+          billboard,
+          this.billboardFacingDirection,
+          this.billboardUpHintScratch,
+        );
+      }
+      return;
+    }
+
+    referenceCamera.getWorldPosition(this.billboardReferenceCameraPositionScratch);
+    this.billboardUpHintScratch.copy(referenceCamera.up);
+    if (this.billboardUpHintScratch.lengthSq() < 1e-7) {
+      this.billboardUpHintScratch.copy(
+        this.isVrPresenting()
+          ? this.billboardWorldUpAxisY
+          : this.billboardWorldUpAxisZ,
+      );
+    } else {
+      this.billboardUpHintScratch.normalize();
+    }
+    for (const billboard of this.monsterBillboards.values()) {
+      billboard.getWorldPosition(this.billboardWorldPositionScratch);
+      this.billboardFacingDirection
+        .copy(this.billboardReferenceCameraPositionScratch)
+        .sub(this.billboardWorldPositionScratch);
+      this.orientMonsterBillboardFromWorldDirection(
+        billboard,
+        this.billboardFacingDirection,
+        this.billboardUpHintScratch,
+      );
+    }
   }
 
   private addWorldObject(object: THREE.Object3D): void {
@@ -3333,14 +3534,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
       typeof window !== "undefined"
         ? window.location.protocol.toLowerCase()
         : "";
-    if (this.isLikelyCapacitorEnvironment()) {
-      return {
-        level: "info",
-        message:
-          "FMOD is using AudioWorklet copy mode (Capacitor WebView). This is expected unless the embedded host is configured for COOP/COEP and supports SharedArrayBuffer.",
-      };
-    }
-
     if (this.isLikelyElectronEnvironment() && protocol === "file:") {
       return {
         level: "info",
@@ -3379,20 +3572,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return /\belectron\b/i.test(navigator.userAgent || "");
   }
 
-  private isLikelyCapacitorEnvironment(): boolean {
-    if (typeof window === "undefined") {
-      return false;
-    }
-    const globalWithCapacitor = window as Window & {
-      Capacitor?: { isNativePlatform?: () => boolean };
-    };
-    if (globalWithCapacitor.Capacitor?.isNativePlatform?.() === true) {
-      return true;
-    }
-    const protocol = window.location.protocol.toLowerCase();
-    return protocol === "capacitor:" || protocol === "ionic:";
-  }
-
   private resolveDeploymentTarget(): string {
     const candidate =
       typeof import.meta.env.VITE_DEPLOY_TARGET === "string"
@@ -3410,13 +3589,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
         return {
           dspBufferLength: 1024,
           dspBufferCount: 4,
-          updateIntervalMs: 16,
-          resumeRecoveryIntervalMs: 1000,
-        };
-      case "capacitor":
-        return {
-          dspBufferLength: 2048,
-          dspBufferCount: 6,
           updateIntervalMs: 16,
           resumeRecoveryIntervalMs: 1000,
         };
@@ -6086,12 +6258,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private startMonsterBillboardDamageFlash(key: string): void {
-    const sprite = this.monsterBillboards.get(key);
-    if (!sprite) {
+    const billboard = this.monsterBillboards.get(key);
+    if (!billboard) {
       return;
     }
-    const material = sprite.material;
-    if (!(material instanceof THREE.SpriteMaterial)) {
+    const material = billboard.material;
+    if (!(material instanceof THREE.MeshBasicMaterial)) {
       return;
     }
 
@@ -6119,10 +6291,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
 
-    const sprite = this.monsterBillboards.get(key);
-    if (sprite && sprite.material instanceof THREE.SpriteMaterial) {
-      sprite.material.color.copy(this.glyphDamageFlashWhite);
-      sprite.material.needsUpdate = true;
+    const billboard = this.monsterBillboards.get(key);
+    if (billboard && billboard.material instanceof THREE.MeshBasicMaterial) {
+      billboard.material.color.copy(this.glyphDamageFlashWhite);
+      billboard.material.needsUpdate = true;
     }
 
     this.monsterBillboardDamageFlashes.delete(key);
@@ -6136,8 +6308,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const deltaMs = deltaSeconds * 1000;
     const entries = Array.from(this.monsterBillboardDamageFlashes.entries());
     for (const [key, state] of entries) {
-      const sprite = this.monsterBillboards.get(key);
-      if (!sprite || !(sprite.material instanceof THREE.SpriteMaterial)) {
+      const billboard = this.monsterBillboards.get(key);
+      if (
+        !billboard ||
+        !(billboard.material instanceof THREE.MeshBasicMaterial)
+      ) {
         this.stopMonsterBillboardDamageFlash(key);
         continue;
       }
@@ -6152,8 +6327,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.glyphDamageFlashColor
         .copy(this.glyphDamageFlashWhite)
         .lerp(this.glyphDamageFlashRed, intensity);
-      sprite.material.color.copy(this.glyphDamageFlashColor);
-      sprite.material.needsUpdate = true;
+      billboard.material.color.copy(this.glyphDamageFlashColor);
+      billboard.material.needsUpdate = true;
 
       if (progress >= 1) {
         this.stopMonsterBillboardDamageFlash(key);
@@ -9966,28 +10141,28 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.entityBlobShadows.delete(key);
   }
 
-  private detachMonsterBillboard(key: string): THREE.Sprite | null {
+  private detachMonsterBillboard(key: string): MonsterBillboardMesh | null {
     this.removeEntityBlobShadow(key);
     this.stopMonsterBillboardDamageFlash(key);
-    const sprite = this.monsterBillboards.get(key);
-    if (!sprite) {
+    const billboard = this.monsterBillboards.get(key);
+    if (!billboard) {
       return null;
     }
-    this.removeWorldObject(sprite);
+    this.removeWorldObject(billboard);
     this.monsterBillboards.delete(key);
-    return sprite;
+    return billboard;
   }
 
   private removeMonsterBillboard(key: string): void {
-    const sprite = this.detachMonsterBillboard(key);
-    if (!sprite) {
+    const billboard = this.detachMonsterBillboard(key);
+    if (!billboard) {
       return;
     }
-    const material = sprite.material;
-    if (material instanceof THREE.SpriteMaterial) {
+    const material = billboard.material;
+    if (material instanceof THREE.MeshBasicMaterial) {
       const textureKey =
-        typeof sprite.userData?.textureKey === "string"
-          ? sprite.userData.textureKey
+        typeof billboard.userData?.textureKey === "string"
+          ? billboard.userData.textureKey
           : "";
       if (textureKey) {
         this.releaseMonsterBillboardTexture(textureKey);
@@ -9996,6 +10171,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       }
       material.dispose();
     }
+    billboard.geometry.dispose();
   }
 
   private resolveMonsterBillboardTextureSource(texture: THREE.Texture): {
@@ -10638,16 +10814,16 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private spawnMonsterBillboardShardParticlesFromDescriptors(
-    sprite: THREE.Sprite,
+    billboard: MonsterBillboardMesh,
     descriptors: BillboardShardDescriptor[],
   ): void {
     if (!descriptors.length) {
       return;
     }
 
-    const basePosition = sprite.position;
-    const baseScaleX = Math.max(0.02, sprite.scale.x);
-    const baseScaleY = Math.max(0.02, sprite.scale.y);
+    const basePosition = billboard.position;
+    const baseScaleX = Math.max(0.02, billboard.scale.x);
+    const baseScaleY = Math.max(0.02, billboard.scale.y);
     const viewCamera = this.getActiveViewCamera();
     const toCamera = new THREE.Vector2(
       viewCamera.position.x - basePosition.x,
@@ -10794,13 +10970,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
     tileY: number,
   ): boolean {
     const key = `${tileX},${tileY}`;
-    const sprite = this.monsterBillboards.get(key);
-    if (!sprite) {
+    const billboard = this.monsterBillboards.get(key);
+    if (!billboard) {
       return false;
     }
 
-    const material = sprite.material;
-    if (!(material instanceof THREE.SpriteMaterial)) {
+    const material = billboard.material;
+    if (!(material instanceof THREE.MeshBasicMaterial)) {
       return false;
     }
 
@@ -10815,7 +10991,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
 
     this.spawnMonsterBillboardShardParticlesFromDescriptors(
-      sprite,
+      billboard,
       descriptors,
     );
     return true;
@@ -10937,17 +11113,18 @@ class Nethack3DEngine implements Nethack3DEngineController {
       ? `tile-billboard:${tileIndex}|bg:${backgroundRemovalTextureKey}`
       : `${this.getMonsterBillboardQualityKey()}|${glyphChar}|${textColor}`;
 
-    const spriteKey = key;
-    let sprite = this.monsterBillboards.get(spriteKey);
-    if (!sprite) {
+    const billboardKey = key;
+    let billboard = this.monsterBillboards.get(billboardKey);
+    if (!billboard) {
       const factory = useTiles
         ? () => this.createTileTexture(tileIndex, 1, true) // Pass true: billboards use transparency
         : () => this.createMonsterBillboardTexture(glyphChar, textColor);
 
       const texture = this.acquireMonsterBillboardTexture(textureKey, factory);
-      const material = new THREE.SpriteMaterial({
+      const material = new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
+        side: THREE.DoubleSide,
         depthWrite: false,
         depthTest: true,
         toneMapped: false,
@@ -10956,19 +11133,20 @@ class Nethack3DEngine implements Nethack3DEngineController {
       // Patch the monster/loot billboard to add vignette lighting
       this.patchMaterialForVignette(material);
 
-      sprite = new THREE.Sprite(material);
-      sprite.renderOrder = 910;
-      sprite.userData.textureKey = textureKey;
-      this.monsterBillboards.set(spriteKey, sprite);
-      this.addWorldObject(sprite);
+      billboard = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
+      billboard.renderOrder = 910;
+      billboard.userData.textureKey = textureKey;
+      billboard.userData.isMonsterBillboard = true;
+      this.monsterBillboards.set(billboardKey, billboard);
+      this.addWorldObject(billboard);
     } else {
       const existingTextureKey =
-        typeof sprite.userData?.textureKey === "string"
-          ? sprite.userData.textureKey
+        typeof billboard.userData?.textureKey === "string"
+          ? billboard.userData.textureKey
           : "";
       if (existingTextureKey !== textureKey) {
-        const material = sprite.material;
-        if (material instanceof THREE.SpriteMaterial) {
+        const material = billboard.material;
+        if (material instanceof THREE.MeshBasicMaterial) {
           if (existingTextureKey) {
             this.releaseMonsterBillboardTexture(existingTextureKey);
           } else if (material.map) {
@@ -10983,7 +11161,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
             factory,
           );
           material.needsUpdate = true;
-          sprite.userData.textureKey = textureKey;
+          billboard.userData.textureKey = textureKey;
         }
       }
     }
@@ -11009,9 +11187,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (isBoulder) {
       scaleBase = overrideSize(1, 1);
     }
-    sprite.scale.set(scaleBase, scaleBase, 1);
+    billboard.scale.set(scaleBase, scaleBase, 1);
 
-    const texture = sprite.material.map;
+    const texture = billboard.material.map;
     let verticalOffset = 1.0;
     let contentWidth = 1.0;
     if (texture && texture.image instanceof HTMLCanvasElement) {
@@ -11025,10 +11203,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     const floorZ = isWall ? WALL_HEIGHT + 0.03 : 0.028;
     const newZ = (verticalOffset - 0.5) * scaleBase + floorZ;
-    sprite.position.set(x * TILE_SIZE, -y * TILE_SIZE, newZ);
-    sprite.userData.elevatedZ = newZ;
-    sprite.userData.tileX = x;
-    sprite.userData.tileY = y;
+    billboard.position.set(x * TILE_SIZE, -y * TILE_SIZE, newZ);
+    billboard.userData.elevatedZ = newZ;
+    billboard.userData.tileX = x;
+    billboard.userData.tileY = y;
 
     const shadowScale = (scaleBase * contentWidth * 1.25) / (TILE_SIZE * 0.8);
     this.ensureEntityBlobShadow(key, x, y, shadowScale, isWall);
@@ -13246,6 +13424,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
     this.destroyed = true;
+    window.removeEventListener("focus", this.handleVrAvailabilityRefreshBound);
+    window.removeEventListener("pageshow", this.handleVrAvailabilityRefreshBound);
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVrVisibilityChangeBound,
+    );
+    this.stopVrAvailabilityPolling();
     this.vrSessionController?.dispose();
     this.vrSessionController = null;
     this.renderer.setAnimationLoop(null);
@@ -15747,16 +15932,25 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return this.getTileTargetFromPointerNdc(0, 0, true);
   }
 
-  private isOpaqueSpriteIntersection(
+  private isMonsterBillboardObject(
+    object: THREE.Object3D,
+  ): object is MonsterBillboardMesh {
+    return (
+      object instanceof THREE.Mesh &&
+      object.userData?.isMonsterBillboard === true
+    );
+  }
+
+  private isOpaqueMonsterBillboardIntersection(
     intersection: THREE.Intersection<THREE.Object3D>,
   ): boolean {
-    const sprite = intersection.object;
-    if (!(sprite instanceof THREE.Sprite)) {
+    const billboard = intersection.object;
+    if (!this.isMonsterBillboardObject(billboard)) {
       return true;
     }
 
-    const material = sprite.material;
-    if (!(material instanceof THREE.SpriteMaterial)) {
+    const material = billboard.material;
+    if (!(material instanceof THREE.MeshBasicMaterial)) {
       return true;
     }
 
@@ -15828,6 +16022,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (objects.length === 0) {
       return null;
     }
+    // Some raycast paths (controller setFromXRController) may not populate
+    // camera, so provide a fallback for material/UV-aware intersections.
+    if (!raycaster.camera) {
+      raycaster.camera = this.getActiveViewCamera();
+    }
     const intersections = raycaster.intersectObjects(objects, false);
     return this.resolveTileTargetFromIntersections(intersections, requireMesh);
   }
@@ -15842,8 +16041,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     for (const intersection of intersections) {
       const object = intersection.object;
-      if (object instanceof THREE.Sprite) {
-        if (!this.isOpaqueSpriteIntersection(intersection)) {
+      if (this.isMonsterBillboardObject(object)) {
+        if (!this.isOpaqueMonsterBillboardIntersection(intersection)) {
           continue;
         }
         const spriteTileX = Number(object.userData?.tileX);
@@ -18534,6 +18733,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.updateContextSelectionHighlight(timeMs);
     this.updateLightingCenter(deltaSeconds);
     this.vrSessionController?.update(deltaSeconds);
+    this.updateMonsterBillboardOrientation();
     if (this.clientOptions.minimap) {
       this.renderMinimapViewportOverlay();
     }

@@ -56,7 +56,7 @@ import { resetNh3dDefaultSoundPackVolumeLevelsToDefaults } from "../audio/sound-
 import SoundPackSettings, {
   type SoundPackDialogActions,
 } from "./SoundPackSettings";
-import VrHudFrame from "./vr/VrHudFrame";
+import VrAframeHudFrame from "./vr/VrAframeHudFrame";
 
 type DirectionChoice = {
   key?: string;
@@ -3549,14 +3549,17 @@ export default function App(): JSX.Element {
     };
   }, [statsBarHeight]);
 
+  const isVrImmersiveSession = xrSessionState === "immersive";
+  const showVrTouchControls = isVrImmersiveSession && !isFpsPlayMode;
+  const shouldUseMobileGameplayLayout = isMobileViewport || showVrTouchControls;
   const isMobileGameRunning =
-    isMobileViewport &&
+    shouldUseMobileGameplayLayout &&
     characterCreationConfig !== null &&
     connectionState === "running" &&
     !loadingVisible;
 
   const isDesktopGameRunning =
-    !isMobileViewport &&
+    !isMobileGameRunning &&
     characterCreationConfig !== null &&
     connectionState === "running" &&
     !loadingVisible;
@@ -3775,7 +3778,7 @@ export default function App(): JSX.Element {
     : 0;
   const showPickupActionButtons =
     Boolean(question?.isPickupDialog) &&
-    (questionSelectableMenuItemCount > 1 || isMobileViewport);
+    (questionSelectableMenuItemCount > 1 || isMobileGameRunning);
   const inventoryContextActionsEnabled =
     inventory.contextActionsEnabled !== false;
   const inventoryCloseInstructionText = inventoryContextActionsEnabled
@@ -5345,9 +5348,10 @@ export default function App(): JSX.Element {
         id="nh3d-vr-dom-overlay-root"
         ref={vrDomOverlayRootRef}
       >
-        <VrHudFrame
+        <VrAframeHudFrame
           availability={xrAvailability}
           clientOptions={clientOptions}
+          offerEnabled={clientOptions.vrOfferOnSupportedDevice}
           onExitVr={handleVrExitToFlat}
           onSessionAction={handleVrSessionAction}
           onToggleBoundaries={handleVrToggleBoundaries}
@@ -7736,7 +7740,9 @@ export default function App(): JSX.Element {
       ) : null}
 
       {isMobileGameRunning ? (
-        <div className="nh3d-mobile-bottom-bar">
+        <div
+          className={`nh3d-mobile-bottom-bar${showVrTouchControls ? " is-vr-touch" : ""}`}
+        >
           <button
             className="nh3d-mobile-bottom-button"
             onClick={() => {
@@ -7809,6 +7815,35 @@ export default function App(): JSX.Element {
           </button>
         </div>
       ) : null}
+      {isMobileGameRunning && showVrTouchControls ? (
+        <div className="nh3d-vr-tilt-slider">
+          <label className="nh3d-vr-tilt-slider-label" htmlFor="nh3d-vr-tilt-slider-input">
+            Board tilt
+          </label>
+          <input
+            className="nh3d-vr-tilt-slider-input"
+            id="nh3d-vr-tilt-slider-input"
+            max={45}
+            min={0}
+            onChange={(event) => {
+              const nextTiltDegrees = Number.parseFloat(event.target.value);
+              if (!Number.isFinite(nextTiltDegrees)) {
+                return;
+              }
+              updateLiveClientOptions((current) => ({
+                ...current,
+                vrTabletopTiltDegrees: nextTiltDegrees,
+              }));
+            }}
+            step={0.5}
+            type="range"
+            value={clientOptions.vrTabletopTiltDegrees}
+          />
+          <div className="nh3d-vr-tilt-slider-value">
+            {`${Math.round(clientOptions.vrTabletopTiltDegrees)}deg`}
+          </div>
+        </div>
+      ) : null}
 
       <div
         className={`${positionRequest ? "is-visible" : ""} nh3d-overflow-glow-frame`.trim()}
@@ -7819,7 +7854,7 @@ export default function App(): JSX.Element {
           data-nh3d-overflow-glow
           data-nh3d-overflow-glow-host="parent"
         >
-          {isMobileViewport && positionRequest ? (
+          {isMobileGameRunning && positionRequest ? (
             <button
               aria-label="Close position prompt"
               className="nh3d-position-dialog-close"

@@ -43,6 +43,20 @@ export default class VrVisuals {
     number,
     (event: DisconnectedControllerEvent) => void
   >();
+  private readonly warningPanelRoot: THREE.Group;
+  private readonly warningPanelMesh: THREE.Mesh<
+    THREE.PlaneGeometry,
+    THREE.MeshBasicMaterial
+  >;
+  private readonly warningPanelCanvas: HTMLCanvasElement;
+  private readonly warningPanelContext: CanvasRenderingContext2D;
+  private readonly warningPanelTexture: THREE.CanvasTexture;
+  private readonly warningPanelForward = new THREE.Vector3();
+  private readonly warningPanelPosition = new THREE.Vector3();
+  private warningPanelMessage =
+    "DOM overlay unavailable in this session.";
+  private warningPanelHovered = false;
+  private warningPanelFingerprint = "";
 
   constructor(
     renderer: THREE.WebGLRenderer,
@@ -54,6 +68,17 @@ export default class VrVisuals {
     this.worldRoot = worldRoot;
     this.boundaryLine = this.createBoundaryLine();
     this.worldRoot.add(this.boundaryLine);
+
+    const warningPanel = this.createWarningPanel();
+    this.warningPanelRoot = warningPanel.root;
+    this.warningPanelMesh = warningPanel.mesh;
+    this.warningPanelCanvas = warningPanel.canvas;
+    this.warningPanelContext = warningPanel.context;
+    this.warningPanelTexture = warningPanel.texture;
+    this.warningPanelRoot.visible = false;
+    this.scene.add(this.warningPanelRoot);
+    this.redrawWarningPanel();
+
     this.initControllers();
   }
 
@@ -95,6 +120,119 @@ export default class VrVisuals {
     return line;
   }
 
+  private createWarningPanel(): {
+    root: THREE.Group;
+    mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+    canvas: HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
+    texture: THREE.CanvasTexture;
+  } {
+    const root = new THREE.Group();
+    root.name = "nh3d-vr-warning-panel-root";
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 1024;
+    canvas.height = 360;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Failed to create VR warning panel canvas context");
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    texture.colorSpace = THREE.SRGBColorSpace;
+
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 0.96,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.26, 0.44), material);
+    mesh.name = "nh3d-vr-warning-panel";
+    mesh.renderOrder = 2400;
+    root.add(mesh);
+
+    return { root, mesh, canvas, context, texture };
+  }
+
+  private redrawWarningPanel(): void {
+    const fingerprint = `${this.warningPanelMessage}|${this.warningPanelHovered ? "hover" : "idle"}`;
+    if (fingerprint === this.warningPanelFingerprint) {
+      return;
+    }
+    this.warningPanelFingerprint = fingerprint;
+
+    const context = this.warningPanelContext;
+    const canvas = this.warningPanelCanvas;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, "rgba(22, 32, 46, 0.96)");
+    gradient.addColorStop(1, "rgba(8, 16, 28, 0.98)");
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    context.strokeStyle = this.warningPanelHovered
+      ? "rgba(255, 246, 168, 1)"
+      : "rgba(255, 246, 168, 0.82)";
+    context.lineWidth = this.warningPanelHovered ? 8 : 6;
+    context.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+    context.fillStyle = "#fff6a8";
+    context.font = "bold 50px 'Courier New', monospace";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText("VR WARNING", canvas.width * 0.5, 86);
+
+    context.fillStyle = "rgba(220, 236, 255, 0.96)";
+    context.font = "30px 'Courier New', monospace";
+    context.fillText(this.warningPanelMessage, canvas.width * 0.5, 170);
+
+    context.fillStyle = this.warningPanelHovered
+      ? "rgba(255, 246, 168, 1)"
+      : "rgba(188, 210, 232, 0.92)";
+    context.font = "bold 28px 'Courier New', monospace";
+    context.fillText("Trigger / A to dismiss", canvas.width * 0.5, 262);
+
+    this.warningPanelTexture.needsUpdate = true;
+  }
+
+  setWarningPanelMessage(message: string): void {
+    const next = String(message || "").trim();
+    this.warningPanelMessage =
+      next.length > 0 ? next : "DOM overlay unavailable in this session.";
+    this.redrawWarningPanel();
+  }
+
+  setWarningPanelHover(hovered: boolean): void {
+    const next = Boolean(hovered);
+    if (this.warningPanelHovered === next) {
+      return;
+    }
+    this.warningPanelHovered = next;
+    this.redrawWarningPanel();
+  }
+
+  resolveWarningPanelHitFromRay(
+    raycaster: THREE.Raycaster,
+  ): { distance: number } | null {
+    if (!this.warningPanelRoot.visible) {
+      return null;
+    }
+    const hit = raycaster.intersectObject(this.warningPanelMesh, false)[0];
+    if (!hit) {
+      return null;
+    }
+    return { distance: hit.distance };
+  }
+
   private initControllers(): void {
     for (let index = 0; index < 2; index += 1) {
       const controller = this.renderer.xr.getController(index);
@@ -118,8 +256,7 @@ export default class VrVisuals {
       this.controllerSpaces.push(visual);
 
       const onConnected = (event: ConnectedControllerEvent): void => {
-        const handedness =
-          event.data?.handedness === "left" ? "left" : "right";
+        const handedness = event.data?.handedness === "left" ? "left" : "right";
         visual.hand = handedness;
         visual.inputSource = event.data ?? null;
         while (modelRoot.children.length > 0) {
@@ -171,6 +308,25 @@ export default class VrVisuals {
     visual.rayLine.scale.z = Math.max(0.25, distance);
   }
 
+  updateWarningPanel(
+    camera: THREE.Camera & THREE.Object3D,
+    visible: boolean,
+  ): void {
+    this.warningPanelRoot.visible = visible;
+    if (!visible) {
+      this.setWarningPanelHover(false);
+      return;
+    }
+    camera.getWorldPosition(this.warningPanelPosition);
+    camera.getWorldDirection(this.warningPanelForward);
+    this.warningPanelForward.normalize();
+    this.warningPanelRoot.position
+      .copy(this.warningPanelPosition)
+      .addScaledVector(this.warningPanelForward, 1.02);
+    this.warningPanelRoot.quaternion.copy(camera.quaternion);
+    this.warningPanelRoot.translateY(-0.14);
+  }
+
   resetRayLengths(): void {
     for (const visual of this.controllerSpaces) {
       visual.rayLine.scale.z = 8;
@@ -208,5 +364,10 @@ export default class VrVisuals {
     if (boundaryMaterial instanceof THREE.Material) {
       boundaryMaterial.dispose();
     }
+
+    this.scene.remove(this.warningPanelRoot);
+    this.warningPanelMesh.geometry.dispose();
+    this.warningPanelMesh.material.map?.dispose();
+    this.warningPanelMesh.material.dispose();
   }
 }

@@ -12,16 +12,32 @@ const tabletopMinScale = 0.05;
 const tabletopMaxScale = 0.45;
 const fpsWorldScale = 1.85;
 const followHalfLifeMs = 110;
+const defaultTabletopAnchorHeight = 0.92;
+const defaultTabletopTiltDegrees = 20;
+const minTabletopTiltDegrees = 0;
+const maxTabletopTiltDegrees = 45;
 
 export default class VrWorldManipulator {
   private readonly worldRoot: THREE.Group;
-  private readonly baseQuaternion = new THREE.Quaternion().setFromEuler(
+  private readonly fpsQuaternion = new THREE.Quaternion().setFromEuler(
     new THREE.Euler(-Math.PI / 2, 0, 0),
   );
-  private readonly tabletopAnchor = new THREE.Vector3(0, 1.05, -1.25);
-  private readonly tabletopManualPosition = new THREE.Vector3(0, 1.05, -1.25);
+  private readonly tabletopQuaternion = new THREE.Quaternion();
+  private readonly tabletopEuler = new THREE.Euler(-Math.PI / 2, 0, 0);
+  private readonly tabletopAnchor = new THREE.Vector3(
+    0,
+    defaultTabletopAnchorHeight,
+    -1.25,
+  );
+  private readonly tabletopManualPosition = new THREE.Vector3(
+    0,
+    defaultTabletopAnchorHeight,
+    -1.25,
+  );
   private readonly targetPosition = new THREE.Vector3();
   private readonly playerLocalScratch = new THREE.Vector3();
+  private readonly playerWorldScratch = new THREE.Vector3();
+  private readonly gripDeltaScratch = new THREE.Vector3();
   private readonly leftGrip: GripState = {
     active: false,
     currentPosition: new THREE.Vector3(),
@@ -37,9 +53,14 @@ export default class VrWorldManipulator {
   private dualGripStartScale = 0.14;
   private active = false;
   private lastPlayMode: PlayMode | null = null;
+  private tabletopTiltRadians = THREE.MathUtils.degToRad(
+    defaultTabletopTiltDegrees,
+  );
 
   constructor(worldRoot: THREE.Group) {
     this.worldRoot = worldRoot;
+    this.tabletopEuler.x = -Math.PI / 2 + this.tabletopTiltRadians;
+    this.tabletopQuaternion.setFromEuler(this.tabletopEuler);
   }
 
   enter(playMode: PlayMode): void {
@@ -93,9 +114,10 @@ export default class VrWorldManipulator {
     if (!this.active) {
       return;
     }
-    this.syncMode(playMode);
+    this.syncTabletopTilt(clientOptions.vrTabletopTiltDegrees);
+    this.syncMode(playMode, clientOptions);
     if (playMode === "fps") {
-      this.worldRoot.quaternion.copy(this.baseQuaternion);
+      this.worldRoot.quaternion.copy(this.fpsQuaternion);
       this.worldRoot.scale.setScalar(fpsWorldScale);
       this.worldRoot.position.set(
         -playerTile.x * fpsWorldScale,
@@ -123,7 +145,7 @@ export default class VrWorldManipulator {
     } else {
       const singleGrip = this.leftGrip.active ? this.leftGrip : this.rightGrip;
       if (singleGrip.active) {
-        const delta = new THREE.Vector3().subVectors(
+        const delta = this.gripDeltaScratch.subVectors(
           singleGrip.currentPosition,
           singleGrip.previousPosition,
         );
@@ -135,16 +157,23 @@ export default class VrWorldManipulator {
       }
     }
 
-    this.worldRoot.quaternion.copy(this.baseQuaternion);
+    this.worldRoot.quaternion.copy(this.tabletopQuaternion);
     this.worldRoot.scale.setScalar(this.tabletopScale);
     this.playerLocalScratch.set(playerTile.x, -playerTile.y, 0).multiplyScalar(
       this.tabletopScale,
     );
+    this.playerWorldScratch
+      .copy(this.playerLocalScratch)
+      // Follow translation should stay stable even when tabletop tilt changes.
+      .applyQuaternion(this.fpsQuaternion);
     const desiredPosition = clientOptions.vrFollowPlayer
       ? this.targetPosition
           .copy(this.tabletopAnchor)
-          .sub(this.playerLocalScratch)
+          .sub(this.playerWorldScratch)
       : this.targetPosition.copy(this.tabletopManualPosition);
+    if (clientOptions.vrFollowPlayer) {
+      desiredPosition.y = this.tabletopAnchor.y;
+    }
 
     if (clientOptions.vrFollowPlayer && !this.leftGrip.active && !this.rightGrip.active) {
       const alpha =
@@ -171,18 +200,44 @@ export default class VrWorldManipulator {
     }
   }
 
-  private syncMode(playMode: PlayMode): void {
+  private syncMode(
+    playMode: PlayMode,
+    clientOptions: Pick<Nh3dClientOptions, "vrFollowPlayer"> | null = null,
+  ): void {
     if (this.lastPlayMode === playMode) {
       return;
     }
     this.lastPlayMode = playMode;
     if (playMode === "normal") {
-      this.worldRoot.quaternion.copy(this.baseQuaternion);
+      this.worldRoot.quaternion.copy(this.tabletopQuaternion);
       this.worldRoot.scale.setScalar(this.tabletopScale);
-      this.worldRoot.position.copy(this.tabletopAnchor);
+      const shouldFollowPlayer =
+        clientOptions?.vrFollowPlayer !== false;
+      this.worldRoot.position.copy(
+        shouldFollowPlayer ? this.tabletopAnchor : this.tabletopManualPosition,
+      );
       return;
     }
     this.leftGrip.active = false;
     this.rightGrip.active = false;
+  }
+
+  private syncTabletopTilt(rawTiltDegrees: number): void {
+    const tiltDegrees = Number.isFinite(rawTiltDegrees)
+      ? rawTiltDegrees
+      : defaultTabletopTiltDegrees;
+    const clampedTiltRadians = THREE.MathUtils.degToRad(
+      THREE.MathUtils.clamp(
+        tiltDegrees,
+        minTabletopTiltDegrees,
+        maxTabletopTiltDegrees,
+      ),
+    );
+    if (Math.abs(clampedTiltRadians - this.tabletopTiltRadians) <= 1e-5) {
+      return;
+    }
+    this.tabletopTiltRadians = clampedTiltRadians;
+    this.tabletopEuler.x = -Math.PI / 2 + clampedTiltRadians;
+    this.tabletopQuaternion.setFromEuler(this.tabletopEuler);
   }
 }

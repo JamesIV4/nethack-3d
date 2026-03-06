@@ -88,20 +88,14 @@ export type NewGamePromptState = {
 };
 
 export type Nh3dVrPointerHand = "left" | "right";
-export type XrLaunchMode = "webxr" | "browser-handoff" | "unavailable";
-export type XrSessionState =
-  | "inactive"
-  | "entering"
-  | "immersive"
-  | "exiting"
-  | "handoff";
+export type XrLaunchMode = "webxr" | "unavailable";
+export type XrSessionState = "inactive" | "entering" | "immersive" | "exiting";
 
 export type XrAvailabilityState = {
   supported: boolean;
   launchMode: XrLaunchMode;
   directWebXrAvailable: boolean;
   isHeadsetShell: boolean;
-  browserHandoffUrl: string | null;
   buttonLabel: string;
   statusText: string;
   usingDomOverlay: boolean;
@@ -159,6 +153,7 @@ export type Nh3dClientOptions = {
   vrFollowPlayer: boolean;
   vrShowLevelBoundaries: boolean;
   vrPreferredPointerHand: Nh3dVrPointerHand;
+  vrTabletopTiltDegrees: number;
   fpsFov: number;
   fpsLookSensitivityX: number;
   fpsLookSensitivityY: number;
@@ -222,9 +217,8 @@ export const defaultXrAvailabilityState: XrAvailabilityState = {
   launchMode: "unavailable",
   directWebXrAvailable: false,
   isHeadsetShell: false,
-  browserHandoffUrl: null,
-  buttonLabel: "VR Unavailable",
-  statusText: "VR is unavailable on this device.",
+  buttonLabel: "Check VR",
+  statusText: "Checking VR support...",
   usingDomOverlay: false,
 };
 
@@ -234,6 +228,7 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
   vrFollowPlayer: true,
   vrShowLevelBoundaries: false,
   vrPreferredPointerHand: "right",
+  vrTabletopTiltDegrees: 20,
   fpsFov: isMobilePortrait ? 95 : 62,
   fpsLookSensitivityX: isMobile ? 1.5 : 1,
   fpsLookSensitivityY: isMobile ? 1.5 : 1,
@@ -751,6 +746,18 @@ export function normalizeNh3dClientOptions(
         : defaultNh3dClientOptions.vrShowLevelBoundaries,
     vrPreferredPointerHand:
       overrides?.vrPreferredPointerHand === "left" ? "left" : "right",
+    vrTabletopTiltDegrees: Number(
+      Math.max(
+        0,
+        Math.min(
+          45,
+          typeof overrides?.vrTabletopTiltDegrees === "number" &&
+            Number.isFinite(overrides.vrTabletopTiltDegrees)
+            ? overrides.vrTabletopTiltDegrees
+            : defaultNh3dClientOptions.vrTabletopTiltDegrees,
+        ),
+      ).toFixed(1),
+    ),
     fpsFov,
     fpsLookSensitivityX,
     fpsLookSensitivityY,

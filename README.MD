@@ -2,11 +2,6 @@
 
 Play in browser: https://jamesiv4.github.io/nethack-3d/
 
-## iOS App
-
-On iPhone/iPad, open the play link in Safari, tap the Share button, then tap `Add to Home Screen`.
-Launch it from your Home Screen for a web app fullscreen experience.
-
 NetHack 3D lets you play classic NetHack in a fully interactive 3D dungeon, in your browser, phone or desktop PC.
 
 ## Gameplay video link:
@@ -45,25 +40,153 @@ NetHack 3D lets you play classic NetHack in a fully interactive 3D dungeon, in y
 - Inventory context actions for common item interactions without typing command sequences.
 - Adjustable client options including FPS FOV, look sensitivity, inverted look, antialiasing, and minimap visibility.
 
-## Run Locally
+## Supported Targets
+
+- Web browser
+- Meta Quest Browser via WebXR
+- GitHub Pages hosted web build
+- Windows desktop via Electron
+- iPhone / iPad via Safari `Add to Home Screen`
+
+## Common Setup
+
+Run this once after cloning the repo:
+
+1. Install a current Node.js release.
+2. `npm i`
+
+The helper scripts below already call the platform-specific build steps they need. In most cases you do not need to run `build:electron` directly unless you want just the intermediate web bundle.
+
+## Web Browser / Local Development
+
+Use this for normal local development in a desktop browser.
+
+First-time setup:
 
 1. `npm i`
-2. `npm run dev`
-3. Open `http://localhost:5173/`
 
-## Scripts
+Development:
 
-- `npm run dev` - Start Vite dev server.
-- `npm run build` - Build production bundles.
-- `npm run build:electron` - Build bundles with Electron-safe relative asset paths.
-- `npm run preview` - Preview production build locally.
-- `npm run electron:dev` - Run Electron against the Vite dev server.
-- `npm run electron:dist:win` - Build and package a Windows NSIS `.exe` installer (x64) to `release/`.
-- `npm run electron:dist:win:portable` - Build and package a portable Windows `.exe` (x64) to `release/`.
-- `npm run android:add` - Create the native Android project with Capacitor (run once).
-- `npm run android:sync` - Build web assets and sync them into the Android project.
-- `npm run android:open` - Open the Android project in Android Studio.
-- `npm run android:run` - Build web assets and run on a connected Android device/emulator.
+1. `npm run dev`
+2. Open `http://localhost:5173/`
+
+Production bundle:
+
+1. `npm run build`
+2. `npm run preview`
+
+Output:
+
+- `dist/`
+
+Optional helpers:
+
+- `npm run dev:isolated` - Start the dev server with cross-origin isolation headers enabled.
+- `npm run preview:isolated` - Preview the production build with cross-origin isolation headers enabled.
+
+## Meta Quest 3 / Quest Browser (WebXR)
+
+To play in VR, open the [Play in browser](https://jamesiv4.github.io/nethack-3d/) link in your VR headset's browser, enable the in-game VR option, and use `Enter VR`.
+
+Local VR development first-time setup:
+
+1. `npm i`
+2. Install Android Platform Tools so the `adb` command is available.
+3. Enable Developer Mode on the headset.
+
+Localhost development from a Quest connected to your PC:
+
+1. Connect the Quest to your PC over USB.
+2. Run `npm run vr:quest:dev`.
+3. In Quest Browser, open `http://localhost:5173/`.
+4. In the app, make sure the VR option is enabled, then use `Enter VR`.
+5. Go to chrome://inspect/#devices on your PC to debug the app.
+
+What `npm run vr:quest:dev` does for you:
+
+- Verifies `adb` is installed.
+- Verifies the headset is connected over USB.
+- Runs `adb reverse tcp:5173 tcp:5173`.
+- Starts the local Vite dev server on port `5173`.
+
+Manual fallback if you want to run the steps yourself:
+
+1. Start the local dev server on the PC with `npm run dev`.
+2. Verify ADB can see the headset with `adb devices`.
+3. Forward the Vite port into the headset with `adb reverse tcp:5173 tcp:5173`.
+4. In Quest Browser, open `http://localhost:5173/`.
+
+Notes:
+
+- `http://localhost:5173/` in the headset only works after `adb reverse`. On the Quest, `localhost` normally refers to the headset itself, not your PC.
+- Plain `http://<your-pc-ip>:5173/` is not a secure context, so WebXR may not be available there.
+- If VR still shows unavailable in Quest Browser, make sure Desktop mode is off for this tab and reload the page.
+- If the USB dev flow is inconvenient, use the GitHub Pages build below. That gives Quest Browser an HTTPS URL, which is the normal hosted WebXR path.
+- `npm run vr:quest:dev:isolated` does the same setup but starts the dev server with cross-origin isolation headers enabled.
+
+Hosted Quest Browser flow:
+
+1. Build the hosted bundle with `npm run build:github-pages`, or push to `main` to let GitHub Actions deploy it.
+2. Open `https://jamesiv4.github.io/nethack-3d/` in Quest Browser.
+3. In the app, make sure the VR option is enabled, then use `Enter VR`.
+
+## GitHub Pages Hosted Web Build
+
+Use this for the public hosted browser build at `https://jamesiv4.github.io/nethack-3d/`.
+
+First-time setup:
+
+1. `npm i`
+2. In GitHub repository settings, set `Pages -> Source` to `GitHub Actions`.
+
+Local build script:
+
+1. `npm run build:github-pages`
+
+Deploy:
+
+1. Push to `main`, or run `.github/workflows/deploy-gh-pages.yml` manually.
+2. The workflow builds `dist/` and deploys it to GitHub Pages.
+
+## Windows Desktop (Electron)
+
+Use this for the native Windows desktop build.
+
+First-time setup:
+
+1. `npm i`
+
+Development:
+
+1. `npm run electron:dev`
+
+Production builds:
+
+1. `npm run electron:dist:win` - NSIS installer build
+2. `npm run electron:dist:win:portable` - portable `.exe`
+3. `npm run electron:pack:win` - unpacked app directory
+
+Output:
+
+- `release/`
+
+Optional helper:
+
+- `npm run electron:dev:isolated` - Electron dev mode with cross-origin isolation enabled.
+
+## iPhone / iPad
+
+There is no native iOS packaging flow in this repo.
+
+Use the hosted web build instead:
+
+1. Open `https://jamesiv4.github.io/nethack-3d/` in Safari.
+2. Tap `Share`.
+3. Tap `Add to Home Screen`.
+4. Launch it from your Home Screen for the installed web app experience.
+
+## Utility Scripts
+
 - `npm run glyphs:generate` - Regenerate glyph catalog from runtime artifacts.
 - `npm run glyphs:check` - Verify checked-in glyph catalog is up to date.
 
@@ -77,13 +200,3 @@ NetHack 3D lets you play classic NetHack in a fully interactive 3D dungeon, in y
 - Runtime worker bridge: `src/runtime/WorkerRuntimeBridge.ts`
 - Worker runtime host: `src/runtime/runtime-worker.ts`
 - NetHack callback adapter/state machine: `src/runtime/LocalNetHackRuntime.ts`
-
-## GitHub Pages Deploy
-
-1. Push this repo to GitHub.
-2. In repository settings, go to `Settings > Pages`.
-3. Set `Source` to `GitHub Actions`.
-4. Ensure your deploy branch matches `.github/workflows/deploy-gh-pages.yml` (`main` by default).
-5. Push to `main` (or run the workflow manually).
-
-The workflow builds with Vite and deploys the `dist/` folder.

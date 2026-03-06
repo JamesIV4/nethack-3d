@@ -10,6 +10,7 @@ type Nh3dSoundEffectDefinitionShape = {
 
 export const nh3dSoundEffectDefinitions = [
   { key: "player-walk", label: "Player walk" },
+  { key: "player-run", label: "Player run" },
   // { key: "monster-footstep", label: "Monster footstep" },
   { key: "hit", label: "Hit" },
   { key: "monster-killed", label: "Monster killed (player)" },

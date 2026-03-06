@@ -39,6 +39,9 @@ export default class VrInputRouter {
       const current = this.readButtons(visual.inputSource?.gamepad ?? null);
       const previous =
         this.previousButtons.get(visual.hand) ?? this.createEmptyButtons();
+      const primaryPressed =
+        (current.triggerPressed && !previous.triggerPressed) ||
+        (current.facePrimaryPressed && !previous.facePrimaryPressed);
 
       this.gripPositionScratch.setFromMatrixPosition(visual.grip.matrixWorld);
       this.worldManipulator.setGripPose(
@@ -56,9 +59,6 @@ export default class VrInputRouter {
       }
 
       if (!quickPanelVisible && activeTarget) {
-        const primaryPressed =
-          (current.triggerPressed && !previous.triggerPressed) ||
-          (current.facePrimaryPressed && !previous.facePrimaryPressed);
         if (primaryPressed) {
           this.bridge.runVrPrimaryAction(activeTarget);
         }

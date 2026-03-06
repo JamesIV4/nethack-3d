@@ -1,9 +1,6 @@
 import * as THREE from "three";
-import {
-  getDefaultVrBrowserLaunchUrl,
-  launchVrBrowserHandoff,
-  resolveXrAvailability,
-} from "../../platform/xr";
+import { resolveXrAvailability } from "../../platform/xr";
+import { isLoggingEnabled, logWithOriginal } from "../../logging";
 import type { Nh3dClientOptions, XrAvailabilityState } from "../ui-types";
 import VrHudFollower from "./VrHudFollower";
 import VrInputRouter from "./VrInputRouter";
@@ -34,12 +31,12 @@ export default class VrSessionController {
     launchMode: "unavailable",
     directWebXrAvailable: false,
     isHeadsetShell: false,
-    browserHandoffUrl: getDefaultVrBrowserLaunchUrl(),
-    buttonLabel: "VR Unavailable",
-    statusText: "VR is unavailable on this device.",
+    buttonLabel: "Check VR",
+    statusText: "Checking VR support...",
     usingDomOverlay: false,
   };
   private activeSession: XRSession | null = null;
+  private activationRetryCleanup: (() => void) | null = null;
   private readonly handleSessionEndBound = (): void => {
     this.handleSessionEnded();
   };
@@ -55,47 +52,74 @@ export default class VrSessionController {
     this.hudFollower = new VrHudFollower(this.domOverlayRoot);
   }
 
+  private logDebug(message: string, details?: unknown): void {
+    if (!isLoggingEnabled()) {
+      return;
+    }
+    if (typeof details === "undefined") {
+      logWithOriginal("[NH3D VR]", message);
+      return;
+    }
+    logWithOriginal("[NH3D VR]", message, details);
+  }
+
   async refreshAvailability(clientOptions: Nh3dClientOptions): Promise<void> {
+    this.logDebug("refreshAvailability:start", {
+      vrOfferOnSupportedDevice: clientOptions.vrOfferOnSupportedDevice,
+    });
     this.availability = await resolveXrAvailability({
       vrOfferOnSupportedDevice: clientOptions.vrOfferOnSupportedDevice,
     });
+    this.logDebug("refreshAvailability:resolved", this.availability);
     this.bridge.setXrAvailability(this.availability);
   }
 
   async enter(clientOptions: Nh3dClientOptions): Promise<void> {
-    if (this.activeSession || this.renderer.xr.isPresenting) {
-      return;
-    }
-    await this.refreshAvailability(clientOptions);
-    if (!this.availability.supported) {
-      return;
-    }
+    await this.enterInternal(clientOptions, { skipRefresh: false });
+  }
 
-    if (this.availability.launchMode === "browser-handoff") {
-      this.bridge.setXrSessionState("handoff");
-      await launchVrBrowserHandoff(this.availability.browserHandoffUrl ?? undefined);
-      this.bridge.setXrSessionState("inactive");
+  private buildBaseSessionInit(): XRSessionInit {
+    return {
+      optionalFeatures: ["local-floor", "bounded-floor"],
+    };
+  }
+
+  private async enterInternal(
+    clientOptions: Nh3dClientOptions,
+    options: {
+      skipRefresh: boolean;
+    },
+  ): Promise<void> {
+    if (this.activeSession || this.renderer.xr.isPresenting) {
+      this.logDebug("enterInternal:skipped-already-presenting");
+      return;
+    }
+    if (!options.skipRefresh) {
+      await this.refreshAvailability(clientOptions);
+    }
+    if (!this.availability.supported) {
+      this.logDebug("enterInternal:blocked-unsupported", this.availability);
       return;
     }
 
     const xr = navigator.xr;
     if (!xr) {
+      this.logDebug("enterInternal:blocked-missing-navigator-xr");
       return;
     }
+    this.logDebug("enterInternal:requesting-session", {
+      launchMode: this.availability.launchMode,
+      directWebXrAvailable: this.availability.directWebXrAvailable,
+      isHeadsetShell: this.availability.isHeadsetShell,
+    });
     this.bridge.setXrSessionState("entering");
-    const sessionInit: XRSessionInit = {
-      optionalFeatures: ["local-floor", "bounded-floor"],
-    };
-    if (this.domOverlayRoot) {
-      sessionInit.optionalFeatures = [
-        ...(sessionInit.optionalFeatures ?? []),
-        "dom-overlay",
-      ];
-      sessionInit.domOverlay = { root: this.domOverlayRoot };
-    }
 
     try {
-      const session = await xr.requestSession("immersive-vr", sessionInit);
+      this.clearActivationRetry();
+      const session = await xr.requestSession(
+        "immersive-vr",
+        this.buildBaseSessionInit(),
+      );
       session.addEventListener("end", this.handleSessionEndBound);
       await this.renderer.xr.setSession(session);
       this.activeSession = session;
@@ -104,23 +128,28 @@ export default class VrSessionController {
       this.bridge.setVrQuickPanelVisible(false);
       this.availability = {
         ...this.availability,
-        usingDomOverlay: Boolean(session.domOverlayState),
+        usingDomOverlay: false,
       };
+      this.logDebug("enterInternal:session-started");
       this.bridge.setXrAvailability(this.availability);
       this.bridge.setXrSessionState("immersive");
       this.worldManipulator.enter(this.bridge.getPlayMode());
       this.hudFollower.reset();
     } catch (error) {
+      this.logDebug("enterInternal:requestSession-failed", error);
       console.warn("Failed to enter immersive VR session:", error);
+      this.registerActivationRetry(clientOptions, error);
       this.bridge.setXrSessionState("inactive");
     }
   }
 
   async exit(): Promise<void> {
     if (!this.activeSession) {
+      this.logDebug("exit:skipped-no-active-session");
       this.bridge.setXrSessionState("inactive");
       return;
     }
+    this.logDebug("exit:ending-session");
     this.bridge.setXrSessionState("exiting");
     await this.activeSession.end();
   }
@@ -130,7 +159,7 @@ export default class VrSessionController {
       await this.exit();
       return;
     }
-    await this.enter(clientOptions);
+    await this.enterInternal(clientOptions, { skipRefresh: false });
   }
 
   toggleQuickPanel(): void {
@@ -145,7 +174,7 @@ export default class VrSessionController {
       return;
     }
 
-    if (!this.availability.usingDomOverlay && this.bridge.shouldSuspendVrForUi()) {
+    if (this.bridge.shouldSuspendVrForUi()) {
       void this.exit();
       return;
     }
@@ -157,6 +186,7 @@ export default class VrSessionController {
       clientOptions.vrPreferredPointerHand,
       (visual, distance) => this.visuals.setRayLength(visual, distance),
     );
+
     this.inputRouter.update({
       controllers,
       activeTarget: target,
@@ -174,6 +204,11 @@ export default class VrSessionController {
       this.renderer.xr.getCamera() as THREE.Camera & THREE.Object3D,
       deltaSeconds,
     );
+    this.visuals.setWarningPanelHover(false);
+    this.visuals.updateWarningPanel(
+      this.renderer.xr.getCamera() as THREE.Camera & THREE.Object3D,
+      false,
+    );
     this.visuals.setBoundaryVisible(
       this.bridge.getPlayMode() === "normal" &&
         clientOptions.vrShowLevelBoundaries,
@@ -184,6 +219,7 @@ export default class VrSessionController {
     this.exit().catch(() => {
       // Ignore cleanup errors during teardown.
     });
+    this.clearActivationRetry();
     this.pointerSystem.clear();
     this.worldManipulator.exit();
     this.hudFollower.reset();
@@ -191,12 +227,18 @@ export default class VrSessionController {
   }
 
   private handleSessionEnded(): void {
+    this.logDebug("handleSessionEnded");
     if (this.activeSession) {
       this.activeSession.removeEventListener("end", this.handleSessionEndBound);
     }
     this.activeSession = null;
     this.pointerSystem.clear();
     this.visuals.resetRayLengths();
+    this.visuals.setWarningPanelHover(false);
+    this.visuals.updateWarningPanel(
+      this.renderer.xr.getCamera() as THREE.Camera & THREE.Object3D,
+      false,
+    );
     this.worldManipulator.exit();
     this.hudFollower.reset();
     this.bridge.setPlayerUiNumbersWorldProjection(false);
@@ -207,5 +249,68 @@ export default class VrSessionController {
       usingDomOverlay: false,
     };
     this.bridge.setXrAvailability(this.availability);
+  }
+
+  private clearActivationRetry(): void {
+    if (!this.activationRetryCleanup) {
+      return;
+    }
+    this.activationRetryCleanup();
+    this.activationRetryCleanup = null;
+  }
+
+  private registerActivationRetry(
+    clientOptions: Nh3dClientOptions,
+    error: unknown,
+  ): void {
+    const likelyActivationError = this.isLikelyActivationError(error);
+    if (!likelyActivationError || this.activationRetryCleanup) {
+      this.logDebug("registerActivationRetry:skipped", {
+        likelyActivationError,
+        alreadyRegistered: Boolean(this.activationRetryCleanup),
+      });
+      return;
+    }
+    this.logDebug("registerActivationRetry:registered");
+    const retry = (): void => {
+      this.logDebug("registerActivationRetry:retry-triggered");
+      this.clearActivationRetry();
+      void this.enterInternal(clientOptions, {
+        skipRefresh: false,
+      });
+    };
+    const eventNames: Array<keyof WindowEventMap> = [
+      "pointerup",
+      "touchend",
+      "keydown",
+      "mouseup",
+    ];
+    for (const eventName of eventNames) {
+      window.addEventListener(eventName, retry, {
+        passive: true,
+        once: true,
+      });
+    }
+    this.activationRetryCleanup = () => {
+      for (const eventName of eventNames) {
+        window.removeEventListener(eventName, retry);
+      }
+    };
+  }
+
+  private isLikelyActivationError(error: unknown): boolean {
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : "";
+    const normalized = message.toLowerCase();
+    return (
+      normalized.includes("user activation") ||
+      normalized.includes("transient activation") ||
+      normalized.includes("user gesture") ||
+      normalized.includes("gesture")
+    );
   }
 }

@@ -361,11 +361,36 @@ select {
   position: fixed;
   inset: 0;
   z-index: 1500;
+  pointer-events: none;
+}
+
+.nh3d-dom-overlay-root > * {
+  pointer-events: auto;
 }
 
 .nh3d-dom-overlay-root.nh3d-vr-overlay-active {
   perspective: 1800px;
   perspective-origin: 50% 18%;
+}
+
+.nh3d-vr-aframe-frame {
+  position: fixed;
+  top: calc(var(--nh3d-safe-area-top) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 24px));
+  height: min(600px, calc(100vh - 16px));
+  z-index: 2400;
+}
+
+.nh3d-vr-aframe-scene {
+  width: 100%;
+  height: 100%;
+}
+
+.nh3d-vr-aframe-scene canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .nh3d-vr-hud-frame {
@@ -4073,6 +4098,86 @@ canvas {
     flex: 0 0 auto;
     width: 78px;
     min-width: 78px;
+  }
+}
+
+.nh3d-mobile-bottom-bar.is-vr-touch {
+  @media (orientation: landscape) {
+    right: calc(8px + env(safe-area-inset-right));
+  }
+}
+
+.nh3d-vr-tilt-slider {
+  position: fixed;
+  right: calc(108px + env(safe-area-inset-right));
+  bottom: calc(
+    var(--nh3d-mobile-bottom-bar-bottom-offset, 0px) + 8px + env(safe-area-inset-bottom)
+  );
+  z-index: 1906;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 48px;
+  padding: 8px 6px;
+  border: 2px solid var(--nh3d-ui-border-strong);
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 26, 44, 0.92) 0%,
+    rgba(4, 12, 24, 0.98) 100%
+  );
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.5);
+}
+
+.nh3d-vr-tilt-slider-label {
+  color: #d5e7ff;
+  font-size: nh3d-scale-font(10px);
+  font-weight: bold;
+  line-height: 1;
+  text-align: center;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nh3d-vr-tilt-slider-input {
+  width: 18px;
+  height: 122px;
+  accent-color: #8ed2ff;
+  cursor: pointer;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  -webkit-appearance: slider-vertical;
+}
+
+.nh3d-vr-tilt-slider-value {
+  min-width: 38px;
+  color: #d5e7ff;
+  font-family: "Courier New", monospace;
+  font-size: nh3d-scale-font(10px);
+  font-weight: bold;
+  text-align: center;
+}
+
+@media (orientation: portrait) {
+  .nh3d-vr-tilt-slider {
+    right: calc(8px + env(safe-area-inset-right));
+    bottom: calc(
+      var(--nh3d-mobile-bottom-bar-bottom-offset, 0px) + 64px + env(safe-area-inset-bottom)
+    );
+    width: auto;
+    min-width: 150px;
+    flex-direction: row;
+    justify-content: center;
+    padding: 8px 10px;
+  }
+
+  .nh3d-vr-tilt-slider-input {
+    width: 96px;
+    height: auto;
+    writing-mode: horizontal-tb;
+    direction: ltr;
+    -webkit-appearance: auto;
   }
 }
 

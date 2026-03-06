@@ -1,101 +1,194 @@
-import { Capacitor, registerPlugin } from "@capacitor/core";
 import type { XrAvailabilityState } from "../../game/ui-types";
+import { isLoggingEnabled, logWithOriginal } from "../../logging";
 
-type NativeVrShellInfo = {
-  isNativePlatform: boolean;
-  manufacturer: string;
-  model: string;
-  isMetaQuest: boolean;
-  hasQuestBrowser: boolean;
+type XrProbeFailureReason =
+  | "insecure-context"
+  | "api-missing"
+  | "unsupported-session"
+  | "probe-error";
+
+type XrProbeResult =
+  | { available: true }
+  | { available: false; reason: XrProbeFailureReason; errorMessage?: string };
+
+type NavigatorWithUaData = Navigator & {
+  userAgentData?: {
+    brands?: Array<{ brand?: string; version?: string }>;
+  };
 };
 
-type LaunchVrBrowserResult = {
-  launched: boolean;
+type XrDebugWindow = Window & {
+  __NH3D_XR_DEBUG_HISTORY__?: Array<Record<string, unknown>>;
+  __NH3D_XR_DEBUG_LAST__?: Record<string, unknown>;
 };
 
-type VrShellPlugin = {
-  getDeviceInfo(): Promise<NativeVrShellInfo>;
-  launchVrBrowser(options: { url: string }): Promise<LaunchVrBrowserResult>;
-};
+let lastAvailabilityFingerprint = "";
 
-const VrShell = registerPlugin<VrShellPlugin>("VrShell", {
-  web: () => import("./web").then((module) => new module.VrShellWeb()),
-});
-
-const defaultVrBrowserLaunchUrl = "https://jamesiv4.github.io/nethack-3d/";
-
-function isPublicWebLaunchUrl(url: string): boolean {
-  if (!url) {
-    return false;
+function xrDebugLog(message: string, details?: unknown): void {
+  if (!isLoggingEnabled()) {
+    return;
   }
-  try {
-    const parsed = new URL(url, typeof window !== "undefined" ? window.location.href : undefined);
-    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-      return false;
-    }
-    const hostname = parsed.hostname.toLowerCase();
-    return (
-      hostname !== "localhost" &&
-      hostname !== "127.0.0.1" &&
-      hostname !== "[::1]"
-    );
-  } catch {
-    return false;
+  if (typeof details === "undefined") {
+    logWithOriginal("[NH3D XR]", message);
+    return;
   }
+  logWithOriginal("[NH3D XR]", message, details);
 }
 
-function resolveConfiguredVrBrowserLaunchUrl(): string {
+function detectQuestLikeUserAgent(): boolean {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+  const userAgent = String(navigator.userAgent || "").toLowerCase();
   if (
-    typeof window !== "undefined" &&
-    isPublicWebLaunchUrl(window.location.href)
+    userAgent.includes("quest") ||
+    userAgent.includes("oculus") ||
+    userAgent.includes("oculusbrowser")
   ) {
-    return window.location.href;
+    return true;
   }
-  const configured =
-    typeof import.meta.env.VITE_VR_LAUNCH_URL === "string"
-      ? import.meta.env.VITE_VR_LAUNCH_URL.trim()
-      : "";
-  return configured || defaultVrBrowserLaunchUrl;
+  const uaBrands = (navigator as NavigatorWithUaData).userAgentData?.brands;
+  if (!Array.isArray(uaBrands)) {
+    return false;
+  }
+  return uaBrands.some((brandEntry) => {
+    const brand = String(brandEntry?.brand || "").toLowerCase();
+    return brand.includes("quest") || brand.includes("oculus");
+  });
 }
 
-async function canDirectlyPresentWebXr(): Promise<boolean> {
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === "object" && error && "message" in error) {
+    const value = (error as { message?: unknown }).message;
+    if (typeof value === "string") {
+      return value;
+    }
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return "";
+}
+
+async function probeDirectWebXrSupport(): Promise<XrProbeResult> {
+  if (typeof window !== "undefined" && !window.isSecureContext) {
+    return { available: false, reason: "insecure-context" };
+  }
+  if (typeof navigator === "undefined") {
+    return { available: false, reason: "api-missing" };
+  }
   const xr = navigator.xr;
   if (!xr || typeof xr.isSessionSupported !== "function") {
-    return false;
+    return { available: false, reason: "api-missing" };
   }
   try {
-    return await xr.isSessionSupported("immersive-vr");
-  } catch {
-    return false;
+    const supported = await xr.isSessionSupported("immersive-vr");
+    if (supported) {
+      return { available: true };
+    }
+    return { available: false, reason: "unsupported-session" };
+  } catch (error) {
+    const errorMessage = extractErrorMessage(error);
+    const normalized = errorMessage.toLowerCase();
+    if (
+      normalized.includes("secure context") ||
+      normalized.includes("https") ||
+      normalized.includes("not allowed in this document")
+    ) {
+      return {
+        available: false,
+        reason: "insecure-context",
+        errorMessage,
+      };
+    }
+    return { available: false, reason: "probe-error", errorMessage };
   }
 }
 
-async function readNativeVrShellInfo(): Promise<NativeVrShellInfo> {
-  const isNativePlatform =
-    typeof Capacitor?.isNativePlatform === "function"
-      ? Capacitor.isNativePlatform()
-      : Capacitor?.getPlatform?.() === "android" ||
-        Capacitor?.getPlatform?.() === "ios";
-  if (!isNativePlatform) {
-    return {
-      isNativePlatform: false,
-      manufacturer: "",
-      model: "",
-      isMetaQuest: false,
-      hasQuestBrowser: false,
-    };
+function resolveUnavailableStatusText(
+  probe: Exclude<XrProbeResult, { available: true }>,
+  isHeadsetShell: boolean,
+): string {
+  if (probe.reason === "insecure-context") {
+    return "WebXR needs a secure context. Use https:// or localhost via adb reverse.";
   }
-  try {
-    return await VrShell.getDeviceInfo();
-  } catch {
-    return {
-      isNativePlatform: true,
-      manufacturer: "",
-      model: "",
-      isMetaQuest: false,
-      hasQuestBrowser: false,
-    };
+  if (probe.reason === "api-missing") {
+    return isHeadsetShell
+      ? "WebXR API is unavailable in this Quest Browser session. Disable Desktop mode and reload."
+      : "WebXR API is unavailable in this browser.";
   }
+  if (probe.reason === "unsupported-session") {
+    return isHeadsetShell
+      ? "Quest Browser reported no immersive VR support for this page. Reload and try again."
+      : "Immersive VR is unavailable in this browser session.";
+  }
+  if (probe.errorMessage) {
+    return `WebXR probe failed: ${probe.errorMessage}`;
+  }
+  return "WebXR probe failed in this browser session.";
+}
+
+function buildAvailabilityFingerprint(params: {
+  offerEnabled: boolean;
+  isHeadsetShell: boolean;
+  probeResult: XrProbeResult;
+  secureContext: boolean | null;
+  hasNavigatorXr: boolean;
+  hasSessionSupportFn: boolean;
+}): string {
+  const probeState = params.probeResult.available
+    ? "available"
+    : `unavailable:${params.probeResult.reason}:${params.probeResult.errorMessage || ""}`;
+  return [
+    params.offerEnabled ? "offer=1" : "offer=0",
+    params.isHeadsetShell ? "headset=1" : "headset=0",
+    `secure=${params.secureContext === null ? "na" : params.secureContext ? "1" : "0"}`,
+    params.hasNavigatorXr ? "xr=1" : "xr=0",
+    params.hasSessionSupportFn ? "supportFn=1" : "supportFn=0",
+    probeState,
+  ].join("|");
+}
+
+function logAvailabilityResolution(params: {
+  offerEnabled: boolean;
+  isHeadsetShell: boolean;
+  probeResult: XrProbeResult;
+  secureContext: boolean | null;
+  hasNavigatorXr: boolean;
+  hasSessionSupportFn: boolean;
+  userAgent: string;
+}): void {
+  const fingerprint = buildAvailabilityFingerprint(params);
+  const snapshot: Record<string, unknown> = {
+    timestamp: new Date().toISOString(),
+    fingerprint,
+    offerEnabled: params.offerEnabled,
+    isHeadsetShell: params.isHeadsetShell,
+    probeResult: params.probeResult,
+    secureContext: params.secureContext,
+    hasNavigatorXr: params.hasNavigatorXr,
+    hasSessionSupportFn: params.hasSessionSupportFn,
+    userAgent: params.userAgent,
+  };
+  if (typeof window !== "undefined") {
+    const debugWindow = window as XrDebugWindow;
+    const history = debugWindow.__NH3D_XR_DEBUG_HISTORY__ || [];
+    history.push(snapshot);
+    if (history.length > 50) {
+      history.splice(0, history.length - 50);
+    }
+    debugWindow.__NH3D_XR_DEBUG_HISTORY__ = history;
+    debugWindow.__NH3D_XR_DEBUG_LAST__ = snapshot;
+  }
+  if (fingerprint === lastAvailabilityFingerprint) {
+    return;
+  }
+  lastAvailabilityFingerprint = fingerprint;
+
+  xrDebugLog("Resolved WebXR availability", snapshot);
 }
 
 export async function resolveXrAvailability(options: {
@@ -107,75 +200,67 @@ export async function resolveXrAvailability(options: {
       launchMode: "unavailable",
       directWebXrAvailable: false,
       isHeadsetShell: false,
-      browserHandoffUrl: null,
       buttonLabel: "VR Disabled",
       statusText: "VR is disabled in client options.",
       usingDomOverlay: false,
     };
   }
 
-  const [directWebXrAvailable, nativeInfo] = await Promise.all([
-    canDirectlyPresentWebXr(),
-    readNativeVrShellInfo(),
+  const [probeResult, isHeadsetShell] = await Promise.all([
+    probeDirectWebXrSupport(),
+    Promise.resolve(detectQuestLikeUserAgent()),
   ]);
-  const browserHandoffUrl = resolveConfiguredVrBrowserLaunchUrl();
+  const secureContext =
+    typeof window === "undefined" ? null : window.isSecureContext;
+  const hasNavigatorXr =
+    typeof navigator !== "undefined" &&
+    typeof navigator.xr !== "undefined" &&
+    navigator.xr !== null;
+  const hasSessionSupportFn =
+    hasNavigatorXr &&
+    typeof (navigator.xr as XRSystem).isSessionSupported === "function";
+  const userAgent =
+    typeof navigator === "undefined" ? "" : String(navigator.userAgent || "");
 
-  if (directWebXrAvailable) {
-    return {
+  if (probeResult.available) {
+    const result: XrAvailabilityState = {
       supported: true,
       launchMode: "webxr",
       directWebXrAvailable: true,
-      isHeadsetShell: nativeInfo.isMetaQuest,
-      browserHandoffUrl,
+      isHeadsetShell,
       buttonLabel: "Enter VR",
       statusText: "Immersive VR is available on this device.",
       usingDomOverlay: false,
     };
+    logAvailabilityResolution({
+      offerEnabled: options.vrOfferOnSupportedDevice,
+      isHeadsetShell,
+      probeResult,
+      secureContext,
+      hasNavigatorXr,
+      hasSessionSupportFn,
+      userAgent,
+    });
+    return result;
   }
 
-  if (nativeInfo.isMetaQuest && nativeInfo.hasQuestBrowser) {
-    return {
-      supported: true,
-      launchMode: "browser-handoff",
-      directWebXrAvailable: false,
-      isHeadsetShell: true,
-      browserHandoffUrl,
-      buttonLabel: "Open VR in Quest Browser",
-      statusText:
-        "This app shell cannot present immersive WebXR directly. Launch the web build in Quest Browser.",
-      usingDomOverlay: false,
-    };
-  }
-
-  return {
+  const result: XrAvailabilityState = {
     supported: false,
     launchMode: "unavailable",
     directWebXrAvailable: false,
-    isHeadsetShell: nativeInfo.isMetaQuest,
-    browserHandoffUrl,
+    isHeadsetShell,
     buttonLabel: "VR Unavailable",
-    statusText: "Immersive VR is unavailable on this device.",
+    statusText: resolveUnavailableStatusText(probeResult, isHeadsetShell),
     usingDomOverlay: false,
   };
-}
-
-export async function launchVrBrowserHandoff(url?: string): Promise<boolean> {
-  const targetUrl = String(url || resolveConfiguredVrBrowserLaunchUrl()).trim();
-  if (!targetUrl) {
-    return false;
-  }
-  try {
-    const result = await VrShell.launchVrBrowser({ url: targetUrl });
-    return result.launched === true;
-  } catch {
-    if (typeof window === "undefined") {
-      return false;
-    }
-    const opened = window.open(targetUrl, "_blank", "noopener,noreferrer");
-    return opened !== null;
-  }
-}
-
-export function getDefaultVrBrowserLaunchUrl(): string {
-  return resolveConfiguredVrBrowserLaunchUrl();
+  logAvailabilityResolution({
+    offerEnabled: options.vrOfferOnSupportedDevice,
+    isHeadsetShell,
+    probeResult,
+    secureContext,
+    hasNavigatorXr,
+    hasSessionSupportFn,
+    userAgent,
+  });
+  return result;
 }

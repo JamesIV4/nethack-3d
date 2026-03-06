@@ -4,14 +4,10 @@
   "main": "electron/main.cjs",
   "scripts": {
     "build": "vite build",
-    "build:capacitor": "cross-env VITE_DEPLOY_TARGET=capacitor vite build",
     "build:electron": "cross-env BUILD_TARGET=electron VITE_DEPLOY_TARGET=electron vite build",
+    "build:github-pages": "cross-env VITE_DEPLOY_TARGET=github-pages vite build",
     "dev": "vite",
     "dev:isolated": "cross-env NH3D_ENABLE_CROSS_ORIGIN_ISOLATION=true vite",
-    "android:add": "cap add android",
-    "android:sync": "npm run build:capacitor && cap sync android",
-    "android:open": "cap open android",
-    "android:run": "npm run build:capacitor && cap run android",
     "electron:dev": "cross-env VITE_DEPLOY_TARGET=electron VITE_DEV_SERVER_URL=http://127.0.0.1:5173 concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
     "electron:dev:isolated": "cross-env VITE_DEPLOY_TARGET=electron NH3D_ENABLE_CROSS_ORIGIN_ISOLATION=true VITE_DEV_SERVER_URL=http://127.0.0.1:5173 concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
     "electron:start": "electron .",
@@ -21,6 +17,8 @@
     "glyphs:generate": "node scripts/glyphs/generate-glyph-catalog.mjs",
     "glyphs:check": "node scripts/glyphs/check-glyph-catalog.mjs",
     "copy-wasm": "node scripts/wasm/copy-wasm.mjs",
+    "vr:quest:dev": "node scripts/vr/run-quest-dev.mjs",
+    "vr:quest:dev:isolated": "cross-env NH3D_ENABLE_CROSS_ORIGIN_ISOLATION=true node scripts/vr/run-quest-dev.mjs",
     "start": "vite",
     "start:preview": "vite preview",
     "preview": "vite preview",
@@ -67,11 +65,10 @@
     }
   },
   "dependencies": {
-    "@capacitor/android": "^8.1.0",
-    "@capacitor/core": "^8.1.0",
     "@neth4ck/wasm-367": "^2.1.1",
     "@neth4ck/wasm-37": "^2.1.1",
     "@types/three": "^0.178.1",
+    "aframe": "^1.7.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sass": "^1.94.0",
@@ -79,7 +76,6 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.1.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.5.0",
