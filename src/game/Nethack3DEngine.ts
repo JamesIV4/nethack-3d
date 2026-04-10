@@ -11660,6 +11660,14 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return this.runtimeTrackedPlayerEntitySeen;
   }
 
+  private shouldAnimatePlayerBillboardsInFps(): boolean {
+    return false;
+  }
+
+  private shouldAllowTrackedPlayerAppearance(): boolean {
+    return !this.isFpsMode() || this.shouldAnimatePlayerBillboardsInFps();
+  }
+
   private getTrackedEntityMoveTransitionId(entityId: number): string {
     return entityId === 0 ? "player" : `monster:${entityId}`;
   }
@@ -11709,6 +11717,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   ): RuntimeMonsterBillboardAppearance | null {
     const behavior = this.classifyTilePayload(tile);
     const hasTrackablePlayerAppearance =
+      this.shouldAllowTrackedPlayerAppearance() &&
       behavior !== null &&
       this.hasExplicitPlayerVisual(
         behavior,
@@ -11775,6 +11784,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (eventMonsterId === 0) {
       this.runtimeTrackedPlayerEntitySeen = true;
     }
+    const shouldAnimateTrackedEntity =
+      eventMonsterId !== 0 || this.shouldAllowTrackedPlayerAppearance();
     const previousMonsterId = this.runtimeMonsterIdByTileKey.get(key) ?? null;
     const isRuntimeClear = Boolean(tile.isRuntimeUndiscoveredClear);
 
@@ -11804,12 +11815,22 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.pendingRuntimeMonsterVacatedTileKeyById.get(eventMonsterId) ??
       null;
     if (previousKeyForMonster && previousKeyForMonster !== key) {
-      this.startRuntimeMonsterMoveTransition(
-        eventMonsterId,
-        previousKeyForMonster,
-        key,
-        tile,
-      );
+      if (shouldAnimateTrackedEntity) {
+        this.startRuntimeMonsterMoveTransition(
+          eventMonsterId,
+          previousKeyForMonster,
+          key,
+          tile,
+        );
+      } else {
+        const previousTile = this.parseTileKey(previousKeyForMonster);
+        if (previousTile) {
+          this.restoreTileVisualFromRememberedTerrain(
+            previousTile.x,
+            previousTile.y,
+          );
+        }
+      }
     }
     if (
       previousKeyForMonster &&
