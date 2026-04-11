@@ -67,6 +67,11 @@ import {
   isRecoverableCheckpointLevelZeroByteLength,
 } from "../runtime/save-storage";
 import {
+  fetchTopScores,
+  saveTopScoreDetailSnapshot,
+  type TopScoreRecord,
+} from "../runtime/top-score-storage";
+import {
   findNh3dTilesetByPath,
   getNh3dTilesetAtlasTileColumns,
   getNh3dCompatibleTilesetCatalog,
@@ -177,6 +182,7 @@ const commonStrings = translationStrings.common;
 const t = translationStrings.app;
 const supportedLocaleOptions = getSupportedLocaleOptions();
 const messageInfoMenuCacheLimit = 50;
+const topScoresPageSize = 10;
 
 function UpdateReleaseNotesMarkdown({
   markdown,
@@ -1118,6 +1124,141 @@ function renderCharacterSheetFieldRows(
       })}
     </div>
   );
+}
+
+function formatTopScoreInteger(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "--";
+  }
+  return Math.trunc(value).toLocaleString();
+}
+
+function formatTopScoreText(value: string | null | undefined): string {
+  const normalized = String(value ?? "").trim();
+  return normalized || "--";
+}
+
+function formatTopScoreDateTime(value: string | null | undefined): string {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) {
+    return "--";
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    return normalized;
+  }
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) {
+    return normalized;
+  }
+  return date.toLocaleString();
+}
+
+function formatTopScoreDuration(seconds: number | null | undefined): string {
+  if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds < 0) {
+    return "--";
+  }
+  const totalSeconds = Math.trunc(seconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainder = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${remainder}s`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${remainder}s`;
+  }
+  return `${remainder}s`;
+}
+
+function formatTopScoreList(labels: ReadonlyArray<string>): string {
+  return labels.length > 0 ? labels.join(", ") : "None";
+}
+
+function formatTopScoreHp(score: TopScoreRecord): string {
+  const hp =
+    typeof score.hp === "number" && Number.isFinite(score.hp)
+      ? String(Math.trunc(score.hp))
+      : "-";
+  return `${hp} [${formatTopScoreInteger(score.maxhp)}]`;
+}
+
+function formatTopScoreLocation(score: TopScoreRecord): string {
+  const snapshotLocation = String(
+    score.detail?.attributes.Location ??
+      [
+        score.detail?.attributes.Dungeon,
+        score.detail?.attributes["Dungeon level"],
+      ]
+        .filter((value) => String(value ?? "").trim())
+        .join(" "),
+  ).trim();
+  if (
+    snapshotLocation &&
+    (score.source === "nh3d-snapshot" ||
+      (score.deathdnum === null &&
+        score.deathlev === null &&
+        score.maxlvl === null))
+  ) {
+    return snapshotLocation;
+  }
+  const dnum = formatTopScoreInteger(score.deathdnum);
+  const level = formatTopScoreInteger(score.deathlev);
+  const maxLevel = formatTopScoreInteger(score.maxlvl);
+  return `Dnum ${dnum}, level ${level}, max ${maxLevel}`;
+}
+
+function formatTopScoreMode(score: TopScoreRecord): string {
+  return score.flagLabels.length > 0 ? score.flagLabels.join(", ") : "Normal";
+}
+
+function buildTopScoreStatRows(score: TopScoreRecord): Array<[string, string]> {
+  return [
+    ["Rank", `#${formatTopScoreInteger(score.rank)}`],
+    ["Points", formatTopScoreInteger(score.points)],
+    ["Name", formatTopScoreText(score.name)],
+    ["Version", formatTopScoreText(score.version)],
+    ["Role", formatTopScoreText(score.role)],
+    ["Race", formatTopScoreText(score.race)],
+    ["Gender", formatTopScoreText(score.gender)],
+    ["Alignment", formatTopScoreText(score.align)],
+    ["Initial gender", formatTopScoreText(score.gender0)],
+    ["Initial alignment", formatTopScoreText(score.align0)],
+    ["Death", formatTopScoreText(score.death)],
+    ["While", formatTopScoreText(score.whileHelpless)],
+    ["Death dungeon number", formatTopScoreInteger(score.deathdnum)],
+    ["Death level", formatTopScoreInteger(score.deathlev)],
+    ["Deepest level", formatTopScoreInteger(score.maxlvl)],
+    ["Hit points", formatTopScoreInteger(score.hp)],
+    ["Max hit points", formatTopScoreInteger(score.maxhp)],
+    ["Deaths", formatTopScoreInteger(score.deaths)],
+    ["Turns", formatTopScoreInteger(score.turns)],
+    ["Real time", formatTopScoreDuration(score.realtimeSeconds)],
+    ["Started", formatTopScoreDateTime(score.starttime)],
+    ["Ended", formatTopScoreDateTime(score.endtime)],
+    ["Birth date", formatTopScoreDateTime(score.birthdate)],
+    ["Death date", formatTopScoreDateTime(score.deathdate)],
+    ["User ID", formatTopScoreInteger(score.uid)],
+    [
+      "Conduct",
+      score.conductHex
+        ? `${score.conductHex} (${formatTopScoreList(score.conductLabels)})`
+        : "--",
+    ],
+    [
+      "Achievements",
+      score.achieveHex
+        ? `${score.achieveHex} (${formatTopScoreList(score.achievementLabels)})`
+        : "--",
+    ],
+    [
+      "Flags",
+      score.flagsHex
+        ? `${score.flagsHex} (${formatTopScoreMode(score)})`
+        : formatTopScoreMode(score),
+    ],
+    ["Score source", score.source],
+    ["Source path", score.sourcePath],
+  ];
 }
 
 function getLegacyCharacterStatValue(
@@ -5890,11 +6031,24 @@ async function fetchSavedGames(
           "record",
           "logfile",
           "xlogfile",
+          "nhdat",
+          "sysconf",
           "perm",
           "timestamp",
           ".keep",
+          "save",
+          "tmp",
+          "home",
+          "dev",
+          "proc",
         ];
         if (knownNonSaves.includes(normalizedFilename)) continue;
+        if (
+          /^bon\d?[a-z].*\./i.test(normalizedFilename) ||
+          normalizedFilename.endsWith(".bn")
+        ) {
+          continue;
+        }
         if (normalizedFilename.includes("level")) {
           continue;
         }
@@ -5908,7 +6062,8 @@ async function fetchSavedGames(
         const isLockArtifact =
           normalizedFilename === "lock" ||
           /^[a-z]lock$/i.test(normalizedFilename) ||
-          normalizedFilename.endsWith(".lock");
+          normalizedFilename.endsWith(".lock") ||
+          normalizedFilename.endsWith("_lock");
         if (isLockArtifact && !isCheckpointShard) {
           continue;
         }
@@ -6150,6 +6305,14 @@ export default function App(): JSX.Element {
   const [hasHydratedStartupInitOptions, setHasHydratedStartupInitOptions] =
     useState(false);
   const [savedGames, setSavedGames] = useState<SaveGameRecord[]>([]);
+  const [topScoresDialogRuntime, setTopScoresDialogRuntime] =
+    useState<NethackRuntimeVersion | null>(null);
+  const [topScores, setTopScores] = useState<TopScoreRecord[]>([]);
+  const [topScoresLoading, setTopScoresLoading] = useState(false);
+  const [topScoresError, setTopScoresError] = useState("");
+  const [topScoresPageIndex, setTopScoresPageIndex] = useState(0);
+  const [selectedTopScore, setSelectedTopScore] =
+    useState<TopScoreRecord | null>(null);
   const resumableSavedGames = useMemo(
     () => savedGames.filter((save) => save.isResumable),
     [savedGames],
@@ -6177,6 +6340,42 @@ export default function App(): JSX.Element {
         },
       ].filter((section) => section.saves.length > 0),
     [resumableSavedGames],
+  );
+  const topScoresPageCount = useMemo(
+    () => Math.max(1, Math.ceil(topScores.length / topScoresPageSize)),
+    [topScores.length],
+  );
+  const topScoresCurrentPageIndex = Math.max(
+    0,
+    Math.min(topScoresPageIndex, topScoresPageCount - 1),
+  );
+  const visibleTopScores = useMemo(() => {
+    return topScores.slice(
+      topScoresCurrentPageIndex * topScoresPageSize,
+      topScoresCurrentPageIndex * topScoresPageSize + topScoresPageSize,
+    );
+  }, [topScores, topScoresCurrentPageIndex]);
+  const selectedTopScoreStatRows = useMemo(
+    () => (selectedTopScore ? buildTopScoreStatRows(selectedTopScore) : []),
+    [selectedTopScore],
+  );
+  const selectedTopScoreRawFieldRows = useMemo(
+    () =>
+      selectedTopScore
+        ? Object.entries(selectedTopScore.rawFields).sort(([a], [b]) =>
+            a.localeCompare(b),
+          )
+        : [],
+    [selectedTopScore],
+  );
+  const selectedTopScoreAttributeRows = useMemo(
+    () =>
+      selectedTopScore?.detail
+        ? Object.entries(selectedTopScore.detail.attributes).filter(([, value]) =>
+            String(value ?? "").trim(),
+          )
+        : [],
+    [selectedTopScore],
   );
   const [isLoadingSaves, setIsLoadingSaves] = useState(false);
   const startupUpdateCheckStartedRef = useRef(false);
@@ -6233,6 +6432,41 @@ export default function App(): JSX.Element {
       setIsLoadingSaves(false);
     }
   };
+
+  const loadTopScoresForRuntime = useCallback(
+    async (targetRuntimeVersion: NethackRuntimeVersion): Promise<void> => {
+      setTopScoresLoading(true);
+      setTopScoresError("");
+      try {
+        const scores = await fetchTopScores(targetRuntimeVersion);
+        setTopScores(scores);
+        setTopScoresPageIndex(0);
+      } catch (error) {
+        console.error("Failed to load top scores:", error);
+        setTopScores([]);
+        setTopScoresError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load top scores.",
+        );
+      } finally {
+        setTopScoresLoading(false);
+      }
+    },
+    [],
+  );
+
+  const openTopScoresDialog = useCallback((): void => {
+    const targetRuntimeVersion = runtimeVersion;
+    setTopScoresDialogRuntime(targetRuntimeVersion);
+    setSelectedTopScore(null);
+    void loadTopScoresForRuntime(targetRuntimeVersion);
+  }, [loadTopScoresForRuntime, runtimeVersion]);
+
+  const closeTopScoresDialog = useCallback((): void => {
+    setTopScoresDialogRuntime(null);
+    setSelectedTopScore(null);
+  }, []);
 
   const handleStartNewGame = async (config: CharacterCreationConfig) => {
     const runtimeVersionForLaunch = config.runtimeVersion ?? runtimeVersion;
@@ -6571,6 +6805,7 @@ export default function App(): JSX.Element {
   );
   const startupControllerCursorPulseTimerRef = useRef<number | null>(null);
   const startupBuildLabelToastTimerRef = useRef<number | null>(null);
+  const persistedTopScoreSignatureRef = useRef("");
   const startupControllerCursorVisibleRef = useRef(false);
   const startupControllerCursorXRef = useRef<number>(Number.NaN);
   const startupControllerCursorYRef = useRef<number>(Number.NaN);
@@ -6614,6 +6849,45 @@ export default function App(): JSX.Element {
   const controller = useGameStore((state) => state.engineController);
   const newGamePrompt = useGameStore((state) => state.newGamePrompt);
   const gameOver = useGameStore((state) => state.gameOver);
+  useEffect(() => {
+    if (
+      activeRuntimeVersion !== "3.6.7" ||
+      !gameOver.active ||
+      !gameOver.promptReady
+    ) {
+      return;
+    }
+
+    const signature = [
+      activeRuntimeVersion,
+      playerStats.name,
+      playerStats.score,
+      playerStats.time,
+      gameOver.deathMessage ?? "",
+    ].join("|");
+    if (persistedTopScoreSignatureRef.current === signature) {
+      return;
+    }
+    persistedTopScoreSignatureRef.current = signature;
+
+    void saveTopScoreDetailSnapshot({
+      runtimeVersion: activeRuntimeVersion,
+      playerStats,
+      inventoryItems: inventory.items,
+      deathMessage: gameOver.deathMessage,
+      tombstoneLines: gameOver.tombstoneLines,
+    }).catch((error) => {
+      console.warn("Failed to save top score detail snapshot:", error);
+    });
+  }, [
+    activeRuntimeVersion,
+    gameOver.active,
+    gameOver.deathMessage,
+    gameOver.promptReady,
+    gameOver.tombstoneLines,
+    inventory.items,
+    playerStats,
+  ]);
   const [messageInfoMenuHistory, setMessageInfoMenuHistory] =
     useState<MessageInfoMenuHistoryState>({
       entries: [],
@@ -15140,6 +15414,15 @@ export default function App(): JSX.Element {
             >
               {t.dialogs.startup.loadGame}
             </button>
+            {runtimeVersion === "3.6.7" ? (
+              <button
+                className="nh3d-choice-button nh3d-character-setup-choice-button"
+                onClick={openTopScoresDialog}
+                type="button"
+              >
+                Top Scores
+              </button>
+            ) : null}
             <button
               className="nh3d-choice-button nh3d-character-setup-choice-button"
               onClick={openClientOptionsDialog}
@@ -15335,6 +15618,323 @@ export default function App(): JSX.Element {
             {commonStrings.back}
           </button>
         </div>
+      </AnimatedDialog>
+
+      <AnimatedDialog
+        className="nh3d-dialog nh3d-dialog-options nh3d-dialog-fixed-actions nh3d-dialog-has-mobile-close nh3d-top-scores-dialog"
+        disableAnimations={startupInitialLoadingVisible}
+        open={Boolean(topScoresDialogRuntime)}
+        id="nh3d-top-scores-dialog"
+        onBlurCapture={handleStartupMainMenuBlurCapture}
+        onChangeCapture={handleStartupMainMenuChangeCapture}
+        onKeyDown={handleStartupMainMenuKeyDown}
+        onPointerDownCapture={handleStartupMainMenuPointerDownCapture}
+      >
+        {renderMobileDialogCloseButton(closeTopScoresDialog, "Close top scores")}
+        {topScoresDialogRuntime ? (
+          <RuntimeVersionBadge
+            label={resolveRuntimeVersionDisplayLabel(topScoresDialogRuntime)}
+            startup
+          />
+        ) : null}
+        <div className="nh3d-options-title">Top Scores</div>
+        <div className="nh3d-top-scores-summary">
+          {topScores.length > 0
+            ? `${topScores.length.toLocaleString()} score${
+                topScores.length === 1 ? "" : "s"
+              }`
+            : topScoresLoading
+              ? "Loading scores..."
+              : "No scores yet."}
+        </div>
+        <div className="nh3d-overflow-glow-frame nh3d-top-scores-table-frame">
+          <div
+            className="nh3d-top-scores-table-scroll"
+            data-nh3d-overflow-glow
+            data-nh3d-overflow-glow-host="parent"
+          >
+            {topScoresLoading ? (
+              <div className="nh3d-top-scores-empty">Loading scores...</div>
+            ) : topScoresError ? (
+              <div className="nh3d-top-scores-empty">{topScoresError}</div>
+            ) : visibleTopScores.length <= 0 ? (
+              <div className="nh3d-top-scores-empty">
+                Finish a scoring game to start the list.
+              </div>
+            ) : (
+              <table className="nh3d-top-scores-table">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Points</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Race</th>
+                    <th>Gen</th>
+                    <th>Align</th>
+                    <th>Death</th>
+                    <th>Location</th>
+                    <th>HP</th>
+                    <th>Deaths</th>
+                    <th>Turns</th>
+                    <th>Conduct</th>
+                    <th>Achievements</th>
+                    <th>Mode</th>
+                    <th>Ended</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleTopScores.map((score) => (
+                    <tr key={score.id}>
+                      <td>{score.rank}</td>
+                      <td>{formatTopScoreInteger(score.points)}</td>
+                      <td>{formatTopScoreText(score.name)}</td>
+                      <td>{formatTopScoreText(score.role)}</td>
+                      <td>{formatTopScoreText(score.race)}</td>
+                      <td>{formatTopScoreText(score.gender)}</td>
+                      <td>{formatTopScoreText(score.align)}</td>
+                      <td className="nh3d-top-scores-death-cell">
+                        {formatTopScoreText(score.death)}
+                      </td>
+                      <td>{formatTopScoreLocation(score)}</td>
+                      <td>{formatTopScoreHp(score)}</td>
+                      <td>{formatTopScoreInteger(score.deaths)}</td>
+                      <td>{formatTopScoreInteger(score.turns)}</td>
+                      <td>{formatTopScoreList(score.conductLabels)}</td>
+                      <td>{formatTopScoreList(score.achievementLabels)}</td>
+                      <td>{formatTopScoreMode(score)}</td>
+                      <td>
+                        {formatTopScoreDateTime(
+                          score.endtime || score.deathdate,
+                        )}
+                      </td>
+                      <td>
+                        <button
+                          className="nh3d-top-scores-link-button"
+                          onClick={() => setSelectedTopScore(score)}
+                          type="button"
+                        >
+                          Stats, attributes, inventory
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+        <div className="nh3d-top-scores-pagination">
+          Page {topScoresCurrentPageIndex + 1} of {topScoresPageCount}
+        </div>
+        <div className="nh3d-menu-actions">
+          <button
+            className="nh3d-menu-action-button"
+            disabled={topScoresLoading || topScoresCurrentPageIndex <= 0}
+            onClick={() =>
+              setTopScoresPageIndex((previous) => Math.max(0, previous - 1))
+            }
+            type="button"
+          >
+            Previous
+          </button>
+          <button
+            className="nh3d-menu-action-button"
+            disabled={
+              topScoresLoading ||
+              topScoresCurrentPageIndex >= topScoresPageCount - 1
+            }
+            onClick={() =>
+              setTopScoresPageIndex((previous) =>
+                Math.min(topScoresPageCount - 1, previous + 1),
+              )
+            }
+            type="button"
+          >
+            Next
+          </button>
+          <button
+            className="nh3d-menu-action-button"
+            disabled={topScoresLoading || !topScoresDialogRuntime}
+            onClick={() => {
+              if (topScoresDialogRuntime) {
+                void loadTopScoresForRuntime(topScoresDialogRuntime);
+              }
+            }}
+            type="button"
+          >
+            Refresh
+          </button>
+          <button
+            className="nh3d-menu-action-button nh3d-menu-action-cancel"
+            onClick={closeTopScoresDialog}
+            type="button"
+          >
+            {commonStrings.close}
+          </button>
+        </div>
+      </AnimatedDialog>
+
+      <AnimatedDialog
+        className="nh3d-dialog nh3d-dialog-character nh3d-dialog-fixed-actions nh3d-dialog-has-mobile-close nh3d-overflow-glow-frame nh3d-top-score-detail-dialog"
+        open={Boolean(selectedTopScore)}
+        id="nh3d-top-score-detail-dialog"
+      >
+        {selectedTopScore ? (
+          <>
+            {renderMobileDialogCloseButton(
+              () => setSelectedTopScore(null),
+              "Close top score details",
+            )}
+            <div
+              className="nh3d-character-sheet-scroll"
+              data-nh3d-overflow-glow
+              data-nh3d-overflow-glow-host="parent"
+            >
+              <div className="nh3d-info-title">
+                #{selectedTopScore.rank} {formatTopScoreText(selectedTopScore.name)}
+              </div>
+              <div className="nh3d-character-xp-block nh3d-character-xp-block-top">
+                <div className="nh3d-character-xp-header">
+                  <span>{formatTopScoreInteger(selectedTopScore.points)} points</span>
+                  <span>{formatTopScoreMode(selectedTopScore)}</span>
+                </div>
+                <div className="nh3d-character-xp-meta">
+                  {formatTopScoreText(selectedTopScore.death)}
+                </div>
+              </div>
+              <div className="nh3d-character-grid nh3d-top-score-detail-grid">
+                <section className="nh3d-character-panel">
+                  <div className="nh3d-character-panel-title">
+                    NetHack Score Stats
+                  </div>
+                  <div className="nh3d-character-field-list">
+                    {selectedTopScoreStatRows.map(([label, value]) => (
+                      <div
+                        className="nh3d-character-field-row"
+                        key={`top-score-stat-${label}`}
+                      >
+                        <div className="nh3d-character-field-label">
+                          {label}
+                        </div>
+                        <div className="nh3d-character-field-value-group">
+                          <span className="nh3d-character-field-value">
+                            {value}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="nh3d-character-panel">
+                  <div className="nh3d-character-panel-title">
+                    Raw Score Fields
+                  </div>
+                  <div className="nh3d-character-field-list">
+                    {selectedTopScoreRawFieldRows.map(([label, value]) => (
+                      <div
+                        className="nh3d-character-field-row"
+                        key={`top-score-raw-${label}`}
+                      >
+                        <div className="nh3d-character-field-label">
+                          {label}
+                        </div>
+                        <div className="nh3d-character-field-value-group">
+                          <span className="nh3d-character-field-value">
+                            {value || "--"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="nh3d-character-panel">
+                  <div className="nh3d-character-panel-title">
+                    Player Attributes
+                  </div>
+                  {selectedTopScoreAttributeRows.length > 0 ? (
+                    <div className="nh3d-character-stat-grid">
+                      {selectedTopScoreAttributeRows.map(([label, value]) => (
+                        <div
+                          className="nh3d-character-stat"
+                          key={`top-score-attribute-${label}`}
+                        >
+                          <div className="nh3d-character-stat-label">
+                            {label}
+                          </div>
+                          <div className="nh3d-character-stat-value">
+                            <span className="nh3d-character-stat-current">
+                              {value}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="nh3d-top-scores-empty">
+                      No attribute snapshot was captured for this score.
+                    </div>
+                  )}
+                </section>
+
+                <section className="nh3d-character-panel">
+                  <div className="nh3d-character-panel-title">Inventory</div>
+                  {selectedTopScore.detail?.inventory.length ? (
+                    <div className="nh3d-top-score-inventory-list">
+                      {selectedTopScore.detail.inventory.map((item, index) =>
+                        item.isCategory ? (
+                          <div
+                            className="nh3d-top-score-inventory-category"
+                            key={`top-score-inventory-${index}`}
+                          >
+                            {item.text}
+                          </div>
+                        ) : (
+                          <div
+                            className="nh3d-top-score-inventory-item"
+                            key={`top-score-inventory-${index}`}
+                          >
+                            <span className="nh3d-top-score-inventory-key">
+                              {item.accelerator ?? "-"}
+                            </span>
+                            <span>{item.text}</span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  ) : (
+                    <div className="nh3d-top-scores-empty">
+                      No inventory snapshot was captured for this score.
+                    </div>
+                  )}
+                </section>
+
+                {selectedTopScore.detail?.tombstoneLines.length ? (
+                  <section className="nh3d-character-panel">
+                    <div className="nh3d-character-panel-title">
+                      Tombstone
+                    </div>
+                    <pre className="nh3d-top-score-tombstone">
+                      {selectedTopScore.detail.tombstoneLines.join("\n")}
+                    </pre>
+                  </section>
+                ) : null}
+              </div>
+            </div>
+            <div className="nh3d-menu-actions">
+              <button
+                className="nh3d-menu-action-button nh3d-menu-action-cancel"
+                onClick={() => setSelectedTopScore(null)}
+                type="button"
+              >
+                {commonStrings.close}
+              </button>
+            </div>
+          </>
+        ) : null}
       </AnimatedDialog>
 
       <AnimatedDialog

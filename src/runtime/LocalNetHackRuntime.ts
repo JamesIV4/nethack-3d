@@ -12,9 +12,11 @@ import {
   supportsRuntimeCheckpointRecovery,
 } from "./runtime-capabilities";
 import {
+  getRuntimeRootPersistenceDbName,
   getRuntimeSaveDbName,
   getRuntimeSaveMountDir,
   isRecoverableCheckpointLevelZeroByteLength,
+  supportsRuntimeRootPersistence,
 } from "./save-storage";
 import { STATUS_FIELD_MAP_367, STATUS_FIELD_MAP_37 } from "./status-map";
 
@@ -1199,6 +1201,22 @@ class LocalNetHackRuntime {
     return characterCreation?.mode === "resume";
   }
 
+  joinRuntimeFsPath(dir, filename) {
+    const normalizedDir = String(dir || "/").replace(/\/+$/, "") || "/";
+    return normalizedDir === "/" ? `/${filename}` : `${normalizedDir}/${filename}`;
+  }
+
+  getRuntimeCheckpointStorageDir(mod = this.nethackModule) {
+    if (supportsRuntimeRootPersistence(this.runtimeVersion)) {
+      return "/";
+    }
+    const cwd =
+      typeof mod?.FS?.cwd === "function"
+        ? String(mod.FS.cwd() || "/")
+        : String(this.nethackModule?.FS?.cwd?.() || "/");
+    return getRuntimeSaveMountDir(this.runtimeVersion, cwd);
+  }
+
   removeCheckpointShardsByLockBaseName(mod, saveDir, lockBaseName, reason) {
     if (!mod?.FS || !saveDir || !lockBaseName) {
       return 0;
@@ -1225,7 +1243,7 @@ class LocalNetHackRuntime {
 
     const shardPaths = entries
       .filter((entry) => checkpointShardPattern.test(String(entry)))
-      .map((entry) => `${saveDir}/${entry}`);
+      .map((entry) => this.joinRuntimeFsPath(saveDir, entry));
 
     if (shardPaths.length === 0) {
       return 0;
@@ -1276,11 +1294,7 @@ class LocalNetHackRuntime {
       return;
     }
 
-    const cwd =
-      typeof mod.FS.cwd === "function"
-        ? String(mod.FS.cwd() || "/")
-        : String(this.nethackModule?.FS?.cwd?.() || "/");
-    const saveDir = getRuntimeSaveMountDir(this.runtimeVersion, cwd);
+    const saveDir = this.getRuntimeCheckpointStorageDir(mod);
     const lockBaseName = this.resolveCurrentCheckpointLockBaseName();
     if (lockBaseName) {
       this.removeCheckpointShardsByLockBaseName(
@@ -1365,7 +1379,10 @@ class LocalNetHackRuntime {
       return null;
     }
 
-    const checkpointLevelZeroPath = `${saveDir}/${lockBaseName}.0`;
+    const checkpointLevelZeroPath = this.joinRuntimeFsPath(
+      saveDir,
+      `${lockBaseName}.0`,
+    );
     try {
       if (!mod.FS.analyzePath(checkpointLevelZeroPath)?.exists) {
         return null;
@@ -1397,11 +1414,7 @@ class LocalNetHackRuntime {
       return;
     }
 
-    const cwd =
-      typeof mod.FS.cwd === "function"
-        ? String(mod.FS.cwd() || "/")
-        : "/";
-    const saveDir = getRuntimeSaveMountDir(this.runtimeVersion, cwd);
+    const saveDir = this.getRuntimeCheckpointStorageDir(mod);
     const lockBaseNames = this.getStartupCheckpointLockBaseNameCandidates();
     if (lockBaseNames.length <= 0) {
       return;
@@ -1419,7 +1432,7 @@ class LocalNetHackRuntime {
           .filter((entry) => shardPattern.test(String(entry)))
           .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
           .map((entry) => {
-            const artifactPath = `${saveDir}/${entry}`;
+            const artifactPath = this.joinRuntimeFsPath(saveDir, entry);
             let byteLength = null;
             try {
               if (typeof mod.FS.stat === "function") {
@@ -1459,11 +1472,7 @@ class LocalNetHackRuntime {
       return;
     }
 
-    const cwd =
-      typeof mod.FS.cwd === "function"
-        ? String(mod.FS.cwd() || "/")
-        : "/";
-    const saveDir = getRuntimeSaveMountDir(this.runtimeVersion, cwd);
+    const saveDir = this.getRuntimeCheckpointStorageDir(mod);
     const lockBaseNames = this.getStartupCheckpointLockBaseNameCandidates();
     if (lockBaseNames.length <= 0) {
       return;
@@ -1480,7 +1489,9 @@ class LocalNetHackRuntime {
         return;
       }
       if (byteLength !== null) {
-        invalidCheckpointPaths.push(`${saveDir}/${lockBaseName}.0 (${byteLength} bytes)`);
+        invalidCheckpointPaths.push(
+          `${this.joinRuntimeFsPath(saveDir, `${lockBaseName}.0`)} (${byteLength} bytes)`,
+        );
       }
     }
 
@@ -1497,6 +1508,118 @@ class LocalNetHackRuntime {
     );
   }
 
+  migrateLegacySaveCheckpointShardsToRootForAutosaveResume() {
+    if (
+      !supportsRuntimeRootPersistence(this.runtimeVersion) ||
+      !this.isAutosaveResumeRequested()
+    ) {
+      return 0;
+    }
+
+    const mod = this.nethackModule;
+    if (!mod?.FS) {
+      return 0;
+    }
+
+    const lockBaseNames = this.getStartupCheckpointLockBaseNameCandidates();
+    if (lockBaseNames.length <= 0) {
+      return 0;
+    }
+
+    const hasRecoverableRootCheckpoint = lockBaseNames.some((lockBaseName) =>
+      isRecoverableCheckpointLevelZeroByteLength(
+        this.getCheckpointLevelZeroArtifactSizeBytes(mod, "/", lockBaseName),
+      ),
+    );
+    if (hasRecoverableRootCheckpoint) {
+      return 0;
+    }
+
+    const cwd =
+      typeof mod.FS.cwd === "function" ? String(mod.FS.cwd() || "/") : "/";
+    const legacySaveDir = getRuntimeSaveMountDir(this.runtimeVersion, cwd);
+    try {
+      if (!mod.FS.analyzePath(legacySaveDir)?.exists) {
+        return 0;
+      }
+    } catch {
+      return 0;
+    }
+
+    let entries = [];
+    try {
+      entries = mod.FS.readdir(legacySaveDir);
+    } catch (error) {
+      console.warn(
+        `Failed to enumerate ${legacySaveDir} for legacy checkpoint migration:`,
+        error,
+      );
+      return 0;
+    }
+
+    let copiedCount = 0;
+    for (const lockBaseName of lockBaseNames) {
+      const escapedLockBaseName = lockBaseName.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&",
+      );
+      const checkpointShardPattern = new RegExp(
+        `^${escapedLockBaseName}\\.\\d+$`,
+      );
+      const shardNames = entries
+        .map((entry) => String(entry || ""))
+        .filter((entry) => checkpointShardPattern.test(entry))
+        .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+
+      for (const shardName of shardNames) {
+        const sourcePath = this.joinRuntimeFsPath(legacySaveDir, shardName);
+        const targetPath = this.joinRuntimeFsPath("/", shardName);
+        try {
+          const stat =
+            typeof mod.FS.stat === "function" ? mod.FS.stat(sourcePath) : null;
+          if (stat && !mod.FS.isFile(stat.mode)) {
+            continue;
+          }
+          const contents = mod.FS.readFile(sourcePath);
+          mod.FS.writeFile(targetPath, contents);
+          if (stat && typeof stat.mode === "number" && typeof mod.FS.chmod === "function") {
+            mod.FS.chmod(targetPath, stat.mode);
+          }
+          if (stat?.mtime instanceof Date && typeof mod.FS.utime === "function") {
+            mod.FS.utime(targetPath, stat.mtime, stat.mtime);
+          }
+          copiedCount += 1;
+        } catch (error) {
+          console.warn(
+            `Failed to copy legacy checkpoint shard ${sourcePath} to ${targetPath}:`,
+            error,
+          );
+        }
+      }
+    }
+
+    if (copiedCount > 0) {
+      console.log(
+        `Copied ${copiedCount} legacy /save checkpoint shard(s) to root for autosave resume.`,
+      );
+      if (typeof mod.__nh3dFlushRootPersistence === "function") {
+        mod.__nh3dFlushRootPersistence(
+          "legacy-save-checkpoint-migration",
+          (error) => {
+            if (error) {
+              console.warn(
+                "Failed to persist migrated legacy checkpoint shards:",
+                error,
+              );
+            }
+          },
+        );
+      }
+    }
+
+    return copiedCount;
+  }
+
   removeStaleRecoverableSaveArtifactsBeforeAutosaveResume(mod, saveDir) {
     if (!mod?.FS || !this.isAutosaveResumeRequested()) {
       return 0;
@@ -1511,7 +1634,7 @@ class LocalNetHackRuntime {
       for (const artifactName of this.getRecoverableSaveArtifactNames(
         lockBaseName,
       )) {
-        const artifactPath = `${saveDir}/${artifactName}`;
+        const artifactPath = this.joinRuntimeFsPath(saveDir, artifactName);
         let exists = false;
         try {
           exists = Boolean(mod.FS.analyzePath(artifactPath)?.exists);
@@ -7610,6 +7733,7 @@ class LocalNetHackRuntime {
       return;
     }
 
+    this.migrateLegacySaveCheckpointShardsToRootForAutosaveResume();
     this.logAutosaveCheckpointArtifactsBeforeStartup();
     this.ensureAutosaveResumeHasRecoverableCheckpoint();
 
@@ -10015,11 +10139,466 @@ class LocalNetHackRuntime {
               const cwd = mod.FS.cwd();
               const saveDir = getRuntimeSaveMountDir(runtimeVersion, cwd);
               const saveDbName = getRuntimeSaveDbName(runtimeVersion, cwd);
+              const rootPersistenceEnabled =
+                supportsRuntimeRootPersistence(runtimeVersion);
+              const rootPersistenceDbName = rootPersistenceEnabled
+                ? getRuntimeRootPersistenceDbName(runtimeVersion)
+                : "";
+              const rootPersistenceStoreName =
+                IDBFS.DB_STORE_NAME || "FILE_DATA";
+              const rootPersistenceDbVersion =
+                Number(IDBFS.DB_VERSION) > 0 ? Number(IDBFS.DB_VERSION) : 21;
               const checkpointLevelFilePattern = /^[^/\\]+\.\d+$/;
               const normalizedCwd = cwd.replace(/\/+$/, "") || "/";
               const normalizedSaveDir =
                 saveDir.replace(/\/+$/, "") ||
                 getRuntimeSaveMountDir(runtimeVersion);
+              const checkpointStorageDir = rootPersistenceEnabled
+                ? "/"
+                : normalizedSaveDir;
+              const normalizeRuntimeFsPath = (rawPath) => {
+                if (typeof rawPath !== "string" || !rawPath.trim()) {
+                  return "";
+                }
+                let normalized = rawPath.replace(/\\/g, "/").trim();
+                if (normalized.startsWith("./")) {
+                  normalized = normalized.slice(2);
+                }
+                if (!normalized.startsWith("/")) {
+                  const liveCwd =
+                    typeof mod.FS.cwd === "function"
+                      ? String(mod.FS.cwd() || normalizedCwd)
+                      : normalizedCwd;
+                  const cwdPrefix = liveCwd.replace(/\/+$/, "") || "/";
+                  normalized =
+                    cwdPrefix === "/" ? `/${normalized}` : `${cwdPrefix}/${normalized}`;
+                }
+                const parts = [];
+                for (const part of normalized.split("/")) {
+                  if (!part || part === ".") {
+                    continue;
+                  }
+                  if (part === "..") {
+                    parts.pop();
+                    continue;
+                  }
+                  parts.push(part);
+                }
+                return `/${parts.join("/")}`;
+              };
+              const basenameForRuntimePath = (path) =>
+                String(path || "").split("/").pop() || "";
+              const isRootPersistenceStaticFilename = (filename) => {
+                const normalized = String(filename || "").toLowerCase();
+                return (
+                  normalized === "nhdat" ||
+                  normalized === "sysconf" ||
+                  normalized === "perm" ||
+                  normalized === "timestamp" ||
+                  normalized === ".keep" ||
+                  normalized === "save" ||
+                  normalized === "tmp" ||
+                  normalized === "home" ||
+                  normalized === "dev" ||
+                  normalized === "proc"
+                );
+              };
+              const isRootPersistenceLockFilename = (filename) => {
+                const normalized = String(filename || "").toLowerCase();
+                return (
+                  normalized === "lock" ||
+                  /^[a-z]lock$/i.test(normalized) ||
+                  normalized.endsWith(".lock") ||
+                  normalized.endsWith("_lock")
+                );
+              };
+              const shouldPersistRootFilePath = (path) => {
+                const normalizedPath = normalizeRuntimeFsPath(path);
+                const filename = basenameForRuntimePath(normalizedPath);
+                if (!shouldPersistRootPathName(normalizedPath, filename)) {
+                  return false;
+                }
+                try {
+                  const stat = mod.FS.stat(normalizedPath);
+                  return Boolean(stat && mod.FS.isFile(stat.mode));
+                } catch {
+                  return false;
+                }
+              };
+              const shouldPersistRootPathName = (path, filename = null) => {
+                const normalizedPath = normalizeRuntimeFsPath(path);
+                const normalizedFilename =
+                  filename ?? basenameForRuntimePath(normalizedPath);
+                return Boolean(
+                  /^\/[^/]+$/.test(normalizedPath) &&
+                    normalizedFilename &&
+                    !isRootPersistenceStaticFilename(normalizedFilename) &&
+                    !isRootPersistenceLockFilename(normalizedFilename),
+                );
+              };
+              const normalizeRootPersistenceKey = (key) => {
+                const normalizedPath = normalizeRuntimeFsPath(key);
+                return /^\/[^/]+$/.test(normalizedPath) ? normalizedPath : "";
+              };
+              let rootPersistenceOperationDepth = 0;
+              const isRootPersistenceOperationActive = () =>
+                rootPersistenceOperationDepth > 0;
+              const runDuringRootPersistenceOperation = (operation) => {
+                rootPersistenceOperationDepth += 1;
+                try {
+                  return operation();
+                } finally {
+                  rootPersistenceOperationDepth -= 1;
+                }
+              };
+              const openRootPersistenceDatabase = () =>
+                new Promise((resolve, reject) => {
+                  if (
+                    !rootPersistenceEnabled ||
+                    !rootPersistenceDbName ||
+                    typeof indexedDB === "undefined"
+                  ) {
+                    resolve(null);
+                    return;
+                  }
+                  const request = indexedDB.open(
+                    rootPersistenceDbName,
+                    rootPersistenceDbVersion,
+                  );
+                  request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    let store = null;
+                    if (db.objectStoreNames.contains(rootPersistenceStoreName)) {
+                      store = event.target.transaction.objectStore(
+                        rootPersistenceStoreName,
+                      );
+                    } else {
+                      store = db.createObjectStore(rootPersistenceStoreName);
+                    }
+                    if (
+                      store &&
+                      !Array.from(store.indexNames || []).includes("timestamp")
+                    ) {
+                      store.createIndex("timestamp", "timestamp", {
+                        unique: false,
+                      });
+                    }
+                  };
+                  request.onsuccess = () => resolve(request.result);
+                  request.onerror = () => reject(request.error);
+                });
+              const idbRequestToPromise = (request) =>
+                new Promise((resolve, reject) => {
+                  request.onsuccess = () => resolve(request.result);
+                  request.onerror = () => reject(request.error);
+                });
+              const decodeStoredRootContents = (value) => {
+                const contents =
+                  value && typeof value === "object" ? value.contents : null;
+                if (contents instanceof Uint8Array) {
+                  return new Uint8Array(contents);
+                }
+                if (contents instanceof ArrayBuffer) {
+                  return new Uint8Array(contents);
+                }
+                if (Array.isArray(contents)) {
+                  return new Uint8Array(
+                    contents.map((entry) =>
+                      Math.max(0, Math.min(255, Number(entry) || 0)),
+                    ),
+                  );
+                }
+                if (
+                  contents &&
+                  typeof contents === "object" &&
+                  Array.isArray(contents.data)
+                ) {
+                  return new Uint8Array(
+                    contents.data.map((entry) =>
+                      Math.max(0, Math.min(255, Number(entry) || 0)),
+                    ),
+                  );
+                }
+                return null;
+              };
+              const hydrateRootPersistence = (callback) => {
+                let settled = false;
+                const finish = (error = null) => {
+                  if (settled) {
+                    return;
+                  }
+                  settled = true;
+                  callback(error);
+                };
+                if (!rootPersistenceEnabled) {
+                  finish(null);
+                  return;
+                }
+                openRootPersistenceDatabase()
+                  .then((db) => {
+                    if (!db) {
+                      finish(null);
+                      return;
+                    }
+                    if (!db.objectStoreNames.contains(rootPersistenceStoreName)) {
+                      db.close();
+                      finish(null);
+                      return;
+                    }
+                    const transaction = db.transaction(
+                      [rootPersistenceStoreName],
+                      "readonly",
+                    );
+                    const store = transaction.objectStore(
+                      rootPersistenceStoreName,
+                    );
+                    Promise.all([
+                      idbRequestToPromise(store.getAll()),
+                      idbRequestToPromise(store.getAllKeys()),
+                    ])
+                      .then(([values, keys]) => {
+                        let restoredCount = 0;
+                        for (let index = 0; index < values.length; index += 1) {
+                          const key =
+                            typeof keys[index] === "string"
+                              ? normalizeRootPersistenceKey(keys[index])
+                              : "";
+                          if (!key) {
+                            continue;
+                          }
+                          const filename = basenameForRuntimePath(key);
+                          if (
+                            isRootPersistenceStaticFilename(filename) ||
+                            isRootPersistenceLockFilename(filename)
+                          ) {
+                            continue;
+                          }
+                          if (
+                            values[index] &&
+                            typeof values[index] === "object" &&
+                            typeof values[index].mode === "number" &&
+                            !mod.FS.isFile(values[index].mode)
+                          ) {
+                            continue;
+                          }
+                          const contents = decodeStoredRootContents(values[index]);
+                          if (!contents) {
+                            continue;
+                          }
+                          try {
+                            runDuringRootPersistenceOperation(() => {
+                              mod.FS.writeFile(key, contents);
+                            });
+                            if (
+                              values[index] &&
+                              typeof values[index] === "object" &&
+                              typeof values[index].mode === "number" &&
+                              typeof mod.FS.chmod === "function"
+                            ) {
+                              runDuringRootPersistenceOperation(() => {
+                                mod.FS.chmod(key, values[index].mode);
+                              });
+                            }
+                            if (
+                              values[index] &&
+                              typeof values[index] === "object" &&
+                              values[index].timestamp &&
+                              typeof mod.FS.utime === "function"
+                            ) {
+                              const timestamp = new Date(values[index].timestamp);
+                              runDuringRootPersistenceOperation(() => {
+                                mod.FS.utime(key, timestamp, timestamp);
+                              });
+                            }
+                            restoredCount += 1;
+                          } catch (error) {
+                            console.warn(
+                              `Failed to restore persisted root file ${key}:`,
+                              error,
+                            );
+                          }
+                        }
+                        db.close();
+                        if (restoredCount > 0) {
+                          console.log(
+                            `Restored ${restoredCount} NetHack root file(s) from ${rootPersistenceDbName}`,
+                          );
+                        }
+                        finish(null);
+                      })
+                      .catch((error) => {
+                        db.close();
+                        finish(error);
+                      });
+                  })
+                  .catch((error) => finish(error));
+              };
+              const readPersistableRootEntries = () => {
+                const entries = new Map();
+                runDuringRootPersistenceOperation(() => {
+                  let names = [];
+                  try {
+                    names = mod.FS.readdir("/");
+                  } catch {
+                    return;
+                  }
+                  for (const name of names) {
+                    const filename = String(name || "");
+                    const path = `/${filename}`;
+                    if (!shouldPersistRootFilePath(path)) {
+                      continue;
+                    }
+                    try {
+                      const stat = mod.FS.stat(path);
+                      const contents = mod.FS.readFile(path);
+                      entries.set(path, {
+                        timestamp:
+                          stat && stat.mtime instanceof Date
+                            ? stat.mtime
+                            : new Date(),
+                        mode: stat.mode,
+                        contents: new Uint8Array(contents),
+                      });
+                    } catch (error) {
+                      console.warn(
+                        `Failed to read root file ${path} for persistence:`,
+                        error,
+                      );
+                    }
+                  }
+                });
+                return entries;
+              };
+              const flushRootPersistence = (reason, callback = null) => {
+                if (!rootPersistenceEnabled) {
+                  if (typeof callback === "function") {
+                    callback(null);
+                  }
+                  return;
+                }
+                const entries = readPersistableRootEntries();
+                openRootPersistenceDatabase()
+                  .then((db) => {
+                    if (!db) {
+                      if (typeof callback === "function") {
+                        callback(null);
+                      }
+                      return;
+                    }
+                    const transaction = db.transaction(
+                      [rootPersistenceStoreName],
+                      "readwrite",
+                    );
+                    const store = transaction.objectStore(
+                      rootPersistenceStoreName,
+                    );
+                    const keysRequest = store.getAllKeys();
+                    keysRequest.onsuccess = () => {
+                      const existingKeys = Array.from(keysRequest.result || [])
+                        .filter((key) => typeof key === "string")
+                        .map((key) => ({
+                          original: key,
+                          normalized: normalizeRootPersistenceKey(key),
+                        }));
+                      const operations = [];
+                      for (const { original, normalized } of existingKeys) {
+                        if (!normalized) {
+                          operations.push(idbRequestToPromise(store.delete(original)));
+                          continue;
+                        }
+                        const filename = basenameForRuntimePath(normalized);
+                        if (
+                          isRootPersistenceStaticFilename(filename) ||
+                          isRootPersistenceLockFilename(filename)
+                        ) {
+                          operations.push(idbRequestToPromise(store.delete(original)));
+                          continue;
+                        }
+                        if (!entries.has(normalized)) {
+                          operations.push(idbRequestToPromise(store.delete(original)));
+                        }
+                      }
+                      for (const [path, entry] of entries.entries()) {
+                        operations.push(idbRequestToPromise(store.put(entry, path)));
+                      }
+                      Promise.all(operations)
+                        .then(() => {
+                          db.close();
+                          if (
+                            entries.size > 0 &&
+                            (reason === "startup" || reason === "postRun")
+                          ) {
+                            console.log(
+                              `Persisted ${entries.size} NetHack root file(s) to ${rootPersistenceDbName} (${reason})`,
+                            );
+                          }
+                          if (typeof callback === "function") {
+                            callback(null);
+                          }
+                        })
+                        .catch((error) => {
+                          db.close();
+                          if (typeof callback === "function") {
+                            callback(error);
+                          }
+                        });
+                    };
+                    keysRequest.onerror = () => {
+                      const error = keysRequest.error;
+                      db.close();
+                      if (typeof callback === "function") {
+                        callback(error);
+                      }
+                    };
+                  })
+                  .catch((error) => {
+                    if (typeof callback === "function") {
+                      callback(error);
+                    }
+                  });
+              };
+              let rootPersistenceFlushInFlight = false;
+              let rootPersistenceFlushQueued = false;
+              let rootPersistenceFlushTimer = 0;
+              const runQueuedRootPersistenceFlush = (reason = "queued") => {
+                if (!rootPersistenceEnabled) {
+                  return;
+                }
+                if (rootPersistenceFlushInFlight) {
+                  rootPersistenceFlushQueued = true;
+                  return;
+                }
+                rootPersistenceFlushInFlight = true;
+                flushRootPersistence(reason, (error) => {
+                  if (error) {
+                    console.warn("NetHack root persistence flush failed:", error);
+                  }
+                  rootPersistenceFlushInFlight = false;
+                  if (rootPersistenceFlushQueued) {
+                    rootPersistenceFlushQueued = false;
+                    runQueuedRootPersistenceFlush("queued");
+                  }
+                });
+              };
+              const scheduleRootPersistenceFlush = (reason = "scheduled") => {
+                if (
+                  !rootPersistenceEnabled ||
+                  isRootPersistenceOperationActive()
+                ) {
+                  return;
+                }
+                if (rootPersistenceFlushTimer) {
+                  clearTimeout(rootPersistenceFlushTimer);
+                }
+                rootPersistenceFlushTimer = globalThis.setTimeout(() => {
+                  rootPersistenceFlushTimer = 0;
+                  runQueuedRootPersistenceFlush(reason);
+                }, 75);
+              };
+              if (rootPersistenceEnabled) {
+                mod.__nh3dFlushRootPersistence = flushRootPersistence;
+                mod.__nh3dHydrateRootPersistence = hydrateRootPersistence;
+              }
 
               const patchIdbfsDbNameResolution = () => {
                 if (!IDBFS || typeof IDBFS.getDB !== "function") {
@@ -10053,11 +10632,11 @@ class LocalNetHackRuntime {
               }
 
               let scheduleCheckpointSync = () => {};
-              if (checkpointStartupOptionEnabled) {
+              if (checkpointStartupOptionEnabled && !rootPersistenceEnabled) {
                 // NetHack checkpointing writes level snapshots as
                 // "<lockname>.<level>" in the current working directory.
-                // Redirect those files into IDBFS only for runtimes that
-                // explicitly opted into checkpoint mode.
+                // Older runtimes need those files moved into the save mount.
+                // Root-persistent runtimes keep NetHack's original paths.
                 const remapCheckpointLevelPath = (rawPath) => {
                   if (typeof rawPath !== "string" || !rawPath) {
                     return rawPath;
@@ -10154,13 +10733,20 @@ class LocalNetHackRuntime {
                     }
                     syncfsInFlight = true;
                     originalSyncfs(next.populate, (err) => {
-                      try {
-                        if (next.callback) {
-                          next.callback(err);
+                      const finish = (rootErr = null) => {
+                        try {
+                          if (next.callback) {
+                            next.callback(err || rootErr);
+                          }
+                        } finally {
+                          runNext();
                         }
-                      } finally {
-                        runNext();
+                      };
+                      if (err || next.populate || !rootPersistenceEnabled) {
+                        finish();
+                        return;
                       }
+                      flushRootPersistence("syncfs", finish);
                     });
                   };
 
@@ -10176,7 +10762,60 @@ class LocalNetHackRuntime {
                 };
               }
 
-              if (checkpointStartupOptionEnabled) {
+              if (rootPersistenceEnabled) {
+                const isWritableOpenFlags = (flags, streamFlags) => {
+                  if (typeof flags === "string") {
+                    return /[wa+]/.test(flags);
+                  }
+                  const numericFlags =
+                    typeof streamFlags === "number"
+                      ? streamFlags
+                      : typeof flags === "number"
+                        ? flags
+                        : null;
+                  if (numericFlags === null) {
+                    return false;
+                  }
+                  return Boolean(
+                    (numericFlags & 3) !== 0 ||
+                      (numericFlags & 64) !== 0 ||
+                      (numericFlags & 512) !== 0 ||
+                      (numericFlags & 1024) !== 0,
+                  );
+                };
+                const originalOpen = mod.FS.open;
+                if (typeof originalOpen === "function") {
+                  mod.FS.open = function (path, flags, ...args) {
+                    const normalizedPath = normalizeRuntimeFsPath(path);
+                    const stream = originalOpen.call(this, path, flags, ...args);
+                    if (
+                      !isRootPersistenceOperationActive() &&
+                      shouldPersistRootFilePath(normalizedPath) &&
+                      isWritableOpenFlags(flags, stream?.flags)
+                    ) {
+                      stream.__nh3dRootPersistenceWritable = true;
+                    }
+                    return stream;
+                  };
+                }
+                const originalUnlink = mod.FS.unlink;
+                if (typeof originalUnlink === "function") {
+                  mod.FS.unlink = function (path, ...args) {
+                    const normalizedPath = normalizeRuntimeFsPath(path);
+                    const filename = basenameForRuntimePath(normalizedPath);
+                    const shouldFlushRoot =
+                      !isRootPersistenceOperationActive() &&
+                      shouldPersistRootPathName(normalizedPath, filename);
+                    const result = originalUnlink.call(this, path, ...args);
+                    if (shouldFlushRoot) {
+                      scheduleRootPersistenceFlush("unlink");
+                    }
+                    return result;
+                  };
+                }
+              }
+
+              if (checkpointStartupOptionEnabled || rootPersistenceEnabled) {
                 let checkpointSyncInFlight = false;
                 let checkpointSyncQueued = false;
                 let checkpointSyncTimer = 0;
@@ -10215,12 +10854,26 @@ class LocalNetHackRuntime {
                       stream && typeof stream.path === "string"
                         ? stream.path
                         : "";
-                    const shouldSyncCheckpoint =
-                      streamPath.startsWith(`${normalizedSaveDir}/`) &&
-                      /\/[^/]+\.\d+$/.test(streamPath);
+                    const normalizedStreamPath =
+                      normalizeRuntimeFsPath(streamPath);
+                    const streamWasRootPersistenceWrite =
+                      Boolean(stream?.__nh3dRootPersistenceWritable) &&
+                      !isRootPersistenceOperationActive();
+                    const shouldSyncCheckpoint = rootPersistenceEnabled
+                      ? streamWasRootPersistenceWrite &&
+                        /^\/[^/]+\.\d+$/.test(normalizedStreamPath)
+                      : normalizedStreamPath.startsWith(`${normalizedSaveDir}/`) &&
+                        /\/[^/]+\.\d+$/.test(normalizedStreamPath);
+                    const shouldFlushRoot =
+                      rootPersistenceEnabled &&
+                      streamWasRootPersistenceWrite &&
+                      shouldPersistRootFilePath(normalizedStreamPath);
                     const result = originalClose.call(this, stream, ...args);
                     if (shouldSyncCheckpoint) {
                       scheduleCheckpointSync();
+                    }
+                    if (shouldFlushRoot) {
+                      scheduleRootPersistenceFlush("close");
                     }
                     return result;
                   };
@@ -10232,10 +10885,20 @@ class LocalNetHackRuntime {
                 logStartupHook("preRun:idbfs-mounted", mod, {
                   saveDir,
                   saveDbName,
+                  rootPersistenceEnabled,
+                  rootPersistenceDbName,
                   rootEntries: listDirectoryEntries(mod, "/"),
                   saveEntries: listDirectoryEntries(mod, saveDir),
                 });
                 mod.addRunDependency("idbfs_sync");
+                let idbfsSyncDependencyRemoved = false;
+                const removeIdbfsSyncDependency = () => {
+                  if (idbfsSyncDependencyRemoved) {
+                    return;
+                  }
+                  idbfsSyncDependencyRemoved = true;
+                  mod.removeRunDependency("idbfs_sync");
+                };
                 mod.FS.syncfs(true, (err) => {
                   if (err) {
                     console.warn("IDBFS load syncfs error:", err);
@@ -10245,76 +10908,93 @@ class LocalNetHackRuntime {
                       error:
                         err instanceof Error && err.message
                           ? err.message
-                          : String(err ?? ""),
+                        : String(err ?? ""),
                     });
-                    mod.removeRunDependency("idbfs_sync");
+                    removeIdbfsSyncDependency();
                     return;
                   }
 
-                  console.log(`IDBFS mounted and synced at ${saveDir}`);
-                  logStartupHook("preRun:idbfs-synced", mod, {
-                    saveDir,
-                    saveDbName,
-                    rootEntries: listDirectoryEntries(mod, "/"),
-                    saveEntries: listDirectoryEntries(mod, saveDir),
-                  });
-                  try {
-                    const sysconfPath = "/sysconf";
-                    if (
-                      mod.FS.analyzePath(sysconfPath).exists &&
-                      typeof mod.FS.readFile === "function"
-                    ) {
-                      const sysconfRaw = String(
-                        mod.FS.readFile(sysconfPath, { encoding: "utf8" }) || "",
+                  const finishStartupPersistence = () => {
+                    try {
+                      console.log(`IDBFS mounted and synced at ${saveDir}`);
+                      logStartupHook("preRun:idbfs-synced", mod, {
+                        saveDir,
+                        saveDbName,
+                        rootPersistenceEnabled,
+                        rootPersistenceDbName,
+                        checkpointStorageDir,
+                        rootEntries: listDirectoryEntries(mod, "/"),
+                        saveEntries: listDirectoryEntries(mod, saveDir),
+                      });
+                      try {
+                        const sysconfPath = "/sysconf";
+                        if (
+                          mod.FS.analyzePath(sysconfPath).exists &&
+                          typeof mod.FS.readFile === "function"
+                        ) {
+                          const sysconfRaw = String(
+                            mod.FS.readFile(sysconfPath, { encoding: "utf8" }) ||
+                              "",
+                          );
+                          const maxPlayersLine =
+                            sysconfRaw
+                              .split(/\r?\n/)
+                              .find((line) =>
+                                /^MAXPLAYERS=/i.test(line.trim()),
+                              ) || "";
+                          if (maxPlayersLine) {
+                            console.log(
+                              `Embedded runtime sysconf ${maxPlayersLine.trim()}`,
+                            );
+                          }
+                        }
+                      } catch (error) {
+                        console.warn("Failed to inspect embedded /sysconf:", error);
+                      }
+
+                      const removedCheckpointShardCount =
+                        this.cleanupStaleCheckpointShardsBeforeStartup(
+                          mod,
+                          checkpointStorageDir,
+                        );
+                      const removedTemporaryLockShardCount =
+                        this.cleanupStaleTemporaryRuntimeLocksBeforeStartup(
+                          mod,
+                          checkpointStorageDir,
+                        );
+                      const removedRecoverableSaveArtifactCount =
+                        this.removeStaleRecoverableSaveArtifactsBeforeAutosaveResume(
+                          mod,
+                          checkpointStorageDir,
+                        );
+                      if (
+                        removedCheckpointShardCount +
+                          removedTemporaryLockShardCount +
+                          removedRecoverableSaveArtifactCount >
+                        0
+                      ) {
+                        mod.FS.syncfs(false, (syncErr) => {
+                          if (syncErr) {
+                            console.warn(
+                              "IDBFS stale checkpoint cleanup sync error:",
+                              syncErr,
+                            );
+                          }
+                          removeIdbfsSyncDependency();
+                        });
+                        return;
+                      }
+                    } catch (error) {
+                      console.warn(
+                        "IDBFS startup persistence cleanup failed:",
+                        error,
                       );
-                      const maxPlayersLine =
-                        sysconfRaw
-                          .split(/\r?\n/)
-                          .find((line) => /^MAXPLAYERS=/i.test(line.trim())) ||
-                        "";
-                      if (maxPlayersLine) {
-                        console.log(
-                          `Embedded runtime sysconf ${maxPlayersLine.trim()}`,
-                        );
-                      }
+                    } finally {
+                      removeIdbfsSyncDependency();
                     }
-                  } catch (error) {
-                    console.warn("Failed to inspect embedded /sysconf:", error);
-                  }
-                  const removedCheckpointShardCount =
-                    this.cleanupStaleCheckpointShardsBeforeStartup(
-                      mod,
-                      saveDir,
-                    );
-                  const removedTemporaryLockShardCount =
-                    this.cleanupStaleTemporaryRuntimeLocksBeforeStartup(
-                      mod,
-                      saveDir,
-                    );
-                  const removedRecoverableSaveArtifactCount =
-                    this.removeStaleRecoverableSaveArtifactsBeforeAutosaveResume(
-                      mod,
-                      saveDir,
-                    );
-                  if (
-                    removedCheckpointShardCount +
-                      removedTemporaryLockShardCount +
-                      removedRecoverableSaveArtifactCount >
-                    0
-                  ) {
-                    mod.FS.syncfs(false, (syncErr) => {
-                      if (syncErr) {
-                        console.warn(
-                          "IDBFS stale checkpoint cleanup sync error:",
-                          syncErr,
-                        );
-                      }
-                      mod.removeRunDependency("idbfs_sync");
-                    });
-                    return;
-                  }
+                  };
 
-                  mod.removeRunDependency("idbfs_sync");
+                  finishStartupPersistence();
                 });
               } catch (e) {
                 console.warn(`Failed to mount IDBFS at ${saveDir}`, e);
@@ -10337,6 +11017,13 @@ class LocalNetHackRuntime {
         postRun: [
           (mod) => {
             startupModule = mod || startupModule;
+            if (typeof mod?.__nh3dFlushRootPersistence === "function") {
+              mod.__nh3dFlushRootPersistence("postRun", (error) => {
+                if (error) {
+                  console.warn("NetHack root persistence postRun flush failed:", error);
+                }
+              });
+            }
             logStartupHook("postRun", mod, {
               rootEntries: listDirectoryEntries(mod, "/"),
               saveEntries: listDirectoryEntries(mod, "/save"),
@@ -10358,6 +11045,50 @@ class LocalNetHackRuntime {
       this.runtimePointerContract = null;
       this.runtimePointerContractValidated = false;
       this.updateCheckpointRecoverySupport();
+
+      if (typeof this.nethackInstance.__nh3dHydrateRootPersistence === "function") {
+        await new Promise((resolve) => {
+          let settled = false;
+          const settle = () => {
+            if (settled) {
+              return;
+            }
+            settled = true;
+            resolve();
+          };
+          try {
+            this.nethackInstance.__nh3dHydrateRootPersistence((hydrateError) => {
+              if (hydrateError) {
+                console.warn(
+                  "NetHack root persistence restore failed:",
+                  hydrateError,
+                );
+                logStartupHook("root-persistence-error", this.nethackInstance, {
+                  error:
+                    hydrateError instanceof Error && hydrateError.message
+                      ? hydrateError.message
+                      : String(hydrateError ?? ""),
+                });
+              } else {
+                logStartupHook("root-persistence-hydrated", this.nethackInstance, {
+                  rootEntries: listDirectoryEntries(this.nethackInstance, "/"),
+                  saveEntries: listDirectoryEntries(this.nethackInstance, "/save"),
+                });
+              }
+              settle();
+            });
+          } catch (error) {
+            console.warn("NetHack root persistence restore threw:", error);
+            logStartupHook("root-persistence-error", this.nethackInstance, {
+              error:
+                error instanceof Error && error.message
+                  ? error.message
+                  : String(error ?? ""),
+            });
+            settle();
+          }
+        });
+      }
 
       // Register the UI callback and start the game loop
       const setCallback = this.nethackInstance.cwrap(

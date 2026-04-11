@@ -115,6 +115,26 @@ export function getRuntimeSaveDbNames(
   );
 }
 
+export function getRuntimeRootPersistenceDbName(
+  runtimeVersion: NethackRuntimeVersion,
+): string {
+  return `/root-${getRuntimeSaveCompatTag(runtimeVersion)}`;
+}
+
+export function supportsRuntimeRootPersistence(
+  runtimeVersion: NethackRuntimeVersion,
+): boolean {
+  return runtimeVersion === "3.6.7";
+}
+
+export function getRuntimeRootPersistenceDbNames(
+  runtimeVersion: NethackRuntimeVersion,
+): string[] {
+  return supportsRuntimeRootPersistence(runtimeVersion)
+    ? [getRuntimeRootPersistenceDbName(runtimeVersion)]
+    : [];
+}
+
 type IndexedDbDatabaseListEntry = {
   name?: unknown;
 };
@@ -123,8 +143,9 @@ export async function resolveRuntimeSaveDbNames(
   runtimeVersion: NethackRuntimeVersion,
 ): Promise<string[]> {
   const staticNames = getRuntimeSaveDbNames(runtimeVersion);
+  const rootPersistenceNames = getRuntimeRootPersistenceDbNames(runtimeVersion);
   const compatTag = getRuntimeSaveCompatTag(runtimeVersion);
-  const matchingNames = new Set(staticNames);
+  const matchingNames = new Set([...staticNames, ...rootPersistenceNames]);
 
   if (
     typeof indexedDB !== "undefined" &&
@@ -146,7 +167,13 @@ export async function resolveRuntimeSaveDbNames(
         if (!name) {
           continue;
         }
-        if (name === `save-${compatTag}` || name.endsWith(`/save-${compatTag}`)) {
+        if (
+          name === `save-${compatTag}` ||
+          name.endsWith(`/save-${compatTag}`) ||
+          (supportsRuntimeRootPersistence(runtimeVersion) &&
+            (name === `root-${compatTag}` ||
+              name.endsWith(`/root-${compatTag}`)))
+        ) {
           matchingNames.add(name);
         }
       }
