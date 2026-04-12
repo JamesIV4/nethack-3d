@@ -6392,6 +6392,11 @@ class LocalNetHackRuntime {
       return { kind: "inventory", lines: [] };
     }
 
+    const normalizeInfoMenuLine = (value) =>
+      String(value || "")
+        .replace(/\r/g, "")
+        .trimEnd();
+
     // Help menu's "List of extended commands." flow sometimes arrives as
     // WIN_INVEN with selectable identifiers. Treat it as informational text.
     const normalizedLines = nonCategoryItems
@@ -6406,7 +6411,7 @@ class LocalNetHackRuntime {
     );
     if (isExtendedCommandsReport) {
       const lines = nonCategoryItems
-        .map((item) => String(item.text || "").trim())
+        .map((item) => normalizeInfoMenuLine(item.text))
         .filter((text) => text.length > 0);
       return {
         kind: "info_menu",
@@ -6420,11 +6425,11 @@ class LocalNetHackRuntime {
     }
 
     const orderedLines = items
-      .map((item) => String(item?.text || "").trim())
+      .map((item) => normalizeInfoMenuLine(item?.text))
       .filter((text) => text.length > 0);
     const categoryLines = items
       .filter((item) => item && item.isCategory)
-      .map((item) => String(item.text || "").trim())
+      .map((item) => normalizeInfoMenuLine(item.text))
       .filter((text) => text.length > 0);
 
     if (normalizedMenuQuestion) {
@@ -6461,7 +6466,7 @@ class LocalNetHackRuntime {
     // WIN_INVEN is also used by NetHack for reports like self-knowledge.
     // If entries are non-selectable metadata rows, treat as informational.
     const lines = nonCategoryItems
-      .map((item) => String(item.text || "").trim())
+      .map((item) => normalizeInfoMenuLine(item.text))
       .filter((text) => text.length > 0);
     return { kind: "info_menu", lines };
   }

@@ -1,6 +1,13 @@
 import type {
+  GameOverPostmortemReports,
   NethackMenuItem,
   PlayerStatsSnapshot,
+  RunTelemetryBreakdownEntry,
+  RunTelemetryLootEvent,
+  RunTelemetrySearchEvent,
+  RunTelemetrySnapshot,
+  RunTelemetrySpellLearnedEvent,
+  RunTelemetryTrapEvent,
 } from "../game/ui-types";
 import { resolveRuntimeSaveDbNames } from "./save-storage";
 import type { NethackRuntimeVersion } from "./types";
@@ -8,6 +15,8 @@ import type { NethackRuntimeVersion } from "./types";
 const scoreDetailsDbName = "nh3d-top-score-details-v1";
 const scoreDetailsDbVersion = 1;
 const scoreDetailsStoreName = "details";
+const nethackRecordNameLength = 10;
+const topScoreDetailTimeMatchWindowMs = 5 * 60 * 1000;
 
 export type TopScoreSource = "xlogfile" | "record" | "nh3d-snapshot";
 
@@ -17,6 +26,30 @@ export type TopScoreInventoryItem = {
   isCategory?: boolean;
   glyphChar?: string;
   tileIndex?: number;
+};
+
+export type TopScoreTimelineEventKind =
+  | "kill"
+  | "gold"
+  | "loot"
+  | "location"
+  | "experience-level"
+  | "trap"
+  | "escape"
+  | "search"
+  | "spell-learned"
+  | "death";
+
+export type TopScoreTimelineEvent = {
+  id: string;
+  turn: number;
+  kind: TopScoreTimelineEventKind;
+  label: string;
+  summary: string;
+  detail?: string;
+  amount?: number;
+  total?: number;
+  location?: string;
 };
 
 export type TopScoreDetailSnapshot = {
@@ -33,7 +66,10 @@ export type TopScoreDetailSnapshot = {
   attributes: Record<string, string>;
   playerStats: Partial<PlayerStatsSnapshot>;
   inventory: TopScoreInventoryItem[];
+  timeline: TopScoreTimelineEvent[];
   tombstoneLines: string[];
+  telemetry: RunTelemetrySnapshot;
+  postmortemReports: GameOverPostmortemReports;
 };
 
 export type TopScoreRecord = {
@@ -123,6 +159,13 @@ function normalizeText(value: unknown): string {
   return String(value ?? "")
     .replace(/\u0000/g, "")
     .trim();
+}
+
+function normalizePreservedLine(value: unknown): string {
+  return String(value ?? "")
+    .replace(/\u0000/g, "")
+    .replace(/\r/g, "")
+    .trimEnd();
 }
 
 function normalizeScoreName(value: unknown): string {
@@ -222,6 +265,11 @@ function normalizeScoreNameAliases(value: unknown): string[] {
   if (titleMarkerIndex > 0) {
     aliases.add(normalized.slice(0, titleMarkerIndex).trim());
   }
+  for (const alias of [...aliases]) {
+    if (alias.length > nethackRecordNameLength) {
+      aliases.add(alias.slice(0, nethackRecordNameLength));
+    }
+  }
   return Array.from(aliases).filter(Boolean);
 }
 
@@ -238,6 +286,19 @@ function buildScoreKeyCandidates(
       normalizedPoints === null ? "" : String(normalizedPoints),
       normalizedTurns === null ? "" : String(normalizedTurns),
     ].join("|"),
+  );
+}
+
+function buildNameTurnScoreKeyCandidates(
+  name: unknown,
+  turns: unknown,
+): string[] {
+  const normalizedTurns = normalizeFiniteInteger(turns);
+  if (normalizedTurns === null) {
+    return [];
+  }
+  return normalizeScoreNameAliases(name).map((normalizedName) =>
+    [normalizedName, String(normalizedTurns)].join("|"),
   );
 }
 
@@ -296,6 +357,254 @@ function sanitizeInventoryItems(
     items.push(inventoryItem);
     return items;
   }, []);
+}
+
+function normalizeTopScoreTimelineEventKind(
+  value: unknown,
+): TopScoreTimelineEventKind | null {
+  const normalized = normalizeText(value);
+  switch (normalized) {
+    case "kill":
+    case "gold":
+    case "loot":
+    case "location":
+    case "experience-level":
+    case "trap":
+    case "escape":
+    case "search":
+    case "spell-learned":
+    case "death":
+      return normalized;
+    default:
+      return null;
+  }
+}
+
+function sanitizeTimelineEvents(
+  timeline: ReadonlyArray<TopScoreTimelineEvent> | undefined,
+): TopScoreTimelineEvent[] {
+  if (!Array.isArray(timeline)) {
+    return [];
+  }
+
+  return timeline
+    .reduce<TopScoreTimelineEvent[]>((events, entry, index) => {
+      const kind = normalizeTopScoreTimelineEventKind(entry?.kind);
+      const turn = normalizeFiniteInteger(entry?.turn);
+      const label = normalizeText(entry?.label);
+      const summary = normalizeText(entry?.summary);
+      if (!kind || turn === null || turn < 0 || !label || !summary) {
+        return events;
+      }
+
+      const id = normalizeText(entry?.id) || `${kind}-${turn}-${index}`;
+      const detail = normalizeText(entry?.detail);
+      const location = normalizeText(entry?.location);
+      const amount = normalizeFiniteInteger(entry?.amount);
+      const total = normalizeFiniteInteger(entry?.total);
+
+      events.push({
+        id,
+        turn,
+        kind,
+        label,
+        summary,
+        detail: detail || undefined,
+        amount: amount === null ? undefined : amount,
+        total: total === null ? undefined : total,
+        location: location || undefined,
+      });
+      return events;
+    }, [])
+    .sort((a, b) => a.turn - b.turn || a.label.localeCompare(b.label));
+}
+
+function sanitizeTelemetryBreakdownEntries(
+  entries: ReadonlyArray<RunTelemetryBreakdownEntry> | undefined,
+): RunTelemetryBreakdownEntry[] {
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+  return entries
+    .map((entry) => ({
+      label: normalizeText(entry?.label),
+      count: Math.max(0, normalizeFiniteInteger(entry?.count) ?? 0),
+      detail: normalizeText(entry?.detail) || undefined,
+    }))
+    .filter((entry) => entry.label && entry.count > 0)
+    .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
+}
+
+function sanitizeTelemetryLootEvents(
+  events: ReadonlyArray<RunTelemetryLootEvent> | undefined,
+): RunTelemetryLootEvent[] {
+  if (!Array.isArray(events)) {
+    return [];
+  }
+  return events
+    .map((event, index) => {
+      const turn = normalizeFiniteInteger(event?.turn);
+      const quantity = normalizeFiniteInteger(event?.quantity);
+      const label = normalizeText(event?.label);
+      if (
+        turn === null ||
+        turn < 0 ||
+        quantity === null ||
+        quantity <= 0 ||
+        !label ||
+        /\b(?:gold pieces?|zorkmids?|coins?)\b/i.test(label)
+      ) {
+        return null;
+      }
+      const sanitized: RunTelemetryLootEvent = {
+        id: normalizeText(event?.id) || `loot-${turn}-${index}`,
+        turn,
+        label,
+        quantity,
+      };
+      const category = normalizeText(event?.category);
+      const detail = normalizeText(event?.detail);
+      const location = normalizeText(event?.location);
+      if (category) {
+        sanitized.category = category;
+      }
+      if (detail) {
+        sanitized.detail = detail;
+      }
+      if (location) {
+        sanitized.location = location;
+      }
+      return sanitized;
+    })
+    .filter((event): event is RunTelemetryLootEvent => event !== null)
+    .sort((left, right) => left.turn - right.turn || left.label.localeCompare(right.label));
+}
+
+function sanitizeTelemetryTrapEvents(
+  events: ReadonlyArray<RunTelemetryTrapEvent> | undefined,
+): RunTelemetryTrapEvent[] {
+  if (!Array.isArray(events)) {
+    return [];
+  }
+  return events
+    .map((event, index) => {
+      const turn = normalizeFiniteInteger(event?.turn);
+      const label = normalizeText(event?.label);
+      if (turn === null || turn < 0 || !label) {
+        return null;
+      }
+      const sanitized: RunTelemetryTrapEvent = {
+        id: normalizeText(event?.id) || `trap-${turn}-${index}`,
+        turn,
+        label,
+      };
+      const detail = normalizeText(event?.detail);
+      const location = normalizeText(event?.location);
+      if (detail) {
+        sanitized.detail = detail;
+      }
+      if (location) {
+        sanitized.location = location;
+      }
+      return sanitized;
+    })
+    .filter((event): event is RunTelemetryTrapEvent => event !== null)
+    .sort((left, right) => left.turn - right.turn || left.label.localeCompare(right.label));
+}
+
+function sanitizeTelemetrySearchEvents(
+  events: ReadonlyArray<RunTelemetrySearchEvent> | undefined,
+): RunTelemetrySearchEvent[] {
+  if (!Array.isArray(events)) {
+    return [];
+  }
+  return events
+    .map((event, index) => {
+      const turn = normalizeFiniteInteger(event?.turn);
+      const count = normalizeFiniteInteger(event?.count);
+      if (turn === null || turn < 0 || count === null || count <= 0) {
+        return null;
+      }
+      const sanitized: RunTelemetrySearchEvent = {
+        id: normalizeText(event?.id) || `search-${turn}-${index}`,
+        turn,
+        count,
+      };
+      const location = normalizeText(event?.location);
+      if (location) {
+        sanitized.location = location;
+      }
+      return sanitized;
+    })
+    .filter((event): event is RunTelemetrySearchEvent => event !== null)
+    .sort((left, right) => left.turn - right.turn || left.id.localeCompare(right.id));
+}
+
+function sanitizeTelemetrySpellLearnedEvents(
+  events: ReadonlyArray<RunTelemetrySpellLearnedEvent> | undefined,
+): RunTelemetrySpellLearnedEvent[] {
+  if (!Array.isArray(events)) {
+    return [];
+  }
+  return events
+    .map((event, index) => {
+      const turn = normalizeFiniteInteger(event?.turn);
+      const spell = normalizeText(event?.spell);
+      if (turn === null || turn < 0 || !spell) {
+        return null;
+      }
+      const sanitized: RunTelemetrySpellLearnedEvent = {
+        id: normalizeText(event?.id) || `spell-${turn}-${index}`,
+        turn,
+        spell,
+      };
+      const detail = normalizeText(event?.detail);
+      const location = normalizeText(event?.location);
+      if (detail) {
+        sanitized.detail = detail;
+      }
+      if (location) {
+        sanitized.location = location;
+      }
+      return sanitized;
+    })
+    .filter((event): event is RunTelemetrySpellLearnedEvent => event !== null)
+    .sort((left, right) => left.turn - right.turn || left.spell.localeCompare(right.spell));
+}
+
+function sanitizeRunTelemetrySnapshot(
+  telemetry: RunTelemetrySnapshot | null | undefined,
+): RunTelemetrySnapshot {
+  return {
+    searches: Math.max(0, normalizeFiniteInteger(telemetry?.searches) ?? 0),
+    lootEvents: sanitizeTelemetryLootEvents(telemetry?.lootEvents),
+    trapEvents: sanitizeTelemetryTrapEvents(telemetry?.trapEvents),
+    searchEvents: sanitizeTelemetrySearchEvents(telemetry?.searchEvents),
+    spellLearnedEvents: sanitizeTelemetrySpellLearnedEvents(
+      telemetry?.spellLearnedEvents,
+    ),
+    weaponKills: sanitizeTelemetryBreakdownEntries(telemetry?.weaponKills),
+    spellKills: sanitizeTelemetryBreakdownEntries(telemetry?.spellKills),
+    petKills: sanitizeTelemetryBreakdownEntries(telemetry?.petKills),
+  };
+}
+
+function sanitizeGameOverPostmortemReports(
+  reports: GameOverPostmortemReports | null | undefined,
+): GameOverPostmortemReports {
+  const normalizeLines = (lines: unknown): string[] | null => {
+    if (!Array.isArray(lines)) {
+      return null;
+    }
+    const normalized = lines.map((line) => normalizePreservedLine(line));
+    return normalized.some((line) => line.length > 0) ? normalized : null;
+  };
+  return {
+    attributes: normalizeLines(reports?.attributes),
+    vanquished: normalizeLines(reports?.vanquished),
+    conduct: normalizeLines(reports?.conduct),
+    dungeonOverview: normalizeLines(reports?.dungeonOverview),
+  };
 }
 
 function buildAttributeSnapshot(
@@ -361,21 +670,25 @@ function openScoreDetailsDatabase(): Promise<IDBDatabase> {
 }
 
 export async function saveTopScoreDetailSnapshot(input: {
+  id?: string | null;
   runtimeVersion: NethackRuntimeVersion;
   playerStats: PlayerStatsSnapshot;
   inventoryItems: ReadonlyArray<NethackMenuItem>;
+  timeline?: ReadonlyArray<TopScoreTimelineEvent>;
   deathMessage?: string | null;
   tombstoneLines?: ReadonlyArray<string> | null;
-}): Promise<void> {
+  telemetry?: RunTelemetrySnapshot | null;
+  postmortemReports?: GameOverPostmortemReports | null;
+}): Promise<string> {
   if (input.runtimeVersion !== "3.6.7") {
-    return;
+    return "";
   }
 
   const points = normalizeFiniteInteger(input.playerStats.score);
   const turns = normalizeFiniteInteger(input.playerStats.time);
   const capturedAtMs = Date.now();
   const snapshot: TopScoreDetailSnapshot = {
-    id: createSnapshotId(input.runtimeVersion),
+    id: normalizeText(input.id) || createSnapshotId(input.runtimeVersion),
     runtimeVersion: input.runtimeVersion,
     capturedAtMs,
     capturedAtIso: new Date(capturedAtMs).toISOString(),
@@ -388,9 +701,14 @@ export async function saveTopScoreDetailSnapshot(input: {
     attributes: buildAttributeSnapshot(input.playerStats),
     playerStats: { ...input.playerStats },
     inventory: sanitizeInventoryItems(input.inventoryItems),
+    timeline: sanitizeTimelineEvents(input.timeline),
     tombstoneLines: Array.isArray(input.tombstoneLines)
-      ? input.tombstoneLines.map((line) => normalizeText(line)).filter(Boolean)
+      ? input.tombstoneLines.map((line) => normalizePreservedLine(line))
       : [],
+    telemetry: sanitizeRunTelemetrySnapshot(input.telemetry),
+    postmortemReports: sanitizeGameOverPostmortemReports(
+      input.postmortemReports,
+    ),
   };
 
   const db = await openScoreDetailsDatabase();
@@ -401,6 +719,7 @@ export async function saveTopScoreDetailSnapshot(input: {
   } finally {
     db.close();
   }
+  return snapshot.id;
 }
 
 async function loadTopScoreDetailSnapshots(
@@ -427,6 +746,17 @@ async function loadTopScoreDetailSnapshots(
                 runtimeVersion,
           ),
       )
+      .map((record) => ({
+        ...record,
+        timeline: sanitizeTimelineEvents(record.timeline),
+        tombstoneLines: Array.isArray(record.tombstoneLines)
+          ? record.tombstoneLines.map((line) => normalizePreservedLine(line))
+          : [],
+        telemetry: sanitizeRunTelemetrySnapshot(record.telemetry),
+        postmortemReports: sanitizeGameOverPostmortemReports(
+          record.postmortemReports,
+        ),
+      }))
       .sort((a, b) => b.capturedAtMs - a.capturedAtMs);
   } finally {
     db.close();
@@ -864,6 +1194,7 @@ function attachDetailsToScores(
   scores: TopScoreRecord[],
   details: TopScoreDetailSnapshot[],
 ): TopScoreRecord[] {
+  const detailsByNameTurnKey = new Map<string, TopScoreDetailSnapshot[]>();
   const detailsByScoreKey = new Map<string, TopScoreDetailSnapshot[]>();
   const detailsByFallbackKey = new Map<string, TopScoreDetailSnapshot[]>();
   const pushDetail = (
@@ -880,6 +1211,12 @@ function attachDetailsToScores(
   };
 
   for (const detail of details) {
+    for (const key of buildNameTurnScoreKeyCandidates(
+      detail.playerName || detail.playerStats.name,
+      detail.turns ?? detail.playerStats.time,
+    )) {
+      pushDetail(detailsByNameTurnKey, key, detail);
+    }
     pushDetail(detailsByScoreKey, detail.scoreKey, detail);
     pushDetail(detailsByFallbackKey, detail.fallbackScoreKey, detail);
     for (const key of buildScoreKeyCandidates(
@@ -898,24 +1235,40 @@ function attachDetailsToScores(
   }
 
   const usedDetailIds = new Set<string>();
-  const scoreEndTimeMs = (score: TopScoreRecord): number | null => {
-    const parsed = Date.parse(score.endtime || score.deathdate || "");
+  const scorePreciseEndTimeMs = (score: TopScoreRecord): number | null => {
+    const parsed = Date.parse(score.endtime || "");
     return Number.isFinite(parsed) ? parsed : null;
+  };
+  const detailEndTimeDistance = (
+    detail: TopScoreDetailSnapshot,
+    score: TopScoreRecord,
+  ): number | null => {
+    const endTimeMs = scorePreciseEndTimeMs(score);
+    return endTimeMs === null ? null : Math.abs(detail.capturedAtMs - endTimeMs);
   };
   const chooseBestDetail = (
     candidates: TopScoreDetailSnapshot[],
     score: TopScoreRecord,
+    options: { requireTimeWindow?: boolean } = {},
   ): TopScoreDetailSnapshot | undefined => {
-    const available = candidates.filter((detail) => !usedDetailIds.has(detail.id));
+    const available = candidates.filter((detail) => {
+      if (usedDetailIds.has(detail.id)) {
+        return false;
+      }
+      if (!options.requireTimeWindow) {
+        return true;
+      }
+      const distance = detailEndTimeDistance(detail, score);
+      return distance === null || distance <= topScoreDetailTimeMatchWindowMs;
+    });
     if (available.length <= 0) {
       return undefined;
     }
 
-    const endTimeMs = scoreEndTimeMs(score);
     const sorted = [...available].sort((a, b) => {
-      if (endTimeMs !== null) {
-        const aDistance = Math.abs(a.capturedAtMs - endTimeMs);
-        const bDistance = Math.abs(b.capturedAtMs - endTimeMs);
+      const aDistance = detailEndTimeDistance(a, score);
+      const bDistance = detailEndTimeDistance(b, score);
+      if (aDistance !== null && bDistance !== null) {
         if (aDistance !== bDistance) {
           return aDistance - bDistance;
         }
@@ -930,6 +1283,16 @@ function attachDetailsToScores(
   const findMatchingDetail = (
     score: TopScoreRecord,
   ): TopScoreDetailSnapshot | undefined => {
+    const nameTurnKeys = buildNameTurnScoreKeyCandidates(score.name, score.turns);
+    for (const key of nameTurnKeys) {
+      const detail = chooseBestDetail(detailsByNameTurnKey.get(key) ?? [], score, {
+        requireTimeWindow: true,
+      });
+      if (detail) {
+        return detail;
+      }
+    }
+
     const scoreKeys = buildScoreKeyCandidates(score.name, score.points, score.turns);
     for (const key of scoreKeys) {
       const detail = chooseBestDetail(detailsByScoreKey.get(key) ?? [], score);

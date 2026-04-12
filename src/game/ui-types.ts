@@ -70,6 +70,91 @@ export type PlayerStatsSnapshot = {
   score: number;
 };
 
+export type GameOverPostmortemReportId =
+  | "attributes"
+  | "vanquished"
+  | "conduct"
+  | "dungeonOverview";
+
+export type GameOverPostmortemReports = {
+  attributes: string[] | null;
+  vanquished: string[] | null;
+  conduct: string[] | null;
+  dungeonOverview: string[] | null;
+};
+
+export type RunTelemetryBreakdownEntry = {
+  label: string;
+  count: number;
+  detail?: string;
+};
+
+export type RunTelemetryLootEvent = {
+  id: string;
+  turn: number;
+  label: string;
+  quantity: number;
+  category?: string;
+  detail?: string;
+  location?: string;
+};
+
+export type RunTelemetryTrapEvent = {
+  id: string;
+  turn: number;
+  label: string;
+  detail?: string;
+  location?: string;
+};
+
+export type RunTelemetrySearchEvent = {
+  id: string;
+  turn: number;
+  count: number;
+  location?: string;
+};
+
+export type RunTelemetrySpellLearnedEvent = {
+  id: string;
+  turn: number;
+  spell: string;
+  detail?: string;
+  location?: string;
+};
+
+export type RunTelemetrySnapshot = {
+  searches: number;
+  lootEvents: RunTelemetryLootEvent[];
+  trapEvents: RunTelemetryTrapEvent[];
+  searchEvents: RunTelemetrySearchEvent[];
+  spellLearnedEvents: RunTelemetrySpellLearnedEvent[];
+  weaponKills: RunTelemetryBreakdownEntry[];
+  spellKills: RunTelemetryBreakdownEntry[];
+  petKills: RunTelemetryBreakdownEntry[];
+};
+
+export function createEmptyGameOverPostmortemReports(): GameOverPostmortemReports {
+  return {
+    attributes: null,
+    vanquished: null,
+    conduct: null,
+    dungeonOverview: null,
+  };
+}
+
+export function createEmptyRunTelemetrySnapshot(): RunTelemetrySnapshot {
+  return {
+    searches: 0,
+    lootEvents: [],
+    trapEvents: [],
+    searchEvents: [],
+    spellLearnedEvents: [],
+    weaponKills: [],
+    spellKills: [],
+    petKills: [],
+  };
+}
+
 export type QuestionDialogState = {
   text: string;
   choices: string;
@@ -101,6 +186,8 @@ export type GameOverState = {
   deathMessage: string | null;
   promptReady: boolean;
   tombstoneLines: string[] | null;
+  postmortemReports: GameOverPostmortemReports | null;
+  telemetry: RunTelemetrySnapshot | null;
 };
 
 export type TextInputRequestState = {
