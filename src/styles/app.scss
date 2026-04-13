@@ -5068,6 +5068,141 @@ canvas {
   text-align: center;
 }
 
+.nh3d-top-scores-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.nh3d-top-scores-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nh3d-ui-text-muted);
+  font-size: nh3d-scale-font(13px);
+  font-weight: 700;
+
+  > span:first-child {
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+.nh3d-top-scores-select-shell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(38, 77, 108, 0.52), rgba(8, 20, 33, 0.86)),
+    rgba(8, 18, 29, 0.94);
+  box-shadow:
+    inset 0 1px 0 rgba(230, 244, 255, 0.11),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.32),
+    0 10px 20px rgba(0, 0, 0, 0.18);
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: 11px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid rgba(209, 235, 255, 0.84);
+    pointer-events: none;
+  }
+
+  &:has(.nh3d-top-scores-sort-trigger:disabled) {
+    opacity: 0.62;
+
+    &::after {
+      opacity: 0.55;
+    }
+  }
+}
+
+.nh3d-top-scores-sort-trigger {
+  min-width: 150px;
+  border: 1px solid rgba(137, 190, 232, 0.46);
+  border-radius: 8px;
+  background: transparent;
+  color: #f4f8ff;
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 7px 32px 7px 10px;
+  text-align: left;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.72);
+  cursor: pointer;
+}
+
+.nh3d-top-scores-sort-trigger:hover:not(:disabled) {
+  border-color: rgba(176, 218, 255, 0.68);
+  filter: brightness(1.08);
+}
+
+.nh3d-top-scores-sort-trigger:focus-visible {
+  outline: none;
+  border-color: var(--nh3d-ui-button-warm-border);
+  box-shadow:
+    0 0 0 1px var(--nh3d-ui-button-warm-ring),
+    0 0 0 3px rgba(102, 204, 255, 0.24),
+    0 0 14px rgba(102, 204, 255, 0.2);
+}
+
+.nh3d-top-scores-sort-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.nh3d-top-scores-sort-menu {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 100%;
+  border: 1px solid rgba(137, 190, 232, 0.48);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(17, 37, 57, 0.98), rgba(7, 18, 30, 0.98)),
+    #08131f;
+  box-shadow:
+    inset 0 1px 0 rgba(230, 244, 255, 0.08),
+    0 16px 30px rgba(0, 0, 0, 0.38);
+  overflow: hidden;
+  padding: 4px;
+}
+
+.nh3d-top-scores-sort-option {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: rgba(225, 240, 255, 0.86);
+  font: inherit;
+  font-weight: 700;
+  padding: 7px 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nh3d-top-scores-sort-option:hover,
+.nh3d-top-scores-sort-option:focus-visible {
+  outline: none;
+  background: rgba(75, 134, 183, 0.24);
+  color: #ffffff;
+}
+
+.nh3d-top-scores-sort-option.is-selected {
+  background:
+    linear-gradient(90deg, rgba(98, 174, 232, 0.32), rgba(98, 174, 232, 0.08));
+  color: #ffffff;
+  box-shadow: inset 3px 0 0 rgba(116, 204, 255, 0.72);
+}
+
 .nh3d-top-scores-table-frame {
   flex: 1 1 auto;
   min-height: 0;

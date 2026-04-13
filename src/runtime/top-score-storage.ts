@@ -3,6 +3,7 @@ import type {
   NethackMenuItem,
   PlayerStatsSnapshot,
   RunTelemetryBreakdownEntry,
+  RunTelemetryHiddenFindEvent,
   RunTelemetryLootEvent,
   RunTelemetrySearchEvent,
   RunTelemetrySnapshot,
@@ -37,6 +38,7 @@ export type TopScoreTimelineEventKind =
   | "trap"
   | "escape"
   | "search"
+  | "hidden-find"
   | "spell-learned"
   | "death";
 
@@ -372,6 +374,7 @@ function normalizeTopScoreTimelineEventKind(
     case "trap":
     case "escape":
     case "search":
+    case "hidden-find":
     case "spell-learned":
     case "death":
       return normalized;
@@ -540,6 +543,47 @@ function sanitizeTelemetrySearchEvents(
     .sort((left, right) => left.turn - right.turn || left.id.localeCompare(right.id));
 }
 
+function sanitizeTelemetryHiddenFindEvents(
+  events: ReadonlyArray<RunTelemetryHiddenFindEvent> | undefined,
+): RunTelemetryHiddenFindEvent[] {
+  if (!Array.isArray(events)) {
+    return [];
+  }
+  return events
+    .map((event, index) => {
+      const turn = normalizeFiniteInteger(event?.turn);
+      const label = normalizeText(event?.label);
+      if (turn === null || turn < 0 || !label) {
+        return null;
+      }
+      const rawCategory = normalizeText(event?.category).toLowerCase();
+      const category: RunTelemetryHiddenFindEvent["category"] =
+        rawCategory === "door" ||
+        rawCategory === "passage" ||
+        rawCategory === "trap" ||
+        rawCategory === "other"
+          ? rawCategory
+          : "other";
+      const sanitized: RunTelemetryHiddenFindEvent = {
+        id: normalizeText(event?.id) || `hidden-find-${turn}-${index}`,
+        turn,
+        label,
+        category,
+      };
+      const detail = normalizeText(event?.detail);
+      const location = normalizeText(event?.location);
+      if (detail) {
+        sanitized.detail = detail;
+      }
+      if (location) {
+        sanitized.location = location;
+      }
+      return sanitized;
+    })
+    .filter((event): event is RunTelemetryHiddenFindEvent => event !== null)
+    .sort((left, right) => left.turn - right.turn || left.label.localeCompare(right.label));
+}
+
 function sanitizeTelemetrySpellLearnedEvents(
   events: ReadonlyArray<RunTelemetrySpellLearnedEvent> | undefined,
 ): RunTelemetrySpellLearnedEvent[] {
@@ -580,6 +624,9 @@ function sanitizeRunTelemetrySnapshot(
     lootEvents: sanitizeTelemetryLootEvents(telemetry?.lootEvents),
     trapEvents: sanitizeTelemetryTrapEvents(telemetry?.trapEvents),
     searchEvents: sanitizeTelemetrySearchEvents(telemetry?.searchEvents),
+    hiddenFindEvents: sanitizeTelemetryHiddenFindEvents(
+      telemetry?.hiddenFindEvents,
+    ),
     spellLearnedEvents: sanitizeTelemetrySpellLearnedEvents(
       telemetry?.spellLearnedEvents,
     ),

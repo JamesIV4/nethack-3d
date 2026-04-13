@@ -190,6 +190,13 @@ const t = translationStrings.app;
 const supportedLocaleOptions = getSupportedLocaleOptions();
 const messageInfoMenuCacheLimit = 50;
 const topScoresPageSize = 10;
+const topScoreSortOptions: readonly TopScoreSortOption[] = [
+  { id: "date", label: "Date" },
+  { id: "score", label: "Score" },
+  { id: "depth", label: "Depth" },
+  { id: "turns", label: "Turns" },
+  { id: "kills", label: "Kills" },
+];
 
 function UpdateReleaseNotesMarkdown({
   markdown,
@@ -1187,6 +1194,13 @@ type TopScoreMetric = {
   detail?: string;
 };
 
+type TopScoreSortId = "date" | "score" | "depth" | "turns" | "kills";
+
+type TopScoreSortOption = {
+  id: TopScoreSortId;
+  label: string;
+};
+
 type TopScoreChipGroup = {
   label: string;
   values: string[];
@@ -1220,7 +1234,7 @@ type TopScoreTimelineFilterId =
   | "kills"
   | "gold"
   | "loot"
-  | "searches"
+  | "secrets"
   | "levels"
   | "hazards"
   | "magic"
@@ -1315,9 +1329,9 @@ const topScoreTimelineFilterConfigs: readonly TopScoreTimelineFilterConfig[] = [
     rowType: "line",
   },
   {
-    id: "searches",
-    label: "Searches",
-    detail: "Search actions",
+    id: "secrets",
+    label: "Hidden Finds",
+    detail: "Hidden doors, passages, and traps",
     color: "#c7b8ff",
     tint: "rgba(199, 184, 255, 0.18)",
     rowType: "line",
@@ -1360,6 +1374,7 @@ const defaultTopScoreTimelineFilters: TopScoreTimelineFilterId[] = [
   "kills",
   "gold",
   "loot",
+  "secrets",
   "levels",
   "hazards",
   "milestones",
@@ -1483,8 +1498,8 @@ function resolveTopScoreTimelineFilterId(
       return "gold";
     case "loot":
       return "loot";
-    case "search":
-      return "searches";
+    case "hidden-find":
+      return "secrets";
     case "experience-level":
       return "levels";
     case "trap":
@@ -1691,6 +1706,100 @@ function resolveTopScoreDepthMetric(score: TopScoreRecord): string {
     return maxLevel;
   }
   return deathLevel;
+}
+
+function resolveTopScoreDateSortValue(score: TopScoreRecord): number {
+  const parsed = Date.parse(
+    score.endtime || score.deathdate || score.detail?.capturedAtIso || "",
+  );
+  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
+}
+
+function resolveTopScoreDepthSortValue(score: TopScoreRecord): number {
+  const candidates = [
+    score.maxlvl,
+    score.deathlev,
+    Number.parseInt(resolveTopScoreAttributeValue(score, "Dungeon level"), 10),
+  ].filter(
+    (value): value is number =>
+      typeof value === "number" && Number.isFinite(value),
+  );
+  return candidates.length > 0
+    ? Math.max(...candidates.map((value) => Math.trunc(value)))
+    : 0;
+}
+
+function resolveTopScoreTurnsSortValue(score: TopScoreRecord): number {
+  const turnCandidate =
+    typeof score.turns === "number" && Number.isFinite(score.turns)
+      ? score.turns
+      : Number.parseInt(resolveTopScoreAttributeValue(score, "Turn"), 10);
+  return Number.isFinite(turnCandidate)
+    ? Math.max(0, Math.trunc(turnCandidate))
+    : 0;
+}
+
+function resolveTopScoreKillsSortValue(score: TopScoreRecord): number {
+  const timelineKills = resolveTopScoreTimelineEvents(score).filter(
+    (event) => event.kind === "kill",
+  ).length;
+  const telemetry = resolveTopScoreTelemetry(score);
+  const breakdownKills = [
+    ...telemetry.weaponKills,
+    ...telemetry.spellKills,
+    ...telemetry.petKills,
+  ].reduce((total, entry) => total + Math.max(0, Math.trunc(entry.count)), 0);
+  return Math.max(timelineKills, breakdownKills);
+}
+
+function compareTopScoresBySort(
+  left: TopScoreRecord,
+  right: TopScoreRecord,
+  sortId: TopScoreSortId,
+): number {
+  const compareNumericDescending = (
+    leftValue: number,
+    rightValue: number,
+  ): number => rightValue - leftValue;
+
+  let result = 0;
+  switch (sortId) {
+    case "date":
+      result = compareNumericDescending(
+        resolveTopScoreDateSortValue(left),
+        resolveTopScoreDateSortValue(right),
+      );
+      break;
+    case "depth":
+      result = compareNumericDescending(
+        resolveTopScoreDepthSortValue(left),
+        resolveTopScoreDepthSortValue(right),
+      );
+      break;
+    case "turns":
+      result = compareNumericDescending(
+        resolveTopScoreTurnsSortValue(left),
+        resolveTopScoreTurnsSortValue(right),
+      );
+      break;
+    case "kills":
+      result = compareNumericDescending(
+        resolveTopScoreKillsSortValue(left),
+        resolveTopScoreKillsSortValue(right),
+      );
+      break;
+    case "score":
+    default:
+      result = compareNumericDescending(left.points, right.points);
+      break;
+  }
+  if (result !== 0) {
+    return result;
+  }
+  if (right.points !== left.points) {
+    return right.points - left.points;
+  }
+  return left.rank - right.rank || right.sourceLine - left.sourceLine;
 }
 
 function formatTopScoreSnapshotStatus(score: TopScoreRecord): string {
@@ -1928,18 +2037,18 @@ function buildTopScoreTelemetryTimelineEvents(
     detail: event.detail,
     location: event.location,
   }));
-  const searchEvents = telemetry.searchEvents.map<TopScoreTimelineEvent>((event) => ({
-    id: `telemetry-search-${event.id}`,
-    turn: normalizeTopScoreTimelineTurn(event.turn),
-    kind: "search",
-    label: event.count === 1 ? "Searched" : `${event.count} searches`,
-    summary:
-      event.count === 1
-        ? "Searched the area."
-        : `Searched ${formatTopScoreInteger(event.count)} times.`,
-    amount: event.count,
-    location: event.location,
-  }));
+  const hiddenFindEvents = telemetry.hiddenFindEvents.map<TopScoreTimelineEvent>(
+    (event) => ({
+      id: `telemetry-hidden-find-${event.id}`,
+      turn: normalizeTopScoreTimelineTurn(event.turn),
+      kind: "hidden-find",
+      label: event.label,
+      summary: event.detail || `Found ${event.label}.`,
+      detail: event.category,
+      amount: 1,
+      location: event.location,
+    }),
+  );
   const spellEvents = telemetry.spellLearnedEvents.map<TopScoreTimelineEvent>((event) => ({
     id: `telemetry-spell-${event.id}`,
     turn: normalizeTopScoreTimelineTurn(event.turn),
@@ -1949,7 +2058,7 @@ function buildTopScoreTelemetryTimelineEvents(
     detail: event.detail,
     location: event.location,
   }));
-  return [...lootEvents, ...trapEvents, ...searchEvents, ...spellEvents];
+  return [...lootEvents, ...trapEvents, ...hiddenFindEvents, ...spellEvents];
 }
 
 function buildFallbackTopScoreTimeline(score: TopScoreRecord): TopScoreTimelineEvent[] {
@@ -1970,7 +2079,9 @@ function buildFallbackTopScoreTimeline(score: TopScoreRecord): TopScoreTimelineE
 function resolveTopScoreTimelineEvents(score: TopScoreRecord): TopScoreTimelineEvent[] {
   const savedTimeline = score.detail?.timeline ?? [];
   const telemetryTimeline = buildTopScoreTelemetryTimelineEvents(score);
-  const mergedTimeline = [...savedTimeline, ...telemetryTimeline];
+  const mergedTimeline = [...savedTimeline, ...telemetryTimeline].filter(
+    (event) => event.kind !== "search",
+  );
   return mergedTimeline.length > 0
     ? mergedTimeline.sort(
         (left, right) => left.turn - right.turn || left.label.localeCompare(right.label),
@@ -1999,6 +2110,7 @@ function buildTopScoreTimelineSummaryMetrics(score: TopScoreRecord): TopScoreMet
       .filter(Boolean),
   ).size;
   const maxCharacterLevel = resolveTopScoreMaxCharacterLevel(score, events);
+  const hiddenFindCount = telemetry.hiddenFindEvents.length;
 
   return [
     {
@@ -2012,12 +2124,10 @@ function buildTopScoreTimelineSummaryMetrics(score: TopScoreRecord): TopScoreMet
       detail: goldCollected === 1 ? "piece picked up" : "pieces picked up",
     },
     {
-      label: "Searches",
-      value: formatTopScoreInteger(telemetry.searches),
+      label: "Hidden finds",
+      value: formatTopScoreInteger(hiddenFindCount),
       detail:
-        telemetry.searches === 1
-          ? "one deliberate search"
-          : "deliberate searches logged",
+        hiddenFindCount === 1 ? "one secret revealed" : "secrets revealed",
     },
     {
       label: "Traps sprung",
@@ -2069,6 +2179,8 @@ function formatTopScoreTimelineEventBadge(event: TopScoreTimelineEvent): string 
       return "Trap";
     case "escape":
       return "Escape";
+    case "hidden-find":
+      return "Hidden";
     case "search":
       return "Search";
     case "spell-learned":
@@ -2129,6 +2241,8 @@ function formatTopScoreTimelineEventMeta(event: TopScoreTimelineEvent): string {
       return event.location ?? event.detail ?? "";
     case "escape":
       return event.location ?? event.detail ?? "";
+    case "hidden-find":
+      return event.location ?? event.detail ?? "";
     case "search":
       return event.location ?? "";
     case "spell-learned":
@@ -2188,7 +2302,7 @@ function resolveTopScoreTimelineLineIncrement(
       return 1;
     case "gold":
     case "loot":
-    case "searches": {
+    case "secrets": {
       const amount =
         typeof event.amount === "number" && Number.isFinite(event.amount)
           ? Math.trunc(event.amount)
@@ -2266,8 +2380,8 @@ function formatTopScoreTimelineLineSummary(
       return `${formatTopScoreInteger(value)} gathered`;
     case "loot":
       return `${formatTopScoreInteger(value)} picked up`;
-    case "searches":
-      return `${formatTopScoreInteger(value)} searches`;
+    case "secrets":
+      return `${formatTopScoreInteger(value)} found`;
     case "levels":
       return `peak level ${formatTopScoreInteger(value)}`;
     case "hazards":
@@ -2700,6 +2814,7 @@ function buildTopScoreRunLedgerMetrics(score: TopScoreRecord): TopScoreMetric[] 
     (total, event) => total + Math.max(0, event.quantity),
     0,
   );
+  const hiddenFindCount = telemetry.hiddenFindEvents.length;
   const spellsLearned = telemetry.spellLearnedEvents.length;
   return [
     {
@@ -2708,10 +2823,12 @@ function buildTopScoreRunLedgerMetrics(score: TopScoreRecord): TopScoreMetric[] 
       detail: lootCount === 1 ? "one item tracked" : "items tracked",
     },
     {
-      label: "Times searched",
-      value: formatTopScoreInteger(telemetry.searches),
+      label: "Hidden finds",
+      value: formatTopScoreInteger(hiddenFindCount),
       detail:
-        telemetry.searches === 1 ? "one deliberate check" : "deliberate checks",
+        hiddenFindCount === 1
+          ? "one hidden feature found"
+          : "hidden features found",
     },
     {
       label: "Traps stepped on",
@@ -7862,6 +7979,9 @@ export default function App(): JSX.Element {
   const [topScoresLoading, setTopScoresLoading] = useState(false);
   const [topScoresError, setTopScoresError] = useState("");
   const [topScoresPageIndex, setTopScoresPageIndex] = useState(0);
+  const [topScoresSortId, setTopScoresSortId] =
+    useState<TopScoreSortId>("score");
+  const [topScoresSortMenuOpen, setTopScoresSortMenuOpen] = useState(false);
   const [selectedTopScore, setSelectedTopScore] =
     useState<TopScoreRecord | null>(null);
   const resumableSavedGames = useMemo(
@@ -7892,20 +8012,35 @@ export default function App(): JSX.Element {
       ].filter((section) => section.saves.length > 0),
     [resumableSavedGames],
   );
+  const sortedTopScores = useMemo(
+    () =>
+      [...topScores].sort((left, right) =>
+        compareTopScoresBySort(left, right, topScoresSortId),
+      ),
+    [topScores, topScoresSortId],
+  );
+  const selectedTopScoreSortOption =
+    topScoreSortOptions.find((option) => option.id === topScoresSortId) ??
+    topScoreSortOptions[1]!;
+  useEffect(() => {
+    if (!topScoresDialogRuntime || topScoresLoading || topScores.length <= 1) {
+      setTopScoresSortMenuOpen(false);
+    }
+  }, [topScores.length, topScoresDialogRuntime, topScoresLoading]);
   const topScoresPageCount = useMemo(
-    () => Math.max(1, Math.ceil(topScores.length / topScoresPageSize)),
-    [topScores.length],
+    () => Math.max(1, Math.ceil(sortedTopScores.length / topScoresPageSize)),
+    [sortedTopScores.length],
   );
   const topScoresCurrentPageIndex = Math.max(
     0,
     Math.min(topScoresPageIndex, topScoresPageCount - 1),
   );
   const visibleTopScores = useMemo(() => {
-    return topScores.slice(
+    return sortedTopScores.slice(
       topScoresCurrentPageIndex * topScoresPageSize,
       topScoresCurrentPageIndex * topScoresPageSize + topScoresPageSize,
     );
-  }, [topScores, topScoresCurrentPageIndex]);
+  }, [sortedTopScores, topScoresCurrentPageIndex]);
   const topScoresSummaryStats = useMemo(() => {
     if (topScores.length <= 0) {
       return [] as TopScoreMetric[];
@@ -8026,7 +8161,7 @@ export default function App(): JSX.Element {
       kills: 0,
       gold: 0,
       loot: 0,
-      searches: 0,
+      secrets: 0,
       levels: 0,
       hazards: 0,
       magic: 0,
@@ -17718,6 +17853,62 @@ export default function App(): JSX.Element {
               {topScoresLoading ? "Loading the ledger..." : "No scores yet."}
             </div>
           )}
+        </div>
+        <div className="nh3d-top-scores-toolbar">
+          <div
+            className="nh3d-top-scores-sort"
+            onBlur={(event) => {
+              const nextFocusedElement = event.relatedTarget;
+              if (
+                !(nextFocusedElement instanceof Node) ||
+                !event.currentTarget.contains(nextFocusedElement)
+              ) {
+                setTopScoresSortMenuOpen(false);
+              }
+            }}
+          >
+            <span>Sort by</span>
+            <span className="nh3d-top-scores-select-shell">
+              <button
+                aria-expanded={topScoresSortMenuOpen}
+                aria-haspopup="listbox"
+                className="nh3d-top-scores-sort-trigger"
+                disabled={topScoresLoading || topScores.length <= 1}
+                onClick={() => {
+                  setTopScoresSortMenuOpen((previous) => !previous);
+                }}
+                type="button"
+              >
+                {selectedTopScoreSortOption.label}
+              </button>
+              {topScoresSortMenuOpen ? (
+                <div
+                  aria-label="Sort top scores by"
+                  className="nh3d-top-scores-sort-menu"
+                  role="listbox"
+                >
+                  {topScoreSortOptions.map((option) => (
+                    <button
+                      aria-selected={option.id === topScoresSortId}
+                      className={`nh3d-top-scores-sort-option${
+                        option.id === topScoresSortId ? " is-selected" : ""
+                      }`}
+                      key={`top-score-sort-${option.id}`}
+                      onClick={() => {
+                        setTopScoresSortId(option.id);
+                        setTopScoresPageIndex(0);
+                        setTopScoresSortMenuOpen(false);
+                      }}
+                      role="option"
+                      type="button"
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </span>
+          </div>
         </div>
         <div className="nh3d-overflow-glow-frame nh3d-top-scores-table-frame">
           <div

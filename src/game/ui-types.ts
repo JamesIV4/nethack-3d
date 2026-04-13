@@ -114,6 +114,15 @@ export type RunTelemetrySearchEvent = {
   location?: string;
 };
 
+export type RunTelemetryHiddenFindEvent = {
+  id: string;
+  turn: number;
+  label: string;
+  category: "door" | "passage" | "trap" | "other";
+  detail?: string;
+  location?: string;
+};
+
 export type RunTelemetrySpellLearnedEvent = {
   id: string;
   turn: number;
@@ -127,6 +136,7 @@ export type RunTelemetrySnapshot = {
   lootEvents: RunTelemetryLootEvent[];
   trapEvents: RunTelemetryTrapEvent[];
   searchEvents: RunTelemetrySearchEvent[];
+  hiddenFindEvents: RunTelemetryHiddenFindEvent[];
   spellLearnedEvents: RunTelemetrySpellLearnedEvent[];
   weaponKills: RunTelemetryBreakdownEntry[];
   spellKills: RunTelemetryBreakdownEntry[];
@@ -148,6 +158,7 @@ export function createEmptyRunTelemetrySnapshot(): RunTelemetrySnapshot {
     lootEvents: [],
     trapEvents: [],
     searchEvents: [],
+    hiddenFindEvents: [],
     spellLearnedEvents: [],
     weaponKills: [],
     spellKills: [],

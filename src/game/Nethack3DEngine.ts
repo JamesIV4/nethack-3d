@@ -70,8 +70,8 @@ import type {
   PlayerStatsSnapshot,
   QuestionDialogState,
   RunTelemetryBreakdownEntry,
+  RunTelemetryHiddenFindEvent,
   RunTelemetryLootEvent,
-  RunTelemetrySearchEvent,
   RunTelemetrySnapshot,
   RunTelemetrySpellLearnedEvent,
   RunTelemetryTrapEvent,
@@ -2144,6 +2144,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   > = new Map();
   private readonly runTelemetryKnownSpellNames: Set<string> = new Set();
   private readonly runTelemetryTrapSignatures: Set<string> = new Set();
+  private readonly runTelemetryHiddenFindSignatures: Set<string> = new Set();
   private recentSpellKillAttribution: PendingRunKillAttribution | null = null;
   private suppressNextFpsHeldWeaponMissedAttackMessageSound: boolean = false;
   private lastDirectionalAttackContext: DirectionalAttackContext | null = null;
@@ -10234,16 +10235,20 @@ class Nethack3DEngine implements Nethack3DEngineController {
             ))
           : null;
         if (postmortemReportKind) {
+          const shouldSuppressPostmortemReportDisplay =
+            this.pendingSuppressedGameOverReportKind !== null;
           this.captureGameOverPostmortemReport(
             postmortemReportKind,
             normalizedInfoMenu.title,
             normalizedInfoMenu.lines,
           );
-          if (Boolean(data.blocking) && this.session) {
-            this.session.sendInput(" ");
+          if (shouldSuppressPostmortemReportDisplay) {
+            if (Boolean(data.blocking) && this.session) {
+              this.session.sendInput(" ");
+            }
+            this.fulfillDeferredGameOverPromptReadyIfPossible();
+            break;
           }
-          this.fulfillDeferredGameOverPromptReadyIfPossible();
-          break;
         }
         const infoMenuSource =
           typeof data.source === "string" ? data.source : "";
@@ -10255,7 +10260,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
         }
         this.showInfoMenuDialog(
           normalizedInfoMenu.title,
-          normalizedInfoMenu.lines,
+          this.isNetHackMessageInfoMenuTitle(normalizedInfoMenu.title)
+            ? normalizedInfoMenu.lines.filter(
+                (line) => !this.isNetHackMessageInfoMenuTitle(line),
+              )
+            : normalizedInfoMenu.lines,
           {
             blocking: Boolean(data.blocking),
           },
@@ -10512,6 +10521,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
       searchEvents: Array.isArray(source.searchEvents)
         ? source.searchEvents.map((event) => ({ ...event }))
         : [],
+      hiddenFindEvents: Array.isArray(source.hiddenFindEvents)
+        ? source.hiddenFindEvents.map((event) => ({ ...event }))
+        : [],
       spellLearnedEvents: Array.isArray(source.spellLearnedEvents)
         ? source.spellLearnedEvents.map((event) => ({ ...event }))
         : [],
@@ -10613,11 +10625,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
     lines: readonly string[],
   ): void {
     const normalizedLines = this.normalizeInfoMenuLines(lines).filter(
-      (line) => line.trim().length > 0,
+      (line) =>
+        line.trim().length > 0 && !this.isNetHackMessageInfoMenuTitle(line),
     );
     const normalizedTitle = String(title || "").trim();
     const storedLines =
       normalizedTitle &&
+      !this.isNetHackMessageInfoMenuTitle(normalizedTitle) &&
       normalizedLines.length > 0 &&
       normalizedTitle.toLowerCase() !== normalizedLines[0]?.trim().toLowerCase()
         ? [normalizedTitle, ...normalizedLines]
@@ -10696,6 +10710,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.runTelemetryPetKillCounts.clear();
     this.runTelemetryKnownSpellNames.clear();
     this.runTelemetryTrapSignatures.clear();
+    this.runTelemetryHiddenFindSignatures.clear();
     this.recentSpellKillAttribution = null;
     this.postmortemReports = createEmptyGameOverPostmortemReports();
     this.pendingSuppressedGameOverReportKind = null;
@@ -10795,20 +10810,41 @@ class Nethack3DEngine implements Nethack3DEngineController {
     });
   }
 
-  private addRunTelemetrySearchEvent(): void {
-    const turn = this.resolveRunTelemetryTurn(1);
+  private addRunTelemetryHiddenFindEvent(
+    label: string,
+    category: RunTelemetryHiddenFindEvent["category"],
+    detail?: string,
+  ): void {
+    const normalizedLabel = String(label || "").trim();
+    if (!normalizedLabel) {
+      return;
+    }
+    const turn = this.resolveRunTelemetryTurn();
     const location = this.resolveRunTelemetryLocation();
-    const nextCount = this.runTelemetry.searchEvents.length + 1;
-    const event: RunTelemetrySearchEvent = {
-      id: `search-${turn}-${nextCount}`,
+    const normalizedDetail = String(detail || "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const signature = [
       turn,
-      count: 1,
+      normalizedLabel.toLowerCase(),
+      category,
+      normalizedDetail.toLowerCase(),
+    ].join("|");
+    if (this.runTelemetryHiddenFindSignatures.has(signature)) {
+      return;
+    }
+    this.runTelemetryHiddenFindSignatures.add(signature);
+    const event: RunTelemetryHiddenFindEvent = {
+      id: `hidden-find-${turn}-${this.runTelemetry.hiddenFindEvents.length + 1}`,
+      turn,
+      label: normalizedLabel,
+      category,
+      detail: normalizedDetail || undefined,
       location,
     };
     this.runTelemetry = {
       ...this.runTelemetry,
-      searches: this.runTelemetry.searches + 1,
-      searchEvents: [...this.runTelemetry.searchEvents, event],
+      hiddenFindEvents: [...this.runTelemetry.hiddenFindEvents, event],
     };
   }
 
@@ -11636,16 +11672,35 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (/\byou\s+escape\b/i.test(normalized)) {
       return null;
     }
+    if (
+      /\b(?:still|stuck|trapped in|caught in a bear trap|already on the edge|can't reach|cannot reach|prevents you|free your)\b/i.test(
+        normalized,
+      )
+    ) {
+      return null;
+    }
 
     const trapPatterns: Array<{ regex: RegExp; label: string }> = [
-      { regex: /\bfall(?:s|ing)? into a pit\b/i, label: "Pit trap" },
+      {
+        regex:
+          /\b(?:fall|plunge|dive|stumble|move|step|land)s?\s+(?:over debris\s+)?(?:into|in|on)\s+(?:an? |the |your )?(?:spiked )?pit\b/i,
+        label: "Pit trap",
+      },
+      { regex: /\byou stumble over debris\b/i, label: "Pit trap" },
+      {
+        regex: /\bpit (?:full of spikes )?opens up under you\b/i,
+        label: "Pit trap",
+      },
       {
         regex:
           /\btrap door opens up under you\b|\bfall through .* trap door\b/i,
         label: "Trap door",
       },
-      { regex: /\bbear trap\b/i, label: "Bear trap" },
-      { regex: /\bland mine\b/i, label: "Land mine" },
+      { regex: /\bbear trap closes\b/i, label: "Bear trap" },
+      {
+        regex: /\b(?:triggered|sets?|set) .*land mine\b|\bkaablamm\b/i,
+        label: "Land mine",
+      },
       { regex: /\brolling boulder trap\b/i, label: "Rolling boulder trap" },
       { regex: /\bdart trap\b/i, label: "Dart trap" },
       { regex: /\barrow trap\b/i, label: "Arrow trap" },
@@ -11672,11 +11727,94 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     if (
       /\btrap\b/i.test(normalized) &&
-      /\b(you|under you|beneath you|caught|trigger)\b/i.test(normalized)
+      /\b(?:trigger(?:ed|s)?|set off|sprung|opens? up under you|closes? on your|puts you|hits? you|enveloped|covered)\b/i.test(
+        normalized,
+      )
     ) {
       return { label: "Trap triggered", detail: normalized };
     }
     return null;
+  }
+
+  private resolveHiddenFindTelemetryFromMessage(
+    messageLike: unknown,
+  ): {
+    label: string;
+    category: RunTelemetryHiddenFindEvent["category"];
+    detail?: string;
+  } | null {
+    if (typeof messageLike !== "string") {
+      return null;
+    }
+    const normalized = messageLike.replace(/\s+/g, " ").trim();
+    if (!normalized) {
+      return null;
+    }
+
+    if (/^you find a hidden door\.$/i.test(normalized)) {
+      return {
+        label: "Hidden door",
+        category: "door",
+        detail: normalized,
+      };
+    }
+    if (/^you find a hidden passage\.$/i.test(normalized)) {
+      return {
+        label: "Hidden passage",
+        category: "passage",
+        detail: normalized,
+      };
+    }
+
+    const trapNames = [
+      "arrow trap",
+      "dart trap",
+      "falling rock trap",
+      "squeaky board",
+      "bear trap",
+      "land mine",
+      "rolling boulder trap",
+      "sleeping gas trap",
+      "rust trap",
+      "fire trap",
+      "pit",
+      "spiked pit",
+      "hole",
+      "trap door",
+      "teleportation trap",
+      "level teleporter",
+      "magic portal",
+      "web",
+      "statue trap",
+      "magic trap",
+      "anti-magic field",
+      "polymorph trap",
+      "vibrating square",
+    ];
+    for (const trapName of trapNames) {
+      const escapedTrapName = trapName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const trapFindPattern = new RegExp(
+        `^you find an? ${escapedTrapName}\\.$`,
+        "i",
+      );
+      if (trapFindPattern.test(normalized)) {
+        return {
+          label: this.capitalizeRunTelemetryLabel(trapName),
+          category: "trap",
+          detail: normalized,
+        };
+      }
+    }
+
+    return null;
+  }
+
+  private capitalizeRunTelemetryLabel(label: string): string {
+    const normalized = String(label || "").trim();
+    if (!normalized) {
+      return "";
+    }
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
 
   private captureRunTelemetryFromMessage(messageLike: unknown): void {
@@ -11696,6 +11834,17 @@ class Nethack3DEngine implements Nethack3DEngineController {
         null,
         lootEvent.detail,
       );
+    }
+
+    const hiddenFindEvent =
+      this.resolveHiddenFindTelemetryFromMessage(normalized);
+    if (hiddenFindEvent) {
+      this.addRunTelemetryHiddenFindEvent(
+        hiddenFindEvent.label,
+        hiddenFindEvent.category,
+        hiddenFindEvent.detail,
+      );
+      return;
     }
 
     const trapEvent = this.resolveTrapTelemetryFromMessage(normalized);
@@ -32170,14 +32319,17 @@ class Nethack3DEngine implements Nethack3DEngineController {
       const normalizedReportAnswer = String(resolvedInput || "")
         .trim()
         .toLowerCase();
-      if (
+      const shouldSuppressReportDisplay =
         normalizedReportAnswer === "escape" ||
         normalizedReportAnswer === "n" ||
-        normalizedReportAnswer === "q"
+        normalizedReportAnswer === "q";
+      if (
+        shouldSuppressReportDisplay
       ) {
         resolvedInput = "y";
       }
       if (
+        shouldSuppressReportDisplay &&
         String(resolvedInput || "")
           .trim()
           .toLowerCase() === "y"
@@ -32194,14 +32346,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
         .toLowerCase() !== "z"
     ) {
       this.recentSpellKillAttribution = null;
-    }
-    if (
-      !this.isInQuestion &&
-      !this.isInDirectionQuestion &&
-      !this.positionInputModeActive &&
-      resolvedInput === "s"
-    ) {
-      this.addRunTelemetrySearchEvent();
     }
     const shouldTreatAsPlayerMovementInput =
       this.isMovementInput(resolvedInput) &&
