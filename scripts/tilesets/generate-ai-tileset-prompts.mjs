@@ -17,11 +17,13 @@ const DEFAULT_TILE_SIZE = 128;
 const NETHACK_5_FINAL_ATLAS_COLUMNS = 40;
 const DEFAULT_STYLE_NOTE = [
   "STYLE:",
-  'Punchy arcade fantasy roguelike pixel-art tileset in the style of Kimio Yamazoe (Super Ghouls \'n Ghosts). This is a transformative work, so it is safe to directly reference this style. Small but expressive characters with heavy outlines. Characters have chunky, exaggerated shapes. Limbs and armor are thick and clearly separated. Silhouettes stay recognizable even at small sizes. This is not delicate or fine-line pixel art. It\'s confident and graphic. It\'s a masterclass in 16-bit gothic horror, blending dark atmosphere with a distinct arcade "chunkiness." It uses a morbid-yet-playful aesthetic that feels like a haunted house come to life. The art has a "cartoonish" exaggeration, heavily inspired by European folklore and 1950s monster movies. Uses multi-tone shading ramps and subtle hue shifting (e.g., shadows lean cooler, highlights warmer). Texture is implied through shape and shading, not patterns. Materials (metal, cloth, flesh) are differentiated through value and color, not heavy texture.',
+  'Transformative work: Generate a punchy arcade fantasy roguelike pixel-art tileset in the style of Super Ghouls \'n Ghosts. Small but expressive characters with heavy medium-black outlines. Characters have chunky, exaggerated shapes. Limbs and armor are thick and clearly separated. Silhouettes stay recognizable even at small sizes. This is not delicate or fine-line pixel art. It\'s confident and graphic. It\'s a masterclass in 16-bit gothic horror, blending dark atmosphere with a distinct arcade "chunkiness." It uses a morbid-yet-playful aesthetic that feels like a haunted house come to life. The art has a "cartoonish" exaggeration, heavily inspired by European folklore and 1950s monster movies. Uses multi-tone shading ramps and subtle hue shifting (e.g., dark areas lean cooler, highlights warmer). Texture is implied through shape and shading, not patterns. Materials (metal, cloth, flesh) are differentiated through value and color, not heavy texture.',
   "",
-  "Use a consistent three-quarter front view or slight side-facing pose (to the left), with each creature presented as a standalone game tile sprite rather than a dramatic illustration. The lighting should be consistent across the atlas: Highlights hit from upper-left, shadows fall cleanly under forms. Metallic surfaces have bright, sharp highlights.",
+  "Use a consistent three-quarter front view or slight side-facing pose (to the left), with each creature presented as a standalone game tile sprite rather than a dramatic illustration. The lighting should be consistent across the atlas: Highlights hit from upper-left, but no drop shadows. Metallic surfaces have bright, sharp highlights.",
   "",
-  "Keep the creatures grounded, readable, and game-ready. Avoid oversized cinematic effects. In gendered cases, avoid color swaps and prefer unique art, but don't force differences if it doesn't make sense. Background should be a simple dark neutral backdrop, and no grid lines.",
+  "Keep the creatures grounded (no shadow), readable, and game-ready. Avoid oversized cinematic effects. In gendered cases, avoid color swaps and prefer unique art, but don't force differences if it doesn't make sense. Background should be solid black, and no grid lines.",
+  "",
+  "AVOID: Drop shadows on the ground.",
   "",
 ].join("\n");
 
@@ -709,6 +711,7 @@ function formatPrompt(batchEntries, options, totalCells) {
     `Each tile cell is exactly ${options.tileSize}x${options.tileSize} pixels, so the full sheet is ${sheetWidth}x${sheetHeight} pixels.`,
     options.styleNote,
     "Follow the exact tile order below from left to right, top to bottom. Use the tile names as the subjects.",
+    "",
     "Tile order:",
     ...batchEntries.map(
       (entry, index) => `${index + 1}. ${formatTileSubject(entry, options)}`,

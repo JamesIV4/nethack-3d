@@ -1004,6 +1004,8 @@ export default function TilesetBatchPicker(): JSX.Element {
     null,
   );
   const [showTransparencyPreview, setShowTransparencyPreview] = useState(false);
+  const [showBackgroundRemovalPoints, setShowBackgroundRemovalPoints] =
+    useState(true);
   const [leftTransparencyTheme, setLeftTransparencyTheme] = useState<
     "dark" | "light"
   >("dark");
@@ -2150,18 +2152,20 @@ export default function TilesetBatchPicker(): JSX.Element {
                   zoom={activePixelZoom}
                 />
               ) : null}
-              <div className="tileset-batch-picker__seed-layer">
-                {removalSettings.seeds.map((seed, seedIndex) => (
-                  <span
-                    className="tileset-batch-picker__seed-marker"
-                    key={`${seed.x}-${seed.y}-${seedIndex}`}
-                    style={{
-                      left: `${(seed.x / Math.max(1, uploadedImage.width)) * 100}%`,
-                      top: `${(seed.y / Math.max(1, uploadedImage.height)) * 100}%`,
-                    }}
-                  />
-                ))}
-              </div>
+              {showBackgroundRemovalPoints ? (
+                <div className="tileset-batch-picker__seed-layer">
+                  {removalSettings.seeds.map((seed, seedIndex) => (
+                    <span
+                      className="tileset-batch-picker__seed-marker"
+                      key={`${seed.x}-${seed.y}-${seedIndex}`}
+                      style={{
+                        left: `${(seed.x / Math.max(1, uploadedImage.width)) * 100}%`,
+                        top: `${(seed.y / Math.max(1, uploadedImage.height)) * 100}%`,
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : null}
             </>
           ) : (
             <div className="tileset-batch-picker__cell-layer">{cells}</div>
@@ -2267,30 +2271,93 @@ export default function TilesetBatchPicker(): JSX.Element {
       <section className="tileset-batch-picker__workspace">
         <div className="tileset-batch-picker__left">
           <header className="tileset-batch-picker__toolbar">
-            <div>
-              <h1>Tileset Batch Picker</h1>
-              <p>{mapLabel}</p>
-            </div>
-            <label
-              className="tileset-batch-picker__map-drop"
-              onDragOver={preventDropDefaults}
-              onDrop={(event) => {
-                preventDropDefaults(event);
-                void handleMapFiles(event.dataTransfer.files);
-              }}
-            >
-              <span>{mapStatus}</span>
-              <input
-                accept="application/json,.json"
-                onChange={(event) => {
-                  if (event.target.files) {
-                    void handleMapFiles(event.target.files);
-                    event.target.value = "";
-                  }
+            <div className="tileset-batch-picker__toolbar-main">
+              <div>
+                <h1>Tileset Batch Picker</h1>
+                <p>{mapLabel}</p>
+              </div>
+              <label
+                className="tileset-batch-picker__map-drop"
+                onDragOver={preventDropDefaults}
+                onDrop={(event) => {
+                  preventDropDefaults(event);
+                  void handleMapFiles(event.dataTransfer.files);
                 }}
-                type="file"
-              />
-            </label>
+              >
+                <span>{mapStatus}</span>
+                <input
+                  accept="application/json,.json"
+                  onChange={(event) => {
+                    if (event.target.files) {
+                      void handleMapFiles(event.target.files);
+                      event.target.value = "";
+                    }
+                  }}
+                  type="file"
+                />
+              </label>
+            </div>
+            {compileMap ? (
+              <div className="tileset-batch-picker__toolbar-controls">
+                <div className="tileset-batch-picker__editor-controls">
+                  <div className="tileset-batch-picker__editor-toggle">
+                    <button
+                      className={[
+                        "tileset-batch-picker__editor-toggle-button",
+                        editorMode === "arrange"
+                          ? "tileset-batch-picker__editor-toggle-button--active"
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => setEditorMode("arrange")}
+                      type="button"
+                    >
+                      Arrange
+                    </button>
+                    <button
+                      className={[
+                        "tileset-batch-picker__editor-toggle-button",
+                        editorMode === "background-remove"
+                          ? "tileset-batch-picker__editor-toggle-button--active"
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => setEditorMode("background-remove")}
+                      type="button"
+                    >
+                      Remove BG
+                    </button>
+                  </div>
+                  <button
+                    className="tileset-batch-picker__small-button"
+                    onClick={() => {
+                      setLeftTransparencyTheme((current) =>
+                        current === "dark" ? "light" : "dark",
+                      );
+                    }}
+                    type="button"
+                  >
+                    Left BG: {leftTransparencyTheme === "dark" ? "Dark" : "Light"}
+                  </button>
+                  <button
+                    className="tileset-batch-picker__small-button"
+                    onClick={() => {
+                      setShowBackgroundRemovalPoints((current) => !current);
+                    }}
+                    type="button"
+                  >
+                    BG Points: {showBackgroundRemovalPoints ? "On" : "Off"}
+                  </button>
+                </div>
+                <p className="tileset-batch-picker__editor-hint">
+                  {editorMode === "arrange"
+                    ? "Click a tile to assign it, then drag the selected frame to nudge or crop it."
+                    : "Click any background area to flood-remove that contiguous color region for just this sheet."}
+                </p>
+              </div>
+            ) : null}
           </header>
 
           <div className="tileset-batch-picker__batches">
@@ -2303,54 +2370,6 @@ export default function TilesetBatchPicker(): JSX.Element {
                       {compileMap.promptSheets.sheetCount} planned batches,
                       {` ${compileMap.promptSheets.columns} x ${compileMap.promptSheets.rows} each`}
                     </p>
-                  </div>
-                  <div className="tileset-batch-picker__editor-controls">
-                    <div className="tileset-batch-picker__editor-toggle">
-                      <button
-                        className={[
-                          "tileset-batch-picker__editor-toggle-button",
-                          editorMode === "arrange"
-                            ? "tileset-batch-picker__editor-toggle-button--active"
-                            : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        onClick={() => setEditorMode("arrange")}
-                        type="button"
-                      >
-                        Arrange
-                      </button>
-                      <button
-                        className={[
-                          "tileset-batch-picker__editor-toggle-button",
-                          editorMode === "background-remove"
-                            ? "tileset-batch-picker__editor-toggle-button--active"
-                            : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        onClick={() => setEditorMode("background-remove")}
-                        type="button"
-                      >
-                        Remove BG
-                      </button>
-                    </div>
-                    <p className="tileset-batch-picker__editor-hint">
-                      {editorMode === "arrange"
-                        ? "Click a tile to assign it, then drag the selected frame to nudge or crop it."
-                        : "Click any background area to flood-remove that contiguous color region for just this sheet."}
-                    </p>
-                    <button
-                      className="tileset-batch-picker__small-button"
-                      onClick={() => {
-                        setLeftTransparencyTheme((current) =>
-                          current === "dark" ? "light" : "dark",
-                        );
-                      }}
-                      type="button"
-                    >
-                      Left BG: {leftTransparencyTheme === "dark" ? "Dark" : "Light"}
-                    </button>
                   </div>
                 </div>
                 {Array.from(

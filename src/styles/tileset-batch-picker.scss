@@ -75,14 +75,24 @@ body.tileset-batch-picker-page {
   position: sticky;
   top: 0;
   z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  display: grid;
+  gap: 12px;
   padding: 18px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(21, 26, 32, 0.96);
   backdrop-filter: blur(14px);
+}
+
+.tileset-batch-picker__toolbar-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tileset-batch-picker__toolbar-controls {
+  display: grid;
+  gap: 8px;
 }
 
 .tileset-batch-picker__toolbar h1 {
@@ -147,8 +157,10 @@ body.tileset-batch-picker-page {
 }
 
 .tileset-batch-picker__editor-controls {
-  display: grid;
-  justify-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
   gap: 8px;
 }
 
@@ -175,11 +187,11 @@ body.tileset-batch-picker-page {
 }
 
 .tileset-batch-picker__editor-hint {
-  max-width: 360px;
+  max-width: 720px;
   margin: 0;
   color: #9daab7;
   font-size: 0.78rem;
-  text-align: right;
+  text-align: left;
 }
 
 .tileset-batch-picker__batch-list-header h2 {
@@ -718,11 +730,12 @@ body.tileset-batch-picker-page {
     flex-direction: column;
   }
 
-  .tileset-batch-picker__editor-controls {
-    justify-items: start;
+  .tileset-batch-picker__toolbar-main {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
-  .tileset-batch-picker__editor-hint {
-    text-align: left;
+  .tileset-batch-picker__map-drop {
+    min-width: 0;
   }
 }
