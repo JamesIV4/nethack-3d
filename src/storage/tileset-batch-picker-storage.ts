@@ -130,7 +130,8 @@ function normalizeDimension(value: unknown): number {
 }
 
 function normalizeBatchIndex(value: unknown): number {
-  return Number.isFinite(value) ? Math.max(0, Math.trunc(Number(value))) : 0;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? Math.max(0, Math.trunc(numericValue)) : 0;
 }
 
 function normalizeSelectedImages(
@@ -382,7 +383,10 @@ function normalizeBatchImages(
         batchIndex,
       }))
       .sort((left, right) => left.createdAt - right.createdAt);
-    normalized[String(batchIndex)] = images;
+    normalized[String(batchIndex)] = [
+      ...(normalized[String(batchIndex)] ?? []),
+      ...images,
+    ].sort((left, right) => left.createdAt - right.createdAt);
   }
   return normalized;
 }

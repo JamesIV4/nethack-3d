@@ -1269,6 +1269,7 @@ export default function TilesetBatchPicker(): JSX.Element {
   const previewViewportRef = useRef<HTMLDivElement | null>(null);
   const objectUrlsRef = useRef<Set<string>>(new Set());
   const activeAdjustmentDragRef = useRef<ActiveAdjustmentDrag | null>(null);
+  const sessionSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const [previewViewportWidth, setPreviewViewportWidth] = useState(0);
   const [activeDraggedGeneratedIndex, setActiveDraggedGeneratedIndex] =
     useState<number | null>(null);
@@ -1443,29 +1444,41 @@ export default function TilesetBatchPicker(): JSX.Element {
           const restoredBatchImages: BatchImagesByIndex = {};
           const restoredImageIds = new Set<string>();
           for (const [batchKey, images] of Object.entries(persisted.batchImages)) {
-            const batchIndex = Number(batchKey);
-            restoredBatchImages[batchIndex] = images.flatMap((image) => {
+            const fallbackBatchIndex = Math.max(
+              0,
+              Math.trunc(Number(batchKey) || 0),
+            );
+            for (const image of images) {
               const persistedImage = persistedImageById[image.id];
               if (!persistedImage) {
-                return [];
+                continue;
               }
+              const batchIndex = Math.max(
+                0,
+                Math.trunc(
+                  Number.isFinite(persistedImage.batchIndex)
+                    ? persistedImage.batchIndex
+                    : fallbackBatchIndex,
+                ),
+              );
               restoredImageIds.add(image.id);
               const url = URL.createObjectURL(persistedImage.blob);
               objectUrlsRef.current.add(url);
-              return [
+              restoredBatchImages[batchIndex] = [
+                ...(restoredBatchImages[batchIndex] ?? []),
                 createBatchImageState({
                   sheetIndex: batchIndex,
                   id: image.id,
                   name: image.name,
                   url,
                   mimeType: image.mimeType,
-                  width: image.width,
-                  height: image.height,
-                  createdAt: image.createdAt,
-                  updatedAt: image.updatedAt,
+                  width: persistedImage.width || image.width,
+                  height: persistedImage.height || image.height,
+                  createdAt: persistedImage.createdAt || image.createdAt,
+                  updatedAt: persistedImage.updatedAt || image.updatedAt,
                 }),
               ];
-            });
+            }
           }
 
           setCompileMap(persisted.compileMap);
@@ -1646,7 +1659,7 @@ export default function TilesetBatchPicker(): JSX.Element {
     if (!compileMap) {
       return;
     }
-    void savePersistedTilesetBatchPickerSession({
+    const sessionSnapshot = {
       compileMap,
       mapLabel,
       selectedImages: selectedImages as Record<string, string>,
@@ -1656,7 +1669,13 @@ export default function TilesetBatchPicker(): JSX.Element {
         backgroundRemovalByImageId,
       ),
       batchImages: toPersistedBatchImages(batchImages),
-    }).catch((error) => {
+    };
+    sessionSaveQueueRef.current = sessionSaveQueueRef.current
+      .catch(() => {
+        // Keep later autosaves moving even if an earlier IndexedDB write failed.
+      })
+      .then(() => savePersistedTilesetBatchPickerSession(sessionSnapshot));
+    void sessionSaveQueueRef.current.catch((error) => {
       console.warn("Failed to persist batch picker session:", error);
     });
   }, [
