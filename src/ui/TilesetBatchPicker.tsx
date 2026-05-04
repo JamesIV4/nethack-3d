@@ -133,6 +133,7 @@ type SampledPixel = {
 
 type SheetPreviewProps = {
   uploadedImage: UploadedBatchImage;
+  pixelPerfect?: boolean;
 };
 
 type ActivePixelZoom = {
@@ -803,7 +804,10 @@ function drawCompiledTileset({
   }
 }
 
-function SheetPreview({ uploadedImage }: SheetPreviewProps): JSX.Element {
+function SheetPreview({
+  uploadedImage,
+  pixelPerfect = false,
+}: SheetPreviewProps): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -844,7 +848,12 @@ function SheetPreview({ uploadedImage }: SheetPreviewProps): JSX.Element {
     return (
       <img
         alt=""
-        className="tileset-batch-picker__sheet-preview"
+        className={[
+          "tileset-batch-picker__sheet-preview",
+          pixelPerfect ? "tileset-batch-picker__sheet-preview--pixel-perfect" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
         draggable={false}
         src={uploadedImage.url}
       />
@@ -853,7 +862,12 @@ function SheetPreview({ uploadedImage }: SheetPreviewProps): JSX.Element {
 
   return (
     <canvas
-      className="tileset-batch-picker__sheet-preview"
+      className={[
+        "tileset-batch-picker__sheet-preview",
+        pixelPerfect ? "tileset-batch-picker__sheet-preview--pixel-perfect" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       height={Math.max(1, uploadedImage.height || 1)}
       ref={canvasRef}
       width={Math.max(1, uploadedImage.width || 1)}
@@ -947,20 +961,36 @@ function PixelZoomPreview({
     );
   }, [uploadedImage, zoom]);
 
-  const left = Math.max(
-    8,
-    Math.min(
-      zoom.frameWidth - pixelZoomPanelWidth - 8,
-      zoom.frameX + pixelZoomPanelOffset,
-    ),
-  );
-  const top = Math.max(
-    8,
-    Math.min(
-      zoom.frameHeight - pixelZoomPanelHeight - 8,
-      zoom.frameY + pixelZoomPanelOffset,
-    ),
-  );
+  const preferredRight = zoom.frameX + pixelZoomPanelOffset;
+  const preferredLeft =
+    zoom.frameX - pixelZoomPanelWidth - pixelZoomPanelOffset;
+  const left =
+    preferredRight + pixelZoomPanelWidth <= zoom.frameWidth - 8
+      ? preferredRight
+      : preferredLeft >= 8
+        ? preferredLeft
+        : Math.max(
+            8,
+            Math.min(
+              zoom.frameWidth - pixelZoomPanelWidth - 8,
+              preferredRight,
+            ),
+          );
+  const preferredBottom = zoom.frameY + pixelZoomPanelOffset;
+  const preferredTop =
+    zoom.frameY - pixelZoomPanelHeight - pixelZoomPanelOffset;
+  const top =
+    preferredBottom + pixelZoomPanelHeight <= zoom.frameHeight - 8
+      ? preferredBottom
+      : preferredTop >= 8
+        ? preferredTop
+        : Math.max(
+            8,
+            Math.min(
+              zoom.frameHeight - pixelZoomPanelHeight - 8,
+              preferredBottom,
+            ),
+          );
 
   return (
     <div
@@ -1009,11 +1039,16 @@ export default function TilesetBatchPicker(): JSX.Element {
   const [leftTransparencyTheme, setLeftTransparencyTheme] = useState<
     "dark" | "light"
   >("dark");
+  const [modeSwitchAnchorImageId, setModeSwitchAnchorImageId] =
+    useState<string | null>(null);
   const [draggedBatchIndex, setDraggedBatchIndex] = useState<number | null>(
     null,
   );
   const [exportStatus, setExportStatus] = useState("");
   const [previewZoomIndex, setPreviewZoomIndex] = useState(0);
+  const batchesViewportRef = useRef<HTMLDivElement | null>(null);
+  const batchSheetRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const visibleSheetImageIdRef = useRef<string | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const previewViewportRef = useRef<HTMLDivElement | null>(null);
   const objectUrlsRef = useRef<Set<string>>(new Set());
@@ -1027,6 +1062,47 @@ export default function TilesetBatchPicker(): JSX.Element {
       URL.revokeObjectURL(url);
     }
     objectUrlsRef.current.clear();
+  }, []);
+
+  const updateVisibleSheetAnchor = useCallback(() => {
+    const viewport = batchesViewportRef.current;
+    if (!viewport) {
+      return null;
+    }
+
+    const viewportRect = viewport.getBoundingClientRect();
+    const viewportCenterY = viewportRect.top + viewportRect.height / 2;
+    let bestImageId: string | null = null;
+    let bestVisibleHeight = -1;
+    let bestCenterDistance = Number.POSITIVE_INFINITY;
+
+    for (const [imageId, element] of Object.entries(batchSheetRefs.current)) {
+      if (!element) {
+        continue;
+      }
+      const rect = element.getBoundingClientRect();
+      const visibleTop = Math.max(rect.top, viewportRect.top);
+      const visibleBottom = Math.min(rect.bottom, viewportRect.bottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      if (visibleHeight <= 0) {
+        continue;
+      }
+
+      const centerY = rect.top + rect.height / 2;
+      const centerDistance = Math.abs(centerY - viewportCenterY);
+      if (
+        visibleHeight > bestVisibleHeight ||
+        (visibleHeight === bestVisibleHeight &&
+          centerDistance < bestCenterDistance)
+      ) {
+        bestImageId = imageId;
+        bestVisibleHeight = visibleHeight;
+        bestCenterDistance = centerDistance;
+      }
+    }
+
+    visibleSheetImageIdRef.current = bestImageId;
+    return bestImageId;
   }, []);
 
   const queueImageLoad = useCallback(
@@ -1117,6 +1193,8 @@ export default function TilesetBatchPicker(): JSX.Element {
       setSelectedOffsets({});
       setSelectedCropInsets({});
       setBackgroundRemovalByImageId({});
+      setModeSwitchAnchorImageId(null);
+      visibleSheetImageIdRef.current = null;
       void clearPersistedTilesetBatchPickerImages().catch((error) => {
         console.warn("Failed to clear persisted batch picker images:", error);
       });
@@ -1298,6 +1376,55 @@ export default function TilesetBatchPicker(): JSX.Element {
       setActivePixelZoom(null);
     }
   }, [activePixelZoom, editorMode]);
+
+  useEffect(() => {
+    const viewport = batchesViewportRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    const handleViewportChange = (): void => {
+      updateVisibleSheetAnchor();
+    };
+
+    handleViewportChange();
+    viewport.addEventListener("scroll", handleViewportChange, {
+      passive: true,
+    });
+    window.addEventListener("resize", handleViewportChange);
+    return () => {
+      viewport.removeEventListener("scroll", handleViewportChange);
+      window.removeEventListener("resize", handleViewportChange);
+    };
+  }, [batchImages, updateVisibleSheetAnchor]);
+
+  useEffect(() => {
+    if (!modeSwitchAnchorImageId) {
+      return;
+    }
+    if (!batchesViewportRef.current) {
+      return;
+    }
+    const anchorSheet = batchSheetRefs.current[modeSwitchAnchorImageId];
+    if (!anchorSheet) {
+      return;
+    }
+    let frameId = 0;
+    let frameId2 = 0;
+    frameId = window.requestAnimationFrame(() => {
+      frameId2 = window.requestAnimationFrame(() => {
+        anchorSheet.scrollIntoView({
+          block: "center",
+          inline: "nearest",
+          behavior: "auto",
+        });
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.cancelAnimationFrame(frameId2);
+    };
+  }, [editorMode, modeSwitchAnchorImageId]);
 
   useEffect(() => {
     if (!compileMap) {
@@ -1510,6 +1637,11 @@ export default function TilesetBatchPicker(): JSX.Element {
       delete nextSettings[imageId];
       return nextSettings;
     });
+    batchSheetRefs.current[imageId] = null;
+    if (visibleSheetImageIdRef.current === imageId) {
+      visibleSheetImageIdRef.current = null;
+    }
+    setModeSwitchAnchorImageId((current) => (current === imageId ? null : current));
     void deletePersistedTilesetBatchPickerImage(imageId).catch((error) => {
       console.warn("Failed to delete persisted batch picker image:", error);
     });
@@ -1726,7 +1858,6 @@ export default function TilesetBatchPicker(): JSX.Element {
       if (!uploadedImage.image || uploadedImage.width <= 0 || uploadedImage.height <= 0) {
         return;
       }
-
       const frameBounds = event.currentTarget.getBoundingClientRect();
       if (frameBounds.width <= 0 || frameBounds.height <= 0) {
         return;
@@ -1793,6 +1924,43 @@ export default function TilesetBatchPicker(): JSX.Element {
       return nextSettings;
     });
   }, []);
+
+  const removeBackgroundRemovalSeed = useCallback(
+    (imageId: string, seedIndex: number) => {
+      setBackgroundRemovalByImageId((current) => {
+        const previous = current[imageId];
+        if (
+          !previous ||
+          seedIndex < 0 ||
+          seedIndex >= previous.seeds.length
+        ) {
+          return current;
+        }
+
+        const nextSeeds = previous.seeds.filter(
+          (_, index) => index !== seedIndex,
+        );
+        if (
+          nextSeeds.length <= 0 &&
+          previous.tolerance === defaultBackgroundRemovalTolerance &&
+          previous.edgeSoftness === defaultBackgroundRemovalEdgeSoftness
+        ) {
+          const nextSettings = { ...current };
+          delete nextSettings[imageId];
+          return nextSettings;
+        }
+
+        return {
+          ...current,
+          [imageId]: {
+            ...previous,
+            seeds: nextSeeds,
+          },
+        };
+      });
+    },
+    [],
+  );
 
   const updateBackgroundRemovalZoom = useCallback(
     (
@@ -1886,6 +2054,16 @@ export default function TilesetBatchPicker(): JSX.Element {
         ? removalSettings.seeds[removalSettings.seeds.length - 1]
         : null;
     const isZoomingThisSheet = activePixelZoom?.imageId === uploadedImage.id;
+    const backgroundRemovalWidth =
+      uploadedImage.width > 0
+        ? uploadedImage.width
+        : (compileMap?.promptSheets.columns ?? 6) *
+          (compileMap?.promptSheets.tileSize ?? 256);
+    const backgroundRemovalHeight =
+      uploadedImage.height > 0
+        ? uploadedImage.height
+        : (compileMap?.promptSheets.rows ?? 4) *
+          (compileMap?.promptSheets.tileSize ?? 256);
     const sourceTileWidth = compileMap
       ? uploadedImage.width > 0
         ? uploadedImage.width / compileMap.promptSheets.columns
@@ -2036,7 +2214,13 @@ export default function TilesetBatchPicker(): JSX.Element {
     });
 
     return (
-      <div className="tileset-batch-picker__sheet" key={uploadedImage.id}>
+      <div
+        className="tileset-batch-picker__sheet"
+        key={uploadedImage.id}
+        ref={(element) => {
+          batchSheetRefs.current[uploadedImage.id] = element;
+        }}
+      >
         <div className="tileset-batch-picker__sheet-header">
           <span>{uploadedImage.name}</span>
           <button
@@ -2123,52 +2307,75 @@ export default function TilesetBatchPicker(): JSX.Element {
           ]
             .filter(Boolean)
             .join(" ")}
-          style={{
-            aspectRatio: `${compileMap?.promptSheets.columns ?? 6} / ${
-              compileMap?.promptSheets.rows ?? 4
-            }`,
-          }}
-        >
-          <SheetPreview uploadedImage={uploadedImage} />
-          {editorMode === "background-remove" ? (
-            <>
-              <button
-                className="tileset-batch-picker__background-hit-target"
-                disabled={!uploadedImage.isReady}
-                onClick={(event) => sampleBackgroundRemovalSeed(event, uploadedImage)}
-                onPointerLeave={() => {
-                  setActivePixelZoom((current) =>
-                    current?.imageId === uploadedImage.id ? null : current,
-                  );
-                }}
-                onPointerMove={(event) =>
-                  updateBackgroundRemovalZoom(event, uploadedImage)
+          style={
+            editorMode === "background-remove"
+              ? undefined
+              : {
+                  aspectRatio: `${compileMap?.promptSheets.columns ?? 6} / ${
+                    compileMap?.promptSheets.rows ?? 4
+                  }`,
                 }
-                type="button"
-              />
-              {isZoomingThisSheet && activePixelZoom ? (
-                <PixelZoomPreview
-                  uploadedImage={uploadedImage}
-                  zoom={activePixelZoom}
+          }
+        >
+          {editorMode === "background-remove" ? (
+            <div className="tileset-batch-picker__sheet-frame-scroll">
+              <div
+                className="tileset-batch-picker__sheet-frame-content"
+                style={{
+                  width: `${backgroundRemovalWidth}px`,
+                  height: `${backgroundRemovalHeight}px`,
+                }}
+              >
+                <SheetPreview pixelPerfect uploadedImage={uploadedImage} />
+                <button
+                  className="tileset-batch-picker__background-hit-target"
+                  disabled={!uploadedImage.isReady}
+                  onClick={(event) =>
+                    sampleBackgroundRemovalSeed(event, uploadedImage)
+                  }
+                  onPointerLeave={() => {
+                    setActivePixelZoom((current) =>
+                      current?.imageId === uploadedImage.id ? null : current,
+                    );
+                  }}
+                  onPointerMove={(event) =>
+                    updateBackgroundRemovalZoom(event, uploadedImage)
+                  }
+                  type="button"
                 />
-              ) : null}
-              {showBackgroundRemovalPoints ? (
-                <div className="tileset-batch-picker__seed-layer">
-                  {removalSettings.seeds.map((seed, seedIndex) => (
-                    <span
-                      className="tileset-batch-picker__seed-marker"
-                      key={`${seed.x}-${seed.y}-${seedIndex}`}
-                      style={{
-                        left: `${(seed.x / Math.max(1, uploadedImage.width)) * 100}%`,
-                        top: `${(seed.y / Math.max(1, uploadedImage.height)) * 100}%`,
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </>
+                {isZoomingThisSheet && activePixelZoom ? (
+                  <PixelZoomPreview
+                    uploadedImage={uploadedImage}
+                    zoom={activePixelZoom}
+                  />
+                ) : null}
+                {showBackgroundRemovalPoints ? (
+                  <div className="tileset-batch-picker__seed-layer">
+                    {removalSettings.seeds.map((seed, seedIndex) => (
+                      <button
+                        aria-label={`Remove background point ${seedIndex + 1}`}
+                        className="tileset-batch-picker__seed-marker"
+                        key={`${seed.x}-${seed.y}-${seedIndex}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          removeBackgroundRemovalSeed(uploadedImage.id, seedIndex);
+                        }}
+                        style={{
+                          left: `${(seed.x / Math.max(1, uploadedImage.width)) * 100}%`,
+                          top: `${(seed.y / Math.max(1, uploadedImage.height)) * 100}%`,
+                        }}
+                        type="button"
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
           ) : (
-            <div className="tileset-batch-picker__cell-layer">{cells}</div>
+            <>
+              <SheetPreview uploadedImage={uploadedImage} />
+              <div className="tileset-batch-picker__cell-layer">{cells}</div>
+            </>
           )}
         </div>
       </div>
@@ -2307,10 +2514,16 @@ export default function TilesetBatchPicker(): JSX.Element {
                         editorMode === "arrange"
                           ? "tileset-batch-picker__editor-toggle-button--active"
                           : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      onClick={() => setEditorMode("arrange")}
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      onClick={() => {
+                        const anchorImageId =
+                          updateVisibleSheetAnchor() ??
+                          visibleSheetImageIdRef.current;
+                        setModeSwitchAnchorImageId(anchorImageId);
+                        setEditorMode("arrange");
+                      }}
                       type="button"
                     >
                       Arrange
@@ -2321,10 +2534,16 @@ export default function TilesetBatchPicker(): JSX.Element {
                         editorMode === "background-remove"
                           ? "tileset-batch-picker__editor-toggle-button--active"
                           : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      onClick={() => setEditorMode("background-remove")}
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      onClick={() => {
+                        const anchorImageId =
+                          updateVisibleSheetAnchor() ??
+                          visibleSheetImageIdRef.current;
+                        setModeSwitchAnchorImageId(anchorImageId);
+                        setEditorMode("background-remove");
+                      }}
                       type="button"
                     >
                       Remove BG
@@ -2360,7 +2579,7 @@ export default function TilesetBatchPicker(): JSX.Element {
             ) : null}
           </header>
 
-          <div className="tileset-batch-picker__batches">
+          <div className="tileset-batch-picker__batches" ref={batchesViewportRef}>
             {compileMap ? (
               <>
                 <div className="tileset-batch-picker__batch-list-header">

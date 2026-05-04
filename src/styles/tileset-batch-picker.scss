@@ -396,6 +396,14 @@ body.tileset-batch-picker-page {
   image-rendering: pixelated;
 }
 
+.tileset-batch-picker__sheet-preview--pixel-perfect {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: initial;
+}
+
 .tileset-batch-picker__pixel-zoom {
   position: absolute;
   z-index: 4;
@@ -493,8 +501,19 @@ body.tileset-batch-picker-page {
 }
 
 .tileset-batch-picker__sheet-frame--background-remove {
+  overflow: auto;
+  max-height: min(72vh, 720px);
   outline: 1px solid rgba(255, 213, 79, 0.28);
   outline-offset: -1px;
+}
+
+.tileset-batch-picker__sheet-frame-scroll {
+  width: 100%;
+  height: 100%;
+}
+
+.tileset-batch-picker__sheet-frame-content {
+  position: relative;
 }
 
 .tileset-batch-picker__seed-layer {
@@ -507,11 +526,33 @@ body.tileset-batch-picker-page {
   position: absolute;
   width: 12px;
   height: 12px;
+  padding: 0;
   border: 2px solid rgba(255, 213, 79, 0.96);
+  cursor: pointer;
   border-radius: 999px;
   background: rgba(16, 20, 25, 0.86);
   box-shadow: 0 0 0 1px rgba(16, 20, 25, 0.84);
+  pointer-events: auto;
   transform: translate(-50%, -50%);
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.tileset-batch-picker__seed-marker:hover,
+.tileset-batch-picker__seed-marker:focus-visible {
+  border-color: rgba(255, 109, 109, 0.98);
+  background: rgba(120, 26, 26, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(16, 20, 25, 0.9),
+    0 0 0 3px rgba(255, 109, 109, 0.28);
+  transform: translate(-50%, -50%) scale(1.18);
+}
+
+.tileset-batch-picker__seed-marker:focus-visible {
+  outline: 0;
 }
 
 .tileset-batch-picker__cell {
