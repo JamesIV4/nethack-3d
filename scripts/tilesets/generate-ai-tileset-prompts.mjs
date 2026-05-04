@@ -38,6 +38,7 @@ function parseArgs(argv) {
     tileSize: DEFAULT_TILE_SIZE,
     out: DEFAULT_OUTPUT_PATH,
     mapOut: null,
+    mapOuts: [],
     sourceRoot: DEFAULT_SOURCE_ROOT,
     versionLabel: DEFAULT_VERSION_LABEL,
     styleNote: DEFAULT_STYLE_NOTE,
@@ -78,6 +79,7 @@ function parseArgs(argv) {
 
     if (arg === "--map-out" && next) {
       options.mapOut = resolve(PROJECT_ROOT, next);
+      options.mapOuts.push(options.mapOut);
       index += 1;
       continue;
     }
@@ -869,14 +871,12 @@ function generateAiTilesetPrompts(
 
   mkdirSync(dirname(rawOptions.out), { recursive: true });
   writeFileSync(rawOptions.out, markdown, "utf8");
-  if (rawOptions.mapOut) {
+  if (rawOptions.mapOuts.length > 0) {
     const compileMap = buildCompileMap(plan, options, tileTextDirectory);
-    mkdirSync(dirname(rawOptions.mapOut), { recursive: true });
-    writeFileSync(
-      rawOptions.mapOut,
-      `${JSON.stringify(compileMap, null, 2)}\n`,
-      "utf8",
-    );
+    for (const mapOut of rawOptions.mapOuts) {
+      mkdirSync(dirname(mapOut), { recursive: true });
+      writeFileSync(mapOut, `${JSON.stringify(compileMap, null, 2)}\n`, "utf8");
+    }
   }
 
   console.log(
@@ -884,8 +884,8 @@ function generateAiTilesetPrompts(
       plan.generatedTiles.length / (rawOptions.columns * rawOptions.rows),
     )} prompt sheets to ${rawOptions.out}`,
   );
-  if (rawOptions.mapOut) {
-    console.log(`Wrote compile map to ${rawOptions.mapOut}`);
+  for (const mapOut of rawOptions.mapOuts) {
+    console.log(`Wrote compile map to ${mapOut}`);
   }
 }
 
