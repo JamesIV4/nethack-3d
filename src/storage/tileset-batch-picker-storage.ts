@@ -58,6 +58,10 @@ export type PersistedTilesetBatchPickerRemovalSeed = {
 export type PersistedTilesetBatchPickerBackgroundRemovalSettings = {
   tolerance: number;
   edgeSoftness: number;
+  edgeSpillRange: number;
+  edgeSpillStrength: number;
+  edgeDesaturation: number;
+  nonContiguous: boolean;
   seeds: PersistedTilesetBatchPickerRemovalSeed[];
 };
 
@@ -229,7 +233,7 @@ function normalizeRemovalCoordinate(value: unknown): number {
 
 function normalizeRemovalTolerance(value: unknown): number {
   if (!Number.isFinite(value)) {
-    return 24;
+    return 57;
   }
   return Math.max(0, Math.min(255, Math.round(Number(value))));
 }
@@ -239,6 +243,31 @@ function normalizeRemovalEdgeSoftness(value: unknown): number {
     return 100;
   }
   return Math.max(0, Math.min(100, Math.round(Number(value))));
+}
+
+function normalizeRemovalEdgeSpillRange(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 4;
+  }
+  return Math.max(0, Math.min(64, Math.round(Number(value))));
+}
+
+function normalizeRemovalEdgeSpillStrength(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 66;
+  }
+  return Math.max(0, Math.min(100, Math.round(Number(value))));
+}
+
+function normalizeRemovalEdgeDesaturation(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 100;
+  }
+  return Math.max(0, Math.min(100, Math.round(Number(value))));
+}
+
+function normalizeRemovalNonContiguous(value: unknown): boolean {
+  return value === true;
 }
 
 function normalizeRemovalSeed(
@@ -266,6 +295,14 @@ function normalizeBackgroundRemovalSettings(
   return {
     tolerance: normalizeRemovalTolerance(rawValue.tolerance),
     edgeSoftness: normalizeRemovalEdgeSoftness(rawValue.edgeSoftness),
+    edgeSpillRange: normalizeRemovalEdgeSpillRange(rawValue.edgeSpillRange),
+    edgeSpillStrength: normalizeRemovalEdgeSpillStrength(
+      rawValue.edgeSpillStrength,
+    ),
+    edgeDesaturation: normalizeRemovalEdgeDesaturation(
+      rawValue.edgeDesaturation,
+    ),
+    nonContiguous: normalizeRemovalNonContiguous(rawValue.nonContiguous),
     seeds: Array.isArray(rawValue.seeds)
       ? rawValue.seeds
           .map((entry) => normalizeRemovalSeed(entry))

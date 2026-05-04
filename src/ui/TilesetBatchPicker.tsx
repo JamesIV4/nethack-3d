@@ -23,8 +23,11 @@ const previewZoomModes = ["fit", "step-1", "step-2", "step-3", "full"] as const;
 const maxSelectionOffset = 1;
 const minCropSpan = 0.1;
 const dragThresholdPx = 3;
-const defaultBackgroundRemovalTolerance = 24;
+const defaultBackgroundRemovalTolerance = 57;
 const defaultBackgroundRemovalEdgeSoftness = 100;
+const defaultBackgroundRemovalEdgeSpillRange = 4;
+const defaultBackgroundRemovalEdgeSpillStrength = 66;
+const defaultBackgroundRemovalEdgeDesaturation = 100;
 const pixelZoomRadius = 5;
 const pixelZoomScale = 10;
 const pixelZoomGridSize = pixelZoomRadius * 2 + 1;
@@ -306,6 +309,10 @@ function getDefaultBackgroundRemovalSettings(): PersistedTilesetBatchPickerBackg
   return {
     tolerance: defaultBackgroundRemovalTolerance,
     edgeSoftness: defaultBackgroundRemovalEdgeSoftness,
+    edgeSpillRange: defaultBackgroundRemovalEdgeSpillRange,
+    edgeSpillStrength: defaultBackgroundRemovalEdgeSpillStrength,
+    edgeDesaturation: defaultBackgroundRemovalEdgeDesaturation,
+    nonContiguous: false,
     seeds: [],
   };
 }
@@ -325,6 +332,19 @@ function toPersistedBackgroundRemovalByImageId(
     persisted[normalizedImageId] = {
       tolerance: Math.max(0, Math.min(255, Math.round(settings.tolerance))),
       edgeSoftness: Math.max(0, Math.min(100, Math.round(settings.edgeSoftness))),
+      edgeSpillRange: Math.max(
+        0,
+        Math.min(64, Math.round(settings.edgeSpillRange)),
+      ),
+      edgeSpillStrength: Math.max(
+        0,
+        Math.min(100, Math.round(settings.edgeSpillStrength)),
+      ),
+      edgeDesaturation: Math.max(
+        0,
+        Math.min(100, Math.round(settings.edgeDesaturation)),
+      ),
+      nonContiguous: settings.nonContiguous === true,
       seeds: settings.seeds.map((seed) => ({
         x: Math.max(0, Math.round(seed.x)),
         y: Math.max(0, Math.round(seed.y)),
@@ -347,6 +367,19 @@ function getBackgroundRemovalSignature(
   return JSON.stringify({
     tolerance: Math.max(0, Math.min(255, Math.round(settings.tolerance))),
     edgeSoftness: Math.max(0, Math.min(100, Math.round(settings.edgeSoftness))),
+    edgeSpillRange: Math.max(
+      0,
+      Math.min(64, Math.round(settings.edgeSpillRange)),
+    ),
+    edgeSpillStrength: Math.max(
+      0,
+      Math.min(100, Math.round(settings.edgeSpillStrength)),
+    ),
+    edgeDesaturation: Math.max(
+      0,
+      Math.min(100, Math.round(settings.edgeDesaturation)),
+    ),
+    nonContiguous: settings.nonContiguous === true,
     seeds: settings.seeds.map((seed) => ({
       x: Math.max(0, Math.round(seed.x)),
       y: Math.max(0, Math.round(seed.y)),
@@ -444,6 +477,174 @@ function applyBackgroundRemovalAntialiasing(
   }
 }
 
+function clampCanvasChannel(value: number): number {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function getDominantSeedScreenChannel(
+  seeds: PersistedTilesetBatchPickerRemovalSeed[],
+): 0 | 1 | 2 {
+  if (seeds.length <= 0) {
+    return 1;
+  }
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  for (const seed of seeds) {
+    r += seed.r;
+    g += seed.g;
+    b += seed.b;
+  }
+  r /= seeds.length;
+  g /= seeds.length;
+  b /= seeds.length;
+
+  const channelScores = [
+    r - (g + b) / 2,
+    g - (r + b) / 2,
+    b - (r + g) / 2,
+  ];
+  if (
+    channelScores[1] >= channelScores[0] &&
+    channelScores[1] >= channelScores[2]
+  ) {
+    return 1;
+  }
+  return channelScores[2] > channelScores[0] ? 2 : 0;
+}
+
+function applyEdgeSpillRemoval(
+  data: Uint8ClampedArray,
+  removedMask: Uint8Array,
+  width: number,
+  height: number,
+  settings: PersistedTilesetBatchPickerBackgroundRemovalSettings,
+): void {
+  const range = Math.max(0, Math.min(64, Math.round(settings.edgeSpillRange)));
+  const baseStrength = Math.max(
+    0,
+    Math.min(1, settings.edgeSpillStrength / 100),
+  );
+  const baseDesaturation = Math.max(
+    0,
+    Math.min(1, settings.edgeDesaturation / 100),
+  );
+  if (
+    range <= 0 ||
+    (baseStrength <= 0 && baseDesaturation <= 0) ||
+    settings.seeds.length <= 0
+  ) {
+    return;
+  }
+
+  const screenChannel = getDominantSeedScreenChannel(settings.seeds);
+  const [otherA, otherB] = [0, 1, 2].filter(
+    (channel) => channel !== screenChannel,
+  );
+  const pixelCount = width * height;
+  const distanceFromCutout = new Uint8Array(pixelCount);
+  const queue = new Int32Array(pixelCount);
+  let head = 0;
+  let tail = 0;
+
+  for (let index = 0; index < pixelCount; index += 1) {
+    if (!removedMask[index]) {
+      continue;
+    }
+    distanceFromCutout[index] = 1;
+    queue[tail] = index;
+    tail += 1;
+  }
+
+  while (head < tail) {
+    const currentIndex = queue[head];
+    head += 1;
+    const currentDistance = distanceFromCutout[currentIndex];
+    if (currentDistance > range) {
+      continue;
+    }
+
+    const x = currentIndex % width;
+    const y = Math.floor(currentIndex / width);
+    const nextDistance = currentDistance + 1;
+    const neighbors = [
+      x > 0 ? currentIndex - 1 : -1,
+      x + 1 < width ? currentIndex + 1 : -1,
+      y > 0 ? currentIndex - width : -1,
+      y + 1 < height ? currentIndex + width : -1,
+    ];
+
+    for (const neighborIndex of neighbors) {
+      if (
+        neighborIndex < 0 ||
+        distanceFromCutout[neighborIndex] > 0 ||
+        data[neighborIndex * 4 + 3] <= 0
+      ) {
+        continue;
+      }
+      distanceFromCutout[neighborIndex] = nextDistance;
+      queue[tail] = neighborIndex;
+      tail += 1;
+    }
+  }
+
+  for (let maskIndex = 0; maskIndex < pixelCount; maskIndex += 1) {
+    if (removedMask[maskIndex]) {
+      continue;
+    }
+    const storedDistance = distanceFromCutout[maskIndex];
+    if (storedDistance <= 1) {
+      continue;
+    }
+
+    const pixelIndex = maskIndex * 4;
+    if (data[pixelIndex + 3] <= 0) {
+      continue;
+    }
+
+    const edgeDistance = storedDistance - 1;
+    const edgeWeight = Math.max(0, 1 - (edgeDistance - 1) / range);
+    if (edgeWeight <= 0) {
+      continue;
+    }
+
+    if (baseStrength > 0) {
+      const spillStrength = baseStrength * edgeWeight;
+      const screen = data[pixelIndex + screenChannel];
+      const a = data[pixelIndex + otherA];
+      const b = data[pixelIndex + otherB];
+      const limit = (a + b) / 2;
+      const spillAmount = Math.max(0, screen - limit) * spillStrength;
+      if (spillAmount > 0) {
+        data[pixelIndex + screenChannel] = clampCanvasChannel(
+          screen - spillAmount,
+        );
+        data[pixelIndex + otherA] = clampCanvasChannel(a + spillAmount * 0.5);
+        data[pixelIndex + otherB] = clampCanvasChannel(b + spillAmount * 0.5);
+      }
+    }
+
+    const desaturationStrength = baseDesaturation * edgeWeight;
+    if (desaturationStrength <= 0) {
+      continue;
+    }
+
+    const r = data[pixelIndex];
+    const g = data[pixelIndex + 1];
+    const b = data[pixelIndex + 2];
+    const luminance = r * 0.299 + g * 0.587 + b * 0.114;
+    data[pixelIndex] = clampCanvasChannel(
+      r * (1 - desaturationStrength) + luminance * desaturationStrength,
+    );
+    data[pixelIndex + 1] = clampCanvasChannel(
+      g * (1 - desaturationStrength) + luminance * desaturationStrength,
+    );
+    data[pixelIndex + 2] = clampCanvasChannel(
+      b * (1 - desaturationStrength) + luminance * desaturationStrength,
+    );
+  }
+}
+
 function renderBackgroundRemovedCanvas(
   image: HTMLImageElement,
   settings: PersistedTilesetBatchPickerBackgroundRemovalSettings,
@@ -472,6 +673,20 @@ function renderBackgroundRemovedCanvas(
     if (seed.x < 0 || seed.x >= width || seed.y < 0 || seed.y >= height) {
       continue;
     }
+    if (settings.nonContiguous) {
+      for (let maskIndex = 0; maskIndex < removedMask.length; maskIndex += 1) {
+        const pixelIndex = maskIndex * 4;
+        if (
+          !removedMask[maskIndex] &&
+          colorsMatchWithinTolerance(baseData, pixelIndex, seed, tolerance)
+        ) {
+          removedMask[maskIndex] = 1;
+          workingData[pixelIndex + 3] = 0;
+        }
+      }
+      continue;
+    }
+
     const visited = new Uint8Array(width * height);
     const queueX = new Int32Array(width * height);
     const queueY = new Int32Array(width * height);
@@ -529,6 +744,7 @@ function renderBackgroundRemovedCanvas(
     height,
     Math.max(0, Math.min(100, Math.round(settings.edgeSoftness))),
   );
+  applyEdgeSpillRemoval(workingData, removedMask, width, height, settings);
   context.putImageData(imageData, 0, 0);
   return canvas;
 }
@@ -1853,6 +2069,79 @@ export default function TilesetBatchPicker(): JSX.Element {
     [],
   );
 
+  const setBackgroundRemovalEdgeSpillRange = useCallback(
+    (imageId: string, edgeSpillRange: number) => {
+      setBackgroundRemovalByImageId((current) => {
+        const previous = current[imageId] ?? getDefaultBackgroundRemovalSettings();
+        return {
+          ...current,
+          [imageId]: {
+            ...previous,
+            edgeSpillRange: Math.max(
+              0,
+              Math.min(64, Math.round(edgeSpillRange)),
+            ),
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const setBackgroundRemovalEdgeSpillStrength = useCallback(
+    (imageId: string, edgeSpillStrength: number) => {
+      setBackgroundRemovalByImageId((current) => {
+        const previous = current[imageId] ?? getDefaultBackgroundRemovalSettings();
+        return {
+          ...current,
+          [imageId]: {
+            ...previous,
+            edgeSpillStrength: Math.max(
+              0,
+              Math.min(100, Math.round(edgeSpillStrength)),
+            ),
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const setBackgroundRemovalEdgeDesaturation = useCallback(
+    (imageId: string, edgeDesaturation: number) => {
+      setBackgroundRemovalByImageId((current) => {
+        const previous = current[imageId] ?? getDefaultBackgroundRemovalSettings();
+        return {
+          ...current,
+          [imageId]: {
+            ...previous,
+            edgeDesaturation: Math.max(
+              0,
+              Math.min(100, Math.round(edgeDesaturation)),
+            ),
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const setBackgroundRemovalNonContiguous = useCallback(
+    (imageId: string, nonContiguous: boolean) => {
+      setBackgroundRemovalByImageId((current) => {
+        const previous = current[imageId] ?? getDefaultBackgroundRemovalSettings();
+        return {
+          ...current,
+          [imageId]: {
+            ...previous,
+            nonContiguous,
+          },
+        };
+      });
+    },
+    [],
+  );
+
   const sampleBackgroundRemovalSeed = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>, uploadedImage: UploadedBatchImage) => {
       if (!uploadedImage.image || uploadedImage.width <= 0 || uploadedImage.height <= 0) {
@@ -1897,7 +2186,12 @@ export default function TilesetBatchPicker(): JSX.Element {
       if (
         nextSeeds.length <= 0 &&
         previous.tolerance === defaultBackgroundRemovalTolerance &&
-        previous.edgeSoftness === defaultBackgroundRemovalEdgeSoftness
+        previous.edgeSoftness === defaultBackgroundRemovalEdgeSoftness &&
+        previous.edgeSpillRange === defaultBackgroundRemovalEdgeSpillRange &&
+        previous.edgeSpillStrength ===
+          defaultBackgroundRemovalEdgeSpillStrength &&
+        previous.edgeDesaturation === defaultBackgroundRemovalEdgeDesaturation &&
+        previous.nonContiguous === false
       ) {
         const nextSettings = { ...current };
         delete nextSettings[imageId];
@@ -1943,7 +2237,12 @@ export default function TilesetBatchPicker(): JSX.Element {
         if (
           nextSeeds.length <= 0 &&
           previous.tolerance === defaultBackgroundRemovalTolerance &&
-          previous.edgeSoftness === defaultBackgroundRemovalEdgeSoftness
+          previous.edgeSoftness === defaultBackgroundRemovalEdgeSoftness &&
+          previous.edgeSpillRange === defaultBackgroundRemovalEdgeSpillRange &&
+          previous.edgeSpillStrength ===
+            defaultBackgroundRemovalEdgeSpillStrength &&
+          previous.edgeDesaturation === defaultBackgroundRemovalEdgeDesaturation &&
+          previous.nonContiguous === false
         ) {
           const nextSettings = { ...current };
           delete nextSettings[imageId];
@@ -2262,6 +2561,64 @@ export default function TilesetBatchPicker(): JSX.Element {
                 type="range"
                 value={removalSettings.edgeSoftness}
               />
+            </label>
+            <label className="tileset-batch-picker__sheet-slider">
+              <span>Edge spill range: {removalSettings.edgeSpillRange}px</span>
+              <input
+                max={64}
+                min={0}
+                onChange={(event) => {
+                  setBackgroundRemovalEdgeSpillRange(
+                    uploadedImage.id,
+                    Number(event.target.value),
+                  );
+                }}
+                type="range"
+                value={removalSettings.edgeSpillRange}
+              />
+            </label>
+            <label className="tileset-batch-picker__sheet-slider">
+              <span>Edge spill cleanup: {removalSettings.edgeSpillStrength}</span>
+              <input
+                max={100}
+                min={0}
+                onChange={(event) => {
+                  setBackgroundRemovalEdgeSpillStrength(
+                    uploadedImage.id,
+                    Number(event.target.value),
+                  );
+                }}
+                type="range"
+                value={removalSettings.edgeSpillStrength}
+              />
+            </label>
+            <label className="tileset-batch-picker__sheet-slider">
+              <span>Edge desaturation: {removalSettings.edgeDesaturation}</span>
+              <input
+                max={100}
+                min={0}
+                onChange={(event) => {
+                  setBackgroundRemovalEdgeDesaturation(
+                    uploadedImage.id,
+                    Number(event.target.value),
+                  );
+                }}
+                type="range"
+                value={removalSettings.edgeDesaturation}
+              />
+            </label>
+            <label className="tileset-batch-picker__sheet-checkbox">
+              <input
+                checked={removalSettings.nonContiguous}
+                onChange={(event) => {
+                  setBackgroundRemovalNonContiguous(
+                    uploadedImage.id,
+                    event.target.checked,
+                  );
+                }}
+                type="checkbox"
+              />
+              <span>Remove matching color everywhere</span>
             </label>
             <div className="tileset-batch-picker__sheet-removal-meta">
               <span className="tileset-batch-picker__sheet-color">

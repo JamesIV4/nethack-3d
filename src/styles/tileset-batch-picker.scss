@@ -449,6 +449,20 @@ body.tileset-batch-picker-page {
   width: 100%;
 }
 
+.tileset-batch-picker__sheet-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #c7d3de;
+  font-size: 0.78rem;
+}
+
+.tileset-batch-picker__sheet-checkbox input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+}
+
 .tileset-batch-picker__sheet-removal-meta {
   display: flex;
   flex-wrap: wrap;
