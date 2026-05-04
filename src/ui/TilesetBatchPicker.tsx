@@ -25,8 +25,12 @@ const minCropSpan = 0.1;
 const dragThresholdPx = 3;
 const defaultBackgroundRemovalTolerance = 57;
 const defaultBackgroundRemovalEdgeSoftness = 100;
+const defaultBackgroundRemovalMatteFalloff = 100;
+const defaultBackgroundRemovalUnmixStrength = 100;
+const defaultBackgroundRemovalScreenColorMode = "auto";
 const defaultBackgroundRemovalEdgeSpillRange = 4;
 const defaultBackgroundRemovalEdgeSpillStrength = 66;
+const defaultBackgroundRemovalSpillLimitMode = "average";
 const defaultBackgroundRemovalEdgeDesaturation = 100;
 const pixelZoomRadius = 5;
 const pixelZoomScale = 10;
@@ -36,6 +40,10 @@ const pixelZoomPanelWidth = pixelZoomGridSize * pixelZoomScale + 18;
 const pixelZoomPanelHeight = pixelZoomGridSize * pixelZoomScale + 54;
 
 type PreviewZoomMode = (typeof previewZoomModes)[number];
+type BackgroundRemovalScreenColorMode =
+  PersistedTilesetBatchPickerBackgroundRemovalSettings["screenColorMode"];
+type BackgroundRemovalSpillLimitMode =
+  PersistedTilesetBatchPickerBackgroundRemovalSettings["spillLimitMode"];
 
 type PromptSheetsMeta = {
   columns: number;
@@ -281,6 +289,26 @@ function getDefaultCropInsets(): PersistedTilesetBatchPickerCropInsets {
   };
 }
 
+function normalizeBackgroundRemovalScreenColorMode(
+  value: unknown,
+): BackgroundRemovalScreenColorMode {
+  if (
+    value === "auto" ||
+    value === "red" ||
+    value === "green" ||
+    value === "blue"
+  ) {
+    return value;
+  }
+  return defaultBackgroundRemovalScreenColorMode;
+}
+
+function normalizeBackgroundRemovalSpillLimitMode(
+  value: unknown,
+): BackgroundRemovalSpillLimitMode {
+  return value === "max" ? "max" : defaultBackgroundRemovalSpillLimitMode;
+}
+
 function clampCropInset(
   value: number,
   opposingInset: number,
@@ -309,8 +337,12 @@ function getDefaultBackgroundRemovalSettings(): PersistedTilesetBatchPickerBackg
   return {
     tolerance: defaultBackgroundRemovalTolerance,
     edgeSoftness: defaultBackgroundRemovalEdgeSoftness,
+    matteFalloff: defaultBackgroundRemovalMatteFalloff,
+    unmixStrength: defaultBackgroundRemovalUnmixStrength,
+    screenColorMode: defaultBackgroundRemovalScreenColorMode,
     edgeSpillRange: defaultBackgroundRemovalEdgeSpillRange,
     edgeSpillStrength: defaultBackgroundRemovalEdgeSpillStrength,
+    spillLimitMode: defaultBackgroundRemovalSpillLimitMode,
     edgeDesaturation: defaultBackgroundRemovalEdgeDesaturation,
     nonContiguous: false,
     seeds: [],
@@ -332,6 +364,17 @@ function toPersistedBackgroundRemovalByImageId(
     persisted[normalizedImageId] = {
       tolerance: Math.max(0, Math.min(255, Math.round(settings.tolerance))),
       edgeSoftness: Math.max(0, Math.min(100, Math.round(settings.edgeSoftness))),
+      matteFalloff: Math.max(
+        0,
+        Math.min(100, Math.round(settings.matteFalloff)),
+      ),
+      unmixStrength: Math.max(
+        0,
+        Math.min(100, Math.round(settings.unmixStrength)),
+      ),
+      screenColorMode: normalizeBackgroundRemovalScreenColorMode(
+        settings.screenColorMode,
+      ),
       edgeSpillRange: Math.max(
         0,
         Math.min(64, Math.round(settings.edgeSpillRange)),
@@ -339,6 +382,9 @@ function toPersistedBackgroundRemovalByImageId(
       edgeSpillStrength: Math.max(
         0,
         Math.min(100, Math.round(settings.edgeSpillStrength)),
+      ),
+      spillLimitMode: normalizeBackgroundRemovalSpillLimitMode(
+        settings.spillLimitMode,
       ),
       edgeDesaturation: Math.max(
         0,
@@ -367,6 +413,17 @@ function getBackgroundRemovalSignature(
   return JSON.stringify({
     tolerance: Math.max(0, Math.min(255, Math.round(settings.tolerance))),
     edgeSoftness: Math.max(0, Math.min(100, Math.round(settings.edgeSoftness))),
+    matteFalloff: Math.max(
+      0,
+      Math.min(100, Math.round(settings.matteFalloff)),
+    ),
+    unmixStrength: Math.max(
+      0,
+      Math.min(100, Math.round(settings.unmixStrength)),
+    ),
+    screenColorMode: normalizeBackgroundRemovalScreenColorMode(
+      settings.screenColorMode,
+    ),
     edgeSpillRange: Math.max(
       0,
       Math.min(64, Math.round(settings.edgeSpillRange)),
@@ -374,6 +431,9 @@ function getBackgroundRemovalSignature(
     edgeSpillStrength: Math.max(
       0,
       Math.min(100, Math.round(settings.edgeSpillStrength)),
+    ),
+    spillLimitMode: normalizeBackgroundRemovalSpillLimitMode(
+      settings.spillLimitMode,
     ),
     edgeDesaturation: Math.max(
       0,
@@ -391,18 +451,297 @@ function getBackgroundRemovalSignature(
   });
 }
 
-function colorsMatchWithinTolerance(
+type RgbTuple = [number, number, number];
+type ChromaKeyModel = {
+  seedSrgbColors: RgbTuple[];
+  screenColor: RgbTuple;
+  screenChannel: 0 | 1 | 2;
+  fullDistance: number;
+  falloffDistance: number;
+  unmixStrength: number;
+};
+
+function clampUnit(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function clampCanvasChannel(value: number): number {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function smoothstep(edge0: number, edge1: number, value: number): number {
+  if (edge0 === edge1) {
+    return value < edge0 ? 0 : 1;
+  }
+  const t = clampUnit((value - edge0) / (edge1 - edge0));
+  return t * t * (3 - 2 * t);
+}
+
+function srgbToLinearChannel(value: number): number {
+  const channel = clampUnit(value);
+  if (channel <= 0.04045) {
+    return channel / 12.92;
+  }
+  return ((channel + 0.055) / 1.055) ** 2.4;
+}
+
+function linearToSrgbChannel(value: number): number {
+  const channel = Math.max(0, value);
+  if (channel <= 0.0031308) {
+    return clampUnit(channel * 12.92);
+  }
+  return clampUnit(1.055 * channel ** (1 / 2.4) - 0.055);
+}
+
+function getOtherChromaChannels(
+  screenChannel: 0 | 1 | 2,
+): [0 | 1 | 2, 0 | 1 | 2] {
+  if (screenChannel === 0) {
+    return [1, 2];
+  }
+  if (screenChannel === 1) {
+    return [0, 2];
+  }
+  return [0, 1];
+}
+
+function getPixelSrgbColor(
   data: Uint8ClampedArray,
   pixelIndex: number,
-  seed: PersistedTilesetBatchPickerRemovalSeed,
-  tolerance: number,
-): boolean {
-  return (
-    Math.abs(data[pixelIndex] - seed.r) <= tolerance &&
-    Math.abs(data[pixelIndex + 1] - seed.g) <= tolerance &&
-    Math.abs(data[pixelIndex + 2] - seed.b) <= tolerance &&
-    Math.abs(data[pixelIndex + 3] - seed.a) <= tolerance
+): RgbTuple {
+  return [
+    data[pixelIndex] / 255,
+    data[pixelIndex + 1] / 255,
+    data[pixelIndex + 2] / 255,
+  ];
+}
+
+function srgbToLinearColor(color: RgbTuple): RgbTuple {
+  return [
+    srgbToLinearChannel(color[0]),
+    srgbToLinearChannel(color[1]),
+    srgbToLinearChannel(color[2]),
+  ];
+}
+
+function getDominantScreenChannel(color: RgbTuple): 0 | 1 | 2 {
+  const channelScores: RgbTuple = [
+    color[0] - (color[1] + color[2]) / 2,
+    color[1] - (color[0] + color[2]) / 2,
+    color[2] - (color[0] + color[1]) / 2,
+  ];
+  if (
+    channelScores[1] >= channelScores[0] &&
+    channelScores[1] >= channelScores[2]
+  ) {
+    return 1;
+  }
+  return channelScores[2] > channelScores[0] ? 2 : 0;
+}
+
+function getScreenChannelForMode(
+  mode: BackgroundRemovalScreenColorMode,
+  screenColor: RgbTuple,
+): 0 | 1 | 2 {
+  if (mode === "red") {
+    return 0;
+  }
+  if (mode === "green") {
+    return 1;
+  }
+  if (mode === "blue") {
+    return 2;
+  }
+  return getDominantScreenChannel(screenColor);
+}
+
+function getBestSeedDistance(color: RgbTuple, seedColors: RgbTuple[]): number {
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const seedColor of seedColors) {
+    bestDistance = Math.min(
+      bestDistance,
+      Math.max(
+        Math.abs(color[0] - seedColor[0]),
+        Math.abs(color[1] - seedColor[1]),
+        Math.abs(color[2] - seedColor[2]),
+      ),
+    );
+  }
+  return Number.isFinite(bestDistance) ? bestDistance : 1;
+}
+
+function createChromaKeyModel(
+  settings: PersistedTilesetBatchPickerBackgroundRemovalSettings,
+  seeds: PersistedTilesetBatchPickerRemovalSeed[],
+): ChromaKeyModel {
+  const seedSrgbColors = seeds.map<RgbTuple>((seed) => [
+    seed.r / 255,
+    seed.g / 255,
+    seed.b / 255,
+  ]);
+  const seedLinearColors = seedSrgbColors.map((seedColor) =>
+    srgbToLinearColor(seedColor),
   );
+  const screenColor = seedLinearColors.reduce<RgbTuple>(
+    (sum, seedColor) => [
+      sum[0] + seedColor[0] / seedLinearColors.length,
+      sum[1] + seedColor[1] / seedLinearColors.length,
+      sum[2] + seedColor[2] / seedLinearColors.length,
+    ],
+    [0, 0, 0],
+  );
+  const fullDistance = Math.max(
+    1 / 255,
+    Math.min(1, Math.round(settings.tolerance) / 255),
+  );
+  const matteFalloff = Math.max(
+    0,
+    Math.min(100, Math.round(settings.matteFalloff)),
+  );
+  const falloffDistance = Math.max(
+    2 / 255,
+    fullDistance * 0.15,
+    (matteFalloff / 100) * 0.12,
+  );
+  const screenColorMode = normalizeBackgroundRemovalScreenColorMode(
+    settings.screenColorMode,
+  );
+
+  return {
+    seedSrgbColors,
+    screenColor,
+    screenChannel: getScreenChannelForMode(screenColorMode, screenColor),
+    fullDistance,
+    falloffDistance,
+    unmixStrength: Math.max(
+      0,
+      Math.min(1, settings.unmixStrength / 100),
+    ),
+  };
+}
+
+function createChromaKeyModels(
+  settings: PersistedTilesetBatchPickerBackgroundRemovalSettings,
+): ChromaKeyModel[] {
+  return settings.seeds.map((seed) => createChromaKeyModel(settings, [seed]));
+}
+
+function getScreenExcessCoverage(
+  color: RgbTuple,
+  model: ChromaKeyModel,
+): number {
+  const [otherA, otherB] = getOtherChromaChannels(model.screenChannel);
+  const screenLimit = (model.screenColor[otherA] + model.screenColor[otherB]) / 2;
+  const maxScreenExcess = Math.max(
+    0.08,
+    model.screenColor[model.screenChannel] - screenLimit,
+  );
+  const limit = (color[otherA] + color[otherB]) / 2;
+  return clampUnit(
+    Math.max(0, color[model.screenChannel] - limit) / maxScreenExcess,
+  );
+}
+
+function getChromaKeyBackgroundCoverage(
+  data: Uint8ClampedArray,
+  pixelIndex: number,
+  model: ChromaKeyModel,
+): number {
+  const srgbColor = getPixelSrgbColor(data, pixelIndex);
+  const seedDistance = getBestSeedDistance(srgbColor, model.seedSrgbColors);
+  const fullKeyCoverage =
+    1 -
+    smoothstep(
+      model.fullDistance,
+      model.fullDistance + model.falloffDistance,
+      seedDistance,
+    );
+
+  const linearColor = srgbToLinearColor(srgbColor);
+  const proximity =
+    1 -
+    smoothstep(
+      model.fullDistance + model.falloffDistance,
+      model.fullDistance + model.falloffDistance * 2.5,
+      seedDistance,
+    );
+  const screenExcessCoverage =
+    getScreenExcessCoverage(linearColor, model) * proximity;
+  return clampUnit(Math.max(fullKeyCoverage, screenExcessCoverage));
+}
+
+function unmixScreenColor(
+  color: RgbTuple,
+  backgroundCoverage: number,
+  screenColor: RgbTuple,
+): RgbTuple {
+  const foregroundCoverage = Math.max(0.001, 1 - backgroundCoverage);
+  return [
+    clampUnit((color[0] - backgroundCoverage * screenColor[0]) / foregroundCoverage),
+    clampUnit((color[1] - backgroundCoverage * screenColor[1]) / foregroundCoverage),
+    clampUnit((color[2] - backgroundCoverage * screenColor[2]) / foregroundCoverage),
+  ];
+}
+
+function applyChromaKeyMatte(
+  data: Uint8ClampedArray,
+  keyCoverage: Float32Array,
+  keyModelIndexByPixel: Int16Array,
+  removedMask: Uint8Array,
+  models: ChromaKeyModel[],
+): void {
+  for (let maskIndex = 0; maskIndex < keyCoverage.length; maskIndex += 1) {
+    const backgroundCoverage = clampUnit(keyCoverage[maskIndex]);
+    if (backgroundCoverage <= 0) {
+      continue;
+    }
+    const pixelIndex = maskIndex * 4;
+    const originalAlpha = data[pixelIndex + 3] / 255;
+    const foregroundAlpha = originalAlpha * (1 - backgroundCoverage);
+
+    if (backgroundCoverage >= 0.5) {
+      removedMask[maskIndex] = 1;
+    }
+    if (foregroundAlpha <= 0.002) {
+      data[pixelIndex + 3] = 0;
+      continue;
+    }
+    const model = models[keyModelIndexByPixel[maskIndex]];
+    if (!model) {
+      data[pixelIndex + 3] = clampCanvasChannel(foregroundAlpha * 255);
+      continue;
+    }
+
+    const originalLinearColor = srgbToLinearColor(
+      getPixelSrgbColor(data, pixelIndex),
+    );
+    const unmixed = unmixScreenColor(
+      originalLinearColor,
+      backgroundCoverage,
+      model.screenColor,
+    );
+    const outputColor: RgbTuple =
+      model.unmixStrength >= 1
+        ? unmixed
+        : [
+            originalLinearColor[0] * (1 - model.unmixStrength) +
+              unmixed[0] * model.unmixStrength,
+            originalLinearColor[1] * (1 - model.unmixStrength) +
+              unmixed[1] * model.unmixStrength,
+            originalLinearColor[2] * (1 - model.unmixStrength) +
+              unmixed[2] * model.unmixStrength,
+          ];
+    data[pixelIndex] = clampCanvasChannel(
+      linearToSrgbChannel(outputColor[0]) * 255,
+    );
+    data[pixelIndex + 1] = clampCanvasChannel(
+      linearToSrgbChannel(outputColor[1]) * 255,
+    );
+    data[pixelIndex + 2] = clampCanvasChannel(
+      linearToSrgbChannel(outputColor[2]) * 255,
+    );
+    data[pixelIndex + 3] = clampCanvasChannel(foregroundAlpha * 255);
+  }
 }
 
 function applyBackgroundRemovalAntialiasing(
@@ -460,8 +799,7 @@ function applyBackgroundRemovalAntialiasing(
         0.35,
         1 - removedWeight / maxRemovedWeight,
       );
-      const adjustedCoverage =
-        1 - strength * (1 - retainedCoverage);
+      const adjustedCoverage = 1 - strength * (1 - retainedCoverage);
       nextAlpha[maskIndex] = Math.max(
         1,
         Math.min(255, Math.round(originalAlpha * adjustedCoverage)),
@@ -477,48 +815,14 @@ function applyBackgroundRemovalAntialiasing(
   }
 }
 
-function clampCanvasChannel(value: number): number {
-  return Math.max(0, Math.min(255, Math.round(value)));
-}
-
-function getDominantSeedScreenChannel(
-  seeds: PersistedTilesetBatchPickerRemovalSeed[],
-): 0 | 1 | 2 {
-  if (seeds.length <= 0) {
-    return 1;
-  }
-  let r = 0;
-  let g = 0;
-  let b = 0;
-  for (const seed of seeds) {
-    r += seed.r;
-    g += seed.g;
-    b += seed.b;
-  }
-  r /= seeds.length;
-  g /= seeds.length;
-  b /= seeds.length;
-
-  const channelScores = [
-    r - (g + b) / 2,
-    g - (r + b) / 2,
-    b - (r + g) / 2,
-  ];
-  if (
-    channelScores[1] >= channelScores[0] &&
-    channelScores[1] >= channelScores[2]
-  ) {
-    return 1;
-  }
-  return channelScores[2] > channelScores[0] ? 2 : 0;
-}
-
 function applyEdgeSpillRemoval(
   data: Uint8ClampedArray,
   removedMask: Uint8Array,
+  keyModelIndexByPixel: Int16Array,
   width: number,
   height: number,
   settings: PersistedTilesetBatchPickerBackgroundRemovalSettings,
+  models: ChromaKeyModel[],
 ): void {
   const range = Math.max(0, Math.min(64, Math.round(settings.edgeSpillRange)));
   const baseStrength = Math.max(
@@ -536,13 +840,10 @@ function applyEdgeSpillRemoval(
   ) {
     return;
   }
-
-  const screenChannel = getDominantSeedScreenChannel(settings.seeds);
-  const [otherA, otherB] = [0, 1, 2].filter(
-    (channel) => channel !== screenChannel,
-  );
   const pixelCount = width * height;
   const distanceFromCutout = new Uint8Array(pixelCount);
+  const distanceModelIndexByPixel = new Int16Array(pixelCount);
+  distanceModelIndexByPixel.fill(-1);
   const queue = new Int32Array(pixelCount);
   let head = 0;
   let tail = 0;
@@ -552,6 +853,7 @@ function applyEdgeSpillRemoval(
       continue;
     }
     distanceFromCutout[index] = 1;
+    distanceModelIndexByPixel[index] = keyModelIndexByPixel[index];
     queue[tail] = index;
     tail += 1;
   }
@@ -583,6 +885,8 @@ function applyEdgeSpillRemoval(
         continue;
       }
       distanceFromCutout[neighborIndex] = nextDistance;
+      distanceModelIndexByPixel[neighborIndex] =
+        distanceModelIndexByPixel[currentIndex];
       queue[tail] = neighborIndex;
       tail += 1;
     }
@@ -609,18 +913,33 @@ function applyEdgeSpillRemoval(
     }
 
     if (baseStrength > 0) {
-      const spillStrength = baseStrength * edgeWeight;
-      const screen = data[pixelIndex + screenChannel];
-      const a = data[pixelIndex + otherA];
-      const b = data[pixelIndex + otherB];
-      const limit = (a + b) / 2;
-      const spillAmount = Math.max(0, screen - limit) * spillStrength;
-      if (spillAmount > 0) {
-        data[pixelIndex + screenChannel] = clampCanvasChannel(
-          screen - spillAmount,
+      const model = models[distanceModelIndexByPixel[maskIndex]];
+      if (model) {
+        const screenChannel = model.screenChannel;
+        const [otherA, otherB] = getOtherChromaChannels(screenChannel);
+        const spillStrength = baseStrength * edgeWeight;
+        const screen = srgbToLinearChannel(
+          data[pixelIndex + screenChannel] / 255,
         );
-        data[pixelIndex + otherA] = clampCanvasChannel(a + spillAmount * 0.5);
-        data[pixelIndex + otherB] = clampCanvasChannel(b + spillAmount * 0.5);
+        const a = srgbToLinearChannel(data[pixelIndex + otherA] / 255);
+        const b = srgbToLinearChannel(data[pixelIndex + otherB] / 255);
+        const limit =
+          normalizeBackgroundRemovalSpillLimitMode(settings.spillLimitMode) ===
+          "max"
+            ? Math.max(a, b)
+            : (a + b) / 2;
+        const spillAmount = Math.max(0, screen - limit) * spillStrength;
+        if (spillAmount > 0) {
+          data[pixelIndex + screenChannel] = clampCanvasChannel(
+            linearToSrgbChannel(screen - spillAmount) * 255,
+          );
+          data[pixelIndex + otherA] = clampCanvasChannel(
+            linearToSrgbChannel(a + spillAmount * 0.5) * 255,
+          );
+          data[pixelIndex + otherB] = clampCanvasChannel(
+            linearToSrgbChannel(b + spillAmount * 0.5) * 255,
+          );
+        }
       }
     }
 
@@ -629,18 +948,24 @@ function applyEdgeSpillRemoval(
       continue;
     }
 
-    const r = data[pixelIndex];
-    const g = data[pixelIndex + 1];
-    const b = data[pixelIndex + 2];
+    const r = srgbToLinearChannel(data[pixelIndex] / 255);
+    const g = srgbToLinearChannel(data[pixelIndex + 1] / 255);
+    const b = srgbToLinearChannel(data[pixelIndex + 2] / 255);
     const luminance = r * 0.299 + g * 0.587 + b * 0.114;
     data[pixelIndex] = clampCanvasChannel(
-      r * (1 - desaturationStrength) + luminance * desaturationStrength,
+      linearToSrgbChannel(
+        r * (1 - desaturationStrength) + luminance * desaturationStrength,
+      ) * 255,
     );
     data[pixelIndex + 1] = clampCanvasChannel(
-      g * (1 - desaturationStrength) + luminance * desaturationStrength,
+      linearToSrgbChannel(
+        g * (1 - desaturationStrength) + luminance * desaturationStrength,
+      ) * 255,
     );
     data[pixelIndex + 2] = clampCanvasChannel(
-      b * (1 - desaturationStrength) + luminance * desaturationStrength,
+      linearToSrgbChannel(
+        b * (1 - desaturationStrength) + luminance * desaturationStrength,
+      ) * 255,
     );
   }
 }
@@ -664,79 +989,98 @@ function renderBackgroundRemovedCanvas(
   const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
   const baseData = new Uint8ClampedArray(imageData.data);
   const workingData = imageData.data;
-  const tolerance = Math.max(0, Math.min(255, Math.round(settings.tolerance)));
   const width = canvas.width;
   const height = canvas.height;
+  const keyModels = createChromaKeyModels(settings);
+  const keyCoverage = new Float32Array(width * height);
+  const keyModelIndexByPixel = new Int16Array(width * height);
+  keyModelIndexByPixel.fill(-1);
   const removedMask = new Uint8Array(width * height);
+  const minTraversalCoverage = 0.01;
 
-  for (const seed of settings.seeds) {
-    if (seed.x < 0 || seed.x >= width || seed.y < 0 || seed.y >= height) {
-      continue;
-    }
-    if (settings.nonContiguous) {
-      for (let maskIndex = 0; maskIndex < removedMask.length; maskIndex += 1) {
+  if (settings.nonContiguous) {
+    for (let modelIndex = 0; modelIndex < keyModels.length; modelIndex += 1) {
+      const keyModel = keyModels[modelIndex];
+      for (let maskIndex = 0; maskIndex < keyCoverage.length; maskIndex += 1) {
         const pixelIndex = maskIndex * 4;
-        if (
-          !removedMask[maskIndex] &&
-          colorsMatchWithinTolerance(baseData, pixelIndex, seed, tolerance)
-        ) {
-          removedMask[maskIndex] = 1;
-          workingData[pixelIndex + 3] = 0;
+        const coverage = getChromaKeyBackgroundCoverage(
+          baseData,
+          pixelIndex,
+          keyModel,
+        );
+        if (coverage > keyCoverage[maskIndex]) {
+          keyCoverage[maskIndex] = coverage;
+          keyModelIndexByPixel[maskIndex] = modelIndex;
         }
       }
-      continue;
     }
-
-    const visited = new Uint8Array(width * height);
-    const queueX = new Int32Array(width * height);
-    const queueY = new Int32Array(width * height);
-    let head = 0;
-    let tail = 0;
-    queueX[tail] = seed.x;
-    queueY[tail] = seed.y;
-    tail += 1;
-
-    while (head < tail) {
-      const x = queueX[head];
-      const y = queueY[head];
-      head += 1;
-      const visitIndex = y * width + x;
-      if (visited[visitIndex]) {
+  } else {
+    for (let modelIndex = 0; modelIndex < keyModels.length; modelIndex += 1) {
+      const seed = settings.seeds[modelIndex];
+      const keyModel = keyModels[modelIndex];
+      if (seed.x < 0 || seed.x >= width || seed.y < 0 || seed.y >= height) {
         continue;
       }
-      visited[visitIndex] = 1;
-      const pixelIndex = visitIndex * 4;
-      if (
-        !colorsMatchWithinTolerance(baseData, pixelIndex, seed, tolerance)
-      ) {
-        continue;
-      }
-      removedMask[visitIndex] = 1;
-      workingData[pixelIndex + 3] = 0;
 
-      if (x > 0) {
-        queueX[tail] = x - 1;
-        queueY[tail] = y;
-        tail += 1;
-      }
-      if (x + 1 < width) {
-        queueX[tail] = x + 1;
-        queueY[tail] = y;
-        tail += 1;
-      }
-      if (y > 0) {
-        queueX[tail] = x;
-        queueY[tail] = y - 1;
-        tail += 1;
-      }
-      if (y + 1 < height) {
-        queueX[tail] = x;
-        queueY[tail] = y + 1;
-        tail += 1;
+      const visited = new Uint8Array(keyCoverage.length);
+      const queue = new Int32Array(keyCoverage.length);
+      const seedIndex = seed.y * width + seed.x;
+      let head = 0;
+      let tail = 0;
+      queue[tail] = seedIndex;
+      visited[seedIndex] = 1;
+      tail += 1;
+
+      while (head < tail) {
+        const visitIndex = queue[head];
+        head += 1;
+        const pixelIndex = visitIndex * 4;
+        const coverage = getChromaKeyBackgroundCoverage(
+          baseData,
+          pixelIndex,
+          keyModel,
+        );
+        if (coverage <= minTraversalCoverage) {
+          continue;
+        }
+        if (coverage > keyCoverage[visitIndex]) {
+          keyCoverage[visitIndex] = coverage;
+          keyModelIndexByPixel[visitIndex] = modelIndex;
+        }
+
+        const x = visitIndex % width;
+        const y = Math.floor(visitIndex / width);
+        if (x > 0 && !visited[visitIndex - 1]) {
+          visited[visitIndex - 1] = 1;
+          queue[tail] = visitIndex - 1;
+          tail += 1;
+        }
+        if (x + 1 < width && !visited[visitIndex + 1]) {
+          visited[visitIndex + 1] = 1;
+          queue[tail] = visitIndex + 1;
+          tail += 1;
+        }
+        if (y > 0 && !visited[visitIndex - width]) {
+          visited[visitIndex - width] = 1;
+          queue[tail] = visitIndex - width;
+          tail += 1;
+        }
+        if (y + 1 < height && !visited[visitIndex + width]) {
+          visited[visitIndex + width] = 1;
+          queue[tail] = visitIndex + width;
+          tail += 1;
+        }
       }
     }
   }
 
+  applyChromaKeyMatte(
+    workingData,
+    keyCoverage,
+    keyModelIndexByPixel,
+    removedMask,
+    keyModels,
+  );
   applyBackgroundRemovalAntialiasing(
     workingData,
     removedMask,
@@ -744,7 +1088,15 @@ function renderBackgroundRemovedCanvas(
     height,
     Math.max(0, Math.min(100, Math.round(settings.edgeSoftness))),
   );
-  applyEdgeSpillRemoval(workingData, removedMask, width, height, settings);
+  applyEdgeSpillRemoval(
+    workingData,
+    removedMask,
+    keyModelIndexByPixel,
+    width,
+    height,
+    settings,
+    keyModels,
+  );
   context.putImageData(imageData, 0, 0);
   return canvas;
 }
@@ -2088,6 +2440,61 @@ export default function TilesetBatchPicker(): JSX.Element {
     [],
   );
 
+  const setBackgroundRemovalMatteFalloff = useCallback(
+    (imageId: string, matteFalloff: number) => {
+      setBackgroundRemovalByImageId((current) => {
+        const previous = current[imageId] ?? getDefaultBackgroundRemovalSettings();
+        return {
+          ...current,
+          [imageId]: {
+            ...previous,
+            matteFalloff: Math.max(
+              0,
+              Math.min(100, Math.round(matteFalloff)),
+            ),
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const setBackgroundRemovalUnmixStrength = useCallback(
+    (imageId: string, unmixStrength: number) => {
+      setBackgroundRemovalByImageId((current) => {
+        const previous = current[imageId] ?? getDefaultBackgroundRemovalSettings();
+        return {
+          ...current,
+          [imageId]: {
+            ...previous,
+            unmixStrength: Math.max(
+              0,
+              Math.min(100, Math.round(unmixStrength)),
+            ),
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const setBackgroundRemovalScreenColorMode = useCallback(
+    (imageId: string, screenColorMode: BackgroundRemovalScreenColorMode) => {
+      setBackgroundRemovalByImageId((current) => {
+        const previous = current[imageId] ?? getDefaultBackgroundRemovalSettings();
+        return {
+          ...current,
+          [imageId]: {
+            ...previous,
+            screenColorMode:
+              normalizeBackgroundRemovalScreenColorMode(screenColorMode),
+          },
+        };
+      });
+    },
+    [],
+  );
+
   const setBackgroundRemovalEdgeSpillRange = useCallback(
     (imageId: string, edgeSpillRange: number) => {
       setBackgroundRemovalByImageId((current) => {
@@ -2119,6 +2526,23 @@ export default function TilesetBatchPicker(): JSX.Element {
               0,
               Math.min(100, Math.round(edgeSpillStrength)),
             ),
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const setBackgroundRemovalSpillLimitMode = useCallback(
+    (imageId: string, spillLimitMode: BackgroundRemovalSpillLimitMode) => {
+      setBackgroundRemovalByImageId((current) => {
+        const previous = current[imageId] ?? getDefaultBackgroundRemovalSettings();
+        return {
+          ...current,
+          [imageId]: {
+            ...previous,
+            spillLimitMode:
+              normalizeBackgroundRemovalSpillLimitMode(spillLimitMode),
           },
         };
       });
@@ -2206,9 +2630,13 @@ export default function TilesetBatchPicker(): JSX.Element {
         nextSeeds.length <= 0 &&
         previous.tolerance === defaultBackgroundRemovalTolerance &&
         previous.edgeSoftness === defaultBackgroundRemovalEdgeSoftness &&
+        previous.matteFalloff === defaultBackgroundRemovalMatteFalloff &&
+        previous.unmixStrength === defaultBackgroundRemovalUnmixStrength &&
+        previous.screenColorMode === defaultBackgroundRemovalScreenColorMode &&
         previous.edgeSpillRange === defaultBackgroundRemovalEdgeSpillRange &&
         previous.edgeSpillStrength ===
           defaultBackgroundRemovalEdgeSpillStrength &&
+        previous.spillLimitMode === defaultBackgroundRemovalSpillLimitMode &&
         previous.edgeDesaturation === defaultBackgroundRemovalEdgeDesaturation &&
         previous.nonContiguous === false
       ) {
@@ -2257,9 +2685,13 @@ export default function TilesetBatchPicker(): JSX.Element {
           nextSeeds.length <= 0 &&
           previous.tolerance === defaultBackgroundRemovalTolerance &&
           previous.edgeSoftness === defaultBackgroundRemovalEdgeSoftness &&
+          previous.matteFalloff === defaultBackgroundRemovalMatteFalloff &&
+          previous.unmixStrength === defaultBackgroundRemovalUnmixStrength &&
+          previous.screenColorMode === defaultBackgroundRemovalScreenColorMode &&
           previous.edgeSpillRange === defaultBackgroundRemovalEdgeSpillRange &&
           previous.edgeSpillStrength ===
             defaultBackgroundRemovalEdgeSpillStrength &&
+          previous.spillLimitMode === defaultBackgroundRemovalSpillLimitMode &&
           previous.edgeDesaturation === defaultBackgroundRemovalEdgeDesaturation &&
           previous.nonContiguous === false
         ) {
@@ -2567,6 +2999,54 @@ export default function TilesetBatchPicker(): JSX.Element {
               />
             </label>
             <label className="tileset-batch-picker__sheet-slider">
+              <span>Screen color</span>
+              <select
+                className="tileset-batch-picker__sheet-select"
+                onChange={(event) => {
+                  setBackgroundRemovalScreenColorMode(
+                    uploadedImage.id,
+                    event.target.value as BackgroundRemovalScreenColorMode,
+                  );
+                }}
+                value={removalSettings.screenColorMode}
+              >
+                <option value="auto">Auto</option>
+                <option value="green">Green</option>
+                <option value="blue">Blue</option>
+                <option value="red">Red</option>
+              </select>
+            </label>
+            <label className="tileset-batch-picker__sheet-slider">
+              <span>Matte falloff: {removalSettings.matteFalloff}</span>
+              <input
+                max={100}
+                min={0}
+                onChange={(event) => {
+                  setBackgroundRemovalMatteFalloff(
+                    uploadedImage.id,
+                    Number(event.target.value),
+                  );
+                }}
+                type="range"
+                value={removalSettings.matteFalloff}
+              />
+            </label>
+            <label className="tileset-batch-picker__sheet-slider">
+              <span>Screen unmix: {removalSettings.unmixStrength}</span>
+              <input
+                max={100}
+                min={0}
+                onChange={(event) => {
+                  setBackgroundRemovalUnmixStrength(
+                    uploadedImage.id,
+                    Number(event.target.value),
+                  );
+                }}
+                type="range"
+                value={removalSettings.unmixStrength}
+              />
+            </label>
+            <label className="tileset-batch-picker__sheet-slider">
               <span>Edge smoothing: {removalSettings.edgeSoftness}</span>
               <input
                 max={100}
@@ -2610,6 +3090,22 @@ export default function TilesetBatchPicker(): JSX.Element {
                 type="range"
                 value={removalSettings.edgeSpillStrength}
               />
+            </label>
+            <label className="tileset-batch-picker__sheet-slider">
+              <span>Spill limit</span>
+              <select
+                className="tileset-batch-picker__sheet-select"
+                onChange={(event) => {
+                  setBackgroundRemovalSpillLimitMode(
+                    uploadedImage.id,
+                    event.target.value as BackgroundRemovalSpillLimitMode,
+                  );
+                }}
+                value={removalSettings.spillLimitMode}
+              >
+                <option value="average">Average</option>
+                <option value="max">Max</option>
+              </select>
             </label>
             <label className="tileset-batch-picker__sheet-slider">
               <span>Edge desaturation: {removalSettings.edgeDesaturation}</span>

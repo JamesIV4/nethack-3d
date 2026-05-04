@@ -58,8 +58,12 @@ export type PersistedTilesetBatchPickerRemovalSeed = {
 export type PersistedTilesetBatchPickerBackgroundRemovalSettings = {
   tolerance: number;
   edgeSoftness: number;
+  matteFalloff: number;
+  unmixStrength: number;
+  screenColorMode: "auto" | "red" | "green" | "blue";
   edgeSpillRange: number;
   edgeSpillStrength: number;
+  spillLimitMode: "average" | "max";
   edgeDesaturation: number;
   nonContiguous: boolean;
   seeds: PersistedTilesetBatchPickerRemovalSeed[];
@@ -246,6 +250,34 @@ function normalizeRemovalEdgeSoftness(value: unknown): number {
   return Math.max(0, Math.min(100, Math.round(Number(value))));
 }
 
+function normalizeRemovalMatteFalloff(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 100;
+  }
+  return Math.max(0, Math.min(100, Math.round(Number(value))));
+}
+
+function normalizeRemovalUnmixStrength(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 100;
+  }
+  return Math.max(0, Math.min(100, Math.round(Number(value))));
+}
+
+function normalizeRemovalScreenColorMode(
+  value: unknown,
+): PersistedTilesetBatchPickerBackgroundRemovalSettings["screenColorMode"] {
+  if (
+    value === "red" ||
+    value === "green" ||
+    value === "blue" ||
+    value === "auto"
+  ) {
+    return value;
+  }
+  return "auto";
+}
+
 function normalizeRemovalEdgeSpillRange(value: unknown): number {
   if (!Number.isFinite(value)) {
     return 4;
@@ -258,6 +290,12 @@ function normalizeRemovalEdgeSpillStrength(value: unknown): number {
     return 66;
   }
   return Math.max(0, Math.min(100, Math.round(Number(value))));
+}
+
+function normalizeRemovalSpillLimitMode(
+  value: unknown,
+): PersistedTilesetBatchPickerBackgroundRemovalSettings["spillLimitMode"] {
+  return value === "max" ? "max" : "average";
 }
 
 function normalizeRemovalEdgeDesaturation(value: unknown): number {
@@ -296,10 +334,14 @@ function normalizeBackgroundRemovalSettings(
   return {
     tolerance: normalizeRemovalTolerance(rawValue.tolerance),
     edgeSoftness: normalizeRemovalEdgeSoftness(rawValue.edgeSoftness),
+    matteFalloff: normalizeRemovalMatteFalloff(rawValue.matteFalloff),
+    unmixStrength: normalizeRemovalUnmixStrength(rawValue.unmixStrength),
+    screenColorMode: normalizeRemovalScreenColorMode(rawValue.screenColorMode),
     edgeSpillRange: normalizeRemovalEdgeSpillRange(rawValue.edgeSpillRange),
     edgeSpillStrength: normalizeRemovalEdgeSpillStrength(
       rawValue.edgeSpillStrength,
     ),
+    spillLimitMode: normalizeRemovalSpillLimitMode(rawValue.spillLimitMode),
     edgeDesaturation: normalizeRemovalEdgeDesaturation(
       rawValue.edgeDesaturation,
     ),

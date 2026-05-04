@@ -40,7 +40,8 @@ body.tileset-batch-picker-page {
 }
 
 .tileset-batch-picker button,
-.tileset-batch-picker input {
+.tileset-batch-picker input,
+.tileset-batch-picker select {
   font: inherit;
 }
 
@@ -447,6 +448,15 @@ body.tileset-batch-picker-page {
 
 .tileset-batch-picker__sheet-slider input {
   width: 100%;
+}
+
+.tileset-batch-picker__sheet-select {
+  width: 100%;
+  min-height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  background: #242c35;
+  color: #ecf4ff;
 }
 
 .tileset-batch-picker__sheet-checkbox {
