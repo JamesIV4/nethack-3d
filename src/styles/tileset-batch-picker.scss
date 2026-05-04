@@ -146,6 +146,42 @@ body.tileset-batch-picker-page {
   padding: 14px 16px;
 }
 
+.tileset-batch-picker__editor-controls {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.tileset-batch-picker__editor-toggle {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tileset-batch-picker__editor-toggle-button {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #afbcc8;
+  cursor: pointer;
+}
+
+.tileset-batch-picker__editor-toggle-button--active {
+  background: #2f8cff;
+  color: #f4f9ff;
+}
+
+.tileset-batch-picker__editor-hint {
+  max-width: 360px;
+  margin: 0;
+  color: #9daab7;
+  font-size: 0.78rem;
+  text-align: right;
+}
+
 .tileset-batch-picker__batch-list-header h2 {
   margin: 0;
   font-size: 1rem;
@@ -308,6 +344,9 @@ body.tileset-batch-picker-page {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 6px;
+}
+
+.tileset-batch-picker__sheet-frame--dark {
   background:
     linear-gradient(45deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%),
     linear-gradient(-45deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%),
@@ -322,7 +361,22 @@ body.tileset-batch-picker-page {
   background-size: 16px 16px;
 }
 
-.tileset-batch-picker__sheet-frame img {
+.tileset-batch-picker__sheet-frame--light {
+  background:
+    linear-gradient(45deg, rgba(194, 204, 216, 0.55) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(194, 204, 216, 0.55) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(194, 204, 216, 0.55) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(194, 204, 216, 0.55) 75%),
+    #eef3f8;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+  background-size: 16px 16px;
+}
+
+.tileset-batch-picker__sheet-preview {
   display: block;
   width: 100%;
   height: 100%;
@@ -330,14 +384,128 @@ body.tileset-batch-picker-page {
   image-rendering: pixelated;
 }
 
+.tileset-batch-picker__pixel-zoom {
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid rgba(255, 213, 79, 0.4);
+  border-radius: 8px;
+  background: rgba(10, 14, 19, 0.94);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
+  pointer-events: none;
+}
+
+.tileset-batch-picker__pixel-zoom-canvas {
+  display: block;
+  width: 110px;
+  height: 110px;
+  image-rendering: pixelated;
+}
+
+.tileset-batch-picker__pixel-zoom-label {
+  display: grid;
+  gap: 2px;
+  color: #eef4fb;
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.tileset-batch-picker__sheet-controls {
+  display: grid;
+  gap: 8px;
+  padding: 0 0 4px;
+}
+
+.tileset-batch-picker__sheet-slider {
+  display: grid;
+  gap: 6px;
+  color: #c7d3de;
+  font-size: 0.78rem;
+}
+
+.tileset-batch-picker__sheet-slider input {
+  width: 100%;
+}
+
+.tileset-batch-picker__sheet-removal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #97a6b5;
+  font-size: 0.76rem;
+}
+
+.tileset-batch-picker__sheet-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tileset-batch-picker__sheet-color-swatch {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background-image:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.12) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.12) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.12) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.12) 75%);
+  background-position:
+    0 0,
+    0 4px,
+    4px -4px,
+    -4px 0;
+  background-size: 8px 8px;
+}
+
 .tileset-batch-picker__cell-layer {
   position: absolute;
   inset: 0;
 }
 
+.tileset-batch-picker__background-hit-target {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: crosshair;
+}
+
+.tileset-batch-picker__background-hit-target:disabled {
+  cursor: progress;
+}
+
+.tileset-batch-picker__sheet-frame--background-remove {
+  outline: 1px solid rgba(255, 213, 79, 0.28);
+  outline-offset: -1px;
+}
+
+.tileset-batch-picker__seed-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tileset-batch-picker__seed-marker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 213, 79, 0.96);
+  border-radius: 999px;
+  background: rgba(16, 20, 25, 0.86);
+  box-shadow: 0 0 0 1px rgba(16, 20, 25, 0.84);
+  transform: translate(-50%, -50%);
+}
+
 .tileset-batch-picker__cell {
   position: absolute;
   appearance: none;
+  overflow: visible;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: transparent;
   cursor: pointer;
@@ -355,6 +523,75 @@ body.tileset-batch-picker-page {
   outline-offset: -3px;
   background: rgba(47, 140, 255, 0.12);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.tileset-batch-picker__cell--draggable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.tileset-batch-picker__cell--dragging {
+  cursor: grabbing;
+}
+
+.tileset-batch-picker__cell-offset-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tileset-batch-picker__cell-offset-body {
+  position: absolute;
+  pointer-events: none;
+  border: 2px dashed rgba(255, 213, 79, 0.96);
+  box-shadow:
+    inset 0 0 0 1px rgba(16, 20, 25, 0.9),
+    0 0 0 1px rgba(255, 213, 79, 0.18);
+}
+
+.tileset-batch-picker__cell--offset .tileset-batch-picker__cell-offset-body {
+  background: rgba(255, 213, 79, 0.08);
+}
+
+.tileset-batch-picker__cell-offset-handle {
+  position: absolute;
+  pointer-events: auto;
+  background: transparent;
+  touch-action: none;
+}
+
+.tileset-batch-picker__cell-offset-handle--left,
+.tileset-batch-picker__cell-offset-handle--right {
+  top: 0;
+  bottom: 0;
+  width: 10px;
+}
+
+.tileset-batch-picker__cell-offset-handle--left {
+  left: -6px;
+  cursor: ew-resize;
+}
+
+.tileset-batch-picker__cell-offset-handle--right {
+  right: -6px;
+  cursor: ew-resize;
+}
+
+.tileset-batch-picker__cell-offset-handle--top,
+.tileset-batch-picker__cell-offset-handle--bottom {
+  left: 0;
+  right: 0;
+  height: 10px;
+}
+
+.tileset-batch-picker__cell-offset-handle--top {
+  top: -6px;
+  cursor: ns-resize;
+}
+
+.tileset-batch-picker__cell-offset-handle--bottom {
+  bottom: -6px;
+  cursor: ns-resize;
 }
 
 .tileset-batch-picker__cell--selected-elsewhere {
@@ -424,6 +661,22 @@ body.tileset-batch-picker-page {
   justify-content: flex-start;
   min-width: 100%;
   min-height: 100%;
+  background: #151a20;
+}
+
+.tileset-batch-picker__preview-stage--transparency {
+  background:
+    linear-gradient(45deg, rgba(194, 204, 216, 0.55) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(194, 204, 216, 0.55) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(194, 204, 216, 0.55) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(194, 204, 216, 0.55) 75%),
+    #eef3f8;
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0;
+  background-size: 20px 20px;
 }
 
 .tileset-batch-picker__preview canvas {
@@ -458,5 +711,18 @@ body.tileset-batch-picker-page {
 
   .tileset-batch-picker__summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tileset-batch-picker__batch-list-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tileset-batch-picker__editor-controls {
+    justify-items: start;
+  }
+
+  .tileset-batch-picker__editor-hint {
+    text-align: left;
   }
 }

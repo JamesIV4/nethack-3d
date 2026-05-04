@@ -24,8 +24,41 @@ export type PersistedTilesetBatchPickerSession = {
   compileMap: unknown;
   mapLabel: string;
   selectedImages: Record<string, string>;
+  selectedOffsets: Record<string, PersistedTilesetBatchPickerOffset>;
+  selectedCropInsets: Record<string, PersistedTilesetBatchPickerCropInsets>;
+  backgroundRemovalByImageId: Record<
+    string,
+    PersistedTilesetBatchPickerBackgroundRemovalSettings
+  >;
   batchImages: Record<string, PersistedTilesetBatchPickerImageMeta[]>;
   updatedAt: number;
+};
+
+export type PersistedTilesetBatchPickerOffset = {
+  x: number;
+  y: number;
+};
+
+export type PersistedTilesetBatchPickerCropInsets = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+
+export type PersistedTilesetBatchPickerRemovalSeed = {
+  x: number;
+  y: number;
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+};
+
+export type PersistedTilesetBatchPickerBackgroundRemovalSettings = {
+  tolerance: number;
+  edgeSoftness: number;
+  seeds: PersistedTilesetBatchPickerRemovalSeed[];
 };
 
 type PersistedTilesetBatchPickerSessionRecord =
@@ -114,6 +147,160 @@ function normalizeSelectedImages(
   return normalized;
 }
 
+function normalizeOffsetValue(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(-1, Math.min(1, Number(value)));
+}
+
+function normalizeSelectedOffsets(
+  rawValue: unknown,
+): Record<string, PersistedTilesetBatchPickerOffset> {
+  if (!isPlainObject(rawValue)) {
+    return {};
+  }
+  const normalized: Record<string, PersistedTilesetBatchPickerOffset> = {};
+  for (const [generatedIndex, offset] of Object.entries(rawValue)) {
+    if (!isPlainObject(offset)) {
+      continue;
+    }
+    const normalizedKey = String(generatedIndex).trim();
+    if (!normalizedKey) {
+      continue;
+    }
+    const x = normalizeOffsetValue(offset.x);
+    const y = normalizeOffsetValue(offset.y);
+    if (x === 0 && y === 0) {
+      continue;
+    }
+    normalized[normalizedKey] = { x, y };
+  }
+  return normalized;
+}
+
+function normalizeCropInsetValue(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(-1, Math.min(0.95, Number(value)));
+}
+
+function normalizeSelectedCropInsets(
+  rawValue: unknown,
+): Record<string, PersistedTilesetBatchPickerCropInsets> {
+  if (!isPlainObject(rawValue)) {
+    return {};
+  }
+  const normalized: Record<string, PersistedTilesetBatchPickerCropInsets> = {};
+  for (const [generatedIndex, crop] of Object.entries(rawValue)) {
+    if (!isPlainObject(crop)) {
+      continue;
+    }
+    const normalizedKey = String(generatedIndex).trim();
+    if (!normalizedKey) {
+      continue;
+    }
+    const left = normalizeCropInsetValue(crop.left);
+    const right = normalizeCropInsetValue(crop.right);
+    const top = normalizeCropInsetValue(crop.top);
+    const bottom = normalizeCropInsetValue(crop.bottom);
+    if (left === 0 && right === 0 && top === 0 && bottom === 0) {
+      continue;
+    }
+    normalized[normalizedKey] = { left, right, top, bottom };
+  }
+  return normalized;
+}
+
+function normalizeRemovalChannel(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(255, Math.round(Number(value))));
+}
+
+function normalizeRemovalCoordinate(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.round(Number(value)));
+}
+
+function normalizeRemovalTolerance(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 24;
+  }
+  return Math.max(0, Math.min(255, Math.round(Number(value))));
+}
+
+function normalizeRemovalEdgeSoftness(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 100;
+  }
+  return Math.max(0, Math.min(100, Math.round(Number(value))));
+}
+
+function normalizeRemovalSeed(
+  rawValue: unknown,
+): PersistedTilesetBatchPickerRemovalSeed | null {
+  if (!isPlainObject(rawValue)) {
+    return null;
+  }
+  return {
+    x: normalizeRemovalCoordinate(rawValue.x),
+    y: normalizeRemovalCoordinate(rawValue.y),
+    r: normalizeRemovalChannel(rawValue.r),
+    g: normalizeRemovalChannel(rawValue.g),
+    b: normalizeRemovalChannel(rawValue.b),
+    a: normalizeRemovalChannel(rawValue.a),
+  };
+}
+
+function normalizeBackgroundRemovalSettings(
+  rawValue: unknown,
+): PersistedTilesetBatchPickerBackgroundRemovalSettings | null {
+  if (!isPlainObject(rawValue)) {
+    return null;
+  }
+  return {
+    tolerance: normalizeRemovalTolerance(rawValue.tolerance),
+    edgeSoftness: normalizeRemovalEdgeSoftness(rawValue.edgeSoftness),
+    seeds: Array.isArray(rawValue.seeds)
+      ? rawValue.seeds
+          .map((entry) => normalizeRemovalSeed(entry))
+          .filter(
+            (entry): entry is PersistedTilesetBatchPickerRemovalSeed =>
+              entry !== null,
+          )
+      : [],
+  };
+}
+
+function normalizeBackgroundRemovalByImageId(
+  rawValue: unknown,
+): Record<string, PersistedTilesetBatchPickerBackgroundRemovalSettings> {
+  if (!isPlainObject(rawValue)) {
+    return {};
+  }
+  const normalized: Record<
+    string,
+    PersistedTilesetBatchPickerBackgroundRemovalSettings
+  > = {};
+  for (const [imageId, settings] of Object.entries(rawValue)) {
+    const normalizedImageId = String(imageId).trim();
+    if (!normalizedImageId) {
+      continue;
+    }
+    const normalizedSettings = normalizeBackgroundRemovalSettings(settings);
+    if (!normalizedSettings) {
+      continue;
+    }
+    normalized[normalizedImageId] = normalizedSettings;
+  }
+  return normalized;
+}
+
 function normalizeImageMeta(
   rawValue: unknown,
 ): PersistedTilesetBatchPickerImageMeta | null {
@@ -173,6 +360,11 @@ function normalizeSession(
     compileMap: rawValue.compileMap,
     mapLabel: normalizeText(rawValue.mapLabel, "NetHack 5 compile map"),
     selectedImages: normalizeSelectedImages(rawValue.selectedImages),
+    selectedOffsets: normalizeSelectedOffsets(rawValue.selectedOffsets),
+    selectedCropInsets: normalizeSelectedCropInsets(rawValue.selectedCropInsets),
+    backgroundRemovalByImageId: normalizeBackgroundRemovalByImageId(
+      rawValue.backgroundRemovalByImageId,
+    ),
     batchImages: normalizeBatchImages(rawValue.batchImages),
     updatedAt: normalizeTimestamp(rawValue.updatedAt),
   };
@@ -222,6 +414,11 @@ export async function savePersistedTilesetBatchPickerSession(
       compileMap: session.compileMap,
       mapLabel: session.mapLabel,
       selectedImages: normalizeSelectedImages(session.selectedImages),
+      selectedOffsets: normalizeSelectedOffsets(session.selectedOffsets),
+      selectedCropInsets: normalizeSelectedCropInsets(session.selectedCropInsets),
+      backgroundRemovalByImageId: normalizeBackgroundRemovalByImageId(
+        session.backgroundRemovalByImageId,
+      ),
       batchImages: normalizeBatchImages(session.batchImages),
       updatedAt: Date.now(),
     };
