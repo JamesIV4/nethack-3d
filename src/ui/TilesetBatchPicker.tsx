@@ -1612,6 +1612,9 @@ export default function TilesetBatchPicker(): JSX.Element {
   const [mapLabel, setMapLabel] = useState("NetHack 5 compile map");
   const [mapStatus, setMapStatus] = useState("Loading");
   const [batchImages, setBatchImages] = useState<BatchImagesByIndex>({});
+  const [expandedBatchIndexes, setExpandedBatchIndexes] = useState<
+    Record<number, boolean>
+  >({});
   const [selectedImages, setSelectedImages] =
     useState<SelectedImageByGeneratedIndex>({});
   const [selectedOffsets, setSelectedOffsets] =
@@ -3091,178 +3094,182 @@ export default function TilesetBatchPicker(): JSX.Element {
         </div>
         {editorMode === "background-remove" ? (
           <div className="tileset-batch-picker__sheet-controls">
-            <label className="tileset-batch-picker__sheet-slider">
-              <span>Fuzzy range: {removalSettings.tolerance}</span>
-              <input
-                max={255}
-                min={0}
-                onChange={(event) => {
-                  setBackgroundRemovalTolerance(
-                    uploadedImage.id,
-                    Number(event.target.value),
-                  );
-                }}
-                type="range"
-                value={removalSettings.tolerance}
-              />
-            </label>
-            <label className="tileset-batch-picker__sheet-slider">
-              <span>Screen color</span>
-              <select
-                className="tileset-batch-picker__sheet-select"
-                onChange={(event) => {
-                  setBackgroundRemovalScreenColorMode(
-                    uploadedImage.id,
-                    event.target.value as BackgroundRemovalScreenColorMode,
-                  );
-                }}
-                value={removalSettings.screenColorMode}
-              >
-                <option value="auto">Auto</option>
-                <option value="green">Green</option>
-                <option value="blue">Blue</option>
-                <option value="red">Red</option>
-              </select>
-            </label>
-            <label className="tileset-batch-picker__sheet-slider">
-              <span>Matte falloff: {removalSettings.matteFalloff}</span>
-              <input
-                max={100}
-                min={0}
-                onChange={(event) => {
-                  setBackgroundRemovalMatteFalloff(
-                    uploadedImage.id,
-                    Number(event.target.value),
-                  );
-                }}
-                type="range"
-                value={removalSettings.matteFalloff}
-              />
-            </label>
-            <label className="tileset-batch-picker__sheet-slider">
-              <span>Screen unmix: {removalSettings.unmixStrength}</span>
-              <input
-                max={100}
-                min={0}
-                onChange={(event) => {
-                  setBackgroundRemovalUnmixStrength(
-                    uploadedImage.id,
-                    Number(event.target.value),
-                  );
-                }}
-                type="range"
-                value={removalSettings.unmixStrength}
-              />
-            </label>
-            <label className="tileset-batch-picker__sheet-slider">
-              <span>Edge smoothing: {removalSettings.edgeSoftness}</span>
-              <input
-                max={100}
-                min={0}
-                onChange={(event) => {
-                  setBackgroundRemovalEdgeSoftness(
-                    uploadedImage.id,
-                    Number(event.target.value),
-                  );
-                }}
-                type="range"
-                value={removalSettings.edgeSoftness}
-              />
-            </label>
-            <label className="tileset-batch-picker__sheet-slider">
-              <span>Edge spill range: {removalSettings.edgeSpillRange}px</span>
-              <input
-                max={64}
-                min={0}
-                onChange={(event) => {
-                  setBackgroundRemovalEdgeSpillRange(
-                    uploadedImage.id,
-                    Number(event.target.value),
-                  );
-                }}
-                type="range"
-                value={removalSettings.edgeSpillRange}
-              />
-            </label>
-            <label className="tileset-batch-picker__sheet-slider">
-              <span>Edge spill cleanup: {removalSettings.edgeSpillStrength}</span>
-              <input
-                max={100}
-                min={0}
-                onChange={(event) => {
-                  setBackgroundRemovalEdgeSpillStrength(
-                    uploadedImage.id,
-                    Number(event.target.value),
-                  );
-                }}
-                type="range"
-                value={removalSettings.edgeSpillStrength}
-              />
-            </label>
-            <label className="tileset-batch-picker__sheet-slider">
-              <span>Spill limit</span>
-              <select
-                className="tileset-batch-picker__sheet-select"
-                onChange={(event) => {
-                  setBackgroundRemovalSpillLimitMode(
-                    uploadedImage.id,
-                    event.target.value as BackgroundRemovalSpillLimitMode,
-                  );
-                }}
-                value={removalSettings.spillLimitMode}
-              >
-                <option value="average">Average</option>
-                <option value="max">Max</option>
-              </select>
-            </label>
-            <label className="tileset-batch-picker__sheet-slider">
-              <span>Edge desaturation: {removalSettings.edgeDesaturation}</span>
-              <input
-                max={100}
-                min={0}
-                onChange={(event) => {
-                  setBackgroundRemovalEdgeDesaturation(
-                    uploadedImage.id,
-                    Number(event.target.value),
-                  );
-                }}
-                type="range"
-                value={removalSettings.edgeDesaturation}
-              />
-            </label>
-            <div className="tileset-batch-picker__removal-mode-toggle">
-              <button
-                className={[
-                  "tileset-batch-picker__removal-mode-button",
-                  !removalSettings.nonContiguous
-                    ? "tileset-batch-picker__removal-mode-button--active"
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() =>
-                  setBackgroundRemovalNonContiguous(uploadedImage.id, false)
-                }
-                type="button"
-              >
-                Contiguous
-              </button>
-              <button
-                className={[
-                  "tileset-batch-picker__removal-mode-button",
-                  removalSettings.nonContiguous
-                    ? "tileset-batch-picker__removal-mode-button--active"
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() =>
-                  setBackgroundRemovalNonContiguous(uploadedImage.id, true)
-                }
-                type="button"
-              >
-                Everywhere
-              </button>
+            <div className="tileset-batch-picker__sheet-control-grid">
+              <label className="tileset-batch-picker__sheet-slider">
+                <span>Fuzzy range: {removalSettings.tolerance}</span>
+                <input
+                  max={255}
+                  min={0}
+                  onChange={(event) => {
+                    setBackgroundRemovalTolerance(
+                      uploadedImage.id,
+                      Number(event.target.value),
+                    );
+                  }}
+                  type="range"
+                  value={removalSettings.tolerance}
+                />
+              </label>
+              <label className="tileset-batch-picker__sheet-slider">
+                <span>Screen color</span>
+                <select
+                  className="tileset-batch-picker__sheet-select"
+                  onChange={(event) => {
+                    setBackgroundRemovalScreenColorMode(
+                      uploadedImage.id,
+                      event.target.value as BackgroundRemovalScreenColorMode,
+                    );
+                  }}
+                  value={removalSettings.screenColorMode}
+                >
+                  <option value="auto">Auto</option>
+                  <option value="green">Green</option>
+                  <option value="blue">Blue</option>
+                  <option value="red">Red</option>
+                </select>
+              </label>
+              <label className="tileset-batch-picker__sheet-slider">
+                <span>Matte falloff: {removalSettings.matteFalloff}</span>
+                <input
+                  max={100}
+                  min={0}
+                  onChange={(event) => {
+                    setBackgroundRemovalMatteFalloff(
+                      uploadedImage.id,
+                      Number(event.target.value),
+                    );
+                  }}
+                  type="range"
+                  value={removalSettings.matteFalloff}
+                />
+              </label>
+              <label className="tileset-batch-picker__sheet-slider">
+                <span>Screen unmix: {removalSettings.unmixStrength}</span>
+                <input
+                  max={100}
+                  min={0}
+                  onChange={(event) => {
+                    setBackgroundRemovalUnmixStrength(
+                      uploadedImage.id,
+                      Number(event.target.value),
+                    );
+                  }}
+                  type="range"
+                  value={removalSettings.unmixStrength}
+                />
+              </label>
+              <label className="tileset-batch-picker__sheet-slider">
+                <span>Edge smoothing: {removalSettings.edgeSoftness}</span>
+                <input
+                  max={100}
+                  min={0}
+                  onChange={(event) => {
+                    setBackgroundRemovalEdgeSoftness(
+                      uploadedImage.id,
+                      Number(event.target.value),
+                    );
+                  }}
+                  type="range"
+                  value={removalSettings.edgeSoftness}
+                />
+              </label>
+              <label className="tileset-batch-picker__sheet-slider">
+                <span>Edge spill range: {removalSettings.edgeSpillRange}px</span>
+                <input
+                  max={64}
+                  min={0}
+                  onChange={(event) => {
+                    setBackgroundRemovalEdgeSpillRange(
+                      uploadedImage.id,
+                      Number(event.target.value),
+                    );
+                  }}
+                  type="range"
+                  value={removalSettings.edgeSpillRange}
+                />
+              </label>
+              <label className="tileset-batch-picker__sheet-slider">
+                <span>
+                  Edge spill cleanup: {removalSettings.edgeSpillStrength}
+                </span>
+                <input
+                  max={100}
+                  min={0}
+                  onChange={(event) => {
+                    setBackgroundRemovalEdgeSpillStrength(
+                      uploadedImage.id,
+                      Number(event.target.value),
+                    );
+                  }}
+                  type="range"
+                  value={removalSettings.edgeSpillStrength}
+                />
+              </label>
+              <label className="tileset-batch-picker__sheet-slider">
+                <span>Spill limit</span>
+                <select
+                  className="tileset-batch-picker__sheet-select"
+                  onChange={(event) => {
+                    setBackgroundRemovalSpillLimitMode(
+                      uploadedImage.id,
+                      event.target.value as BackgroundRemovalSpillLimitMode,
+                    );
+                  }}
+                  value={removalSettings.spillLimitMode}
+                >
+                  <option value="average">Average</option>
+                  <option value="max">Max</option>
+                </select>
+              </label>
+              <label className="tileset-batch-picker__sheet-slider">
+                <span>Edge desaturation: {removalSettings.edgeDesaturation}</span>
+                <input
+                  max={100}
+                  min={0}
+                  onChange={(event) => {
+                    setBackgroundRemovalEdgeDesaturation(
+                      uploadedImage.id,
+                      Number(event.target.value),
+                    );
+                  }}
+                  type="range"
+                  value={removalSettings.edgeDesaturation}
+                />
+              </label>
+              <div className="tileset-batch-picker__removal-mode-toggle">
+                <button
+                  className={[
+                    "tileset-batch-picker__removal-mode-button",
+                    !removalSettings.nonContiguous
+                      ? "tileset-batch-picker__removal-mode-button--active"
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onClick={() =>
+                    setBackgroundRemovalNonContiguous(uploadedImage.id, false)
+                  }
+                  type="button"
+                >
+                  Contiguous
+                </button>
+                <button
+                  className={[
+                    "tileset-batch-picker__removal-mode-button",
+                    removalSettings.nonContiguous
+                      ? "tileset-batch-picker__removal-mode-button--active"
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onClick={() =>
+                    setBackgroundRemovalNonContiguous(uploadedImage.id, true)
+                  }
+                  type="button"
+                >
+                  Everywhere
+                </button>
+              </div>
             </div>
             <div className="tileset-batch-picker__sheet-removal-meta">
               <span className="tileset-batch-picker__sheet-color">
@@ -3405,16 +3412,26 @@ export default function TilesetBatchPicker(): JSX.Element {
 
     const images = batchImages[sheetIndex] ?? [];
     const inputId = `tileset-batch-picker-upload-${sheetIndex}`;
+    const bodyId = `tileset-batch-picker-batch-body-${sheetIndex}`;
     const batchLabel = formatBatchLabel(sheetIndex);
     const batchPlan = getBatchPlan(compileMap, sheetIndex);
     const batchTileRange = formatBatchTileRange(compileMap, sheetIndex);
+    const isExpanded = expandedBatchIndexes[sheetIndex] ?? false;
     const batchImageLabel =
       images.length === 1 ? "1 image" : `${images.length} images`;
 
     return (
-      <section className="tileset-batch-picker__batch" key={sheetIndex}>
+      <section
+        className={[
+          "tileset-batch-picker__batch",
+          !isExpanded ? "tileset-batch-picker__batch--collapsed" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        key={sheetIndex}
+      >
         <div className="tileset-batch-picker__batch-heading">
-          <div>
+          <div className="tileset-batch-picker__batch-heading-main">
             <h2>{batchLabel}</h2>
             <p>
               {batchTileRange}
@@ -3423,68 +3440,89 @@ export default function TilesetBatchPicker(): JSX.Element {
                 : ""}
             </p>
           </div>
-          <span>{batchImageLabel}</span>
+          <div className="tileset-batch-picker__batch-heading-actions">
+            <span>{batchImageLabel}</span>
+            <button
+              aria-controls={bodyId}
+              aria-expanded={isExpanded}
+              className="tileset-batch-picker__small-button"
+              onClick={() => {
+                setExpandedBatchIndexes((current) => ({
+                  ...current,
+                  [sheetIndex]: !isExpanded,
+                }));
+              }}
+              type="button"
+            >
+              {isExpanded ? "Collapse" : "Expand"}
+            </button>
+          </div>
         </div>
-        <label
-          className={[
-            "tileset-batch-picker__dropzone",
-            draggedBatchIndex === sheetIndex
-              ? "tileset-batch-picker__dropzone--active"
-              : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          htmlFor={inputId}
-          onDragEnter={(event) => {
-            preventDropDefaults(event);
-            setDraggedBatchIndex(sheetIndex);
-          }}
-          onDragLeave={(event) => {
-            preventDropDefaults(event);
-            setDraggedBatchIndex(null);
-          }}
-          onDragOver={preventDropDefaults}
-          onDrop={(event) => {
-            preventDropDefaults(event);
-            setDraggedBatchIndex(null);
-            addImagesToBatch(sheetIndex, event.dataTransfer.files);
-          }}
-        >
-          <strong>{`Drop ${batchLabel} images here`}</strong>
-          <span>
-            {compileMap.promptSheets.columns} x {compileMap.promptSheets.rows} sheet,
-            {` ${compileMap.promptSheets.tileSize}px tiles`}
-          </span>
-          <input
-            accept="image/*"
-            id={inputId}
-            multiple
-            onChange={(event) => {
-              if (event.target.files) {
-                addImagesToBatch(sheetIndex, event.target.files);
-                event.target.value = "";
-              }
-            }}
-            type="file"
-          />
-        </label>
-        {batchPlan.count > 0 ? (
-          <div className="tileset-batch-picker__batch-subjects">
-            <span>{batchPlan.firstSubject}</span>
-            {batchPlan.lastSubject && batchPlan.lastSubject !== batchPlan.firstSubject ? (
-              <span>{batchPlan.lastSubject}</span>
+        {isExpanded ? (
+          <div className="tileset-batch-picker__batch-body" id={bodyId}>
+            <label
+              className={[
+                "tileset-batch-picker__dropzone",
+                draggedBatchIndex === sheetIndex
+                  ? "tileset-batch-picker__dropzone--active"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              htmlFor={inputId}
+              onDragEnter={(event) => {
+                preventDropDefaults(event);
+                setDraggedBatchIndex(sheetIndex);
+              }}
+              onDragLeave={(event) => {
+                preventDropDefaults(event);
+                setDraggedBatchIndex(null);
+              }}
+              onDragOver={preventDropDefaults}
+              onDrop={(event) => {
+                preventDropDefaults(event);
+                setDraggedBatchIndex(null);
+                addImagesToBatch(sheetIndex, event.dataTransfer.files);
+              }}
+            >
+              <strong>{`Drop ${batchLabel} images here`}</strong>
+              <span>
+                {compileMap.promptSheets.columns} x {compileMap.promptSheets.rows} sheet,
+                {` ${compileMap.promptSheets.tileSize}px tiles`}
+              </span>
+              <input
+                accept="image/*"
+                id={inputId}
+                multiple
+                onChange={(event) => {
+                  if (event.target.files) {
+                    addImagesToBatch(sheetIndex, event.target.files);
+                    event.target.value = "";
+                  }
+                }}
+                type="file"
+              />
+            </label>
+            {batchPlan.count > 0 ? (
+              <div className="tileset-batch-picker__batch-subjects">
+                <span>{batchPlan.firstSubject}</span>
+                {batchPlan.lastSubject &&
+                batchPlan.lastSubject !== batchPlan.firstSubject ? (
+                  <span>{batchPlan.lastSubject}</span>
+                ) : null}
+              </div>
             ) : null}
+            <div className="tileset-batch-picker__sheet-stack">
+              {images.length > 0 ? (
+                images.map((image) => renderBatchSheet(sheetIndex, image))
+              ) : (
+                <div className="tileset-batch-picker__empty-batch">
+                  Waiting for generated batch images.
+                </div>
+              )}
+            </div>
           </div>
         ) : null}
-        <div className="tileset-batch-picker__sheet-stack">
-          {images.length > 0 ? (
-            images.map((image) => renderBatchSheet(sheetIndex, image))
-          ) : (
-            <div className="tileset-batch-picker__empty-batch">
-              Waiting for generated batch images.
-            </div>
-          )}
-        </div>
       </section>
     );
   };

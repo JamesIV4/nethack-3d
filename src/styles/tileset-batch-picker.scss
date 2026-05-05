@@ -233,6 +233,21 @@ body.tileset-batch-picker-page {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.tileset-batch-picker__batch--collapsed .tileset-batch-picker__batch-heading {
+  border-bottom: 0;
+}
+
+.tileset-batch-picker__batch-heading-main {
+  min-width: 0;
+}
+
+.tileset-batch-picker__batch-heading-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+
 .tileset-batch-picker__batch-heading h2 {
   margin: 0;
   font-size: 0.94rem;
@@ -249,6 +264,11 @@ body.tileset-batch-picker-page {
 .tileset-batch-picker__batch-heading span {
   color: #9daab7;
   font-size: 0.82rem;
+}
+
+.tileset-batch-picker__batch-body {
+  display: flex;
+  flex-direction: column;
 }
 
 .tileset-batch-picker__dropzone {
@@ -451,6 +471,12 @@ body.tileset-batch-picker-page {
   padding: 0 0 4px;
 }
 
+.tileset-batch-picker__sheet-control-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
 .tileset-batch-picker__sheet-slider {
   display: grid;
   gap: 6px;
@@ -527,6 +553,12 @@ body.tileset-batch-picker-page {
     4px -4px,
     -4px 0;
   background-size: 8px 8px;
+}
+
+@media (max-width: 980px) {
+  .tileset-batch-picker__sheet-control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .tileset-batch-picker__cell-layer {
