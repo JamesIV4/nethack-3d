@@ -118,6 +118,7 @@ type ActiveAdjustmentDrag = {
   generatedIndex: number;
   imageId: string;
   mode: "offset" | "left" | "right" | "top" | "bottom";
+  previewElement: HTMLElement | null;
   startClientX: number;
   startClientY: number;
   startOffsetX: number;
@@ -268,6 +269,18 @@ function clampSelectionOffset(value: number): number {
 function quantizeSelectionRatio(value: number, pixelSpan: number): number {
   const safePixelSpan = Math.max(1, Math.round(pixelSpan));
   return Math.round(value * safePixelSpan) / safePixelSpan;
+}
+
+function getAdjustmentBoxStyle(
+  offset: PersistedTilesetBatchPickerOffset,
+  cropInsets: PersistedTilesetBatchPickerCropInsets,
+): Pick<CSSStyleDeclaration, "left" | "right" | "top" | "bottom"> {
+  return {
+    left: `${(offset.x + cropInsets.left) * 100}%`,
+    right: `${(cropInsets.right - offset.x) * 100}%`,
+    top: `${(offset.y + cropInsets.top) * 100}%`,
+    bottom: `${(cropInsets.bottom - offset.y) * 100}%`,
+  };
 }
 
 function toPersistedSelectedOffsets(
@@ -2387,7 +2400,19 @@ export default function TilesetBatchPicker(): JSX.Element {
       if (selectedImages[generatedIndex] !== imageId) {
         return;
       }
-      const cellBounds = event.currentTarget.getBoundingClientRect();
+      const cellElement =
+        event.currentTarget.closest<HTMLElement>(
+          ".tileset-batch-picker__cell",
+        ) ?? event.currentTarget;
+      const previewElement =
+        mode === "offset"
+          ? event.currentTarget.querySelector<HTMLElement>(
+              ".tileset-batch-picker__cell-offset-body",
+            )
+          : event.currentTarget.closest<HTMLElement>(
+              ".tileset-batch-picker__cell-offset-body",
+            );
+      const cellBounds = cellElement.getBoundingClientRect();
       const currentOffset = selectedOffsets[generatedIndex] ?? { x: 0, y: 0 };
       const currentCropInsets =
         selectedCropInsets[generatedIndex] ?? getDefaultCropInsets();
@@ -2395,6 +2420,7 @@ export default function TilesetBatchPicker(): JSX.Element {
         generatedIndex,
         imageId,
         mode,
+        previewElement,
         startClientX: event.clientX,
         startClientY: event.clientY,
         startOffsetX: currentOffset.x,
@@ -2410,34 +2436,40 @@ export default function TilesetBatchPicker(): JSX.Element {
         moved: false,
       };
       setActiveDraggedGeneratedIndex(generatedIndex);
+      event.currentTarget.setPointerCapture(event.pointerId);
       event.preventDefault();
     },
     [selectedCropInsets, selectedImages, selectedOffsets],
   );
 
   useEffect(() => {
-    const applyAdjustmentDrag = (clientX: number, clientY: number): void => {
-      const activeDrag = activeAdjustmentDragRef.current;
-      if (!activeDrag) {
-        return;
-      }
-
+    const computeAdjustmentDrag = (
+      activeDrag: ActiveAdjustmentDrag,
+      clientX: number,
+      clientY: number,
+    ): {
+      cropInsets: PersistedTilesetBatchPickerCropInsets;
+      offset: PersistedTilesetBatchPickerOffset;
+    } => {
+      const offset = {
+        x: activeDrag.startOffsetX,
+        y: activeDrag.startOffsetY,
+      };
+      const cropInsets = {
+        left: activeDrag.startCropLeft,
+        right: activeDrag.startCropRight,
+        top: activeDrag.startCropTop,
+        bottom: activeDrag.startCropBottom,
+      };
       const deltaX =
-        (clientX - activeDrag.startClientX) / activeDrag.sourceTileWidth;
+        (clientX - activeDrag.startClientX) / activeDrag.cellWidth;
       const deltaY =
-        (clientY - activeDrag.startClientY) / activeDrag.sourceTileHeight;
-      if (
-        !activeDrag.moved &&
-        (Math.abs(clientX - activeDrag.startClientX) >= dragThresholdPx ||
-          Math.abs(clientY - activeDrag.startClientY) >= dragThresholdPx)
-      ) {
-        activeDrag.moved = true;
-      }
+        (clientY - activeDrag.startClientY) / activeDrag.cellHeight;
 
       if (activeDrag.mode === "offset") {
-        setSelectedOffsets((current) => {
-          const previous = current[activeDrag.generatedIndex] ?? { x: 0, y: 0 };
-          const nextOffset = {
+        return {
+          cropInsets,
+          offset: {
             x: clampSelectionOffset(
               quantizeSelectionRatio(
                 activeDrag.startOffsetX + deltaX,
@@ -2450,13 +2482,115 @@ export default function TilesetBatchPicker(): JSX.Element {
                 activeDrag.sourceTileHeight,
               ),
             ),
-          };
-          if (previous.x === nextOffset.x && previous.y === nextOffset.y) {
+          },
+        };
+      }
+
+      if (activeDrag.mode === "left") {
+        cropInsets.left = clampCropInset(
+          quantizeSelectionRatio(
+            activeDrag.startCropLeft + deltaX,
+            activeDrag.sourceTileWidth,
+          ),
+          activeDrag.startCropRight,
+        );
+      } else if (activeDrag.mode === "right") {
+        cropInsets.right = clampCropInset(
+          quantizeSelectionRatio(
+            activeDrag.startCropRight - deltaX,
+            activeDrag.sourceTileWidth,
+          ),
+          activeDrag.startCropLeft,
+        );
+      } else if (activeDrag.mode === "top") {
+        cropInsets.top = clampCropInset(
+          quantizeSelectionRatio(
+            activeDrag.startCropTop + deltaY,
+            activeDrag.sourceTileHeight,
+          ),
+          activeDrag.startCropBottom,
+        );
+      } else if (activeDrag.mode === "bottom") {
+        cropInsets.bottom = clampCropInset(
+          quantizeSelectionRatio(
+            activeDrag.startCropBottom - deltaY,
+            activeDrag.sourceTileHeight,
+          ),
+          activeDrag.startCropTop,
+        );
+      }
+
+      return { cropInsets, offset };
+    };
+
+    const updateAdjustmentPreview = (clientX: number, clientY: number): void => {
+      const activeDrag = activeAdjustmentDragRef.current;
+      if (!activeDrag) {
+        return;
+      }
+      if (
+        !activeDrag.moved &&
+        (Math.abs(clientX - activeDrag.startClientX) >= dragThresholdPx ||
+          Math.abs(clientY - activeDrag.startClientY) >= dragThresholdPx)
+      ) {
+        activeDrag.moved = true;
+      }
+
+      if (!activeDrag.previewElement) {
+        return;
+      }
+      const nextBox = computeAdjustmentDrag(activeDrag, clientX, clientY);
+      const nextStyle = getAdjustmentBoxStyle(
+        nextBox.offset,
+        nextBox.cropInsets,
+      );
+      activeDrag.previewElement.style.left = nextStyle.left;
+      activeDrag.previewElement.style.right = nextStyle.right;
+      activeDrag.previewElement.style.top = nextStyle.top;
+      activeDrag.previewElement.style.bottom = nextStyle.bottom;
+    };
+
+    const resetAdjustmentPreview = (activeDrag: ActiveAdjustmentDrag): void => {
+      if (!activeDrag.previewElement) {
+        return;
+      }
+      const startStyle = getAdjustmentBoxStyle(
+        {
+          x: activeDrag.startOffsetX,
+          y: activeDrag.startOffsetY,
+        },
+        {
+          left: activeDrag.startCropLeft,
+          right: activeDrag.startCropRight,
+          top: activeDrag.startCropTop,
+          bottom: activeDrag.startCropBottom,
+        },
+      );
+      activeDrag.previewElement.style.left = startStyle.left;
+      activeDrag.previewElement.style.right = startStyle.right;
+      activeDrag.previewElement.style.top = startStyle.top;
+      activeDrag.previewElement.style.bottom = startStyle.bottom;
+    };
+
+    const commitAdjustmentDrag = (clientX: number, clientY: number): void => {
+      const activeDrag = activeAdjustmentDragRef.current;
+      if (!activeDrag) {
+        return;
+      }
+      const nextBox = computeAdjustmentDrag(activeDrag, clientX, clientY);
+
+      if (activeDrag.mode === "offset") {
+        setSelectedOffsets((current) => {
+          const previous = current[activeDrag.generatedIndex] ?? { x: 0, y: 0 };
+          if (
+            previous.x === nextBox.offset.x &&
+            previous.y === nextBox.offset.y
+          ) {
             return current;
           }
           return {
             ...current,
-            [activeDrag.generatedIndex]: nextOffset,
+            [activeDrag.generatedIndex]: nextBox.offset,
           };
         });
         return;
@@ -2465,63 +2599,17 @@ export default function TilesetBatchPicker(): JSX.Element {
       setSelectedCropInsets((current) => {
         const previous =
           current[activeDrag.generatedIndex] ?? getDefaultCropInsets();
-        let nextCropInsets = previous;
-        if (activeDrag.mode === "left") {
-          nextCropInsets = {
-            ...previous,
-            left: clampCropInset(
-              quantizeSelectionRatio(
-                activeDrag.startCropLeft + deltaX,
-                activeDrag.sourceTileWidth,
-              ),
-              activeDrag.startCropRight,
-            ),
-          };
-        } else if (activeDrag.mode === "right") {
-          nextCropInsets = {
-            ...previous,
-            right: clampCropInset(
-              quantizeSelectionRatio(
-                activeDrag.startCropRight - deltaX,
-                activeDrag.sourceTileWidth,
-              ),
-              activeDrag.startCropLeft,
-            ),
-          };
-        } else if (activeDrag.mode === "top") {
-          nextCropInsets = {
-            ...previous,
-            top: clampCropInset(
-              quantizeSelectionRatio(
-                activeDrag.startCropTop + deltaY,
-                activeDrag.sourceTileHeight,
-              ),
-              activeDrag.startCropBottom,
-            ),
-          };
-        } else if (activeDrag.mode === "bottom") {
-          nextCropInsets = {
-            ...previous,
-            bottom: clampCropInset(
-              quantizeSelectionRatio(
-                activeDrag.startCropBottom - deltaY,
-                activeDrag.sourceTileHeight,
-              ),
-              activeDrag.startCropTop,
-            ),
-          };
-        }
         if (
-          previous.left === nextCropInsets.left &&
-          previous.right === nextCropInsets.right &&
-          previous.top === nextCropInsets.top &&
-          previous.bottom === nextCropInsets.bottom
+          previous.left === nextBox.cropInsets.left &&
+          previous.right === nextBox.cropInsets.right &&
+          previous.top === nextBox.cropInsets.top &&
+          previous.bottom === nextBox.cropInsets.bottom
         ) {
           return current;
         }
         return {
           ...current,
-          [activeDrag.generatedIndex]: nextCropInsets,
+          [activeDrag.generatedIndex]: nextBox.cropInsets,
         };
       });
     };
@@ -2541,32 +2629,45 @@ export default function TilesetBatchPicker(): JSX.Element {
         pendingAdjustmentFrameRef.current = null;
         const pointer = latestAdjustmentPointerRef.current;
         if (pointer) {
-          applyAdjustmentDrag(pointer.x, pointer.y);
+          updateAdjustmentPreview(pointer.x, pointer.y);
         }
       });
+      event.preventDefault();
     };
 
-    const endPointerDrag = (event: PointerEvent): void => {
-      if (!activeAdjustmentDragRef.current) {
+    const endPointerDrag = (event: PointerEvent, shouldCommit: boolean): void => {
+      const activeDrag = activeAdjustmentDragRef.current;
+      if (!activeDrag) {
         return;
       }
       if (pendingAdjustmentFrameRef.current !== null) {
         window.cancelAnimationFrame(pendingAdjustmentFrameRef.current);
         pendingAdjustmentFrameRef.current = null;
       }
-      applyAdjustmentDrag(event.clientX, event.clientY);
+      if (shouldCommit) {
+        updateAdjustmentPreview(event.clientX, event.clientY);
+        commitAdjustmentDrag(event.clientX, event.clientY);
+      } else {
+        resetAdjustmentPreview(activeDrag);
+      }
       latestAdjustmentPointerRef.current = null;
       activeAdjustmentDragRef.current = null;
       setActiveDraggedGeneratedIndex(null);
     };
+    const handlePointerUp = (event: PointerEvent): void => {
+      endPointerDrag(event, true);
+    };
+    const handlePointerCancel = (event: PointerEvent): void => {
+      endPointerDrag(event, false);
+    };
 
     window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", endPointerDrag);
-    window.addEventListener("pointercancel", endPointerDrag);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerCancel);
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", endPointerDrag);
-      window.removeEventListener("pointercancel", endPointerDrag);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerCancel);
       if (pendingAdjustmentFrameRef.current !== null) {
         window.cancelAnimationFrame(pendingAdjustmentFrameRef.current);
         pendingAdjustmentFrameRef.current = null;
