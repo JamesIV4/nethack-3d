@@ -398,6 +398,7 @@ function toPersistedBackgroundRemovalByImageId(
         g: Math.max(0, Math.min(255, Math.round(seed.g))),
         b: Math.max(0, Math.min(255, Math.round(seed.b))),
         a: Math.max(0, Math.min(255, Math.round(seed.a))),
+        nonContiguous: seed.nonContiguous === true,
       })),
     };
   }
@@ -447,6 +448,7 @@ function getBackgroundRemovalSignature(
       g: Math.max(0, Math.min(255, Math.round(seed.g))),
       b: Math.max(0, Math.min(255, Math.round(seed.b))),
       a: Math.max(0, Math.min(255, Math.round(seed.a))),
+      nonContiguous: seed.nonContiguous === true,
     })),
   });
 }
@@ -624,6 +626,21 @@ function createChromaKeyModels(
   settings: PersistedTilesetBatchPickerBackgroundRemovalSettings,
 ): ChromaKeyModel[] {
   return settings.seeds.map((seed) => createChromaKeyModel(settings, [seed]));
+}
+
+function getBackgroundRemovalSeedCounts(
+  seeds: PersistedTilesetBatchPickerRemovalSeed[],
+): { contiguous: number; nonContiguous: number } {
+  let contiguous = 0;
+  let nonContiguous = 0;
+  for (const seed of seeds) {
+    if (seed.nonContiguous) {
+      nonContiguous += 1;
+    } else {
+      contiguous += 1;
+    }
+  }
+  return { contiguous, nonContiguous };
 }
 
 function getScreenExcessCoverage(
@@ -998,9 +1015,13 @@ function renderBackgroundRemovedCanvas(
   const removedMask = new Uint8Array(width * height);
   const minTraversalCoverage = 0.01;
 
-  if (settings.nonContiguous) {
-    for (let modelIndex = 0; modelIndex < keyModels.length; modelIndex += 1) {
-      const keyModel = keyModels[modelIndex];
+  for (let modelIndex = 0; modelIndex < keyModels.length; modelIndex += 1) {
+    const seed = settings.seeds[modelIndex];
+    const keyModel = keyModels[modelIndex];
+    if (!seed || !keyModel) {
+      continue;
+    }
+    if (seed.nonContiguous) {
       for (let maskIndex = 0; maskIndex < keyCoverage.length; maskIndex += 1) {
         const pixelIndex = maskIndex * 4;
         const coverage = getChromaKeyBackgroundCoverage(
@@ -1013,63 +1034,60 @@ function renderBackgroundRemovedCanvas(
           keyModelIndexByPixel[maskIndex] = modelIndex;
         }
       }
+      continue;
     }
-  } else {
-    for (let modelIndex = 0; modelIndex < keyModels.length; modelIndex += 1) {
-      const seed = settings.seeds[modelIndex];
-      const keyModel = keyModels[modelIndex];
-      if (seed.x < 0 || seed.x >= width || seed.y < 0 || seed.y >= height) {
+
+    if (seed.x < 0 || seed.x >= width || seed.y < 0 || seed.y >= height) {
+      continue;
+    }
+
+    const visited = new Uint8Array(keyCoverage.length);
+    const queue = new Int32Array(keyCoverage.length);
+    const seedIndex = seed.y * width + seed.x;
+    let head = 0;
+    let tail = 0;
+    queue[tail] = seedIndex;
+    visited[seedIndex] = 1;
+    tail += 1;
+
+    while (head < tail) {
+      const visitIndex = queue[head];
+      head += 1;
+      const pixelIndex = visitIndex * 4;
+      const coverage = getChromaKeyBackgroundCoverage(
+        baseData,
+        pixelIndex,
+        keyModel,
+      );
+      if (coverage <= minTraversalCoverage) {
         continue;
       }
+      if (coverage > keyCoverage[visitIndex]) {
+        keyCoverage[visitIndex] = coverage;
+        keyModelIndexByPixel[visitIndex] = modelIndex;
+      }
 
-      const visited = new Uint8Array(keyCoverage.length);
-      const queue = new Int32Array(keyCoverage.length);
-      const seedIndex = seed.y * width + seed.x;
-      let head = 0;
-      let tail = 0;
-      queue[tail] = seedIndex;
-      visited[seedIndex] = 1;
+      const x = visitIndex % width;
+      const y = Math.floor(visitIndex / width);
+      if (x > 0 && !visited[visitIndex - 1]) {
+        visited[visitIndex - 1] = 1;
+        queue[tail] = visitIndex - 1;
+        tail += 1;
+      }
+      if (x + 1 < width && !visited[visitIndex + 1]) {
+        visited[visitIndex + 1] = 1;
+        queue[tail] = visitIndex + 1;
+        tail += 1;
+      }
+      if (y > 0 && !visited[visitIndex - width]) {
+        visited[visitIndex - width] = 1;
+        queue[tail] = visitIndex - width;
+        tail += 1;
+      }
+      if (y + 1 < height && !visited[visitIndex + width]) {
+        visited[visitIndex + width] = 1;
+        queue[tail] = visitIndex + width;
       tail += 1;
-
-      while (head < tail) {
-        const visitIndex = queue[head];
-        head += 1;
-        const pixelIndex = visitIndex * 4;
-        const coverage = getChromaKeyBackgroundCoverage(
-          baseData,
-          pixelIndex,
-          keyModel,
-        );
-        if (coverage <= minTraversalCoverage) {
-          continue;
-        }
-        if (coverage > keyCoverage[visitIndex]) {
-          keyCoverage[visitIndex] = coverage;
-          keyModelIndexByPixel[visitIndex] = modelIndex;
-        }
-
-        const x = visitIndex % width;
-        const y = Math.floor(visitIndex / width);
-        if (x > 0 && !visited[visitIndex - 1]) {
-          visited[visitIndex - 1] = 1;
-          queue[tail] = visitIndex - 1;
-          tail += 1;
-        }
-        if (x + 1 < width && !visited[visitIndex + 1]) {
-          visited[visitIndex + 1] = 1;
-          queue[tail] = visitIndex + 1;
-          tail += 1;
-        }
-        if (y > 0 && !visited[visitIndex - width]) {
-          visited[visitIndex - width] = 1;
-          queue[tail] = visitIndex - width;
-          tail += 1;
-        }
-        if (y + 1 < height && !visited[visitIndex + width]) {
-          visited[visitIndex + width] = 1;
-          queue[tail] = visitIndex + width;
-          tail += 1;
-        }
       }
     }
   }
@@ -1134,7 +1152,12 @@ function sampleImagePixel(
   };
 }
 
-function formatPixelColor(seed: PersistedTilesetBatchPickerRemovalSeed | null): string {
+function formatPixelColor(
+  seed:
+    | PersistedTilesetBatchPickerRemovalSeed
+    | SampledPixel
+    | null,
+): string {
   if (!seed) {
     return "None";
   }
@@ -2105,12 +2128,29 @@ export default function TilesetBatchPicker(): JSX.Element {
   const previewRenderedPixelHeight = compileMap
     ? compileMap.finalAtlas.rows * previewRenderTileSize
     : 0;
-  const previewZoomLabel =
-    previewZoomMode === "fit"
-      ? "Fit"
-      : previewZoomMode === "full"
-        ? "1:1"
-        : `${Math.max(1, Math.round(previewDisplayScale * 100))}%`;
+  const previewZoomOptions = useMemo(
+    () =>
+      previewZoomModes.map((mode) => {
+        if (mode === "fit") {
+          return { mode, label: "Fit" };
+        }
+        if (mode === "full") {
+          return { mode, label: "1:1" };
+        }
+        const step =
+          mode === "step-1"
+            ? 1
+            : mode === "step-2"
+              ? 2
+              : 3;
+        const scale = fitPreviewScale + ((1 - fitPreviewScale) * step) / 4;
+        return {
+          mode,
+          label: `${Math.max(1, Math.round(scale * 100))}%`,
+        };
+      }),
+    [fitPreviewScale],
+  );
   const previewCanvasStyle = useMemo(() => {
     if (!compileMap) {
       return {
@@ -2233,6 +2273,44 @@ export default function TilesetBatchPicker(): JSX.Element {
       console.warn("Failed to delete persisted batch picker image:", error);
     });
   }, []);
+
+  const resetImagePositions = useCallback((imageId: string) => {
+    const selectedGeneratedIndexes = new Set<number>();
+    for (const [generatedIndex, selectedImageId] of Object.entries(
+      selectedImages,
+    )) {
+      if (selectedImageId === imageId) {
+        selectedGeneratedIndexes.add(Number(generatedIndex));
+      }
+    }
+    if (selectedGeneratedIndexes.size <= 0) {
+      return;
+    }
+
+    setSelectedOffsets((current) => {
+      let didChange = false;
+      const nextOffsets = { ...current };
+      for (const generatedIndex of selectedGeneratedIndexes) {
+        if (generatedIndex in nextOffsets) {
+          delete nextOffsets[generatedIndex];
+          didChange = true;
+        }
+      }
+      return didChange ? nextOffsets : current;
+    });
+
+    setSelectedCropInsets((current) => {
+      let didChange = false;
+      const nextCropInsets = { ...current };
+      for (const generatedIndex of selectedGeneratedIndexes) {
+        if (generatedIndex in nextCropInsets) {
+          delete nextCropInsets[generatedIndex];
+          didChange = true;
+        }
+      }
+      return didChange ? nextCropInsets : current;
+    });
+  }, [selectedImages]);
 
   const handleMapFiles = useCallback(
     async (files: FileList | File[]) => {
@@ -2595,7 +2673,7 @@ export default function TilesetBatchPicker(): JSX.Element {
         return;
       }
 
-      const sample = sampleImagePixel(
+  const sample = sampleImagePixel(
         uploadedImage.image,
         ((event.clientX - frameBounds.left) / frameBounds.width) * uploadedImage.width,
         ((event.clientY - frameBounds.top) / frameBounds.height) * uploadedImage.height,
@@ -2606,11 +2684,15 @@ export default function TilesetBatchPicker(): JSX.Element {
 
       setBackgroundRemovalByImageId((current) => {
         const previous = current[uploadedImage.id] ?? getDefaultBackgroundRemovalSettings();
+        const nextSeed: PersistedTilesetBatchPickerRemovalSeed = {
+          ...sample,
+          nonContiguous: previous.nonContiguous,
+        };
         return {
           ...current,
           [uploadedImage.id]: {
             ...previous,
-            seeds: [...previous.seeds, sample],
+            seeds: [...previous.seeds, nextSeed],
           },
         };
       });
@@ -2803,6 +2885,20 @@ export default function TilesetBatchPicker(): JSX.Element {
       removalSettings.seeds.length > 0
         ? removalSettings.seeds[removalSettings.seeds.length - 1]
         : null;
+    const removalSeedCounts = getBackgroundRemovalSeedCounts(
+      removalSettings.seeds,
+    );
+    const hasAdjustedPositions = Object.entries(selectedImages).some(
+      ([generatedIndex, selectedImageId]) => {
+        if (selectedImageId !== uploadedImage.id) {
+          return false;
+        }
+        return (
+          selectedOffsets[Number(generatedIndex)] !== undefined ||
+          selectedCropInsets[Number(generatedIndex)] !== undefined
+        );
+      },
+    );
     const isZoomingThisSheet = activePixelZoom?.imageId === uploadedImage.id;
     const backgroundRemovalWidth =
       uploadedImage.width > 0
@@ -2973,13 +3069,25 @@ export default function TilesetBatchPicker(): JSX.Element {
       >
         <div className="tileset-batch-picker__sheet-header">
           <span>{uploadedImage.name}</span>
-          <button
-            className="tileset-batch-picker__small-button"
-            onClick={() => removeBatchImage(sheetIndex, uploadedImage.id)}
-            type="button"
-          >
-            Remove
-          </button>
+          <div className="tileset-batch-picker__sheet-header-actions">
+            {editorMode === "arrange" ? (
+              <button
+                className="tileset-batch-picker__small-button"
+                disabled={!hasAdjustedPositions}
+                onClick={() => resetImagePositions(uploadedImage.id)}
+                type="button"
+              >
+                Reset positions
+              </button>
+            ) : null}
+            <button
+              className="tileset-batch-picker__small-button"
+              onClick={() => removeBatchImage(sheetIndex, uploadedImage.id)}
+              type="button"
+            >
+              Remove
+            </button>
+          </div>
         </div>
         {editorMode === "background-remove" ? (
           <div className="tileset-batch-picker__sheet-controls">
@@ -3122,19 +3230,40 @@ export default function TilesetBatchPicker(): JSX.Element {
                 value={removalSettings.edgeDesaturation}
               />
             </label>
-            <label className="tileset-batch-picker__sheet-checkbox">
-              <input
-                checked={removalSettings.nonContiguous}
-                onChange={(event) => {
-                  setBackgroundRemovalNonContiguous(
-                    uploadedImage.id,
-                    event.target.checked,
-                  );
-                }}
-                type="checkbox"
-              />
-              <span>Remove matching color everywhere</span>
-            </label>
+            <div className="tileset-batch-picker__removal-mode-toggle">
+              <button
+                className={[
+                  "tileset-batch-picker__removal-mode-button",
+                  !removalSettings.nonContiguous
+                    ? "tileset-batch-picker__removal-mode-button--active"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() =>
+                  setBackgroundRemovalNonContiguous(uploadedImage.id, false)
+                }
+                type="button"
+              >
+                Contiguous
+              </button>
+              <button
+                className={[
+                  "tileset-batch-picker__removal-mode-button",
+                  removalSettings.nonContiguous
+                    ? "tileset-batch-picker__removal-mode-button--active"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() =>
+                  setBackgroundRemovalNonContiguous(uploadedImage.id, true)
+                }
+                type="button"
+              >
+                Everywhere
+              </button>
+            </div>
             <div className="tileset-batch-picker__sheet-removal-meta">
               <span className="tileset-batch-picker__sheet-color">
                 <span
@@ -3147,7 +3276,8 @@ export default function TilesetBatchPicker(): JSX.Element {
                 />
                 {formatPixelColor(lastRemovalSeed)}
               </span>
-              <span>{removalSettings.seeds.length} regions</span>
+              <span>{removalSeedCounts.contiguous} contiguous</span>
+              <span>{removalSeedCounts.nonContiguous} everywhere</span>
               <button
                 className="tileset-batch-picker__small-button"
                 disabled={removalSettings.seeds.length <= 0}
@@ -3223,22 +3353,36 @@ export default function TilesetBatchPicker(): JSX.Element {
                 ) : null}
                 {showBackgroundRemovalPoints ? (
                   <div className="tileset-batch-picker__seed-layer">
-                    {removalSettings.seeds.map((seed, seedIndex) => (
-                      <button
-                        aria-label={`Remove background point ${seedIndex + 1}`}
-                        className="tileset-batch-picker__seed-marker"
-                        key={`${seed.x}-${seed.y}-${seedIndex}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          removeBackgroundRemovalSeed(uploadedImage.id, seedIndex);
-                        }}
-                        style={{
-                          left: `${(seed.x / Math.max(1, uploadedImage.width)) * 100}%`,
-                          top: `${(seed.y / Math.max(1, uploadedImage.height)) * 100}%`,
-                        }}
-                        type="button"
-                      />
-                    ))}
+                    {removalSettings.seeds.map((seed, seedIndex) =>
+                      seed.nonContiguous === removalSettings.nonContiguous ? (
+                        <button
+                          aria-label={`Remove ${
+                            seed.nonContiguous ? "everywhere" : "contiguous"
+                          } background point ${seedIndex + 1}`}
+                          className={[
+                            "tileset-batch-picker__seed-marker",
+                            seed.nonContiguous
+                              ? "tileset-batch-picker__seed-marker--non-contiguous"
+                              : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          key={`${seed.x}-${seed.y}-${seedIndex}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            removeBackgroundRemovalSeed(
+                              uploadedImage.id,
+                              seedIndex,
+                            );
+                          }}
+                          style={{
+                            left: `${(seed.x / Math.max(1, uploadedImage.width)) * 100}%`,
+                            top: `${(seed.y / Math.max(1, uploadedImage.height)) * 100}%`,
+                          }}
+                          type="button"
+                        />
+                      ) : null,
+                    )}
                   </div>
                 ) : null}
               </div>
@@ -3492,18 +3636,25 @@ export default function TilesetBatchPicker(): JSX.Element {
                 {compileMap ? ` / ${compileMap.finalSlots.length}` : ""}
               </strong>
             </div>
-            <button
-              className="tileset-batch-picker__small-button tileset-batch-picker__zoom-button"
-              disabled={!compileMap}
-              onClick={() => {
-                setPreviewZoomIndex(
-                  (currentIndex) => (currentIndex + 1) % previewZoomModes.length,
-                );
-              }}
-              type="button"
-            >
-              Zoom: {previewZoomLabel}
-            </button>
+            <label className="tileset-batch-picker__summary-select">
+              <span>Zoom</span>
+              <select
+                disabled={!compileMap}
+                onChange={(event) => {
+                  const nextIndex = previewZoomModes.indexOf(
+                    event.target.value as PreviewZoomMode,
+                  );
+                  setPreviewZoomIndex(Math.max(0, nextIndex));
+                }}
+                value={previewZoomMode}
+              >
+                {previewZoomOptions.map((option) => (
+                  <option key={option.mode} value={option.mode}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
               className="tileset-batch-picker__small-button tileset-batch-picker__zoom-button"
               disabled={!compileMap}
@@ -3539,7 +3690,29 @@ export default function TilesetBatchPicker(): JSX.Element {
                 .filter(Boolean)
                 .join(" ")}
             >
-              <canvas ref={previewCanvasRef} style={previewCanvasStyle} />
+              <div
+                className="tileset-batch-picker__preview-frame"
+                style={previewCanvasStyle}
+              >
+                <canvas
+                  ref={previewCanvasRef}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    maxWidth: "none",
+                  }}
+                />
+                {showTransparencyPreview && compileMap ? (
+                  <div
+                    className="tileset-batch-picker__preview-alpha-grid"
+                    style={
+                      {
+                        "--tileset-batch-picker-preview-tile-size": `${previewRenderTileSize}px`,
+                      } as React.CSSProperties
+                    }
+                  />
+                ) : null}
+              </div>
             </div>
           </div>
         </aside>

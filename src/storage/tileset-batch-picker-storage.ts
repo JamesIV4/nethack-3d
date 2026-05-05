@@ -53,6 +53,7 @@ export type PersistedTilesetBatchPickerRemovalSeed = {
   g: number;
   b: number;
   a: number;
+  nonContiguous: boolean;
 };
 
 export type PersistedTilesetBatchPickerBackgroundRemovalSettings = {
@@ -311,6 +312,7 @@ function normalizeRemovalNonContiguous(value: unknown): boolean {
 
 function normalizeRemovalSeed(
   rawValue: unknown,
+  fallbackNonContiguous: boolean,
 ): PersistedTilesetBatchPickerRemovalSeed | null {
   if (!isPlainObject(rawValue)) {
     return null;
@@ -322,6 +324,10 @@ function normalizeRemovalSeed(
     g: normalizeRemovalChannel(rawValue.g),
     b: normalizeRemovalChannel(rawValue.b),
     a: normalizeRemovalChannel(rawValue.a),
+    nonContiguous:
+      typeof rawValue.nonContiguous === "boolean"
+        ? rawValue.nonContiguous
+        : fallbackNonContiguous,
   };
 }
 
@@ -331,6 +337,7 @@ function normalizeBackgroundRemovalSettings(
   if (!isPlainObject(rawValue)) {
     return null;
   }
+  const nonContiguous = normalizeRemovalNonContiguous(rawValue.nonContiguous);
   return {
     tolerance: normalizeRemovalTolerance(rawValue.tolerance),
     edgeSoftness: normalizeRemovalEdgeSoftness(rawValue.edgeSoftness),
@@ -345,10 +352,10 @@ function normalizeBackgroundRemovalSettings(
     edgeDesaturation: normalizeRemovalEdgeDesaturation(
       rawValue.edgeDesaturation,
     ),
-    nonContiguous: normalizeRemovalNonContiguous(rawValue.nonContiguous),
+    nonContiguous,
     seeds: Array.isArray(rawValue.seeds)
       ? rawValue.seeds
-          .map((entry) => normalizeRemovalSeed(entry))
+          .map((entry) => normalizeRemovalSeed(entry, nonContiguous))
           .filter(
             (entry): entry is PersistedTilesetBatchPickerRemovalSeed =>
               entry !== null,
