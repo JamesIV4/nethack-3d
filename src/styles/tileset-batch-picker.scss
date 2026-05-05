@@ -380,8 +380,9 @@ body.tileset-batch-picker-page {
 }
 
 .tileset-batch-picker__zoom-button {
-  min-width: 92px;
-  padding: 0 12px;
+  min-width: 86px;
+  padding: 0 10px;
+  white-space: nowrap;
 }
 
 .tileset-batch-picker__sheet-frame {
@@ -751,15 +752,17 @@ body.tileset-batch-picker-page {
 }
 
 .tileset-batch-picker__summary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) auto auto;
-  gap: 10px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
   align-items: stretch;
 }
 
 .tileset-batch-picker__summary div {
   display: grid;
+  flex: 1 1 64px;
   gap: 4px;
+  min-width: 0;
   padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 7px;
@@ -768,8 +771,9 @@ body.tileset-batch-picker-page {
 
 .tileset-batch-picker__summary-select {
   display: grid;
+  flex: 0 0 84px;
   gap: 4px;
-  min-width: 92px;
+  min-width: 0;
   padding: 8px 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 7px;
@@ -788,6 +792,10 @@ body.tileset-batch-picker-page {
   opacity: 0.5;
 }
 
+.tileset-batch-picker__file-input {
+  display: none;
+}
+
 .tileset-batch-picker__summary span,
 .tileset-batch-picker__export-status {
   color: #95a4b3;
@@ -800,9 +808,10 @@ body.tileset-batch-picker-page {
 }
 
 .tileset-batch-picker__export-button {
-  min-width: 112px;
-  padding: 0 14px;
+  min-width: 98px;
+  padding: 0 12px;
   background: #1e5fa8;
+  white-space: nowrap;
 }
 
 .tileset-batch-picker__export-button:disabled {
@@ -903,7 +912,7 @@ body.tileset-batch-picker-page {
   }
 
   .tileset-batch-picker__summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-wrap: wrap;
   }
 
   .tileset-batch-picker__batch-list-header {

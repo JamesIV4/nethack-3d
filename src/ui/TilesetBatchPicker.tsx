@@ -12,6 +12,7 @@ import {
   type PersistedTilesetBatchPickerImageMeta,
   type PersistedTilesetBatchPickerOffset,
   type PersistedTilesetBatchPickerRemovalSeed,
+  type PersistedTilesetBatchPickerSession,
 } from "../storage/tileset-batch-picker-storage";
 import "../styles/tileset-batch-picker.scss";
 
@@ -37,6 +38,12 @@ const pixelZoomScale = 10;
 const pixelZoomGridSize = pixelZoomRadius * 2 + 1;
 const pixelZoomPanelOffset = 18;
 const pixelZoomPanelWidth = pixelZoomGridSize * pixelZoomScale + 18;
+const archiveFormatName = "nh3d-tileset-batch-picker";
+const archiveVersion = 1;
+const zipLocalFileHeaderSignature = 0x04034b50;
+const zipCentralDirectoryHeaderSignature = 0x02014b50;
+const zipEndOfCentralDirectorySignature = 0x06054b50;
+const zipStoreMethod = 0;
 const pixelZoomPanelHeight = pixelZoomGridSize * pixelZoomScale + 54;
 
 type PreviewZoomMode = (typeof previewZoomModes)[number];
@@ -114,6 +121,21 @@ type BackgroundRemovalByImageId = Record<
   string,
   PersistedTilesetBatchPickerBackgroundRemovalSettings
 >;
+type TilesetBatchPickerArchiveManifest = {
+  format: typeof archiveFormatName;
+  version: typeof archiveVersion;
+  exportedAt: string;
+  session: Omit<PersistedTilesetBatchPickerSession, "updatedAt">;
+  images: Array<
+    PersistedTilesetBatchPickerImageMeta & {
+      path: string;
+    }
+  >;
+};
+type ZipEntry = {
+  name: string;
+  data: Uint8Array;
+};
 type ActiveAdjustmentDrag = {
   generatedIndex: number;
   imageId: string;
@@ -226,6 +248,208 @@ function preventDropDefaults(event: React.DragEvent<HTMLElement>): void {
 
 function isImageFile(file: File): boolean {
   return file.type.startsWith("image/");
+}
+
+function isZipFile(file: File): boolean {
+  return (
+    file.type === "application/zip" ||
+    file.type === "application/x-zip-compressed" ||
+    file.name.toLowerCase().endsWith(".zip")
+  );
+}
+
+function makeCrc32Table(): Uint32Array {
+  const table = new Uint32Array(256);
+  for (let index = 0; index < table.length; index += 1) {
+    let value = index;
+    for (let bit = 0; bit < 8; bit += 1) {
+      value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+    }
+    table[index] = value >>> 0;
+  }
+  return table;
+}
+
+const crc32Table = makeCrc32Table();
+
+function getCrc32(data: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (const byte of data) {
+    crc = crc32Table[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function copyUint8ArrayBuffer(data: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(data.byteLength);
+  copy.set(data);
+  return copy.buffer as ArrayBuffer;
+}
+
+function createZipArchive(entries: ZipEntry[]): Blob {
+  const encoder = new TextEncoder();
+  const chunks: BlobPart[] = [];
+  const centralDirectoryChunks: Uint8Array[] = [];
+  let offset = 0;
+
+  for (const entry of entries) {
+    const nameBytes = encoder.encode(entry.name);
+    const crc32 = getCrc32(entry.data);
+    const localHeader = new Uint8Array(30 + nameBytes.length);
+    const localView = new DataView(localHeader.buffer);
+    localView.setUint32(0, zipLocalFileHeaderSignature, true);
+    localView.setUint16(4, 20, true);
+    localView.setUint16(6, 0x0800, true);
+    localView.setUint16(8, zipStoreMethod, true);
+    localView.setUint16(10, 0, true);
+    localView.setUint16(12, 0, true);
+    localView.setUint32(14, crc32, true);
+    localView.setUint32(18, entry.data.byteLength, true);
+    localView.setUint32(22, entry.data.byteLength, true);
+    localView.setUint16(26, nameBytes.length, true);
+    localView.setUint16(28, 0, true);
+    localHeader.set(nameBytes, 30);
+
+    const centralHeader = new Uint8Array(46 + nameBytes.length);
+    const centralView = new DataView(centralHeader.buffer);
+    centralView.setUint32(0, zipCentralDirectoryHeaderSignature, true);
+    centralView.setUint16(4, 20, true);
+    centralView.setUint16(6, 20, true);
+    centralView.setUint16(8, 0x0800, true);
+    centralView.setUint16(10, zipStoreMethod, true);
+    centralView.setUint16(12, 0, true);
+    centralView.setUint16(14, 0, true);
+    centralView.setUint32(16, crc32, true);
+    centralView.setUint32(20, entry.data.byteLength, true);
+    centralView.setUint32(24, entry.data.byteLength, true);
+    centralView.setUint16(28, nameBytes.length, true);
+    centralView.setUint16(30, 0, true);
+    centralView.setUint16(32, 0, true);
+    centralView.setUint16(34, 0, true);
+    centralView.setUint16(36, 0, true);
+    centralView.setUint32(38, 0, true);
+    centralView.setUint32(42, offset, true);
+    centralHeader.set(nameBytes, 46);
+
+    chunks.push(
+      copyUint8ArrayBuffer(localHeader),
+      copyUint8ArrayBuffer(entry.data),
+    );
+    centralDirectoryChunks.push(centralHeader);
+    offset += localHeader.byteLength + entry.data.byteLength;
+  }
+
+  const centralDirectoryOffset = offset;
+  let centralDirectorySize = 0;
+  for (const chunk of centralDirectoryChunks) {
+    chunks.push(copyUint8ArrayBuffer(chunk));
+    centralDirectorySize += chunk.byteLength;
+    offset += chunk.byteLength;
+  }
+
+  const endRecord = new Uint8Array(22);
+  const endView = new DataView(endRecord.buffer);
+  endView.setUint32(0, zipEndOfCentralDirectorySignature, true);
+  endView.setUint16(4, 0, true);
+  endView.setUint16(6, 0, true);
+  endView.setUint16(8, entries.length, true);
+  endView.setUint16(10, entries.length, true);
+  endView.setUint32(12, centralDirectorySize, true);
+  endView.setUint32(16, centralDirectoryOffset, true);
+  endView.setUint16(20, 0, true);
+  chunks.push(copyUint8ArrayBuffer(endRecord));
+
+  return new Blob(chunks, { type: "application/zip" });
+}
+
+function findEndOfCentralDirectory(view: DataView): number {
+  const minimumOffset = Math.max(0, view.byteLength - 65557);
+  for (let offset = view.byteLength - 22; offset >= minimumOffset; offset -= 1) {
+    if (view.getUint32(offset, true) === zipEndOfCentralDirectorySignature) {
+      return offset;
+    }
+  }
+  return -1;
+}
+
+function readZipArchive(buffer: ArrayBuffer): Map<string, Uint8Array> {
+  const view = new DataView(buffer);
+  const decoder = new TextDecoder();
+  const endOffset = findEndOfCentralDirectory(view);
+  if (endOffset < 0) {
+    throw new Error("Invalid zip archive.");
+  }
+
+  const entryCount = view.getUint16(endOffset + 10, true);
+  let centralOffset = view.getUint32(endOffset + 16, true);
+  const entries = new Map<string, Uint8Array>();
+
+  for (let index = 0; index < entryCount; index += 1) {
+    if (
+      centralOffset + 46 > view.byteLength ||
+      view.getUint32(centralOffset, true) !== zipCentralDirectoryHeaderSignature
+    ) {
+      throw new Error("Invalid zip central directory.");
+    }
+
+    const method = view.getUint16(centralOffset + 10, true);
+    if (method !== zipStoreMethod) {
+      throw new Error("Only uncompressed picker zip archives are supported.");
+    }
+    const compressedSize = view.getUint32(centralOffset + 20, true);
+    const uncompressedSize = view.getUint32(centralOffset + 24, true);
+    const nameLength = view.getUint16(centralOffset + 28, true);
+    const extraLength = view.getUint16(centralOffset + 30, true);
+    const commentLength = view.getUint16(centralOffset + 32, true);
+    const localOffset = view.getUint32(centralOffset + 42, true);
+    const nameStart = centralOffset + 46;
+    const name = decoder.decode(
+      new Uint8Array(buffer, nameStart, nameLength),
+    );
+
+    if (
+      compressedSize !== uncompressedSize ||
+      localOffset + 30 > view.byteLength ||
+      view.getUint32(localOffset, true) !== zipLocalFileHeaderSignature
+    ) {
+      throw new Error("Invalid zip entry.");
+    }
+    const localNameLength = view.getUint16(localOffset + 26, true);
+    const localExtraLength = view.getUint16(localOffset + 28, true);
+    const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+    const dataEnd = dataStart + uncompressedSize;
+    if (dataEnd > view.byteLength) {
+      throw new Error("Zip entry exceeds archive bounds.");
+    }
+    entries.set(name, new Uint8Array(buffer.slice(dataStart, dataEnd)));
+    centralOffset = nameStart + nameLength + extraLength + commentLength;
+  }
+
+  return entries;
+}
+
+function sanitizeArchivePathPart(value: string): string {
+  return value.replace(/[^a-z0-9._-]+/gi, "-").replace(/^-+|-+$/g, "") || "file";
+}
+
+function getArchiveImagePath(image: UploadedBatchImage): string {
+  return `images/${sanitizeArchivePathPart(image.id)}-${sanitizeArchivePathPart(
+    image.name,
+  )}`;
+}
+
+function isArchiveManifest(
+  value: unknown,
+): value is TilesetBatchPickerArchiveManifest {
+  const candidate = value as Partial<TilesetBatchPickerArchiveManifest>;
+  return (
+    Boolean(candidate) &&
+    typeof candidate === "object" &&
+    candidate.format === archiveFormatName &&
+    candidate.version === archiveVersion &&
+    typeof candidate.session === "object" &&
+    Array.isArray(candidate.images)
+  );
 }
 
 function getGeneratedIndexForCell(
@@ -1663,6 +1887,7 @@ export default function TilesetBatchPicker(): JSX.Element {
   const visibleSheetImageIdRef = useRef<string | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const previewViewportRef = useRef<HTMLDivElement | null>(null);
+  const archiveImportInputRef = useRef<HTMLInputElement | null>(null);
   const objectUrlsRef = useRef<Set<string>>(new Set());
   const activeAdjustmentDragRef = useRef<ActiveAdjustmentDrag | null>(null);
   const pendingAdjustmentFrameRef = useRef<number | null>(null);
@@ -2265,6 +2490,259 @@ export default function TilesetBatchPicker(): JSX.Element {
       [sheetIndex]: [...(current[sheetIndex] ?? []), ...nextImages],
     }));
   }, [createBatchImageState]);
+
+  const exportPickerArchive = useCallback(async () => {
+    if (!compileMap) {
+      return;
+    }
+
+    try {
+      setExportStatus("Exporting work");
+      const images = Object.entries(batchImages).flatMap(
+        ([batchKey, batchImageList]) =>
+          batchImageList.map((image) => ({
+            ...image,
+            batchIndex: Math.max(0, Math.trunc(Number(batchKey) || 0)),
+          })),
+      );
+      const persistedImageById = await loadPersistedTilesetBatchPickerImages(
+        images.map((image) => image.id),
+      );
+      const archiveImages: TilesetBatchPickerArchiveManifest["images"] = [];
+      const zipEntries: ZipEntry[] = [];
+
+      for (const image of images) {
+        const persistedImage = persistedImageById[image.id];
+        const blob =
+          persistedImage?.blob ??
+          (await fetch(image.url).then((response) => {
+            if (!response.ok) {
+              throw new Error(`Failed to read ${image.name}.`);
+            }
+            return response.blob();
+          }));
+        const path = getArchiveImagePath(image);
+        archiveImages.push({
+          id: image.id,
+          batchIndex: image.batchIndex,
+          name: image.name,
+          width: image.width || persistedImage?.width || 0,
+          height: image.height || persistedImage?.height || 0,
+          mimeType:
+            image.mimeType ||
+            persistedImage?.mimeType ||
+            blob.type ||
+            "application/octet-stream",
+          createdAt: image.createdAt || persistedImage?.createdAt || Date.now(),
+          updatedAt: image.updatedAt || persistedImage?.updatedAt || Date.now(),
+          path,
+        });
+        zipEntries.push({
+          name: path,
+          data: new Uint8Array(await blob.arrayBuffer()),
+        });
+      }
+
+      const session: Omit<PersistedTilesetBatchPickerSession, "updatedAt"> = {
+        compileMap,
+        mapLabel,
+        selectedImages: selectedImages as Record<string, string>,
+        selectedOffsets: toPersistedSelectedOffsets(selectedOffsets),
+        selectedCropInsets: toPersistedSelectedCropInsets(selectedCropInsets),
+        backgroundRemovalByImageId: toPersistedBackgroundRemovalByImageId(
+          backgroundRemovalByImageId,
+        ),
+        batchImages: toPersistedBatchImages(batchImages),
+      };
+      const manifest: TilesetBatchPickerArchiveManifest = {
+        format: archiveFormatName,
+        version: archiveVersion,
+        exportedAt: new Date().toISOString(),
+        session,
+        images: archiveImages,
+      };
+      zipEntries.unshift({
+        name: "manifest.json",
+        data: new TextEncoder().encode(JSON.stringify(manifest, null, 2)),
+      });
+
+      const archiveBlob = createZipArchive(zipEntries);
+      const url = URL.createObjectURL(archiveBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "tileset-batch-picker-work.zip";
+      link.click();
+      URL.revokeObjectURL(url);
+      setExportStatus("Work exported");
+    } catch (error) {
+      console.warn("Failed to export picker archive:", error);
+      setExportStatus("Export work failed");
+    }
+  }, [
+    backgroundRemovalByImageId,
+    batchImages,
+    compileMap,
+    mapLabel,
+    selectedCropInsets,
+    selectedImages,
+    selectedOffsets,
+  ]);
+
+  const importPickerArchive = useCallback(
+    async (file: File) => {
+      if (!isZipFile(file)) {
+        setExportStatus("Import needs a zip");
+        return;
+      }
+
+      const importedObjectUrls = new Set<string>();
+      try {
+        setExportStatus("Importing work");
+        await sessionSaveQueueRef.current.catch(() => {
+          // Continue importing even if a previous autosave failed.
+        });
+
+        const entries = readZipArchive(await file.arrayBuffer());
+        const manifestBytes = entries.get("manifest.json");
+        if (!manifestBytes) {
+          throw new Error("Archive is missing manifest.json.");
+        }
+        const manifest = JSON.parse(
+          new TextDecoder().decode(manifestBytes),
+        ) as unknown;
+        if (
+          !isArchiveManifest(manifest) ||
+          !isCompileMap(manifest.session.compileMap)
+        ) {
+          throw new Error("Archive manifest is not valid for this picker.");
+        }
+
+        const importedImageIds = new Set<string>();
+        const importedBatchImages: BatchImagesByIndex = {};
+        const importedSessionImages: Record<
+          string,
+          PersistedTilesetBatchPickerImageMeta[]
+        > = {};
+        const importedImageRecords: Array<
+          PersistedTilesetBatchPickerImageMeta & { blob: Blob }
+        > = [];
+
+        for (const image of manifest.images) {
+          const imageBytes = entries.get(image.path);
+          if (!imageBytes) {
+            continue;
+          }
+          const batchIndex = Math.max(0, Math.trunc(Number(image.batchIndex) || 0));
+          const blob = new Blob(
+            [copyUint8ArrayBuffer(imageBytes)],
+            {
+              type: image.mimeType || "application/octet-stream",
+            },
+          );
+          const url = URL.createObjectURL(blob);
+          importedObjectUrls.add(url);
+          importedImageIds.add(image.id);
+          importedImageRecords.push({
+            id: image.id,
+            batchIndex,
+            name: image.name,
+            width: image.width,
+            height: image.height,
+            mimeType: image.mimeType,
+            createdAt: image.createdAt,
+            updatedAt: image.updatedAt,
+            blob,
+          });
+          importedBatchImages[batchIndex] = [
+            ...(importedBatchImages[batchIndex] ?? []),
+            createBatchImageState({
+              sheetIndex: batchIndex,
+              id: image.id,
+              name: image.name,
+              url,
+              mimeType: image.mimeType,
+              width: image.width,
+              height: image.height,
+              createdAt: image.createdAt,
+              updatedAt: image.updatedAt,
+            }),
+          ];
+          importedSessionImages[String(batchIndex)] = [
+            ...(importedSessionImages[String(batchIndex)] ?? []),
+            {
+              id: image.id,
+              batchIndex,
+              name: image.name,
+              width: image.width,
+              height: image.height,
+              mimeType: image.mimeType,
+              createdAt: image.createdAt,
+              updatedAt: image.updatedAt,
+            },
+          ];
+        }
+
+        const nextSelectedImages = Object.fromEntries(
+          Object.entries(manifest.session.selectedImages).filter(([, imageId]) =>
+            importedImageIds.has(imageId),
+          ),
+        ) as SelectedImageByGeneratedIndex;
+        const nextBackgroundRemovalByImageId = Object.fromEntries(
+          Object.entries(manifest.session.backgroundRemovalByImageId).filter(
+            ([imageId]) => importedImageIds.has(imageId),
+          ),
+        ) as BackgroundRemovalByImageId;
+        const nextSession: Omit<PersistedTilesetBatchPickerSession, "updatedAt"> =
+          {
+            compileMap: manifest.session.compileMap,
+            mapLabel: manifest.session.mapLabel,
+            selectedImages: nextSelectedImages as Record<string, string>,
+            selectedOffsets: manifest.session
+              .selectedOffsets as SelectedOffsetByGeneratedIndex,
+            selectedCropInsets: manifest.session
+              .selectedCropInsets as SelectedCropInsetsByGeneratedIndex,
+            backgroundRemovalByImageId: nextBackgroundRemovalByImageId,
+            batchImages: importedSessionImages,
+          };
+
+        await clearPersistedTilesetBatchPickerSession();
+        await Promise.all(
+          importedImageRecords.map((image) =>
+            savePersistedTilesetBatchPickerImage(image),
+          ),
+        );
+        await savePersistedTilesetBatchPickerSession(nextSession);
+        sessionSaveQueueRef.current = Promise.resolve();
+
+        resetObjectUrls();
+        for (const url of importedObjectUrls) {
+          objectUrlsRef.current.add(url);
+        }
+        setCompileMap(manifest.session.compileMap);
+        setMapLabel(manifest.session.mapLabel);
+        setMapStatus("Ready");
+        setBatchImages(importedBatchImages);
+        setSelectedImages(nextSelectedImages);
+        setSelectedOffsets(
+          manifest.session.selectedOffsets as SelectedOffsetByGeneratedIndex,
+        );
+        setSelectedCropInsets(
+          manifest.session.selectedCropInsets as SelectedCropInsetsByGeneratedIndex,
+        );
+        setBackgroundRemovalByImageId(nextBackgroundRemovalByImageId);
+        setModeSwitchAnchorImageId(null);
+        visibleSheetImageIdRef.current = null;
+        setExportStatus("Work imported");
+      } catch (error) {
+        for (const url of importedObjectUrls) {
+          URL.revokeObjectURL(url);
+        }
+        console.warn("Failed to import picker archive:", error);
+        setExportStatus("Import work failed");
+      }
+    },
+    [createBatchImageState, resetObjectUrls],
+  );
 
   const removeBatchImage = useCallback((sheetIndex: number, imageId: string) => {
     setBatchImages((current) => {
@@ -3897,6 +4375,38 @@ export default function TilesetBatchPicker(): JSX.Element {
             >
               Export PNG
             </button>
+            <button
+              className="tileset-batch-picker__small-button tileset-batch-picker__zoom-button"
+              disabled={!compileMap}
+              onClick={() => {
+                void exportPickerArchive();
+              }}
+              type="button"
+            >
+              Export Work
+            </button>
+            <button
+              className="tileset-batch-picker__small-button tileset-batch-picker__zoom-button"
+              onClick={() => {
+                archiveImportInputRef.current?.click();
+              }}
+              type="button"
+            >
+              Import Work
+            </button>
+            <input
+              accept=".zip,application/zip,application/x-zip-compressed"
+              className="tileset-batch-picker__file-input"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  void importPickerArchive(file);
+                }
+                event.target.value = "";
+              }}
+              ref={archiveImportInputRef}
+              type="file"
+            />
           </div>
           {exportStatus ? (
             <div className="tileset-batch-picker__export-status">

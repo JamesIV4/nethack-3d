@@ -205,16 +205,16 @@ Follow the exact tile order below from left to right, top to bottom. Use the til
 
 Tile order:
 
-1. imp, male
+1. imp, male (tiny minor demon)
 2. imp, female
-3. lemure
-4. quasit, male
+3. lemure (demon)
+4. quasit, male (Quasits are minor demons that stand somewhere between 1 and 2 feet tall, and appear as tiny humanoids with warty green skin, spiky horns, barbed tails)
 5. quasit, female
-6. tengu, male
+6. tengu, male (tengu has the highest monster level and difficulty of the minor demons)
 7. tengu, female
-8. blue jelly
-9. spotted jelly
-10. ochre jelly
+8. blue jelly (cold damage)
+9. spotted jelly (Although it does not move, it has a passive acid attack that can deal quite a bit of damage)
+10. ochre jelly (Ochre jellies attack by engulfing, and have a dangerous passive acid)
 11. kobold, male
 12. kobold, female
 13. large kobold, male
