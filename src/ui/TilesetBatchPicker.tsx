@@ -265,6 +265,11 @@ function clampSelectionOffset(value: number): number {
   return Math.max(-maxSelectionOffset, Math.min(maxSelectionOffset, value));
 }
 
+function quantizeSelectionRatio(value: number, pixelSpan: number): number {
+  const safePixelSpan = Math.max(1, Math.round(pixelSpan));
+  return Math.round(value * safePixelSpan) / safePixelSpan;
+}
+
 function toPersistedSelectedOffsets(
   selectedOffsets: SelectedOffsetByGeneratedIndex,
 ): Record<string, PersistedTilesetBatchPickerOffset> {
@@ -1647,6 +1652,10 @@ export default function TilesetBatchPicker(): JSX.Element {
   const previewViewportRef = useRef<HTMLDivElement | null>(null);
   const objectUrlsRef = useRef<Set<string>>(new Set());
   const activeAdjustmentDragRef = useRef<ActiveAdjustmentDrag | null>(null);
+  const pendingAdjustmentFrameRef = useRef<number | null>(null);
+  const latestAdjustmentPointerRef = useRef<{ x: number; y: number } | null>(
+    null,
+  );
   const sessionSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const [previewViewportWidth, setPreviewViewportWidth] = useState(0);
   const [activeDraggedGeneratedIndex, setActiveDraggedGeneratedIndex] =
@@ -2037,6 +2046,9 @@ export default function TilesetBatchPicker(): JSX.Element {
     if (!compileMap) {
       return;
     }
+    if (activeDraggedGeneratedIndex !== null) {
+      return;
+    }
     const sessionSnapshot = {
       compileMap,
       mapLabel,
@@ -2061,6 +2073,7 @@ export default function TilesetBatchPicker(): JSX.Element {
     compileMap,
     backgroundRemovalByImageId,
     mapLabel,
+    activeDraggedGeneratedIndex,
     selectedCropInsets,
     selectedImages,
     selectedOffsets,
@@ -2173,15 +2186,20 @@ export default function TilesetBatchPicker(): JSX.Element {
     if (!canvas || !compileMap) {
       return;
     }
-    drawCompiledTileset({
-      canvas,
-      compileMap,
-      selectedImages,
-      selectedOffsets,
-      selectedCropInsets,
-      batchImages,
-      tileSize: previewRenderTileSize,
+    const frameId = window.requestAnimationFrame(() => {
+      drawCompiledTileset({
+        canvas,
+        compileMap,
+        selectedImages,
+        selectedOffsets,
+        selectedCropInsets,
+        batchImages,
+        tileSize: previewRenderTileSize,
+      });
     });
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
   }, [
     batchImages,
     compileMap,
@@ -2398,32 +2416,49 @@ export default function TilesetBatchPicker(): JSX.Element {
   );
 
   useEffect(() => {
-    const handlePointerMove = (event: PointerEvent): void => {
+    const applyAdjustmentDrag = (clientX: number, clientY: number): void => {
       const activeDrag = activeAdjustmentDragRef.current;
       if (!activeDrag) {
         return;
       }
 
       const deltaX =
-        (event.clientX - activeDrag.startClientX) / activeDrag.sourceTileWidth;
+        (clientX - activeDrag.startClientX) / activeDrag.sourceTileWidth;
       const deltaY =
-        (event.clientY - activeDrag.startClientY) / activeDrag.sourceTileHeight;
+        (clientY - activeDrag.startClientY) / activeDrag.sourceTileHeight;
       if (
         !activeDrag.moved &&
-        (Math.abs(event.clientX - activeDrag.startClientX) >= dragThresholdPx ||
-          Math.abs(event.clientY - activeDrag.startClientY) >= dragThresholdPx)
+        (Math.abs(clientX - activeDrag.startClientX) >= dragThresholdPx ||
+          Math.abs(clientY - activeDrag.startClientY) >= dragThresholdPx)
       ) {
         activeDrag.moved = true;
       }
 
       if (activeDrag.mode === "offset") {
-        setSelectedOffsets((current) => ({
-          ...current,
-          [activeDrag.generatedIndex]: {
-            x: clampSelectionOffset(activeDrag.startOffsetX + deltaX),
-            y: clampSelectionOffset(activeDrag.startOffsetY + deltaY),
-          },
-        }));
+        setSelectedOffsets((current) => {
+          const previous = current[activeDrag.generatedIndex] ?? { x: 0, y: 0 };
+          const nextOffset = {
+            x: clampSelectionOffset(
+              quantizeSelectionRatio(
+                activeDrag.startOffsetX + deltaX,
+                activeDrag.sourceTileWidth,
+              ),
+            ),
+            y: clampSelectionOffset(
+              quantizeSelectionRatio(
+                activeDrag.startOffsetY + deltaY,
+                activeDrag.sourceTileHeight,
+              ),
+            ),
+          };
+          if (previous.x === nextOffset.x && previous.y === nextOffset.y) {
+            return current;
+          }
+          return {
+            ...current,
+            [activeDrag.generatedIndex]: nextOffset,
+          };
+        });
         return;
       }
 
@@ -2435,7 +2470,10 @@ export default function TilesetBatchPicker(): JSX.Element {
           nextCropInsets = {
             ...previous,
             left: clampCropInset(
-              activeDrag.startCropLeft + deltaX,
+              quantizeSelectionRatio(
+                activeDrag.startCropLeft + deltaX,
+                activeDrag.sourceTileWidth,
+              ),
               activeDrag.startCropRight,
             ),
           };
@@ -2443,7 +2481,10 @@ export default function TilesetBatchPicker(): JSX.Element {
           nextCropInsets = {
             ...previous,
             right: clampCropInset(
-              activeDrag.startCropRight - deltaX,
+              quantizeSelectionRatio(
+                activeDrag.startCropRight - deltaX,
+                activeDrag.sourceTileWidth,
+              ),
               activeDrag.startCropLeft,
             ),
           };
@@ -2451,7 +2492,10 @@ export default function TilesetBatchPicker(): JSX.Element {
           nextCropInsets = {
             ...previous,
             top: clampCropInset(
-              activeDrag.startCropTop + deltaY,
+              quantizeSelectionRatio(
+                activeDrag.startCropTop + deltaY,
+                activeDrag.sourceTileHeight,
+              ),
               activeDrag.startCropBottom,
             ),
           };
@@ -2459,10 +2503,21 @@ export default function TilesetBatchPicker(): JSX.Element {
           nextCropInsets = {
             ...previous,
             bottom: clampCropInset(
-              activeDrag.startCropBottom - deltaY,
+              quantizeSelectionRatio(
+                activeDrag.startCropBottom - deltaY,
+                activeDrag.sourceTileHeight,
+              ),
               activeDrag.startCropTop,
             ),
           };
+        }
+        if (
+          previous.left === nextCropInsets.left &&
+          previous.right === nextCropInsets.right &&
+          previous.top === nextCropInsets.top &&
+          previous.bottom === nextCropInsets.bottom
+        ) {
+          return current;
         }
         return {
           ...current,
@@ -2471,10 +2526,36 @@ export default function TilesetBatchPicker(): JSX.Element {
       });
     };
 
-    const endPointerDrag = (): void => {
+    const handlePointerMove = (event: PointerEvent): void => {
       if (!activeAdjustmentDragRef.current) {
         return;
       }
+      latestAdjustmentPointerRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+      };
+      if (pendingAdjustmentFrameRef.current !== null) {
+        return;
+      }
+      pendingAdjustmentFrameRef.current = window.requestAnimationFrame(() => {
+        pendingAdjustmentFrameRef.current = null;
+        const pointer = latestAdjustmentPointerRef.current;
+        if (pointer) {
+          applyAdjustmentDrag(pointer.x, pointer.y);
+        }
+      });
+    };
+
+    const endPointerDrag = (event: PointerEvent): void => {
+      if (!activeAdjustmentDragRef.current) {
+        return;
+      }
+      if (pendingAdjustmentFrameRef.current !== null) {
+        window.cancelAnimationFrame(pendingAdjustmentFrameRef.current);
+        pendingAdjustmentFrameRef.current = null;
+      }
+      applyAdjustmentDrag(event.clientX, event.clientY);
+      latestAdjustmentPointerRef.current = null;
       activeAdjustmentDragRef.current = null;
       setActiveDraggedGeneratedIndex(null);
     };
@@ -2486,6 +2567,10 @@ export default function TilesetBatchPicker(): JSX.Element {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", endPointerDrag);
       window.removeEventListener("pointercancel", endPointerDrag);
+      if (pendingAdjustmentFrameRef.current !== null) {
+        window.cancelAnimationFrame(pendingAdjustmentFrameRef.current);
+        pendingAdjustmentFrameRef.current = null;
+      }
     };
   }, []);
 
