@@ -29,7 +29,7 @@ const defaultBackgroundRemovalMatteFalloff = 100;
 const defaultBackgroundRemovalUnmixStrength = 100;
 const defaultBackgroundRemovalScreenColorMode = "auto";
 const defaultBackgroundRemovalEdgeSpillRange = 4;
-const defaultBackgroundRemovalEdgeSpillStrength = 66;
+const defaultBackgroundRemovalEdgeSpillStrength = 100;
 const defaultBackgroundRemovalSpillLimitMode = "average";
 const defaultBackgroundRemovalEdgeDesaturation = 100;
 const pixelZoomRadius = 5;
@@ -349,7 +349,7 @@ function getDefaultBackgroundRemovalSettings(): PersistedTilesetBatchPickerBackg
     edgeSpillStrength: defaultBackgroundRemovalEdgeSpillStrength,
     spillLimitMode: defaultBackgroundRemovalSpillLimitMode,
     edgeDesaturation: defaultBackgroundRemovalEdgeDesaturation,
-    nonContiguous: false,
+    nonContiguous: true,
     seeds: [],
   };
 }
@@ -2808,7 +2808,7 @@ export default function TilesetBatchPicker(): JSX.Element {
           defaultBackgroundRemovalEdgeSpillStrength &&
         previous.spillLimitMode === defaultBackgroundRemovalSpillLimitMode &&
         previous.edgeDesaturation === defaultBackgroundRemovalEdgeDesaturation &&
-        previous.nonContiguous === false
+        previous.nonContiguous === true
       ) {
         const nextSettings = { ...current };
         delete nextSettings[imageId];
@@ -2863,7 +2863,7 @@ export default function TilesetBatchPicker(): JSX.Element {
             defaultBackgroundRemovalEdgeSpillStrength &&
           previous.spillLimitMode === defaultBackgroundRemovalSpillLimitMode &&
           previous.edgeDesaturation === defaultBackgroundRemovalEdgeDesaturation &&
-          previous.nonContiguous === false
+          previous.nonContiguous === true
         ) {
           const nextSettings = { ...current };
           delete nextSettings[imageId];

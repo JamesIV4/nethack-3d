@@ -288,7 +288,7 @@ function normalizeRemovalEdgeSpillRange(value: unknown): number {
 
 function normalizeRemovalEdgeSpillStrength(value: unknown): number {
   if (!Number.isFinite(value)) {
-    return 66;
+    return 100;
   }
   return Math.max(0, Math.min(100, Math.round(Number(value))));
 }
@@ -307,7 +307,7 @@ function normalizeRemovalEdgeDesaturation(value: unknown): number {
 }
 
 function normalizeRemovalNonContiguous(value: unknown): boolean {
-  return value === true;
+  return value === false ? false : true;
 }
 
 function normalizeRemovalSeed(
