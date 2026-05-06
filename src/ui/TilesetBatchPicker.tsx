@@ -9,6 +9,7 @@ import {
   savePersistedTilesetBatchPickerSession,
   type PersistedTilesetBatchPickerBackgroundRemovalSettings,
   type PersistedTilesetBatchPickerCropInsets,
+  type PersistedTilesetBatchPickerExclusionMask,
   type PersistedTilesetBatchPickerImageMeta,
   type PersistedTilesetBatchPickerOffset,
   type PersistedTilesetBatchPickerRemovalSeed,
@@ -38,6 +39,9 @@ const pixelZoomScale = 10;
 const pixelZoomGridSize = pixelZoomRadius * 2 + 1;
 const pixelZoomPanelOffset = 18;
 const pixelZoomPanelWidth = pixelZoomGridSize * pixelZoomScale + 18;
+const defaultExclusionBrushSize = 18;
+const minExclusionBrushSize = 1;
+const maxExclusionBrushSize = 128;
 const archiveFormatName = "nh3d-tileset-batch-picker";
 const archiveVersion = 1;
 const zipLocalFileHeaderSignature = 0x04034b50;
@@ -116,7 +120,12 @@ type SelectedCropInsetsByGeneratedIndex = Record<
   number,
   PersistedTilesetBatchPickerCropInsets
 >;
-type EditorMode = "arrange" | "background-remove";
+type SelectedExclusionMaskByGeneratedIndex = Record<
+  number,
+  PersistedTilesetBatchPickerExclusionMask
+>;
+type EditorMode = "arrange" | "background-remove" | "exclude";
+type ExclusionTool = "paint" | "erase";
 type BackgroundRemovalByImageId = Record<
   string,
   PersistedTilesetBatchPickerBackgroundRemovalSettings
@@ -156,6 +165,17 @@ type ActiveAdjustmentDrag = {
   moved: boolean;
 };
 
+type ActiveExclusionPaint = {
+  generatedIndex: number;
+  element: HTMLElement;
+  canvas: HTMLCanvasElement;
+  bytes: Uint8Array;
+  originalBytes: Uint8Array;
+  maskWidth: number;
+  maskHeight: number;
+  changed: boolean;
+};
+
 type SampledPixel = {
   x: number;
   y: number;
@@ -168,6 +188,12 @@ type SampledPixel = {
 type SheetPreviewProps = {
   uploadedImage: UploadedBatchImage;
   pixelPerfect?: boolean;
+};
+
+type ExclusionMaskPreviewProps = {
+  mask?: PersistedTilesetBatchPickerExclusionMask;
+  width: number;
+  height: number;
 };
 
 type ActivePixelZoom = {
@@ -573,6 +599,167 @@ function toPersistedSelectedCropInsets(
     persisted[generatedIndex] = { left, right, top, bottom };
   }
   return persisted;
+}
+
+function getExclusionMaskByteLength(width: number, height: number): number {
+  return Math.ceil(Math.max(0, width * height) / 8);
+}
+
+function decodeExclusionMaskData(
+  mask: PersistedTilesetBatchPickerExclusionMask,
+): Uint8Array {
+  const byteLength = getExclusionMaskByteLength(mask.width, mask.height);
+  const bytes = new Uint8Array(byteLength);
+  if (!mask.data) {
+    return bytes;
+  }
+  try {
+    const binary = atob(mask.data);
+    const copyLength = Math.min(byteLength, binary.length);
+    for (let index = 0; index < copyLength; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+  } catch {
+    return new Uint8Array(byteLength);
+  }
+  return bytes;
+}
+
+function encodeExclusionMaskData(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const chunk = bytes.subarray(index, index + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
+}
+
+function getExclusionMaskBit(bytes: Uint8Array, pixelIndex: number): boolean {
+  return (bytes[pixelIndex >> 3] & (1 << (pixelIndex & 7))) !== 0;
+}
+
+function setExclusionMaskBit(
+  bytes: Uint8Array,
+  pixelIndex: number,
+  excluded: boolean,
+): void {
+  if (excluded) {
+    bytes[pixelIndex >> 3] |= 1 << (pixelIndex & 7);
+  } else {
+    bytes[pixelIndex >> 3] &= ~(1 << (pixelIndex & 7));
+  }
+}
+
+function isExclusionMaskEmpty(bytes: Uint8Array): boolean {
+  return bytes.every((byte) => byte === 0);
+}
+
+function drawExclusionMaskPreview(
+  canvas: HTMLCanvasElement,
+  width: number,
+  height: number,
+  bytes: Uint8Array,
+): void {
+  const normalizedWidth = Math.max(1, Math.round(width));
+  const normalizedHeight = Math.max(1, Math.round(height));
+  if (canvas.width !== normalizedWidth) {
+    canvas.width = normalizedWidth;
+  }
+  if (canvas.height !== normalizedHeight) {
+    canvas.height = normalizedHeight;
+  }
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return;
+  }
+  const imageData = context.createImageData(normalizedWidth, normalizedHeight);
+  const data = imageData.data;
+  for (
+    let pixelIndex = 0;
+    pixelIndex < normalizedWidth * normalizedHeight;
+    pixelIndex += 1
+  ) {
+    if (!getExclusionMaskBit(bytes, pixelIndex)) {
+      continue;
+    }
+    const dataIndex = pixelIndex * 4;
+    data[dataIndex] = 255;
+    data[dataIndex + 1] = 76;
+    data[dataIndex + 2] = 76;
+    data[dataIndex + 3] = 150;
+  }
+  context.clearRect(0, 0, normalizedWidth, normalizedHeight);
+  context.putImageData(imageData, 0, 0);
+}
+
+function toPersistedSelectedExclusionMasks(
+  selectedExclusionMasks: SelectedExclusionMaskByGeneratedIndex,
+): Record<string, PersistedTilesetBatchPickerExclusionMask> {
+  const persisted: Record<string, PersistedTilesetBatchPickerExclusionMask> = {};
+  for (const [generatedIndex, mask] of Object.entries(selectedExclusionMasks)) {
+    const width = Math.max(1, Math.trunc(mask.width));
+    const height = Math.max(1, Math.trunc(mask.height));
+    const bytes = decodeExclusionMaskData({ width, height, data: mask.data });
+    if (isExclusionMaskEmpty(bytes)) {
+      continue;
+    }
+    persisted[generatedIndex] = {
+      width,
+      height,
+      data: encodeExclusionMaskData(bytes),
+    };
+  }
+  return persisted;
+}
+
+function applyExclusionBrushToBytes({
+  bytes,
+  width,
+  height,
+  x,
+  y,
+  brushSize,
+  tool,
+}: {
+  bytes: Uint8Array;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  brushSize: number;
+  tool: ExclusionTool;
+}): boolean {
+  const maskWidth = Math.max(1, Math.round(width));
+  const maskHeight = Math.max(1, Math.round(height));
+  const radius = Math.max(0.5, brushSize / 2);
+  const radiusSquared = radius * radius;
+  const centerX = Math.max(0, Math.min(maskWidth - 1, x));
+  const centerY = Math.max(0, Math.min(maskHeight - 1, y));
+  const minX = Math.max(0, Math.floor(centerX - radius));
+  const maxX = Math.min(maskWidth - 1, Math.ceil(centerX + radius));
+  const minY = Math.max(0, Math.floor(centerY - radius));
+  const maxY = Math.min(maskHeight - 1, Math.ceil(centerY + radius));
+  let changed = false;
+
+  for (let paintY = minY; paintY <= maxY; paintY += 1) {
+    for (let paintX = minX; paintX <= maxX; paintX += 1) {
+      const deltaX = paintX + 0.5 - centerX;
+      const deltaY = paintY + 0.5 - centerY;
+      if (deltaX * deltaX + deltaY * deltaY > radiusSquared) {
+        continue;
+      }
+      const pixelIndex = paintY * maskWidth + paintX;
+      const nextExcluded = tool === "paint";
+      if (getExclusionMaskBit(bytes, pixelIndex) === nextExcluded) {
+        continue;
+      }
+      setExclusionMaskBit(bytes, pixelIndex, nextExcluded);
+      changed = true;
+    }
+  }
+
+  return changed;
 }
 
 function getDefaultBackgroundRemovalSettings(): PersistedTilesetBatchPickerBackgroundRemovalSettings {
@@ -1529,12 +1716,73 @@ function applyStoneTint(
   context.putImageData(imageData, x, y);
 }
 
+function applyExclusionMaskToDrawnTile({
+  context,
+  mask,
+  generatedTile,
+  crop,
+  drawX,
+  drawY,
+  drawWidth,
+  drawHeight,
+}: {
+  context: CanvasRenderingContext2D;
+  mask: PersistedTilesetBatchPickerExclusionMask | undefined;
+  generatedTile: GeneratedTilePlacement;
+  crop: ReturnType<typeof getCropRect>;
+  drawX: number;
+  drawY: number;
+  drawWidth: number;
+  drawHeight: number;
+}): void {
+  if (!mask || drawWidth <= 0 || drawHeight <= 0) {
+    return;
+  }
+  const bytes = decodeExclusionMaskData(mask);
+  if (isExclusionMaskEmpty(bytes)) {
+    return;
+  }
+
+  const imageData = context.getImageData(drawX, drawY, drawWidth, drawHeight);
+  const data = imageData.data;
+  const sourceTileX = generatedTile.sheetColumn * crop.baseSourceWidth;
+  const sourceTileY = generatedTile.sheetRow * crop.baseSourceHeight;
+
+  for (let targetY = 0; targetY < drawHeight; targetY += 1) {
+    const sourceY =
+      crop.sourceY + ((targetY + 0.5) / drawHeight) * crop.sourceHeight;
+    const maskY = Math.floor(
+      ((sourceY - sourceTileY) / crop.baseSourceHeight) * mask.height,
+    );
+    if (maskY < 0 || maskY >= mask.height) {
+      continue;
+    }
+
+    for (let targetX = 0; targetX < drawWidth; targetX += 1) {
+      const sourceX =
+        crop.sourceX + ((targetX + 0.5) / drawWidth) * crop.sourceWidth;
+      const maskX = Math.floor(
+        ((sourceX - sourceTileX) / crop.baseSourceWidth) * mask.width,
+      );
+      if (maskX < 0 || maskX >= mask.width) {
+        continue;
+      }
+      if (getExclusionMaskBit(bytes, maskY * mask.width + maskX)) {
+        data[(targetY * drawWidth + targetX) * 4 + 3] = 0;
+      }
+    }
+  }
+
+  context.putImageData(imageData, drawX, drawY);
+}
+
 function drawCompiledTileset({
   canvas,
   compileMap,
   selectedImages,
   selectedOffsets,
   selectedCropInsets,
+  selectedExclusionMasks,
   batchImages,
   tileSize,
 }: {
@@ -1543,6 +1791,7 @@ function drawCompiledTileset({
   selectedImages: SelectedImageByGeneratedIndex;
   selectedOffsets: SelectedOffsetByGeneratedIndex;
   selectedCropInsets: SelectedCropInsetsByGeneratedIndex;
+  selectedExclusionMasks: SelectedExclusionMaskByGeneratedIndex;
   batchImages: BatchImagesByIndex;
   tileSize: number;
 }): void {
@@ -1614,6 +1863,16 @@ function drawCompiledTileset({
       drawWidth,
       drawHeight,
     );
+    applyExclusionMaskToDrawnTile({
+      context,
+      mask: selectedExclusionMasks[slot.generatedIndex],
+      generatedTile,
+      crop,
+      drawX,
+      drawY,
+      drawWidth,
+      drawHeight,
+    });
     if (slot.operation === "stone-statue") {
       applyStoneTint(context, drawX, drawY, drawWidth, drawHeight);
     }
@@ -1704,6 +1963,38 @@ function SheetPreview({
       height={Math.max(1, uploadedImage.height || 1)}
       ref={canvasRef}
       width={Math.max(1, uploadedImage.width || 1)}
+    />
+  );
+}
+
+function ExclusionMaskPreview({
+  mask,
+  width,
+  height,
+}: ExclusionMaskPreviewProps): JSX.Element {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+    const normalizedWidth = Math.max(1, Math.round(width));
+    const normalizedHeight = Math.max(1, Math.round(height));
+    const bytes =
+      mask?.width === normalizedWidth && mask.height === normalizedHeight
+        ? decodeExclusionMaskData(mask)
+        : new Uint8Array(
+            getExclusionMaskByteLength(normalizedWidth, normalizedHeight),
+          );
+    drawExclusionMaskPreview(canvas, normalizedWidth, normalizedHeight, bytes);
+  }, [height, mask, width]);
+
+  return (
+    <canvas
+      aria-hidden="true"
+      className="tileset-batch-picker__exclusion-mask-preview"
+      ref={canvasRef}
     />
   );
 }
@@ -1863,9 +2154,15 @@ export default function TilesetBatchPicker(): JSX.Element {
     useState<SelectedOffsetByGeneratedIndex>({});
   const [selectedCropInsets, setSelectedCropInsets] =
     useState<SelectedCropInsetsByGeneratedIndex>({});
+  const [selectedExclusionMasks, setSelectedExclusionMasks] =
+    useState<SelectedExclusionMaskByGeneratedIndex>({});
   const [backgroundRemovalByImageId, setBackgroundRemovalByImageId] =
     useState<BackgroundRemovalByImageId>({});
   const [editorMode, setEditorMode] = useState<EditorMode>("arrange");
+  const [exclusionTool, setExclusionTool] = useState<ExclusionTool>("paint");
+  const [exclusionBrushSize, setExclusionBrushSize] = useState(
+    defaultExclusionBrushSize,
+  );
   const [activePixelZoom, setActivePixelZoom] = useState<ActivePixelZoom | null>(
     null,
   );
@@ -1894,6 +2191,7 @@ export default function TilesetBatchPicker(): JSX.Element {
   const latestAdjustmentPointerRef = useRef<{ x: number; y: number } | null>(
     null,
   );
+  const activeExclusionPaintRef = useRef<ActiveExclusionPaint | null>(null);
   const sessionSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const [previewViewportWidth, setPreviewViewportWidth] = useState(0);
   const [activeDraggedGeneratedIndex, setActiveDraggedGeneratedIndex] =
@@ -2034,6 +2332,7 @@ export default function TilesetBatchPicker(): JSX.Element {
       setSelectedImages({});
       setSelectedOffsets({});
       setSelectedCropInsets({});
+      setSelectedExclusionMasks({});
       setBackgroundRemovalByImageId({});
       setModeSwitchAnchorImageId(null);
       visibleSheetImageIdRef.current = null;
@@ -2121,6 +2420,9 @@ export default function TilesetBatchPicker(): JSX.Element {
           );
           setSelectedCropInsets(
             persisted.selectedCropInsets as SelectedCropInsetsByGeneratedIndex,
+          );
+          setSelectedExclusionMasks(
+            persisted.selectedExclusionMasks as SelectedExclusionMaskByGeneratedIndex,
           );
           setBackgroundRemovalByImageId(
             Object.fromEntries(
@@ -2293,6 +2595,8 @@ export default function TilesetBatchPicker(): JSX.Element {
       selectedImages: selectedImages as Record<string, string>,
       selectedOffsets: toPersistedSelectedOffsets(selectedOffsets),
       selectedCropInsets: toPersistedSelectedCropInsets(selectedCropInsets),
+      selectedExclusionMasks:
+        toPersistedSelectedExclusionMasks(selectedExclusionMasks),
       backgroundRemovalByImageId: toPersistedBackgroundRemovalByImageId(
         backgroundRemovalByImageId,
       ),
@@ -2313,6 +2617,7 @@ export default function TilesetBatchPicker(): JSX.Element {
     mapLabel,
     activeDraggedGeneratedIndex,
     selectedCropInsets,
+    selectedExclusionMasks,
     selectedImages,
     selectedOffsets,
   ]);
@@ -2337,6 +2642,7 @@ export default function TilesetBatchPicker(): JSX.Element {
       .length;
   }, [compileMap, selectedImages]);
   const previewZoomMode: PreviewZoomMode = previewZoomModes[previewZoomIndex];
+  const useNearestPreviewFiltering = previewZoomMode === "full";
   const finalAtlasPixelWidth = compileMap
     ? compileMap.finalAtlas.columns * compileMap.finalAtlas.tileSize
     : 0;
@@ -2431,6 +2737,7 @@ export default function TilesetBatchPicker(): JSX.Element {
         selectedImages,
         selectedOffsets,
         selectedCropInsets,
+        selectedExclusionMasks,
         batchImages,
         tileSize: previewRenderTileSize,
       });
@@ -2443,6 +2750,7 @@ export default function TilesetBatchPicker(): JSX.Element {
     compileMap,
     previewRenderTileSize,
     selectedCropInsets,
+    selectedExclusionMasks,
     selectedImages,
     selectedOffsets,
   ]);
@@ -2549,6 +2857,8 @@ export default function TilesetBatchPicker(): JSX.Element {
         selectedImages: selectedImages as Record<string, string>,
         selectedOffsets: toPersistedSelectedOffsets(selectedOffsets),
         selectedCropInsets: toPersistedSelectedCropInsets(selectedCropInsets),
+        selectedExclusionMasks:
+          toPersistedSelectedExclusionMasks(selectedExclusionMasks),
         backgroundRemovalByImageId: toPersistedBackgroundRemovalByImageId(
           backgroundRemovalByImageId,
         ),
@@ -2584,6 +2894,7 @@ export default function TilesetBatchPicker(): JSX.Element {
     compileMap,
     mapLabel,
     selectedCropInsets,
+    selectedExclusionMasks,
     selectedImages,
     selectedOffsets,
   ]);
@@ -2692,6 +3003,9 @@ export default function TilesetBatchPicker(): JSX.Element {
             ([imageId]) => importedImageIds.has(imageId),
           ),
         ) as BackgroundRemovalByImageId;
+        const nextSelectedExclusionMasks =
+          (manifest.session.selectedExclusionMasks ??
+            {}) as SelectedExclusionMaskByGeneratedIndex;
         const nextSession: Omit<PersistedTilesetBatchPickerSession, "updatedAt"> =
           {
             compileMap: manifest.session.compileMap,
@@ -2701,6 +3015,7 @@ export default function TilesetBatchPicker(): JSX.Element {
               .selectedOffsets as SelectedOffsetByGeneratedIndex,
             selectedCropInsets: manifest.session
               .selectedCropInsets as SelectedCropInsetsByGeneratedIndex,
+            selectedExclusionMasks: nextSelectedExclusionMasks,
             backgroundRemovalByImageId: nextBackgroundRemovalByImageId,
             batchImages: importedSessionImages,
           };
@@ -2729,6 +3044,7 @@ export default function TilesetBatchPicker(): JSX.Element {
         setSelectedCropInsets(
           manifest.session.selectedCropInsets as SelectedCropInsetsByGeneratedIndex,
         );
+        setSelectedExclusionMasks(nextSelectedExclusionMasks);
         setBackgroundRemovalByImageId(nextBackgroundRemovalByImageId);
         setModeSwitchAnchorImageId(null);
         visibleSheetImageIdRef.current = null;
@@ -2824,6 +3140,32 @@ export default function TilesetBatchPicker(): JSX.Element {
     });
   }, [selectedImages]);
 
+  const clearImageExclusionMasks = useCallback((imageId: string) => {
+    const selectedGeneratedIndexes = new Set<number>();
+    for (const [generatedIndex, selectedImageId] of Object.entries(
+      selectedImages,
+    )) {
+      if (selectedImageId === imageId) {
+        selectedGeneratedIndexes.add(Number(generatedIndex));
+      }
+    }
+    if (selectedGeneratedIndexes.size <= 0) {
+      return;
+    }
+
+    setSelectedExclusionMasks((current) => {
+      let didChange = false;
+      const nextMasks = { ...current };
+      for (const generatedIndex of selectedGeneratedIndexes) {
+        if (generatedIndex in nextMasks) {
+          delete nextMasks[generatedIndex];
+          didChange = true;
+        }
+      }
+      return didChange ? nextMasks : current;
+    });
+  }, [selectedImages]);
+
   const handleMapFiles = useCallback(
     async (files: FileList | File[]) => {
       const mapFile = Array.from(files).find((file) =>
@@ -2865,6 +3207,198 @@ export default function TilesetBatchPicker(): JSX.Element {
     },
     [compileMap],
   );
+
+  const updateExclusionBrushPreview = useCallback(
+    (
+      element: HTMLElement,
+      clientX: number,
+      clientY: number,
+      maskWidth: number,
+      maskHeight: number,
+    ): void => {
+      const previewElement = element.querySelector<HTMLElement>(
+        ".tileset-batch-picker__exclusion-brush-preview",
+      );
+      if (!previewElement) {
+        return;
+      }
+      const bounds = element.getBoundingClientRect();
+      if (bounds.width <= 0 || bounds.height <= 0) {
+        previewElement.style.opacity = "0";
+        return;
+      }
+      const localX = clientX - bounds.left;
+      const localY = clientY - bounds.top;
+      if (
+        localX < 0 ||
+        localY < 0 ||
+        localX > bounds.width ||
+        localY > bounds.height
+      ) {
+        previewElement.style.opacity = "0";
+        return;
+      }
+      previewElement.style.left = `${(localX / bounds.width) * 100}%`;
+      previewElement.style.top = `${(localY / bounds.height) * 100}%`;
+      previewElement.style.width = `${
+        (exclusionBrushSize / Math.max(1, maskWidth)) * 100
+      }%`;
+      previewElement.style.height = `${
+        (exclusionBrushSize / Math.max(1, maskHeight)) * 100
+      }%`;
+      previewElement.style.opacity = "1";
+    },
+    [exclusionBrushSize],
+  );
+
+  const hideExclusionBrushPreview = useCallback((element: HTMLElement): void => {
+    const previewElement = element.querySelector<HTMLElement>(
+      ".tileset-batch-picker__exclusion-brush-preview",
+    );
+    if (previewElement) {
+      previewElement.style.opacity = "0";
+    }
+  }, []);
+
+  const paintExclusionDraftAt = useCallback(
+    (
+      activePaint: ActiveExclusionPaint,
+      clientX: number,
+      clientY: number,
+    ): void => {
+      const bounds = activePaint.element.getBoundingClientRect();
+      if (bounds.width <= 0 || bounds.height <= 0) {
+        return;
+      }
+      updateExclusionBrushPreview(
+        activePaint.element,
+        clientX,
+        clientY,
+        activePaint.maskWidth,
+        activePaint.maskHeight,
+      );
+      const changed = applyExclusionBrushToBytes({
+        bytes: activePaint.bytes,
+        width: activePaint.maskWidth,
+        height: activePaint.maskHeight,
+        x: ((clientX - bounds.left) / bounds.width) * activePaint.maskWidth,
+        y: ((clientY - bounds.top) / bounds.height) * activePaint.maskHeight,
+        brushSize: exclusionBrushSize,
+        tool: exclusionTool,
+      });
+      if (!changed) {
+        return;
+      }
+      activePaint.changed = true;
+      drawExclusionMaskPreview(
+        activePaint.canvas,
+        activePaint.maskWidth,
+        activePaint.maskHeight,
+        activePaint.bytes,
+      );
+    },
+    [exclusionBrushSize, exclusionTool, updateExclusionBrushPreview],
+  );
+
+  const beginExclusionPaint = useCallback(
+    (
+      event: React.PointerEvent<HTMLElement>,
+      generatedIndex: number,
+      imageId: string,
+      maskWidth: number,
+      maskHeight: number,
+    ) => {
+      if (selectedImages[generatedIndex] !== imageId) {
+        return;
+      }
+      const normalizedMaskWidth = Math.max(1, Math.round(maskWidth));
+      const normalizedMaskHeight = Math.max(1, Math.round(maskHeight));
+      const canvas = event.currentTarget.querySelector<HTMLCanvasElement>(
+        ".tileset-batch-picker__exclusion-mask-preview",
+      );
+      if (!canvas) {
+        return;
+      }
+      const existingMask = selectedExclusionMasks[generatedIndex];
+      const bytes =
+        existingMask?.width === normalizedMaskWidth &&
+        existingMask.height === normalizedMaskHeight
+          ? decodeExclusionMaskData(existingMask)
+          : new Uint8Array(
+              getExclusionMaskByteLength(
+                normalizedMaskWidth,
+                normalizedMaskHeight,
+              ),
+            );
+      const activePaint: ActiveExclusionPaint = {
+        generatedIndex,
+        element: event.currentTarget,
+        canvas,
+        bytes,
+        originalBytes: new Uint8Array(bytes),
+        maskWidth: normalizedMaskWidth,
+        maskHeight: normalizedMaskHeight,
+        changed: false,
+      };
+      activeExclusionPaintRef.current = activePaint;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      paintExclusionDraftAt(activePaint, event.clientX, event.clientY);
+      event.preventDefault();
+    },
+    [paintExclusionDraftAt, selectedExclusionMasks, selectedImages],
+  );
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent): void => {
+      const activePaint = activeExclusionPaintRef.current;
+      if (!activePaint) {
+        return;
+      }
+      paintExclusionDraftAt(activePaint, event.clientX, event.clientY);
+      event.preventDefault();
+    };
+    const endPaint = (shouldCommit: boolean): void => {
+      const activePaint = activeExclusionPaintRef.current;
+      if (!activePaint) {
+        return;
+      }
+      if (shouldCommit && activePaint.changed) {
+        setSelectedExclusionMasks((current) => {
+          const nextMasks = { ...current };
+          if (isExclusionMaskEmpty(activePaint.bytes)) {
+            delete nextMasks[activePaint.generatedIndex];
+          } else {
+            nextMasks[activePaint.generatedIndex] = {
+              width: activePaint.maskWidth,
+              height: activePaint.maskHeight,
+              data: encodeExclusionMaskData(activePaint.bytes),
+            };
+          }
+          return nextMasks;
+        });
+      } else if (!shouldCommit) {
+        drawExclusionMaskPreview(
+          activePaint.canvas,
+          activePaint.maskWidth,
+          activePaint.maskHeight,
+          activePaint.originalBytes,
+        );
+      }
+      hideExclusionBrushPreview(activePaint.element);
+      activeExclusionPaintRef.current = null;
+    };
+    const handlePointerUp = (): void => endPaint(true);
+    const handlePointerCancel = (): void => endPaint(false);
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerCancel);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerCancel);
+    };
+  }, [hideExclusionBrushPreview, paintExclusionDraftAt]);
 
   const beginAdjustmentDrag = useCallback(
     (
@@ -3513,6 +4047,7 @@ export default function TilesetBatchPicker(): JSX.Element {
           selectedImages,
           selectedOffsets,
           selectedCropInsets,
+          selectedExclusionMasks,
           batchImages,
           tileSize: compileMap.finalAtlas.tileSize,
         });
@@ -3537,6 +4072,7 @@ export default function TilesetBatchPicker(): JSX.Element {
     batchImages,
     compileMap,
     selectedCropInsets,
+    selectedExclusionMasks,
     selectedImages,
     selectedOffsets,
   ]);
@@ -3565,6 +4101,11 @@ export default function TilesetBatchPicker(): JSX.Element {
           selectedCropInsets[Number(generatedIndex)] !== undefined
         );
       },
+    );
+    const hasExclusionMasks = Object.entries(selectedImages).some(
+      ([generatedIndex, selectedImageId]) =>
+        selectedImageId === uploadedImage.id &&
+        selectedExclusionMasks[Number(generatedIndex)] !== undefined,
     );
     const isZoomingThisSheet = activePixelZoom?.imageId === uploadedImage.id;
     const backgroundRemovalWidth =
@@ -3602,6 +4143,7 @@ export default function TilesetBatchPicker(): JSX.Element {
       const isSelectedElsewhere = !!selectedImageId && !isSelected;
       const selectedOffset = selectedOffsets[generatedIndex] ?? { x: 0, y: 0 };
       const selectedCrop = selectedCropInsets[generatedIndex] ?? getDefaultCropInsets();
+      const selectedExclusionMask = selectedExclusionMasks[generatedIndex];
       const hasOffset = selectedOffset.x !== 0 || selectedOffset.y !== 0;
       const hasCropInsets =
         selectedCrop.left !== 0 ||
@@ -3616,8 +4158,16 @@ export default function TilesetBatchPicker(): JSX.Element {
           className={[
             "tileset-batch-picker__cell",
             isSelected ? "tileset-batch-picker__cell--selected" : "",
-            isSelected ? "tileset-batch-picker__cell--draggable" : "",
+            isSelected && editorMode === "arrange"
+              ? "tileset-batch-picker__cell--draggable"
+              : "",
+            isSelected && editorMode === "exclude"
+              ? "tileset-batch-picker__cell--paintable"
+              : "",
             hasOffset || hasCropInsets ? "tileset-batch-picker__cell--offset" : "",
+            selectedExclusionMask
+              ? "tileset-batch-picker__cell--excluded"
+              : "",
             isDraggingOffset ? "tileset-batch-picker__cell--dragging" : "",
             isSelectedElsewhere
               ? "tileset-batch-picker__cell--selected-elsewhere"
@@ -3629,16 +4179,46 @@ export default function TilesetBatchPicker(): JSX.Element {
           disabled={!isAvailable}
           key={tileIndex}
           onClick={() => selectTile(sheetIndex, tileIndex, uploadedImage.id)}
-          onPointerDown={(event) =>
-            beginAdjustmentDrag(
-              event,
-              generatedIndex,
-              uploadedImage.id,
-              "offset",
-              sourceTileWidth,
-              sourceTileHeight,
-            )
-          }
+          onPointerDown={(event) => {
+            if (editorMode === "arrange") {
+              beginAdjustmentDrag(
+                event,
+                generatedIndex,
+                uploadedImage.id,
+                "offset",
+                sourceTileWidth,
+                sourceTileHeight,
+              );
+            } else if (editorMode === "exclude") {
+              beginExclusionPaint(
+                event,
+                generatedIndex,
+                uploadedImage.id,
+                sourceTileWidth,
+                sourceTileHeight,
+              );
+            }
+          }}
+          onPointerLeave={(event) => {
+            if (editorMode === "exclude" && !activeExclusionPaintRef.current) {
+              hideExclusionBrushPreview(event.currentTarget);
+            }
+          }}
+          onPointerMove={(event) => {
+            if (
+              editorMode === "exclude" &&
+              isSelected &&
+              !activeExclusionPaintRef.current
+            ) {
+              updateExclusionBrushPreview(
+                event.currentTarget,
+                event.clientX,
+                event.clientY,
+                sourceTileWidth,
+                sourceTileHeight,
+              );
+            }
+          }}
           style={{
             left: `${(tileIndex % compileMap.promptSheets.columns) * (100 / compileMap.promptSheets.columns)}%`,
             top: `${Math.floor(tileIndex / compileMap.promptSheets.columns) * (100 / compileMap.promptSheets.rows)}%`,
@@ -3647,12 +4227,14 @@ export default function TilesetBatchPicker(): JSX.Element {
           }}
           title={
             isSelected
-              ? `${subject} | drag to nudge crop`
+              ? editorMode === "exclude"
+                ? `${subject} | ${exclusionTool === "paint" ? "paint to exclude" : "erase excluded pixels"}`
+                : `${subject} | drag to nudge crop`
               : subject
           }
           type="button"
         >
-          {isSelected ? (
+          {isSelected && editorMode === "arrange" ? (
             <span className="tileset-batch-picker__cell-offset-frame">
               <span
                 className="tileset-batch-picker__cell-offset-body"
@@ -3722,6 +4304,18 @@ export default function TilesetBatchPicker(): JSX.Element {
               </span>
             </span>
           ) : null}
+          {selectedExclusionMask || (isSelected && editorMode === "exclude") ? (
+            <span className="tileset-batch-picker__exclusion-mask-frame">
+              <ExclusionMaskPreview
+                height={sourceTileHeight}
+                mask={selectedExclusionMask}
+                width={sourceTileWidth}
+              />
+            </span>
+          ) : null}
+          {isSelected && editorMode === "exclude" ? (
+            <span className="tileset-batch-picker__exclusion-brush-preview" />
+          ) : null}
         </button>
       );
     });
@@ -3745,6 +4339,16 @@ export default function TilesetBatchPicker(): JSX.Element {
                 type="button"
               >
                 Reset positions
+              </button>
+            ) : null}
+            {editorMode === "exclude" ? (
+              <button
+                className="tileset-batch-picker__small-button"
+                disabled={!hasExclusionMasks}
+                onClick={() => clearImageExclusionMasks(uploadedImage.id)}
+                type="button"
+              >
+                Clear masks
               </button>
             ) : null}
             <button
@@ -4266,7 +4870,81 @@ export default function TilesetBatchPicker(): JSX.Element {
                     >
                       Remove BG
                     </button>
+                    <button
+                      className={[
+                        "tileset-batch-picker__editor-toggle-button",
+                        editorMode === "exclude"
+                          ? "tileset-batch-picker__editor-toggle-button--active"
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => {
+                        const anchorImageId =
+                          updateVisibleSheetAnchor() ??
+                          visibleSheetImageIdRef.current;
+                        setModeSwitchAnchorImageId(anchorImageId);
+                        setEditorMode("exclude");
+                      }}
+                      type="button"
+                    >
+                      Exclude
+                    </button>
                   </div>
+                  {editorMode === "exclude" ? (
+                    <>
+                      <div className="tileset-batch-picker__removal-mode-toggle tileset-batch-picker__exclude-tool-toggle">
+                        <button
+                          className={[
+                            "tileset-batch-picker__removal-mode-button",
+                            exclusionTool === "paint"
+                              ? "tileset-batch-picker__removal-mode-button--active"
+                              : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          onClick={() => setExclusionTool("paint")}
+                          type="button"
+                        >
+                          Paint
+                        </button>
+                        <button
+                          className={[
+                            "tileset-batch-picker__removal-mode-button",
+                            exclusionTool === "erase"
+                              ? "tileset-batch-picker__removal-mode-button--active"
+                              : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          onClick={() => setExclusionTool("erase")}
+                          type="button"
+                        >
+                          Erase
+                        </button>
+                      </div>
+                      <label className="tileset-batch-picker__exclude-brush">
+                        <span>Brush {exclusionBrushSize}px</span>
+                        <input
+                          max={maxExclusionBrushSize}
+                          min={minExclusionBrushSize}
+                          onChange={(event) => {
+                            setExclusionBrushSize(
+                              Math.max(
+                                minExclusionBrushSize,
+                                Math.min(
+                                  maxExclusionBrushSize,
+                                  Math.round(Number(event.target.value)),
+                                ),
+                              ),
+                            );
+                          }}
+                          type="range"
+                          value={exclusionBrushSize}
+                        />
+                      </label>
+                    </>
+                  ) : null}
                   <button
                     className="tileset-batch-picker__small-button"
                     onClick={() => {
@@ -4280,6 +4958,7 @@ export default function TilesetBatchPicker(): JSX.Element {
                   </button>
                   <button
                     className="tileset-batch-picker__small-button"
+                    disabled={editorMode !== "background-remove"}
                     onClick={() => {
                       setShowBackgroundRemovalPoints((current) => !current);
                     }}
@@ -4291,7 +4970,9 @@ export default function TilesetBatchPicker(): JSX.Element {
                 <p className="tileset-batch-picker__editor-hint">
                   {editorMode === "arrange"
                     ? "Click a tile to assign it, then drag the selected frame to nudge or crop it."
-                    : "Click any background area to flood-remove that contiguous color region for just this sheet."}
+                    : editorMode === "background-remove"
+                      ? "Click any background area to flood-remove that contiguous color region for just this sheet."
+                      : "Select a tile, then paint on it to exclude pixels from the compiled tile or erase to restore them."}
                 </p>
               </div>
             ) : null}
@@ -4413,7 +5094,17 @@ export default function TilesetBatchPicker(): JSX.Element {
               {exportStatus}
             </div>
           ) : null}
-          <div className="tileset-batch-picker__preview" ref={previewViewportRef}>
+          <div
+            className={[
+              "tileset-batch-picker__preview",
+              showTransparencyPreview
+                ? "tileset-batch-picker__preview--transparency"
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            ref={previewViewportRef}
+          >
             <div
               className={[
                 "tileset-batch-picker__preview-stage",
@@ -4429,6 +5120,11 @@ export default function TilesetBatchPicker(): JSX.Element {
                 style={previewCanvasStyle}
               >
                 <canvas
+                  className={
+                    useNearestPreviewFiltering
+                      ? "tileset-batch-picker__preview-canvas--nearest"
+                      : undefined
+                  }
                   ref={previewCanvasRef}
                   style={{
                     width: "100%",

@@ -26,6 +26,7 @@ export type PersistedTilesetBatchPickerSession = {
   selectedImages: Record<string, string>;
   selectedOffsets: Record<string, PersistedTilesetBatchPickerOffset>;
   selectedCropInsets: Record<string, PersistedTilesetBatchPickerCropInsets>;
+  selectedExclusionMasks: Record<string, PersistedTilesetBatchPickerExclusionMask>;
   backgroundRemovalByImageId: Record<
     string,
     PersistedTilesetBatchPickerBackgroundRemovalSettings
@@ -44,6 +45,12 @@ export type PersistedTilesetBatchPickerCropInsets = {
   right: number;
   top: number;
   bottom: number;
+};
+
+export type PersistedTilesetBatchPickerExclusionMask = {
+  width: number;
+  height: number;
+  data: string;
 };
 
 export type PersistedTilesetBatchPickerRemovalSeed = {
@@ -219,6 +226,46 @@ function normalizeSelectedCropInsets(
       continue;
     }
     normalized[normalizedKey] = { left, right, top, bottom };
+  }
+  return normalized;
+}
+
+function normalizeExclusionMaskDimension(value: unknown): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(1, Math.min(4096, Math.trunc(Number(value))));
+}
+
+function normalizeExclusionMaskData(value: unknown): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+  return value.replace(/[^A-Za-z0-9+/=]/g, "");
+}
+
+function normalizeSelectedExclusionMasks(
+  rawValue: unknown,
+): Record<string, PersistedTilesetBatchPickerExclusionMask> {
+  if (!isPlainObject(rawValue)) {
+    return {};
+  }
+  const normalized: Record<string, PersistedTilesetBatchPickerExclusionMask> = {};
+  for (const [generatedIndex, mask] of Object.entries(rawValue)) {
+    if (!isPlainObject(mask)) {
+      continue;
+    }
+    const normalizedKey = String(generatedIndex).trim();
+    if (!normalizedKey) {
+      continue;
+    }
+    const width = normalizeExclusionMaskDimension(mask.width);
+    const height = normalizeExclusionMaskDimension(mask.height);
+    const data = normalizeExclusionMaskData(mask.data);
+    if (width <= 0 || height <= 0 || !data) {
+      continue;
+    }
+    normalized[normalizedKey] = { width, height, data };
   }
   return normalized;
 }
@@ -452,6 +499,9 @@ function normalizeSession(
     selectedImages: normalizeSelectedImages(rawValue.selectedImages),
     selectedOffsets: normalizeSelectedOffsets(rawValue.selectedOffsets),
     selectedCropInsets: normalizeSelectedCropInsets(rawValue.selectedCropInsets),
+    selectedExclusionMasks: normalizeSelectedExclusionMasks(
+      rawValue.selectedExclusionMasks,
+    ),
     backgroundRemovalByImageId: normalizeBackgroundRemovalByImageId(
       rawValue.backgroundRemovalByImageId,
     ),
@@ -506,6 +556,9 @@ export async function savePersistedTilesetBatchPickerSession(
       selectedImages: normalizeSelectedImages(session.selectedImages),
       selectedOffsets: normalizeSelectedOffsets(session.selectedOffsets),
       selectedCropInsets: normalizeSelectedCropInsets(session.selectedCropInsets),
+      selectedExclusionMasks: normalizeSelectedExclusionMasks(
+        session.selectedExclusionMasks,
+      ),
       backgroundRemovalByImageId: normalizeBackgroundRemovalByImageId(
         session.backgroundRemovalByImageId,
       ),
