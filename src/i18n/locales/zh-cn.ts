@@ -1099,6 +1099,8 @@ export const zhCnOverrides = {
         commonCommands: "常用命令",
         allCommands: "全部命令",
         actions: "操作",
+        hotbar: "快捷栏",
+        addAction: "添加操作",
         menu: "菜单",
         close: "关闭",
         wizardCommands: "巫师命令",

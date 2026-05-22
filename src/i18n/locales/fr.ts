@@ -1421,6 +1421,8 @@ export const fr = {
         commonCommands: "Commandes courantes",
         allCommands: "Toutes les commandes",
         actions: "Actions rapides",
+        hotbar: "Barre rapide",
+        addAction: "Ajouter action",
         menu: "Menu principal",
         close: "Fermer",
         wizardCommands: "Commandes assistant",

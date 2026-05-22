@@ -1378,6 +1378,8 @@ export const ko = {
         commonCommands: "자주 쓰는 명령",
         allCommands: "모든 명령",
         actions: "동작",
+        hotbar: "핫바",
+        addAction: "동작 추가",
         menu: "메뉴",
         close: "닫기",
         wizardCommands: "위저드 명령",

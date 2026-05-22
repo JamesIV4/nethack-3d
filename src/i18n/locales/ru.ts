@@ -1385,6 +1385,8 @@ export const ru = {
         commonCommands: "Частые команды",
         allCommands: "Все команды",
         actions: "Действия",
+        hotbar: "Хотбар",
+        addAction: "Добавить действие",
         menu: "Меню",
         close: "Закрыть",
         wizardCommands: "Команды wizard",

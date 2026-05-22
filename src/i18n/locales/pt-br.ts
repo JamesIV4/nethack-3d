@@ -1420,6 +1420,8 @@ export const ptBrOverrides = {
         commonCommands: "Comandos comuns",
         allCommands: "Todos os comandos",
         actions: "Ações",
+        hotbar: "Barra rápida",
+        addAction: "Adicionar ação",
         menu: "Menu geral",
         close: "Fechar",
         wizardCommands: "Comandos de assistente",

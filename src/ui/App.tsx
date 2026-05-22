@@ -2822,7 +2822,8 @@ type WizardCommandCopy = {
   name: string;
   description: string;
 };
-type MobileActionSheetMode = "quick" | "extended";
+type MobileActionSheetMode = "quick" | "extended" | "hotbar" | "hotbar-add";
+type ControllerActionWheelMode = "quick" | "extended";
 type InventoryContextAction = {
   id: string;
   label: string;
@@ -5442,6 +5443,74 @@ const commonExtendedCommandWhitelist = [
   "travel",
 ];
 
+const mobileHotbarStorageKey = "nh3d-mobile-hotbar-v1";
+
+function areStringArraysEqual(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function normalizeMobileHotbarCommands(raw: unknown): string[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+  for (const rawCommand of raw) {
+    const command = String(rawCommand || "")
+      .trim()
+      .toLowerCase();
+    if (!command || command === "#" || command === "?") {
+      continue;
+    }
+    if (seen.has(command)) {
+      continue;
+    }
+    seen.add(command);
+    normalized.push(command);
+  }
+  return normalized;
+}
+
+function readMobileHotbarCommandsFromStorage(): string[] {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return [];
+  }
+  try {
+    const raw = window.localStorage.getItem(mobileHotbarStorageKey);
+    if (!raw) {
+      return [];
+    }
+    return normalizeMobileHotbarCommands(JSON.parse(raw));
+  } catch {
+    return [];
+  }
+}
+
+function writeMobileHotbarCommandsToStorage(commands: readonly string[]): void {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return;
+  }
+  try {
+    window.localStorage.setItem(
+      mobileHotbarStorageKey,
+      JSON.stringify(normalizeMobileHotbarCommands(commands)),
+    );
+  } catch (error) {
+    console.warn("Failed to persist mobile hotbar commands:", error);
+  }
+}
+
 const wizardExtendedCommandNameSet = new Set([
   "levelchange",
   "lightsources",
@@ -6672,10 +6741,14 @@ export default function App(): JSX.Element {
     useState(false);
   const [mobileActionSheetMode, setMobileActionSheetMode] =
     useState<MobileActionSheetMode>("quick");
+  const [mobileHotbarCommands, setMobileHotbarCommands] = useState<string[]>(
+    () => readMobileHotbarCommandsFromStorage(),
+  );
+  const [mobileHotbarEditMode, setMobileHotbarEditMode] = useState(false);
   const [isControllerActionWheelVisible, setIsControllerActionWheelVisible] =
     useState(false);
   const [controllerActionWheelMode, setControllerActionWheelMode] =
-    useState<MobileActionSheetMode>("quick");
+    useState<ControllerActionWheelMode>("quick");
   const [
     controllerActionWheelChosenIndex,
     setControllerActionWheelChosenIndex,
@@ -10472,6 +10545,31 @@ export default function App(): JSX.Element {
       available.has(command),
     );
   }, [mobileExtendedCommandNames]);
+  const availableMobileHotbarCommands = useMemo(() => {
+    const available = new Set(mobileExtendedCommandNames);
+    return mobileHotbarCommands.filter((command) => available.has(command));
+  }, [mobileExtendedCommandNames, mobileHotbarCommands]);
+  useEffect(() => {
+    if (areStringArraysEqual(mobileHotbarCommands, availableMobileHotbarCommands)) {
+      return;
+    }
+    setMobileHotbarCommands(availableMobileHotbarCommands);
+  }, [availableMobileHotbarCommands, mobileHotbarCommands]);
+  useEffect(() => {
+    writeMobileHotbarCommandsToStorage(mobileHotbarCommands);
+  }, [mobileHotbarCommands]);
+  useEffect(() => {
+    if (
+      mobileHotbarEditMode &&
+      (!isMobileActionSheetVisible || mobileActionSheetMode !== "hotbar")
+    ) {
+      setMobileHotbarEditMode(false);
+    }
+  }, [
+    isMobileActionSheetVisible,
+    mobileActionSheetMode,
+    mobileHotbarEditMode,
+  ]);
   const isWizardModeSession = useMemo(() => {
     if (!characterCreationConfig) {
       return false;
@@ -10524,6 +10622,11 @@ export default function App(): JSX.Element {
   const closeWizardCommands = useCallback((): void => {
     setIsWizardCommandsVisible(false);
   }, []);
+  const closeMobileActionSheet = useCallback((): void => {
+    setIsMobileActionSheetVisible(false);
+    setMobileActionSheetMode("quick");
+    setMobileHotbarEditMode(false);
+  }, []);
   const openPauseMenu = useCallback((): void => {
     if (!isMobileGameRunning && !isDesktopGameRunning) {
       return;
@@ -10531,12 +10634,12 @@ export default function App(): JSX.Element {
     controller?.dismissFpsCrosshairContextMenu();
     closeControllerActionWheel();
     closeWizardCommands();
-    setIsMobileActionSheetVisible(false);
-    setMobileActionSheetMode("quick");
+    closeMobileActionSheet();
     setIsMobileLogVisible(false);
     setIsExitConfirmationVisible(false);
     setIsPauseMenuVisible(true);
   }, [
+    closeMobileActionSheet,
     closeControllerActionWheel,
     closeWizardCommands,
     controller,
@@ -10590,6 +10693,43 @@ export default function App(): JSX.Element {
       closeControllerActionWheel();
     },
     [closeControllerActionWheel, controller],
+  );
+  const addMobileHotbarCommand = useCallback((command: string): void => {
+    const normalized = String(command || "")
+      .trim()
+      .toLowerCase();
+    if (!normalized) {
+      return;
+    }
+    setMobileHotbarCommands((previous) =>
+      previous.includes(normalized) ? previous : [...previous, normalized],
+    );
+    setMobileActionSheetMode("hotbar");
+    setMobileHotbarEditMode(false);
+  }, []);
+  const removeMobileHotbarCommand = useCallback((command: string): void => {
+    setMobileHotbarCommands((previous) =>
+      previous.filter((candidate) => candidate !== command),
+    );
+  }, []);
+  const moveMobileHotbarCommand = useCallback(
+    (command: string, direction: -1 | 1): void => {
+      setMobileHotbarCommands((previous) => {
+        const index = previous.indexOf(command);
+        if (index < 0) {
+          return previous;
+        }
+        const targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= previous.length) {
+          return previous;
+        }
+        const next = [...previous];
+        const [moved] = next.splice(index, 1);
+        next.splice(targetIndex, 0, moved);
+        return next;
+      });
+    },
+    [],
   );
   const openCharacterDialog = useCallback((): void => {
     setCharacterSheetInterceptionArmed(true);
@@ -19823,14 +19963,27 @@ export default function App(): JSX.Element {
 
       {mobileTouchUiVisible && isMobileActionSheetVisible ? (
         <div className="nh3d-mobile-actions-sheet">
+          {(() => {
+            const isQuickMode = mobileActionSheetMode === "quick";
+            const isExtendedMode = mobileActionSheetMode === "extended";
+            const isHotbarMode = mobileActionSheetMode === "hotbar";
+            const isHotbarAddMode = mobileActionSheetMode === "hotbar-add";
+            const actionSheetTitle = isQuickMode
+              ? t.dialogs.mobileActions.actions
+              : isExtendedMode
+                ? t.dialogs.mobileActions.extendedCommands
+                : isHotbarMode
+                  ? t.dialogs.mobileActions.hotbar
+                  : t.dialogs.mobileActions.addAction;
+
+            return (
+              <Fragment>
           <div className="nh3d-mobile-actions-title-row">
             <div className="nh3d-mobile-actions-title">
-              {mobileActionSheetMode === "quick"
-                ? t.dialogs.mobileActions.actions
-                : t.dialogs.mobileActions.extendedCommands}
+              {actionSheetTitle}
             </div>
             <div className="nh3d-mobile-actions-controls">
-              {mobileActionSheetMode === "extended" ? (
+              {isExtendedMode ? (
                 <button
                   className="nh3d-mobile-actions-back"
                   onClick={() => setMobileActionSheetMode("quick")}
@@ -19838,31 +19991,66 @@ export default function App(): JSX.Element {
                 >
                   {commonStrings.back}
                 </button>
+              ) : isHotbarAddMode ? (
+                <button
+                  className="nh3d-mobile-actions-back"
+                  onClick={() => setMobileActionSheetMode("hotbar")}
+                  type="button"
+                >
+                  {commonStrings.back}
+                </button>
               ) : null}
 
-              <div className="nh3d-mobile-actions-divider" />
+              {isQuickMode ? (
+                <Fragment>
+                  <div className="nh3d-mobile-actions-divider" />
 
-              <button
-                className="nh3d-mobile-actions-back"
-                onClick={openPauseMenu}
-                type="button"
-              >
-                {t.dialogs.mobileActions.menu}
-              </button>
+                  <button
+                    className="nh3d-mobile-actions-back"
+                    onClick={openPauseMenu}
+                    type="button"
+                  >
+                    {t.dialogs.mobileActions.menu}
+                  </button>
+                </Fragment>
+              ) : null}
+
+              {isHotbarMode ? (
+                <button
+                  className="nh3d-mobile-actions-back"
+                  onClick={() => {
+                    setMobileActionSheetMode("hotbar-add");
+                    setMobileHotbarEditMode(false);
+                  }}
+                  type="button"
+                >
+                  {t.dialogs.mobileActions.addAction}
+                </button>
+              ) : null}
+
+              {isHotbarMode ? (
+                <button
+                  className="nh3d-mobile-actions-back"
+                  disabled={availableMobileHotbarCommands.length === 0}
+                  onClick={() =>
+                    setMobileHotbarEditMode((current) => !current)
+                  }
+                  type="button"
+                >
+                  {mobileHotbarEditMode ? commonStrings.done : commonStrings.edit}
+                </button>
+              ) : null}
 
               <button
                 className="nh3d-mobile-actions-close"
-                onClick={() => {
-                  setIsMobileActionSheetVisible(false);
-                  setMobileActionSheetMode("quick");
-                }}
+                onClick={closeMobileActionSheet}
                 type="button"
               >
                 {t.dialogs.mobileActions.close}
               </button>
             </div>
           </div>
-          {mobileActionSheetMode === "quick" ? (
+          {isQuickMode ? (
             <div className="nh3d-overflow-glow-frame">
               <div
                 className="nh3d-mobile-actions-grid is-fixed-layout"
@@ -19884,8 +20072,7 @@ export default function App(): JSX.Element {
                       } else {
                         controller?.runExtendedCommand(action.value);
                       }
-                      setIsMobileActionSheetVisible(false);
-                      setMobileActionSheetMode("quick");
+                      closeMobileActionSheet();
                     }}
                     type="button"
                   >
@@ -19894,7 +20081,7 @@ export default function App(): JSX.Element {
                 ))}
               </div>
             </div>
-          ) : (
+          ) : isExtendedMode ? (
             <div className="nh3d-overflow-glow-frame">
               <div
                 className="nh3d-mobile-actions-sections"
@@ -19914,8 +20101,7 @@ export default function App(): JSX.Element {
                           onClick={() => {
                             controller?.dismissFpsCrosshairContextMenu();
                             controller?.runExtendedCommand(command);
-                            setIsMobileActionSheetVisible(false);
-                            setMobileActionSheetMode("quick");
+                            closeMobileActionSheet();
                           }}
                           type="button"
                         >
@@ -19937,8 +20123,7 @@ export default function App(): JSX.Element {
                         onClick={() => {
                           controller?.dismissFpsCrosshairContextMenu();
                           controller?.runExtendedCommand(command);
-                          setIsMobileActionSheetVisible(false);
-                          setMobileActionSheetMode("quick");
+                          closeMobileActionSheet();
                         }}
                         type="button"
                       >
@@ -19949,7 +20134,124 @@ export default function App(): JSX.Element {
                 </div>
               </div>
             </div>
+          ) : isHotbarAddMode ? (
+            <div className="nh3d-overflow-glow-frame">
+              <div
+                className="nh3d-mobile-actions-sections"
+                data-nh3d-overflow-glow
+                data-nh3d-overflow-glow-host="parent"
+              >
+                {mobileCommonExtendedCommandNames.length > 0 ? (
+                  <div className="nh3d-mobile-actions-section">
+                    <div className="nh3d-mobile-actions-subheader">
+                      {t.dialogs.mobileActions.commonCommands}
+                    </div>
+                    <div className="nh3d-mobile-actions-grid is-extended">
+                      {mobileCommonExtendedCommandNames.map((command) => (
+                        <button
+                          className="nh3d-mobile-actions-button"
+                          key={`hotbar-add-common-${command}`}
+                          onClick={() => addMobileHotbarCommand(command)}
+                          type="button"
+                        >
+                          {command}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="nh3d-mobile-actions-section">
+                  <div className="nh3d-mobile-actions-subheader">
+                    {t.dialogs.mobileActions.allCommands}
+                  </div>
+                  <div className="nh3d-mobile-actions-grid is-extended">
+                    {mobileExtendedCommandNames.map((command) => (
+                      <button
+                        className="nh3d-mobile-actions-button"
+                        key={`hotbar-add-all-${command}`}
+                        onClick={() => addMobileHotbarCommand(command)}
+                        type="button"
+                      >
+                        {command}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="nh3d-overflow-glow-frame">
+              {mobileHotbarEditMode ? (
+                <div
+                  className="nh3d-mobile-actions-sections nh3d-hotbar-edit-list"
+                  data-nh3d-overflow-glow
+                  data-nh3d-overflow-glow-host="parent"
+                >
+                  {availableMobileHotbarCommands.map((command, index) => (
+                    <div className="nh3d-hotbar-edit-row" key={`hotbar-edit-${command}`}>
+                      <button
+                        className="nh3d-mobile-actions-button"
+                        disabled
+                        type="button"
+                      >
+                        {command}
+                      </button>
+                      <button
+                        aria-label={`${commonStrings.back}: ${command}`}
+                        className="nh3d-mobile-actions-back"
+                        disabled={index === 0}
+                        onClick={() => moveMobileHotbarCommand(command, -1)}
+                        type="button"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        aria-label={`${commonStrings.done}: ${command}`}
+                        className="nh3d-mobile-actions-back"
+                        disabled={index >= availableMobileHotbarCommands.length - 1}
+                        onClick={() => moveMobileHotbarCommand(command, 1)}
+                        type="button"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        aria-label={`${commonStrings.delete}: ${command}`}
+                        className="nh3d-mobile-actions-close"
+                        onClick={() => removeMobileHotbarCommand(command)}
+                        type="button"
+                      >
+                        {commonStrings.delete}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="nh3d-mobile-actions-grid is-extended"
+                  data-nh3d-overflow-glow
+                  data-nh3d-overflow-glow-host="parent"
+                >
+                  {availableMobileHotbarCommands.map((command) => (
+                    <button
+                      className="nh3d-mobile-actions-button"
+                      key={`hotbar-${command}`}
+                      onClick={() => {
+                        controller?.dismissFpsCrosshairContextMenu();
+                        controller?.runExtendedCommand(command);
+                        closeMobileActionSheet();
+                      }}
+                      type="button"
+                    >
+                      {command}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
+              </Fragment>
+            );
+          })()}
         </div>
       ) : null}
 
@@ -20106,6 +20408,18 @@ export default function App(): JSX.Element {
 
       {mobileTouchUiVisible ? (
         <div className="nh3d-mobile-bottom-bar">
+          {(() => {
+            const isMobileMenuActionsSheetVisible =
+              isMobileActionSheetVisible &&
+              (mobileActionSheetMode === "quick" ||
+                mobileActionSheetMode === "extended");
+            const isMobileHotbarSheetVisible =
+              isMobileActionSheetVisible &&
+              (mobileActionSheetMode === "hotbar" ||
+                mobileActionSheetMode === "hotbar-add");
+
+            return (
+              <Fragment>
           <button
             className={`nh3d-mobile-bottom-button${
               isCharacterSheetVisible ? " is-active" : ""
@@ -20176,14 +20490,20 @@ export default function App(): JSX.Element {
           <button
             aria-label={`${t.dialogs.mobileActions.menu} / ${t.dialogs.mobileActions.actions}`}
             className={`nh3d-mobile-bottom-button${
-              isMobileActionSheetVisible ? " is-active" : ""
+              isMobileMenuActionsSheetVisible ? " is-active" : ""
             }`}
             onClick={() => {
               controller?.dismissFpsCrosshairContextMenu();
+              if (isMobileHotbarSheetVisible) {
+                setMobileActionSheetMode("quick");
+                setMobileHotbarEditMode(false);
+                return;
+              }
               setIsMobileActionSheetVisible((visible) => {
                 const next = !visible;
                 if (next) {
                   setMobileActionSheetMode("quick");
+                  setMobileHotbarEditMode(false);
                   setIsMobileLogVisible(false);
                   closeWizardCommands();
                 }
@@ -20196,6 +20516,38 @@ export default function App(): JSX.Element {
             <br />
             {t.dialogs.mobileActions.actions}
           </button>
+          <button
+            className={`nh3d-mobile-bottom-button${
+              isMobileHotbarSheetVisible ? " is-active" : ""
+            }`}
+            onClick={() => {
+              controller?.dismissFpsCrosshairContextMenu();
+              if (isMobileMenuActionsSheetVisible) {
+                setMobileActionSheetMode("hotbar");
+                setMobileHotbarEditMode(false);
+                return;
+              }
+              setIsMobileActionSheetVisible((visible) => {
+                const next = !visible;
+                if (next) {
+                  setMobileActionSheetMode("hotbar");
+                  setMobileHotbarEditMode(false);
+                  setIsMobileLogVisible(false);
+                  closeWizardCommands();
+                } else {
+                  setMobileActionSheetMode("quick");
+                  setMobileHotbarEditMode(false);
+                }
+                return next;
+              });
+            }}
+            type="button"
+          >
+            {t.dialogs.mobileActions.hotbar}
+          </button>
+              </Fragment>
+            );
+          })()}
         </div>
       ) : null}
 
