@@ -137,6 +137,7 @@ export type FpsCrosshairContextState = {
 
 export type PlayMode = "normal" | "fps";
 export type Nh3dAntialiasingMode = "taa" | "fxaa";
+export type Nh3dAsciiColorMode = "nethack-3d" | "classic";
 export type Nh3dDesktopTouchInterfaceMode = "off" | "portrait" | "landscape";
 export type Nh3dBloodDetailMode = "veryLow" | "low" | "medium" | "high";
 export type Nh3dInventoryFixedTileSizeMode =
@@ -251,6 +252,7 @@ export type Nh3dClientOptions = {
   fpsHeldWeaponSpriteFlipX: boolean;
   fpsHeldWeaponSpriteFlipXByTileset: TilesetWeaponSpriteFlipXByTileset;
   tilesetMode: "ascii" | "tiles";
+  asciiColorMode: Nh3dAsciiColorMode;
   tilesetPath: string;
   antialiasing: Nh3dAntialiasingMode;
   brightness: number;
@@ -411,6 +413,7 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
     resolveDefaultNh3dTilesetWeaponSpriteFlipX(defaultNh3dTilesetPath),
   fpsHeldWeaponSpriteFlipXByTileset: {},
   tilesetMode: "tiles",
+  asciiColorMode: "nethack-3d",
   tilesetPath: defaultNh3dTilesetPath,
   antialiasing: "taa",
   brightness: 0,
@@ -1184,6 +1187,8 @@ export function normalizeNh3dClientOptions(
     fpsHeldWeaponSpriteFlipX,
     fpsHeldWeaponSpriteFlipXByTileset,
     tilesetMode,
+    asciiColorMode:
+      overrides?.asciiColorMode === "classic" ? "classic" : "nethack-3d",
     tilesetPath,
     antialiasing,
     brightness,

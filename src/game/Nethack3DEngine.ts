@@ -38,6 +38,7 @@ import {
   isSinkCmapGlyph,
   isVerticalDoorCmapGlyph,
 } from "./glyphs/behavior";
+import { getNetHackColorHex } from "./glyphs/colors";
 import {
   getGlyphCatalogEntry,
   getGlyphCatalogRanges,
@@ -7070,6 +7071,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const fpsHeldWeaponSpriteFlipXChanged =
       previous.fpsHeldWeaponSpriteFlipX !== normalized.fpsHeldWeaponSpriteFlipX;
     const tilesetModeChanged = previous.tilesetMode !== normalized.tilesetMode;
+    const asciiColorModeChanged =
+      previous.asciiColorMode !== normalized.asciiColorMode;
     const tilesetPathChanged = previous.tilesetPath !== normalized.tilesetPath;
     const antialiasingChanged =
       previous.antialiasing !== normalized.antialiasing;
@@ -7158,6 +7161,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
     if (tilesetModeChanged) {
       this.clearMenuTilePreviewCache();
+      this.refreshTilesFromStateCache();
+    }
+    if (asciiColorModeChanged && !tilesetModeChanged) {
+      this.invalidateTilesetDependentCaches();
       this.refreshTilesFromStateCache();
     }
     if (fpsFlattenEntityBillboardsChanged && !tilesetModeChanged) {
@@ -16576,6 +16583,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
       typeof mesh.userData?.glyphTextColor === "string"
         ? mesh.userData.glyphTextColor
         : "#F4F4F4";
+    const glyphBackgroundColor =
+      typeof mesh.userData?.glyphBackgroundColor === "string"
+        ? mesh.userData.glyphBackgroundColor
+        : null;
     const darkenFactor =
       typeof mesh.userData?.glyphDarkenFactor === "number"
         ? mesh.userData.glyphDarkenFactor
@@ -16611,6 +16622,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       inferredDarkWallSolidColorHex,
       inferredDarkWallSolidColorGridEnabled,
       inferredDarkWallSolidColorGridDarknessPercent,
+      glyphBackgroundColor,
     );
   }
 
@@ -17898,6 +17910,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     darkenFactor: number = 1,
     size: number = 256,
     drawFloorGrid: boolean = false,
+    backgroundColorHex: string | null = null,
   ): THREE.CanvasTexture {
     const canvas = document.createElement("canvas");
     canvas.width = size;
@@ -17914,6 +17927,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       textColor,
       darkenFactor,
       drawFloorGrid,
+      backgroundColorHex,
     );
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -17934,18 +17948,23 @@ class Nethack3DEngine implements Nethack3DEngineController {
     textColor: string,
     darkenFactor: number = 1,
     drawFloorGrid: boolean = false,
+    backgroundColorHex: string | null = null,
   ): void {
     context.clearRect(0, 0, size, size);
 
-    const tonedBackground = this.toneColor(
-      baseColorHex,
-      0.8 * THREE.MathUtils.clamp(darkenFactor, 0, 1),
-    );
-    const contrastBackground = this.ensureTextContrast(
-      tonedBackground,
-      textColor,
-    );
-    context.fillStyle = `#${contrastBackground}`;
+    if (backgroundColorHex && backgroundColorHex.length > 0) {
+      context.fillStyle = backgroundColorHex;
+    } else {
+      const tonedBackground = this.toneColor(
+        baseColorHex,
+        0.8 * THREE.MathUtils.clamp(darkenFactor, 0, 1),
+      );
+      const contrastBackground = this.ensureTextContrast(
+        tonedBackground,
+        textColor,
+      );
+      context.fillStyle = `#${contrastBackground}`;
+    }
     context.fillRect(0, 0, size, size);
 
     if (drawFloorGrid) {
@@ -20000,6 +20019,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     solidColorHex: string | null = null,
     solidColorGridEnabled: boolean = false,
     solidColorGridDarknessPercent: number = 15,
+    glyphBackgroundColorHex: string | null = null,
   ): void {
     const overlay = this.ensureGlyphOverlay(key, baseMaterial);
     const baseColorHex = baseMaterial.color.getHexString();
@@ -20101,6 +20121,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
             solidColorGridDarknessPercent,
           )
         : null;
+    const resolvedGlyphBackgroundColorHex =
+      typeof glyphBackgroundColorHex === "string" &&
+      glyphBackgroundColorHex.length > 0
+        ? glyphBackgroundColorHex
+        : null;
 
     let textureKey: string;
     if (useSolidColor) {
@@ -20110,7 +20135,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         ? `vtile:${resolvedVultureLookupKey}|mk:${tileTextureMaterialKindKey}|${clampedDarken.toFixed(3)}`
         : `tile:${tileIndex}|sg:${tileTextureSourceGlyphKey}|mk:${tileTextureMaterialKindKey}|${tileUseBackgroundReferenceTileKey}|${tileTextureForceBackgroundRemovalKey}|ug:${floorUnderlayGlyphKey}|ui:${floorUnderlayTileIndexKey}|${floorUnderlayUseBackgroundReferenceTileKey}|umk:${floorUnderlayMaterialKindKey}|${clampedDarken.toFixed(3)}`;
     } else {
-      textureKey = `${baseColorHex}|${glyphChar}|${textColor}|${clampedDarken.toFixed(3)}|${drawFloorGrid ? 1 : 0}`;
+      textureKey = `${baseColorHex}|${glyphChar}|${textColor}|${clampedDarken.toFixed(3)}|${drawFloorGrid ? 1 : 0}|bg:${resolvedGlyphBackgroundColorHex ?? "none"}`;
     }
 
     if (overlay.textureKey !== textureKey) {
@@ -20156,6 +20181,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
             clampedDarken,
             256,
             drawFloorGrid,
+            resolvedGlyphBackgroundColorHex,
           ),
         );
       }
@@ -23134,6 +23160,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
       typeof mesh.userData?.glyphTextColor === "string"
         ? mesh.userData.glyphTextColor
         : "#F4F4F4";
+    const glyphBackgroundColor =
+      typeof mesh.userData?.glyphBackgroundColor === "string"
+        ? mesh.userData.glyphBackgroundColor
+        : null;
     const darkenFactor =
       typeof mesh.userData?.glyphDarkenFactor === "number"
         ? mesh.userData.glyphDarkenFactor
@@ -23169,6 +23199,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       inferredDarkWallSolidColorHex,
       inferredDarkWallSolidColorGridEnabled,
       inferredDarkWallSolidColorGridDarknessPercent,
+      glyphBackgroundColor,
     );
   }
 
@@ -26073,6 +26104,21 @@ class Nethack3DEngine implements Nethack3DEngineController {
       }
       tileTextColor = this.asciiFriendlyGlyphTextColor;
     }
+    let glyphBackgroundColorHex: string | null = null;
+    if (!useTiles && this.clientOptions.asciiColorMode === "classic") {
+      const netHackColorHex = getNetHackColorHex(behavior.resolved.color);
+      if (netHackColorHex) {
+        tileTextColor = netHackColorHex;
+      }
+      glyphBackgroundColorHex = "#1f1f1f";
+      const shouldUsePetReverseVideo =
+        renderBehavior.effective.kind === "pet" ||
+        renderBehavior.effective.kind === "ridden";
+      if (shouldUsePetReverseVideo && tileGlyphChar.trim().length > 0) {
+        glyphBackgroundColorHex = "#f2f2f2";
+        tileTextColor = "#0d0d0d";
+      }
+    }
     if (shouldTraceAsciiPlayerTile) {
       this.logAsciiPlayerTileDebug("update_tile_color_resolution", x, y, {
         hasSeenPlayerPosition: this.hasSeenPlayerPosition,
@@ -26178,6 +26224,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     mesh.userData.tileTextureForceBackgroundRemoval =
       shouldForceTileTextureBackgroundRemoval;
     mesh.userData.glyphTextColor = tileTextColor;
+    mesh.userData.glyphBackgroundColor = glyphBackgroundColorHex;
     mesh.userData.glyphDarkenFactor = behavior.darkenFactor;
     mesh.userData.glyphBaseColorHex = material.color.getHexString();
     const tileTextureIndex =
@@ -26277,6 +26324,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       inferredDarkWallSolidColorHex,
       inferredDarkWallSolidColorGridEnabled,
       inferredDarkWallSolidColorGridDarknessPercent,
+      glyphBackgroundColorHex,
     );
     const hasFpsClosedDoorChamferTrim =
       this.isFpsMode() &&
