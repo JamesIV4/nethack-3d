@@ -490,21 +490,10 @@ async function main() {
   await runNpmOrExit(["run", "build:electron"]);
   progressTracker.advance("Built Electron web assets");
 
-  const windowsElectronBuilderNpmArgs = [
-    ...npmRunner.baseArgs,
-    "exec",
-    "--",
-    "electron-builder",
-    "--win",
-    "nsis",
-    "portable",
-    "--x64",
-  ];
+  const windowsAllTargetsArgs = ["scripts/electron/dist-windows.mjs"];
   const linuxAllTargetsArgs = ["scripts/electron/dist-linux-appimage.mjs"];
 
   if (isParallel) {
-    windowsElectronBuilderNpmArgs.push(`-c.directories.output=${windowsParallelOutputDir}`);
-
     logInfo("Preparing Linux packaging prerequisites before parallel packaging...");
     if (!isDryRun) {
       ensureCleanParallelOutputRoot();
@@ -520,8 +509,12 @@ async function main() {
     await runParallelJobsOrExit([
       {
         label: "windows",
-        command: npmRunner.command,
-        args: windowsElectronBuilderNpmArgs,
+        command: process.execPath,
+        args: windowsAllTargetsArgs,
+        env: {
+          NH3D_SKIP_ELECTRON_BUILD: "1",
+          NH3D_ELECTRON_OUTPUT_DIR: windowsParallelOutputDir,
+        },
         prefixColor: "blue",
       },
       {
@@ -547,8 +540,10 @@ async function main() {
     finalizeParallelOutputsOrExit();
     progressTracker.advance("Merged staged artifacts into release/");
   } else {
-    logInfo("Packaging Windows setup + portable...");
-    await runOrExit(npmRunner.command, windowsElectronBuilderNpmArgs);
+    logInfo("Packaging Windows setup + x64 and legacy x86 portable executables...");
+    await runOrExit(process.execPath, windowsAllTargetsArgs, {
+      NH3D_SKIP_ELECTRON_BUILD: "1",
+    });
     progressTracker.advance("Finished Windows packaging");
     logInfo("Packaging Linux AppImage...");
     await runOrExit("node", linuxAllTargetsArgs, { NH3D_SKIP_ELECTRON_BUILD: "1" });

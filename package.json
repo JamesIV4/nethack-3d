@@ -21,7 +21,7 @@
     "electron:dist:mac": "npm run build:electron && electron-builder --mac",
     "electron:pack:win": "npm run build:electron && electron-builder --win --x64 --dir",
     "electron:dist:win": "npm run build:electron && electron-builder --win nsis --x64",
-    "electron:dist:win:portable": "npm run build:electron && electron-builder --win portable --x64",
+    "electron:dist:win:portable": "node scripts/electron/dist-windows.mjs --portable-only",
     "electron:dist:linux:appimage": "node scripts/electron/dist-linux-appimage.mjs",
     "electron:dist:all": "node scripts/electron/dist-all.mjs",
     "electron:dist:all:parallel": "node scripts/electron/dist-all.mjs --parallel",
