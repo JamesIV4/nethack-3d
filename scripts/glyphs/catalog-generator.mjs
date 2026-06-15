@@ -8,6 +8,7 @@ export const GLYPH_CATALOG_VERSIONS = /** @type {const} */ ([
   "3.6.7",
   "5.0",
   "slashem",
+  "evilhack",
 ]);
 
 const CATALOG_TARGETS = [
@@ -29,11 +30,17 @@ const CATALOG_TARGETS = [
     publicWasmPath: "public/slashem.wasm",
     generatedCatalogPath: "src/game/glyphs/glyph-catalog.slashem.generated.ts",
   },
+  {
+    version: "evilhack",
+    publicJsPath: "public/evilhack.js",
+    publicWasmPath: "public/evilhack.wasm",
+    generatedCatalogPath: "src/game/glyphs/glyph-catalog.evilhack.generated.ts",
+  },
 ];
 
 /**
  * @typedef {(
- *  "mon" | "pet" | "invis" | "detect" | "body" | "ridden" | "obj" | "cmap" |
+ *  "mon" | "pet" | "peaceful" | "invis" | "detect" | "body" | "ridden" | "obj" | "cmap" |
  *  "explode" | "zap" | "swallow" | "warning" | "statue" | "unexplored" | "nothing"
  * )} GlyphKind
  */
@@ -73,6 +80,7 @@ const CATALOG_TARGETS = [
 const KNOWN_GLYPH_KINDS = new Set([
   "mon",
   "pet",
+  "peaceful",
   "invis",
   "detect",
   "body",
@@ -169,7 +177,7 @@ function createRuntimeCallback() {
 
 /**
  * @param {string} projectRoot
- * @param {{ version: "3.6.7" | "5.0" | "slashem"; publicJsPath: string; publicWasmPath: string }} target
+ * @param {{ version: "3.6.7" | "5.0" | "slashem" | "evilhack"; publicJsPath: string; publicWasmPath: string }} target
  */
 async function bootCatalogRuntime(projectRoot, target) {
   const jsPath = path.join(projectRoot, target.publicJsPath);
@@ -190,12 +198,21 @@ async function bootCatalogRuntime(projectRoot, target) {
     noInitialRun: true,
     wasmBinary,
     locateFile: (assetPath) => assetPath,
-    print: () => {},
-    printErr: () => {},
+    print: target.version === "evilhack" ? console.log : () => {},
+    printErr: target.version === "evilhack" ? console.warn : () => {},
     preRun: [
       (mod) => {
         mod.ENV = mod.ENV || {};
-        mod.ENV.NETHACKOPTIONS = `autoquiver,name:${SAFE_NAME},map_mode:tiles`;
+        const opts = `autoquiver,name:${SAFE_NAME},map_mode:tiles`;
+        mod.ENV.NETHACKOPTIONS = opts;
+        // EvilHack reads EVILHACKOPTIONS / HACKOPTIONS, not NETHACKOPTIONS.
+        mod.ENV.EVILHACKOPTIONS = opts;
+        mod.ENV.HACKOPTIONS = opts;
+        // Without HACKDIR / NETHACKDIR, evilhack's main() tries to chdir to
+        // the compiled-in default (/usr/games/lib/evilhackdir) and abort()s
+        // before nh_wasm_init runs.
+        mod.ENV.HACKDIR = "/";
+        mod.ENV.NETHACKDIR = "/";
       },
     ],
   });
@@ -213,6 +230,18 @@ async function bootCatalogRuntime(projectRoot, target) {
   } catch {
     // Expected: ASYNCIFY requires async callbacks, but we only need the
     // initialization that runs before the first async suspension point.
+  }
+
+  // EvilHack defers nh_wasm_init() until shim_init_nhwindows, which fires
+  // *after* the first ASYNCIFY boundary. Since _main() suspends before that,
+  // helpers/constants are never registered. Force-call the exported init
+  // function directly — it's idempotent and only touches JS state.
+  if (target.version === "evilhack" && typeof Module._nh_wasm_init === "function") {
+    try {
+      Module._nh_wasm_init();
+    } catch (err) {
+      console.warn("nh_wasm_init() failed:", err?.message || err);
+    }
   }
 
   const helpers = globalThis.nethackGlobal?.helpers;
@@ -293,7 +322,7 @@ function glyphKindForGlyph(ranges, glyph) {
  *   mapglyphHelper?: (glyph: number, x: number, y: number, mgflags: number) => any,
  *   mapGlyphInfoHelper?: (glyph: number, x: number, y: number, mgflags: number) => any
  * }} helpers
- * @param {"3.6.7" | "5.0" | "slashem"} version
+ * @param {"3.6.7" | "5.0" | "slashem" | "evilhack"} version
  * @param {GlyphRange[]} ranges
  * @param {number} maxGlyph
  */
@@ -452,6 +481,9 @@ function normalizeCatalogVersion(version) {
   }
   if (version === "slashem") {
     return "slashem";
+  }
+  if (version === "evilhack") {
+    return "evilhack";
   }
   return "3.6.7";
 }

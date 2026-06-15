@@ -235,6 +235,8 @@ function resolveTilesetLayoutShortLabel(
       return "5.0";
     case "3.6.7":
       return "3.6.7";
+    case "evilhack":
+      return "EvilHack";
     default:
       return "unknown";
   }
@@ -252,6 +254,8 @@ function resolveTilesetLayoutDisplayLabel(
       return t.dialogs.tilesetManager.layout5;
     case "3.6.7":
       return t.dialogs.tilesetManager.layout367;
+    case "evilhack":
+      return "EvilHack layout";
     default:
       return "Unknown layout";
   }
@@ -265,6 +269,8 @@ function resolveRuntimeVersionDisplayLabel(
       return "NetHack 5.0";
     case "slashem":
       return "Slash'EM";
+    case "evilhack":
+      return "EvilHack 0.9.3";
     case "3.6.7":
     default:
       return "NetHack 3.6.7";
@@ -15341,6 +15347,16 @@ export default function App(): JSX.Element {
             <button
               className="nh3d-choice-button nh3d-character-setup-choice-button"
               onClick={() => {
+                setRuntimeVersion("evilhack");
+                setStartupFlowStep("choose");
+              }}
+              type="button"
+            >
+              EvilHack
+            </button>
+            <button
+              className="nh3d-choice-button nh3d-character-setup-choice-button"
+              onClick={() => {
                 void requestGameQuit();
               }}
               type="button"
@@ -15954,6 +15970,12 @@ export default function App(): JSX.Element {
                 style={resolveCoreStatStyle("armor")}
               >
                 AC:{playerStats.armor}
+                {activeRuntimeVersion === "evilhack" && playerStats.magicCancellation != null && (
+                  <> MC:{playerStats.magicCancellation}</>
+                )}
+                {activeRuntimeVersion === "evilhack" && playerStats.toHit != null && (
+                  <> TH:{playerStats.toHit}</>
+                )}
               </div>
               <div className="nh3d-stats-secondary-exp nh3d-stats-mobile-inline-secondary">
                 Exp:{playerStats.experience}
@@ -15972,6 +15994,12 @@ export default function App(): JSX.Element {
               style={resolveCoreStatStyle("armor")}
             >
               AC:{playerStats.armor}
+              {activeRuntimeVersion === "evilhack" && playerStats.magicCancellation != null && (
+                <> MC:{playerStats.magicCancellation}</>
+              )}
+              {activeRuntimeVersion === "evilhack" && playerStats.toHit != null && (
+                <> TH:{playerStats.toHit}</>
+              )}
             </div>
             <div className="nh3d-stats-secondary-exp nh3d-stats-desktop-secondary">
               Exp:{playerStats.experience}

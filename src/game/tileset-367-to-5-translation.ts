@@ -216,6 +216,7 @@ export function shouldTranslateNh367TilesetForNh5Runtime(
     | "3.4.3"
     | "3.6.7"
     | "5.0"
+    | "evilhack"
     | "unknown" = "unknown",
 ): boolean {
   if (runtimeVersion !== "5.0") {

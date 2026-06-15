@@ -32,6 +32,8 @@ export const defaultPlayerStats: PlayerStatsSnapshot = {
   wisdom: 10,
   charisma: 10,
   armor: 10,
+  magicCancellation: null,
+  toHit: null,
   dungeon: "Dungeons of Doom",
   dlevel: 1,
   locationLabel: "",

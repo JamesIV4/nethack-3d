@@ -16,7 +16,7 @@ import {
   getRuntimeSaveMountDir,
   isRecoverableCheckpointLevelZeroByteLength,
 } from "./save-storage";
-import { STATUS_FIELD_MAP_367, STATUS_FIELD_MAP_5 } from "./status-map";
+import { STATUS_FIELD_MAP_367, STATUS_FIELD_MAP_5, STATUS_FIELD_MAP_EVILHACK } from "./status-map";
 
 const process =
   typeof globalThis !== "undefined" && globalThis.process
@@ -173,7 +173,7 @@ class LocalNetHackRuntime {
   }
 
   normalizeRuntimeVersion(value) {
-    return value === "5.0" || value === "slashem" ? value : "3.6.7";
+    return value === "5.0" || value === "slashem" || value === "evilhack" ? value : "3.6.7";
   }
 
   getDefaultRuntimeWindowGlobals(runtimeVersion = this.runtimeVersion) {
@@ -237,7 +237,7 @@ class LocalNetHackRuntime {
   }
 
   shouldSuppressRedundantStatusWindowText(winId) {
-    return this.runtimeVersion === "slashem" && this.isStatusWindow(winId);
+    return (this.runtimeVersion === "slashem" || this.runtimeVersion === "evilhack") && this.isStatusWindow(winId);
   }
 
   isMapWindow(winId) {
@@ -255,6 +255,9 @@ class LocalNetHackRuntime {
     if (runtimeVersion === "slashem") {
       return "slashem.js";
     }
+    if (runtimeVersion === "evilhack") {
+      return "evilhack.js";
+    }
     return "nethack-367.js";
   }
 
@@ -265,6 +268,9 @@ class LocalNetHackRuntime {
     if (runtimeVersion === "slashem") {
       return "slashem.wasm";
     }
+    if (runtimeVersion === "evilhack") {
+      return "evilhack.wasm";
+    }
     return "nethack-367.wasm";
   }
 
@@ -274,6 +280,8 @@ class LocalNetHackRuntime {
         ? import.meta.env.VITE_NH3D_WASM_5_RUNTIME_BUILD_TAG
         : runtimeVersion === "slashem"
           ? import.meta.env.VITE_NH3D_WASM_SLASHEM_RUNTIME_BUILD_TAG
+        : runtimeVersion === "evilhack"
+          ? import.meta.env.VITE_NH3D_WASM_EVILHACK_RUNTIME_BUILD_TAG
         : import.meta.env.VITE_NH3D_WASM_367_RUNTIME_BUILD_TAG;
     const runtimeBuildTag =
       typeof rawValue === "string" ? rawValue.trim() : "";
@@ -330,12 +338,16 @@ class LocalNetHackRuntime {
         ? "nh5-pointer-v1"
         : runtimeVersion === "slashem"
           ? "slashem-pointer-v1"
-          : "nh367-pointer-v1";
+          : runtimeVersion === "evilhack"
+            ? "evilhack-pointer-v1"
+            : "nh367-pointer-v1";
     const rawValue =
       runtimeVersion === "5.0"
         ? import.meta.env.VITE_NH3D_WASM_5_POINTER_ABI_TAG
         : runtimeVersion === "slashem"
           ? import.meta.env.VITE_NH3D_WASM_SLASHEM_POINTER_ABI_TAG
+        : runtimeVersion === "evilhack"
+          ? import.meta.env.VITE_NH3D_WASM_EVILHACK_POINTER_ABI_TAG
         : import.meta.env.VITE_NH3D_WASM_367_POINTER_ABI_TAG;
     return this.normalizePointerAbiTag(rawValue, fallback);
   }
@@ -371,8 +383,19 @@ class LocalNetHackRuntime {
   buildDefaultRuntimePointerContract(runtimeVersion = this.runtimeVersion) {
     const is5 = runtimeVersion === "5.0";
     const isSlashEm = runtimeVersion === "slashem";
+    const isEvilHack = runtimeVersion === "evilhack";
     const addMenuArgCounts = is5 ? [9] : [8];
-    const printGlyphArgCounts = is5 ? [5, 7] : isSlashEm ? [4, 6] : [4, 5, 7];
+    // 5.0:      [win, x, y, ptrToGlyphInfo] or [..., extra] (5 or 7)
+    // EvilHack: [win, x, y, glyph, monster_id, attacking_target_id] (6)
+    // SlashEm:  [win, x, y, glyph] or [..., bkglyph] (4 or 6)
+    // 3.6.7:    [win, x, y, glyph] / [..., bkglyph] / [..., extra] (4, 5, or 7)
+    const printGlyphArgCounts = is5
+      ? [5, 7]
+      : isEvilHack
+        ? [6]
+        : isSlashEm
+          ? [4, 6]
+          : [4, 5, 7];
     return {
       abiTag: this.readConfiguredPointerAbiTag(runtimeVersion),
       callbackArgCounts: {
@@ -496,12 +519,23 @@ class LocalNetHackRuntime {
       extcmd: {
         exportedPointerName: "extcmdlist",
         exportedPointerMode: "direct_or_slot",
-        stride: isSlashEm ? 16 : 24,
-        textPtrOffset: isSlashEm ? 0 : 4,
-        flagsOffset: isSlashEm ? 12 : 16,
+        // SlashEM ext_func_tab: { char *ef_txt, int (*ef_funct)(), int flags, char *ef_desc } = 16 bytes
+        // EvilHack ext_func_tab: { uchar key, char *ef_txt, char *ef_desc, int (*ef_funct)(), int flags, char *f_text }
+        //   = 1(key)+3(pad)+4+4+4+4+4 = 24 bytes; textPtr at +4, flags at +16
+        stride: isSlashEm ? 16 : isEvilHack ? 24 : 24,
+        textPtrOffset: isSlashEm ? 0 : isEvilHack ? 4 : 4,
+        flagsOffset: isSlashEm ? 12 : isEvilHack ? 16 : 16,
         maxEntries: 512,
-        minEntries: isSlashEm ? 20 : 10,
-        requiredNames: isSlashEm ? ["2weapon", "pray"] : ["#", "pray"],
+        minEntries: isSlashEm || isEvilHack ? 20 : 10,
+        // SlashEM names its two-weapon toggle "2weapon"; EvilHack 0.9.3
+        // (cmd.c extcmdlist[]) calls it "twoweapon". Mismatched required
+        // names cause validateExtendedCommandEntries() to drop the whole
+        // table and emit an empty extcmd list (breaks `#kick`, `#pray`, ...).
+        requiredNames: isSlashEm
+          ? ["2weapon", "pray"]
+          : isEvilHack
+            ? ["twoweapon", "pray"]
+            : ["#", "pray"],
       },
       menuItem: {
         // NetHack 5.0's `anything` union includes int64/uint64 members, so
@@ -637,7 +671,7 @@ class LocalNetHackRuntime {
     return true;
   }
 
-  notePointerContractViolation(key, message, details = null) {
+   notePointerContractViolation(key, message, details = null) {
     if (!key || this.pointerContractViolationKeys.has(key)) {
       return;
     }
@@ -929,6 +963,7 @@ class LocalNetHackRuntime {
         `arg-count-${name}`,
         `${name} received unexpected arg count ${args.length} (expected ${expectedCounts.join(", ")}).`,
       );
+      console.warn(`[CONTRACT_REJECT] ${name}: got ${args.length} args, expected [${expectedCounts.join(", ")}] — callback DROPPED`);
       return false;
     }
 
@@ -975,9 +1010,9 @@ class LocalNetHackRuntime {
   }
 
   getRuntimeStatusFieldMap() {
-    return this.runtimeVersion === "5.0"
-      ? STATUS_FIELD_MAP_5
-      : STATUS_FIELD_MAP_367;
+    if (this.runtimeVersion === "5.0") return STATUS_FIELD_MAP_5;
+    if (this.runtimeVersion === "evilhack") return STATUS_FIELD_MAP_EVILHACK;
+    return STATUS_FIELD_MAP_367;
   }
 
   seedRuntimeStatusFieldConstants() {
@@ -1095,8 +1130,33 @@ class LocalNetHackRuntime {
         moduleUrl,
         runtimeBuildTag: this.readRuntimeBuildTag(version) || null,
       });
-      const { default: factory } = await import(/* @vite-ignore */ moduleUrl);
-      return factory;
+      try {
+        const imported = await import(/* @vite-ignore */ moduleUrl);
+        console.log("Module imported successfully", {
+          runtimeVersion: version,
+          hasDefault: !!imported.default,
+          defaultType: typeof imported.default,
+          keys: Object.keys(imported).slice(0, 10),
+        });
+        const { default: factory } = imported;
+        if (typeof factory !== "function") {
+          console.error("Module default export is not a function", {
+            runtimeVersion: version,
+            defaultType: typeof factory,
+            defaultValue: String(factory).substring(0, 100),
+          });
+          throw new Error(`Module default export is not a function (got ${typeof factory})`);
+        }
+        return factory;
+      } catch (error) {
+        console.error("Failed to load/import runtime factory", {
+          runtimeVersion: version,
+          moduleUrl,
+          error: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined,
+        });
+        throw error;
+      }
     };
 
     const moduleUrl = this.resolveWasmAssetUrl(
@@ -6254,6 +6314,92 @@ class LocalNetHackRuntime {
     return context;
   }
 
+  scheduleEvilhackHangDiagnostic(reason) {
+    console.warn(
+      `[EVILHACK_HANG_DIAG] scheduleEvilhackHangDiagnostic ENTERED reason="${reason}" alreadyScheduled=${Boolean(
+        (this as any).__evilhackHangDiagScheduled,
+      )} runtimeVersion=${this.runtimeVersion} uiCallbackCount=${this.uiCallbackCount}`,
+    );
+    if ((this as any).__evilhackHangDiagScheduled) {
+      return;
+    }
+    (this as any).__evilhackHangDiagScheduled = true;
+    const startCallbackCount = this.uiCallbackCount;
+    const delayMs = 1500;
+    console.warn(
+      `[EVILHACK_HANG_DIAG] arming ${delayMs}ms timer (reason="${reason}")`,
+    );
+    setTimeout(() => {
+      console.warn(
+        `[EVILHACK_HANG_DIAG] timer FIRED (reason="${reason}") — collecting diagnostic...`,
+      );
+      try {
+        const mod: any = this.nethackInstance || {};
+        const FS = mod.FS;
+        const dumpedFs: any = {};
+        let rootEntries: any = null;
+        if (FS && typeof FS.readdir === "function") {
+          try {
+            rootEntries = FS.readdir("/").filter(
+              (n: string) => n !== "." && n !== "..",
+            );
+          } catch (e) {
+            rootEntries = `readdir error: ${String((e as any)?.message || e)}`;
+          }
+          for (const f of [
+            "nhdat",
+            "nhshare",
+            "dungeon",
+            "quest.dat",
+            "data",
+            "rumors",
+            "oracles",
+            "license",
+            "sysconf",
+            "serverseed",
+            "vaults.dat",
+          ]) {
+            try {
+              const st = FS.stat("/" + f);
+              dumpedFs[f] = { present: true, size: st?.size };
+            } catch {
+              dumpedFs[f] = { present: false };
+            }
+          }
+        }
+        const callbacksSince = this.uiCallbackCount - startCallbackCount;
+        const recentNames = Array.isArray((this as any).recentUICallbacks)
+          ? (this as any).recentUICallbacks
+              .slice(-5)
+              .map((c: any) => c?.name || "<?>")
+          : null;
+        console.warn(
+          `[EVILHACK_HANG_DIAG] ${reason} — ${delayMs}ms later:`,
+          {
+            runtimeVersion: this.runtimeVersion,
+            calledMain: mod.calledMain,
+            exitStatus: mod.exitStatus,
+            noExitRuntime: (() => {
+              try { return mod.noExitRuntime; } catch { return "<not-exported>"; }
+            })(),
+            remainingRunDeps:
+              typeof mod.getRunDependencies === "function"
+                ? mod.getRunDependencies()
+                : null,
+            uiCallbackCountSinceMark: callbacksSince,
+            totalUiCallbacks: this.uiCallbackCount,
+            recentCallbacks: recentNames,
+            rootEntries,
+            dumpedFs,
+            isClosed: this.isClosed,
+          },
+        );
+      } catch (e) {
+        console.warn("[EVILHACK_HANG_DIAG] diagnostic failed:", e);
+      }
+    }, delayMs);
+  }
+
   handleShimDisplayFile(args) {
     const [rawName, complain] = Array.isArray(args) ? args : [];
     const fileName =
@@ -6264,7 +6410,6 @@ class LocalNetHackRuntime {
     console.log(
       `DISPLAY FILE request: "${fileName || "<empty>"}" (mustExist=${mustExist})`,
     );
-
     const bundled = getBundledDisplayFile(fileName);
     if (bundled && bundled.lines.length > 0) {
       if (this.eventHandler) {
@@ -6284,6 +6429,7 @@ class LocalNetHackRuntime {
       console.log(
         'DISPLAY FILE optional startup "news" file is not bundled; continuing without it.',
       );
+      this.scheduleEvilhackHangDiagnostic("after display_file news");
       return 0;
     }
 
@@ -8894,9 +9040,25 @@ class LocalNetHackRuntime {
       return this.extendedCommandEntries;
     }
 
+    const wasEmpty =
+      !Array.isArray(this.extendedCommandEntries) ||
+      this.extendedCommandEntries.length === 0;
+
     const extracted = this.extractExtendedCommandEntriesFromMemory();
     if (extracted.length > 0) {
       this.extendedCommandEntries = extracted;
+      // First successful extraction after a startup-time empty snapshot:
+      // re-emit so the engine's autocomplete picks up the list. Without
+      // this, EvilHack's `#` prompt has no completions because the extcmd
+      // table wasn't yet linked when sendReconnectSnapshot fired.
+      if (wasEmpty && !this.extendedCommandsEmitFromLazyLoad) {
+        this.extendedCommandsEmitFromLazyLoad = true;
+        try {
+          this.emitExtendedCommands("lazy_load");
+        } catch (error) {
+          console.warn("Failed to emit extended commands on lazy load", error);
+        }
+      }
       return extracted;
     }
 
@@ -9217,14 +9379,18 @@ class LocalNetHackRuntime {
     if (field === -3) {
       return "BL_CHARACTERISTICS";
     }
-    if (field === 23) {
-      return "BL_FLUSH";
-    }
-    if (field === 24) {
-      return "BL_RESET";
-    }
-    if (field === 25) {
-      return "BL_CHARACTERISTICS";
+    // Fields 23/24/25 are flush/reset/characteristics signals only in vanilla 3.7.
+    // EvilHack uses these indices for real data (BL_LEVELDESC/BL_EXP/BL_CONDITION).
+    if (this.runtimeVersion !== "evilhack") {
+      if (field === 23) {
+        return "BL_FLUSH";
+      }
+      if (field === 24) {
+        return "BL_RESET";
+      }
+      if (field === 25) {
+        return "BL_CHARACTERISTICS";
+      }
     }
 
     const constants =
@@ -9907,6 +10073,12 @@ class LocalNetHackRuntime {
       console.log("Starting local NetHack session...");
 
       globalThis.nethackCallback = async (name, ...args) => {
+        // Lightweight ring-buffer of recent callback names for hang diagnosis.
+        const ring = ((globalThis as any).__nh_cb_ring ||= []);
+        ring.push({ t: performance.now(), name });
+        if (ring.length > 200) ring.shift();
+        (globalThis as any).__nh_cb_total =
+          ((globalThis as any).__nh_cb_total || 0) + 1;
         return this.handleUICallback(name, args);
       };
 
@@ -10092,6 +10264,12 @@ class LocalNetHackRuntime {
 
       const createModule = await this.loadRuntimeFactory(runtimeVersion);
 
+      console.log("About to call createModule", {
+        runtimeVersion,
+        createModuleType: typeof createModule,
+        createModuleIsFunction: typeof createModule === "function",
+      });
+
       this.nethackInstance = await createModule({
         noInitialRun: true,
         preInit: [
@@ -10194,8 +10372,12 @@ class LocalNetHackRuntime {
             mod.ENV.NETHACKOPTIONS = existingOptions
               ? `${existingOptions},${runtimeOptions.join(",")}`
               : runtimeOptions.join(",");
+            // EvilHack reads EVILHACKOPTIONS (fallback HACKOPTIONS) rather than
+            // NETHACKOPTIONS, so mirror the same string under those names too.
+            mod.ENV.EVILHACKOPTIONS = mod.ENV.NETHACKOPTIONS;
+            mod.ENV.HACKOPTIONS = mod.ENV.NETHACKOPTIONS;
             this.lastConfiguredNethackOptions = mod.ENV.NETHACKOPTIONS;
-            console.log(`Configured NETHACKOPTIONS: ${mod.ENV.NETHACKOPTIONS}`);
+            console.log(`Configured NETHACKOPTIONS // EVILHACKOPTIONS: ${mod.ENV.EVILHACKOPTIONS}`);
 
             // Ensure NetHack chdirs into a valid data root inside the wasm FS.
             // If HACKDIR/NETHACKDIR points at a host path, main() will abort
@@ -10231,28 +10413,75 @@ class LocalNetHackRuntime {
               ),
             });
 
-            // Inject sysconf to enable wizard mode after IDBFS is synced
-            // Defer this to postRun to ensure FS is fully initialized
-            const injectSysconfLater = () => {
-              try {
-                const sysconfPath = "/sysconf";
-                const lines = [
-                  "# NetHack configuration for WASM",
-                  "WIZARDS=wizard",
-                  "CHECK_PLNAME=1",
-                  "EXPLORERS=*",
-                ];
-                const sysconfContent = lines.join("\n") + "\n";
-                if (mod.FS && typeof mod.FS.writeFile === "function") {
-                  mod.FS.writeFile(sysconfPath, sysconfContent);
-                  console.log("✅ Injected sysconf with WIZARDS=wizard and CHECK_PLNAME=1");
+            // EvilHack 0.9.3 currently hangs in a tight openat() loop after
+            // shim_display_file("news") (suspected load_qtlist / mklev path).
+            // Install a narrow FS.open instrumentation that:
+            //   - logs the first few unique paths opened (one line per path)
+            //   - detects "spin" patterns (>=8 opens of same path within 500ms)
+            //     and logs a single warning per path
+            // Never touches Module.Asyncify. EvilHack-only to keep other
+            // runtimes quiet.
+            if (
+              runtimeVersion === "evilhack" &&
+              mod.FS &&
+              typeof mod.FS.open === "function" &&
+              !mod.FS.__nh3dEvilHackOpenProbeInstalled
+            ) {
+              const originalOpen = mod.FS.open.bind(mod.FS);
+              const seenPaths = new Set<string>();
+              const recentOpens = new Map<
+                string,
+                { count: number; windowStartMs: number; reported: boolean }
+              >();
+              const MAX_LOGGED_UNIQUE = 80;
+              const SPIN_WINDOW_MS = 500;
+              const SPIN_THRESHOLD = 8;
+              let totalOpens = 0;
+
+              mod.FS.open = function (
+                path: string,
+                ...args: unknown[]
+              ): unknown {
+                totalOpens += 1;
+                const pathStr = typeof path === "string" ? path : String(path);
+                if (
+                  seenPaths.size < MAX_LOGGED_UNIQUE &&
+                  !seenPaths.has(pathStr)
+                ) {
+                  seenPaths.add(pathStr);
+                  console.log(
+                    `[EVILHACK_FS_OPEN #${totalOpens}] path="${pathStr}"`,
+                  );
                 }
-              } catch (err) {
-                console.warn("⚠️ Failed to inject sysconf:", err);
-              }
-            };
-            // Store for injection in postRun callback (after full initialization)
-            (mod as any).__nh3dInjectSysconfCallback = injectSysconfLater;
+                const nowMs =
+                  typeof performance !== "undefined" &&
+                  typeof performance.now === "function"
+                    ? performance.now()
+                    : Date.now();
+                let bucket = recentOpens.get(pathStr);
+                if (!bucket || nowMs - bucket.windowStartMs > SPIN_WINDOW_MS) {
+                  bucket = { count: 1, windowStartMs: nowMs, reported: false };
+                  recentOpens.set(pathStr, bucket);
+                } else {
+                  bucket.count += 1;
+                  if (bucket.count >= SPIN_THRESHOLD && !bucket.reported) {
+                    bucket.reported = true;
+                    console.warn(
+                      `[EVILHACK_FS_OPEN_SPIN] path="${pathStr}" opened ${bucket.count}x within ${Math.round(
+                        nowMs - bucket.windowStartMs,
+                      )}ms (total opens so far: ${totalOpens})`,
+                    );
+                  }
+                }
+                return originalOpen(path, ...(args as []));
+              };
+              mod.FS.__nh3dEvilHackOpenProbeInstalled = true;
+              logStartupHook("preRun:evilhack-fs-open-probe", mod, {
+                maxLoggedUnique: MAX_LOGGED_UNIQUE,
+                spinThreshold: SPIN_THRESHOLD,
+                spinWindowMs: SPIN_WINDOW_MS,
+              });
+            }
 
             // Setup IndexedDB file system for persisting saves
             const IDBFS =
@@ -10590,14 +10819,6 @@ class LocalNetHackRuntime {
               rootEntries: listDirectoryEntries(mod, "/"),
               saveEntries: listDirectoryEntries(mod, "/save"),
             });
-            // Inject sysconf after WASM is fully initialized
-            if (typeof (mod as any).__nh3dInjectSysconfCallback === "function") {
-              try {
-                (mod as any).__nh3dInjectSysconfCallback();
-              } catch (err) {
-                console.warn("⚠️ sysconf injection callback failed:", err);
-              }
-            }
           },
         ],
       });
@@ -11002,8 +11223,10 @@ class LocalNetHackRuntime {
     this.clearStartupNoCallbackTimer();
     let shouldLogUiCallback = true;
     if (name === "shim_print_glyph") {
-      // Avoid duplicate callback-level spam for map glyph traffic.
-      shouldLogUiCallback = false;
+      // Temporarily log first few to diagnose black map
+      if (!((this as any).__loggedGlyphCallbackCount)) (this as any).__loggedGlyphCallbackCount = 0;
+      (this as any).__loggedGlyphCallbackCount++;
+      shouldLogUiCallback = (this as any).__loggedGlyphCallbackCount <= 3;
     }
     if (shouldLogUiCallback) {
       console.log(`UI Callback: ${name}`, args);
@@ -11069,20 +11292,28 @@ class LocalNetHackRuntime {
         console.log(
           `Resolved extended command "${extCommandText}" to index ${extCommandIndex}`,
         );
+        console.log(`[EXTCMD_DEBUG] Returning index ${extCommandIndex} for "${extCommandText}" — watching for next callback...`);
         this.armFarLookForExtendedCommandIndex(extCommandIndex);
         return extCommandIndex;
 
-      case "shim_init_nhwindows":
+      case "shim_init_nhwindows": {
         this.nameInitDebugCounter += 1;
+        const initConfiguredName = this.normalizeCharacterNameValue(
+          this.startupOptions?.characterCreation?.name,
+        );
         console.log("[NAME_DEBUG] shim_init_nhwindows", {
           callId: this.nameInitDebugCounter,
           args,
           pendingTextResponses: this.pendingTextResponses.length,
-          configuredName: this.normalizeCharacterNameValue(
-            this.startupOptions?.characterCreation?.name,
-          ),
+          configuredName: initConfiguredName,
         });
-        if (this.eventHandler) {
+        // Only prompt the UI for a name when neither a configured name nor a
+        // queued text response is available; otherwise shim_askname will
+        // resolve silently and the spurious dialog blocks the user.
+        const hasNameAlready =
+          initConfiguredName.length > 0 ||
+          this.pendingTextResponses.length > 0;
+        if (this.eventHandler && !hasNameAlready) {
           this.emit({
             type: "name_request",
             text: "What is your name, adventurer?",
@@ -11090,8 +11321,13 @@ class LocalNetHackRuntime {
             source: "init_nhwindows",
             callId: this.nameInitDebugCounter,
           });
+        } else if (hasNameAlready) {
+          console.log(
+            "[NAME_DEBUG] shim_init_nhwindows skipping name_request emit — name already available (configured or queued)",
+          );
         }
         return 1;
+      }
       case "shim_create_nhwindow":
         const [windowType] = args;
         this.resetWindowTextBuffer(windowType);
@@ -11767,9 +12003,19 @@ class LocalNetHackRuntime {
         }
         return 0;
       case "shim_print_glyph": {
+        // 3.6.7/SlashEM: args = [win, x, y, glyph] (or [..., bkglyph])
+        // 3.7:           args = [win, x, y, ptrToGlyphInfo, extra]
+        // EvilHack:      args = [win, x, y, glyph, monster_id, attacking_target_id]
         // Runtime-specific shapes are validated against the pointer contract
         // before we get here; do not infer layout from arg count.
         const [printWin, x, y, a, b] = args as number[];
+
+        // DEBUG: count arriving glyphs to diagnose black map (all versions)
+        if (!((this as any).__evGlyphCount)) (this as any).__evGlyphCount = 0;
+        (this as any).__evGlyphCount++;
+        if ((this as any).__evGlyphCount <= 5 || (this as any).__evGlyphCount % 200 === 0) {
+          console.log(`[GLYPH_DEBUG #${(this as any).__evGlyphCount}] rv=${this.runtimeVersion} win=${printWin} x=${x} y=${y} glyph=${a} isMapWin=${this.isMapWindow(printWin)}`);
+        }
 
         let printGlyph = a;
         // Use local names to avoid colliding with existing glyphChar/glyphColor in your file
@@ -11906,6 +12152,12 @@ class LocalNetHackRuntime {
           let decodedGlyphFlags = null;
           let floorUnderlay = null;
 
+          // DEBUG: log once to show mapHelper availability
+          if (!(this as any).__evMapHelperLogged) {
+            (this as any).__evMapHelperLogged = true;
+            console.log(`[MAPHELPER_DEBUG] rv=${this.runtimeVersion} mapglyphHelper=${typeof helpers?.mapglyphHelper} mapGlyphInfoHelper=${typeof helpers?.mapGlyphInfoHelper} mapHelper=${typeof mapHelper}`);
+          }
+
           if (mapHelper) {
             try {
               // IMPORTANT: for 5.0 we now pass the decoded glyph (not the pointer)
@@ -11915,6 +12167,12 @@ class LocalNetHackRuntime {
                 y,
                 0,
               );
+
+              // DEBUG: log first mapHelper result
+              if (!(this as any).__evFirstGlyphLogged) {
+                (this as any).__evFirstGlyphLogged = true;
+                console.log(`[MAPHELPER_RESULT] rv=${this.runtimeVersion} glyph=${printGlyph} result=`, glyphInfo, `tileIdx=${this.extractGlyphInfoTileIndex(glyphInfo)}`);
+              }
 
               if (glyphInfo) {
                 if (glyphInfo.ch !== undefined) {
@@ -12576,13 +12834,13 @@ class LocalNetHackRuntime {
         }
         return resolvedName;
       case "shim_mark_synch":
-        console.log("NetHack marking synchronization");
+        console.log(`NetHack marking synchronization — glyphs received so far: ${(this as any).__evGlyphCount ?? 0}`);
         return 0;
 
       case "shim_cliparound":
         const [clipX, clipY] = args;
         console.log(
-          `🎯 Cliparound request for position (${clipX}, ${clipY}) - updating player position`,
+          `🎯 Cliparound request for position (${clipX}, ${clipY}) - updating player position — total glyphs: ${(this as any).__evGlyphCount ?? 0}`,
         );
 
         if (this.positionInputActive || this.isFarLookPositionRequest()) {
@@ -12724,12 +12982,14 @@ class LocalNetHackRuntime {
           });
         }
         if (
-          normalizedExitMessage.toLowerCase() === "be seeing you..." &&
+          (normalizedExitMessage.toLowerCase() === "be seeing you..." ||
+            normalizedExitMessage.toLowerCase() === "well... bye.") &&
           !this.runtimeTerminationEmitted
         ) {
           // Manual save/quit can reach exit_nhwindows before the Emscripten
           // quit/onExit hooks fire. Emit a termination fallback so the UI can
-          // transition and the worker can flush IDBFS.
+          // transition and the worker can flush IDBFS. Stock NetHack/SlashEM
+          // use "Be seeing you..."; EvilHack save.c uses "Well... bye.".
           this.emitRuntimeTerminated(normalizedExitMessage, 0);
         }
         return 0;

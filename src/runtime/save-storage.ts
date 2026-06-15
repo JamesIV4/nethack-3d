@@ -70,13 +70,17 @@ export function getRuntimeSaveCompatTag(
       ? "wasm-5"
       : runtimeVersion === "slashem"
         ? "slashem-343"
-        : "wasm-367";
+        : runtimeVersion === "evilhack"
+          ? "evilhack-092"
+          : "wasm-367";
   const rawCompatTag =
     runtimeVersion === "5.0"
       ? import.meta.env.VITE_NH3D_WASM_5_COMPAT_TAG
       : runtimeVersion === "slashem"
         ? import.meta.env.VITE_NH3D_WASM_SLASHEM_COMPAT_TAG
-        : import.meta.env.VITE_NH3D_WASM_367_COMPAT_TAG;
+        : runtimeVersion === "evilhack"
+          ? import.meta.env.VITE_NH3D_WASM_EVILHACK_COMPAT_TAG
+          : import.meta.env.VITE_NH3D_WASM_367_COMPAT_TAG;
   return normalizeCompatTag(rawCompatTag, fallback);
 }
 

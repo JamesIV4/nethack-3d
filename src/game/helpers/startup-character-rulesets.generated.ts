@@ -5,6 +5,7 @@
  * - imported/role-sources/3.6.7/role.c
  * - imported/role-sources/5.0/role.c
  * - imported/role-sources/slashem/role.c
+ * - imported/role-sources/evilhack/role.c
  */
 
 export const GENERATED_STARTUP_ROLE_OPTIONS = [
@@ -25,7 +26,10 @@ export const GENERATED_STARTUP_ROLE_OPTIONS = [
   "Ice Mage",
   "Necromancer",
   "Undead Slayer",
-  "Yeoman"
+  "Yeoman",
+  "Convict",
+  "Druid",
+  "Infidel"
 ] as const;
 
 export const GENERATED_STARTUP_RACE_OPTIONS = [
@@ -38,7 +42,13 @@ export const GENERATED_STARTUP_RACE_OPTIONS = [
   "drow",
   "hobbit",
   "lycanthrope",
-  "vampire"
+  "vampire",
+  "giant",
+  "centaur",
+  "illithid",
+  "tortle",
+  "draugr",
+  "aasimar"
 ] as const;
 
 export const GENERATED_STARTUP_CHARACTER_RULESETS = {
@@ -983,6 +993,488 @@ export const GENERATED_STARTUP_CHARACTER_RULESETS = {
         ],
         "aligns": [
           "chaotic"
+        ]
+      }
+    }
+  },
+  "evilhack": {
+    "roles": [
+      "Archeologist",
+      "Barbarian",
+      "Caveman",
+      "Convict",
+      "Druid",
+      "Healer",
+      "Infidel",
+      "Knight",
+      "Monk",
+      "Priest",
+      "Rogue",
+      "Ranger",
+      "Samurai",
+      "Tourist",
+      "Valkyrie",
+      "Wizard"
+    ],
+    "races": [
+      "human",
+      "elf",
+      "dwarf",
+      "gnome",
+      "orc",
+      "giant",
+      "hobbit",
+      "centaur",
+      "illithid",
+      "tortle",
+      "drow",
+      "draugr",
+      "vampire",
+      "aasimar"
+    ],
+    "roleConstraints": {
+      "Archeologist": {
+        "races": [
+          "human",
+          "dwarf",
+          "gnome",
+          "hobbit",
+          "tortle",
+          "aasimar"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "neutral"
+        ]
+      },
+      "Barbarian": {
+        "races": [
+          "human",
+          "dwarf",
+          "orc",
+          "giant",
+          "centaur",
+          "tortle",
+          "draugr",
+          "vampire"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "neutral",
+          "chaotic"
+        ]
+      },
+      "Caveman": {
+        "races": [
+          "human",
+          "dwarf",
+          "gnome",
+          "giant",
+          "aasimar"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "neutral"
+        ]
+      },
+      "Convict": {
+        "races": [
+          "human",
+          "gnome",
+          "orc",
+          "illithid",
+          "drow",
+          "draugr",
+          "vampire"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "chaotic"
+        ]
+      },
+      "Druid": {
+        "races": [
+          "human",
+          "elf",
+          "giant",
+          "hobbit",
+          "centaur",
+          "tortle"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "neutral"
+        ]
+      },
+      "Healer": {
+        "races": [
+          "human",
+          "elf",
+          "dwarf",
+          "gnome",
+          "giant",
+          "hobbit",
+          "centaur",
+          "tortle"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "neutral"
+        ]
+      },
+      "Infidel": {
+        "races": [
+          "human",
+          "elf",
+          "orc",
+          "giant",
+          "centaur",
+          "illithid",
+          "drow",
+          "draugr",
+          "vampire"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "chaotic"
+        ]
+      },
+      "Knight": {
+        "races": [
+          "human",
+          "elf",
+          "dwarf",
+          "orc",
+          "centaur",
+          "drow",
+          "draugr",
+          "vampire",
+          "aasimar"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "chaotic"
+        ]
+      },
+      "Monk": {
+        "races": [
+          "human",
+          "elf",
+          "dwarf",
+          "giant",
+          "centaur",
+          "tortle",
+          "drow",
+          "draugr",
+          "vampire",
+          "aasimar"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "neutral",
+          "chaotic"
+        ]
+      },
+      "Priest": {
+        "races": [
+          "human",
+          "elf",
+          "dwarf",
+          "orc",
+          "giant",
+          "hobbit",
+          "centaur",
+          "illithid",
+          "tortle",
+          "drow",
+          "aasimar"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "neutral",
+          "chaotic"
+        ]
+      },
+      "Rogue": {
+        "races": [
+          "human",
+          "elf",
+          "gnome",
+          "orc",
+          "hobbit",
+          "drow",
+          "draugr",
+          "vampire"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "neutral",
+          "chaotic"
+        ]
+      },
+      "Ranger": {
+        "races": [
+          "human",
+          "elf",
+          "gnome",
+          "orc",
+          "hobbit",
+          "centaur",
+          "drow"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "neutral",
+          "chaotic"
+        ]
+      },
+      "Samurai": {
+        "races": [
+          "human",
+          "dwarf",
+          "giant",
+          "tortle",
+          "aasimar"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful"
+        ]
+      },
+      "Tourist": {
+        "races": [
+          "human",
+          "gnome",
+          "hobbit",
+          "tortle"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "neutral"
+        ]
+      },
+      "Valkyrie": {
+        "races": [
+          "human",
+          "dwarf",
+          "giant",
+          "centaur",
+          "aasimar"
+        ],
+        "genders": [
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "neutral"
+        ]
+      },
+      "Wizard": {
+        "races": [
+          "human",
+          "elf",
+          "dwarf",
+          "gnome",
+          "orc",
+          "giant",
+          "hobbit",
+          "illithid",
+          "tortle",
+          "drow",
+          "vampire"
+        ],
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "neutral",
+          "chaotic"
+        ]
+      }
+    },
+    "raceConstraints": {
+      "human": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "neutral",
+          "chaotic"
+        ]
+      },
+      "elf": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "neutral",
+          "chaotic"
+        ]
+      },
+      "dwarf": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "neutral"
+        ]
+      },
+      "gnome": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "neutral",
+          "chaotic"
+        ]
+      },
+      "orc": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "chaotic"
+        ]
+      },
+      "giant": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "neutral",
+          "chaotic"
+        ]
+      },
+      "hobbit": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "neutral"
+        ]
+      },
+      "centaur": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "neutral",
+          "chaotic"
+        ]
+      },
+      "illithid": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "chaotic"
+        ]
+      },
+      "tortle": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful",
+          "neutral"
+        ]
+      },
+      "drow": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "chaotic"
+        ]
+      },
+      "draugr": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "chaotic"
+        ]
+      },
+      "vampire": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "chaotic"
+        ]
+      },
+      "aasimar": {
+        "genders": [
+          "male",
+          "female"
+        ],
+        "aligns": [
+          "lawful"
         ]
       }
     }

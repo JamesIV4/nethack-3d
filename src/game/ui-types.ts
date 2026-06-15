@@ -58,6 +58,8 @@ export type PlayerStatsSnapshot = {
   wisdom: number;
   charisma: number;
   armor: number;
+  magicCancellation?: number | null;
+  toHit?: number | null;
   dungeon: string;
   dlevel: number;
   locationLabel?: string;

@@ -1,4 +1,36 @@
 
+// EvilHack 0.9.x status field layout (MAXBLSTATS=26).
+// BL_MC (magic cancellation) and BL_TOHIT (to-hit bonus) are EvilHack-specific
+// fields inserted between BL_AC and BL_HD relative to vanilla 3.6.7.
+export const STATUS_FIELD_MAP_EVILHACK = {
+    0:  "BL_TITLE",
+    1:  "BL_STR",
+    2:  "BL_DX",
+    3:  "BL_CO",
+    4:  "BL_IN",
+    5:  "BL_WI",
+    6:  "BL_CH",
+    7:  "BL_ALIGN",
+    8:  "BL_SCORE",
+    9:  "BL_CAP",
+    10: "BL_GOLD",
+    11: "BL_ENE",
+    12: "BL_ENEMAX",
+    13: "BL_XP",
+    14: "BL_AC",
+    15: "BL_MC",
+    16: "BL_TOHIT",
+    17: "BL_HD",
+    18: "BL_TIME",
+    19: "BL_REALTIME",
+    20: "BL_HUNGER",
+    21: "BL_HP",
+    22: "BL_HPMAX",
+    23: "BL_LEVELDESC",
+    24: "BL_EXP",
+    25: "BL_CONDITION",
+};
+
 export const STATUS_FIELD_MAP_367 = {
     0: "BL_TITLE", 
     1: "BL_STR", 

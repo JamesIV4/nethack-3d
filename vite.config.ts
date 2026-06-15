@@ -118,9 +118,11 @@ const enableCrossOriginIsolation =
 const wasm367RuntimeBuildJsPath = resolvePublicAssetPath("nethack-367.js");
 const wasm5RuntimeBuildJsPath = resolvePublicAssetPath("nethack-5.js");
 const slashemRuntimeBuildJsPath = resolvePublicAssetPath("slashem.js");
+const evilhackRuntimeBuildJsPath = resolvePublicAssetPath("evilhack.js");
 const wasm367CompatTag = "wasm-367-forked";
 const wasm5CompatTag = "wasm-5-forked";
 const slashemCompatTag = "slashem-343-forked";
+const evilhackCompatTag = "evilhack-092-forked";
 const projectVersion = resolveProjectPackageVersion();
 const wasm367RuntimeBuildTag = buildRuntimeAssetTag([
   wasm367RuntimeBuildJsPath,
@@ -134,9 +136,14 @@ const slashemRuntimeBuildTag = buildRuntimeAssetTag([
   slashemRuntimeBuildJsPath,
   resolvePublicAssetPath("slashem.wasm"),
 ]);
+const evilhackRuntimeBuildTag = buildRuntimeAssetTag([
+  evilhackRuntimeBuildJsPath,
+  resolvePublicAssetPath("evilhack.wasm"),
+]);
 const wasm367PointerAbiTag = "nh367-pointer-v1";
 const wasm5PointerAbiTag = "nh5-pointer-v1";
 const slashemPointerAbiTag = "slashem-pointer-v1";
+const evilhackPointerAbiTag = "evilhack-pointer-v1";
 const wasm367HasRecoverSavefile = buildFileContains(
   wasm367RuntimeBuildJsPath,
   'Module["_recover_savefile"]',
@@ -162,6 +169,14 @@ const slashemHasRecoverSavefile = buildFileContains(
 );
 const slashemHasCheckpointResumeBridge = buildFileContains(
   slashemRuntimeBuildJsPath,
+  'Module["_resume_checkpoint_save"]',
+);
+const evilhackHasRecoverSavefile = buildFileContains(
+  evilhackRuntimeBuildJsPath,
+  'Module["_recover_savefile"]',
+);
+const evilhackHasCheckpointResumeBridge = buildFileContains(
+  evilhackRuntimeBuildJsPath,
   'Module["_resume_checkpoint_save"]',
 );
 const resolvedBuildCommitSha = resolveBuildCommitSha();
@@ -211,6 +226,13 @@ const devSessionTag = String(Date.now());
 
 export default defineConfig({
   plugins: [tilesetManifestPlugin(), react()],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: "modern-compiler",
+      },
+    },
+  },
   define: {
     "import.meta.env.VITE_NH3D_APP_VERSION": JSON.stringify(projectVersion),
     "import.meta.env.VITE_NH3D_BUILD_COMMIT_SHA": JSON.stringify(
@@ -255,6 +277,16 @@ export default defineConfig({
       JSON.stringify(slashemHasRecoverSavefile),
     "import.meta.env.VITE_NH3D_WASM_SLASHEM_HAS_CHECKPOINT_RESUME_BRIDGE":
       JSON.stringify(slashemHasCheckpointResumeBridge),
+    "import.meta.env.VITE_NH3D_WASM_EVILHACK_COMPAT_TAG":
+      JSON.stringify(evilhackCompatTag),
+    "import.meta.env.VITE_NH3D_WASM_EVILHACK_RUNTIME_BUILD_TAG":
+      JSON.stringify(evilhackRuntimeBuildTag),
+    "import.meta.env.VITE_NH3D_WASM_EVILHACK_POINTER_ABI_TAG":
+      JSON.stringify(evilhackPointerAbiTag),
+    "import.meta.env.VITE_NH3D_WASM_EVILHACK_HAS_RECOVER_SAVEFILE":
+      JSON.stringify(evilhackHasRecoverSavefile),
+    "import.meta.env.VITE_NH3D_WASM_EVILHACK_HAS_CHECKPOINT_RESUME_BRIDGE":
+      JSON.stringify(evilhackHasCheckpointResumeBridge),
   },
   base: isElectronBuild ? "./" : isGitHubActions ? "/nethack-3d/" : "/",
   server: {

@@ -1,6 +1,7 @@
 export type GlyphKind =
   | "mon"
   | "pet"
+  | "peaceful"
   | "invis"
   | "detect"
   | "body"

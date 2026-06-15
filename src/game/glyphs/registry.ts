@@ -37,6 +37,11 @@ const GLYPH_CATALOG_BY_VERSION: Record<
     GLYPH_CATALOG_META: GLYPH_CATALOG_META_367,
     GLYPH_CATALOG_RANGES: GLYPH_CATALOG_RANGES_367,
   },
+  evilhack: {
+    GLYPH_CATALOG: GLYPH_CATALOG_367,
+    GLYPH_CATALOG_META: GLYPH_CATALOG_META_367,
+    GLYPH_CATALOG_RANGES: GLYPH_CATALOG_RANGES_367,
+  },
 };
 
 let activeGlyphCatalogVersion: NethackRuntimeVersion = "3.6.7";
@@ -64,6 +69,17 @@ async function loadGlyphCatalogModule(
     const mod =
       (await import("./glyph-catalog.slashem.generated")) as GlyphCatalogModule;
     GLYPH_CATALOG_BY_VERSION.slashem = mod;
+    return mod;
+  }
+
+  if (version === "evilhack") {
+    const existing = GLYPH_CATALOG_BY_VERSION.evilhack;
+    if (existing.GLYPH_CATALOG !== GLYPH_CATALOG_367) {
+      return existing;
+    }
+    const mod =
+      (await import("./glyph-catalog.evilhack.generated")) as GlyphCatalogModule;
+    GLYPH_CATALOG_BY_VERSION.evilhack = mod;
     return mod;
   }
 
@@ -127,6 +143,7 @@ function normalizeRuntimeKind(
   switch (runtimeKind) {
     case "mon":
     case "pet":
+    case "peaceful":
     case "invis":
     case "detect":
     case "body":

@@ -7,3 +7,19 @@ android/build/
 android/app/build/
 android/local.properties
 build/linux-libs/
+imported/evilhack-wasm/.emcache/
+imported/evilhack-wasm/build/EvilHack-0.9.3_native/
+imported/evilhack-wasm/build/EvilHack-0.9.3_wasm/
+imported/evilhack-wasm/build/evilhack.js
+imported/evilhack-wasm/build/evilhack.wasm
+
+# Editor / IDE local settings
+.vscode/settings.json
+
+# Local debug / scratch artifacts
+q
+isolate-*.log
+*-objdump.txt
+
+# Vendored EvilHack source (kept locally for build reproducibility, excluded from PR branch)
+imported/evilhack-wasm/

@@ -647,7 +647,7 @@ export function resolveCharacterCommandActions(
     }
   }
 
-  if (runtimeVersion === "slashem") {
+  if (runtimeVersion === "slashem" || runtimeVersion === "evilhack") {
     for (const command of [
       "enhance",
       "conduct",
@@ -661,7 +661,7 @@ export function resolveCharacterCommandActions(
   }
 
   return characterCommandCatalog.filter((entry) => {
-    if (runtimeVersion === "slashem" && entry.command === "seespells") {
+    if ((runtimeVersion === "slashem" || runtimeVersion === "evilhack") && entry.command === "seespells") {
       return false;
     }
     return available.has(entry.command);

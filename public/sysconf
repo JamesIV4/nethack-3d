@@ -1,3 +1,0 @@
-# NetHack sysconf for WASM wizard mode
-defaults
-WIZARDS = wizard

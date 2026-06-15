@@ -374,18 +374,21 @@ function ensureRuntime(
 }
 
 self.addEventListener("error", (event: ErrorEvent) => {
-  const status = getErrorStatus(
-    (event as unknown as { error?: unknown }).error,
-  );
-  const message = extractErrorMessage(
-    (event as unknown as { error?: unknown }).error ?? event.message,
-  );
+  const rawError = (event as unknown as { error?: unknown }).error;
+  const status = getErrorStatus(rawError);
+  const message = extractErrorMessage(rawError ?? event.message);
   if (isNormalRuntimeTermination(message, status)) {
     reportTermination(message, status ?? 0);
     event.preventDefault();
     return;
   }
-  reportRuntimeError(message);
+  const stack =
+    rawError && typeof (rawError as any).stack === "string"
+      ? (rawError as any).stack
+      : "";
+  // eslint-disable-next-line no-console
+  console.error("[WORKER_ERROR_EVENT]", message, stack || "(no stack)");
+  reportRuntimeError(stack ? `${message}\n${stack}` : message);
 });
 
 self.addEventListener("unhandledrejection", (event: any) => {
@@ -396,7 +399,13 @@ self.addEventListener("unhandledrejection", (event: any) => {
     event.preventDefault();
     return;
   }
-  reportRuntimeError(message);
+  const stack =
+    event.reason && typeof event.reason.stack === "string"
+      ? event.reason.stack
+      : "";
+  // eslint-disable-next-line no-console
+  console.error("[WORKER_UNHANDLED_REJECTION]", message, stack || "(no stack)");
+  reportRuntimeError(stack ? `${message}\n${stack}` : message);
 });
 
 self.onmessage = async (message: MessageEvent<RuntimeCommand>) => {

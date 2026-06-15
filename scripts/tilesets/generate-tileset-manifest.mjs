@@ -21,6 +21,11 @@ const TILESET_MANIFEST_SOURCES = [
     assetPrefix: "assets/5.0",
     tileLayoutVersion: "5.0",
   },
+  {
+    sourceDir: resolve(PROJECT_ROOT, "public/assets/evilhack"),
+    assetPrefix: "assets/evilhack",
+    tileLayoutVersion: "evilhack",
+  },
 ];
 
 export const TILESET_MANIFEST_SOURCE_DIRS = TILESET_MANIFEST_SOURCES.map(
@@ -239,7 +244,7 @@ export type GeneratedTilesetManifestEntry = {
   readonly label: string;
   readonly path: string;
   readonly tileSize: number;
-  readonly tileLayoutVersion: "slashem" | "3.4.3" | "3.6.7" | "5.0";
+  readonly tileLayoutVersion: "slashem" | "3.4.3" | "3.6.7" | "5.0" | "evilhack";
 };
 
 export const GENERATED_TILESET_MANIFEST: ReadonlyArray<GeneratedTilesetManifestEntry> =

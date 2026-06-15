@@ -17863,28 +17863,68 @@ class Nethack3DEngine implements Nethack3DEngineController {
     // Pixels with max(R/G/B delta) >= this are treated as full foreground (keep full alpha).
     // Values between min/max are linearly feathered for smoother edges.
     const alphaSoftMax = 40;
+    // Neighborhood radius used to look up the reference pixel: instead of
+    // requiring a pixel-exact match against the chosen background tile, we
+    // take min(delta) over a (2*r+1)^2 window. This makes background removal
+    // robust to atlases whose baked-in stone/floor backdrop is procedurally
+    // perturbed per cell (e.g. Absurdly Evil 93), and also robust to reference
+    // tiles whose own edges (UI border, frame) don't pixel-align with sprite
+    // tile edges. Radius 3 (7x7) drops the worst-case top-row residual delta
+    // from ~56 to ~18 (well under alphaSoftMax=40 → fully transparent), while
+    // sprite silhouettes are still safe: actual sprite pixels stay >40 from
+    // any neighborhood stone-floor color (typical max delta 80-150).
+    const referenceFuzzRadius = 3;
+    const tileStride = tileSize * 4;
 
-    for (let i = 0; i < data.length; i += 4) {
-      const sourceAlpha = data[i + 3];
-      if (sourceAlpha === 0) {
-        continue;
-      }
+    for (let py = 0; py < tileSize; py += 1) {
+      const rowOffset = py * tileStride;
+      for (let px = 0; px < tileSize; px += 1) {
+        const i = rowOffset + px * 4;
+        const sourceAlpha = data[i + 3];
+        if (sourceAlpha === 0) {
+          continue;
+        }
+        const sr = data[i];
+        const sg = data[i + 1];
+        const sb = data[i + 2];
 
-      const deltaR = Math.abs(data[i] - backgroundPixels[i]);
-      const deltaG = Math.abs(data[i + 1] - backgroundPixels[i + 1]);
-      const deltaB = Math.abs(data[i + 2] - backgroundPixels[i + 2]);
-      const delta = Math.max(deltaR, deltaG, deltaB);
-      const visibility = THREE.MathUtils.clamp(
-        (delta - alphaSoftMin) / (alphaSoftMax - alphaSoftMin),
-        0,
-        1,
-      );
-      const nextAlpha = Math.round(sourceAlpha * visibility);
-      data[i + 3] = nextAlpha;
-      if (nextAlpha === 0) {
-        data[i] = 0;
-        data[i + 1] = 0;
-        data[i + 2] = 0;
+        const minY = Math.max(0, py - referenceFuzzRadius);
+        const maxY = Math.min(tileSize - 1, py + referenceFuzzRadius);
+        const minX = Math.max(0, px - referenceFuzzRadius);
+        const maxX = Math.min(tileSize - 1, px + referenceFuzzRadius);
+        let bestDelta = 255;
+        for (let ry = minY; ry <= maxY; ry += 1) {
+          const refRowOffset = ry * tileStride;
+          for (let rx = minX; rx <= maxX; rx += 1) {
+            const j = refRowOffset + rx * 4;
+            const dr = Math.abs(sr - backgroundPixels[j]);
+            const dg = Math.abs(sg - backgroundPixels[j + 1]);
+            const db = Math.abs(sb - backgroundPixels[j + 2]);
+            const delta = dr > dg ? (dr > db ? dr : db) : dg > db ? dg : db;
+            if (delta < bestDelta) {
+              bestDelta = delta;
+              if (bestDelta <= alphaSoftMin) {
+                break;
+              }
+            }
+          }
+          if (bestDelta <= alphaSoftMin) {
+            break;
+          }
+        }
+
+        const visibility = THREE.MathUtils.clamp(
+          (bestDelta - alphaSoftMin) / (alphaSoftMax - alphaSoftMin),
+          0,
+          1,
+        );
+        const nextAlpha = Math.round(sourceAlpha * visibility);
+        data[i + 3] = nextAlpha;
+        if (nextAlpha === 0) {
+          data[i] = 0;
+          data[i + 1] = 0;
+          data[i + 2] = 0;
+        }
       }
     }
 
@@ -28418,6 +28458,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       BL_ENE: "power",
       BL_ENEMAX: "maxpower",
       BL_AC: "armor",
+      BL_MC: "magicCancellation",
+      BL_TOHIT: "toHit",
       BL_XP: "level",
       BL_EXP: "experience",
       BL_TIME: "time",
@@ -28488,6 +28530,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       "experience",
       "time",
       "armor",
+      "magicCancellation",
+      "toHit",
       "score",
       "gold",
       "dlevel",

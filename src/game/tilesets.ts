@@ -10,6 +10,7 @@ export type Nh3dTilesetTileLayoutVersion =
   | "3.4.3"
   | "3.6.7"
   | "5.0"
+  | "evilhack"
   | "unknown";
 export type Nh3dTilesetBackgroundRemovalMode = "none" | "tile" | "solid";
 
@@ -48,6 +49,8 @@ const vultureDefaultDataRoot = "assets/vulture/win/vulture/gamedata";
 const vultureNominalTileSize = 112;
 const tilesetBackgroundTilePresetByLabel: Readonly<Record<string, number>> = {
   "Absurdly Evil": 869,
+  "Absurdly Evil 9.2": 869,
+  "Absurdly Evil 93": 869,
   DawnHack: 869,
   Nevanda: 1476,
   "Vanilla NetHack TIles": 1476,
@@ -56,6 +59,8 @@ const tilesetBackgroundTilePresetByLabel: Readonly<Record<string, number>> = {
 };
 const tilesetSolidChromaKeyPresetByLabel: Readonly<Record<string, string>> = {
   "Absurdly Evil": "#466d6c",
+  "Absurdly Evil 9.2": "#466d6c",
+  "Absurdly Evil 93": "#466d6c",
   DawnHack: "#466d6c",
   Nevanda: "#466d6c",
   "Nevanda (5.0)": "#466d6c",
@@ -85,6 +90,8 @@ const tilesetBackgroundRemovalModePresetByPath: Readonly<
   "assets/3.6/RZTiles.bmp": "tile",
   "assets/3.6/Absurdly Evil.png": "none",
   "assets/3.6/Vanilla NetHack Tiles.png": "solid",
+  "assets/evilhack/Absurdly Evil 9.2.bmp": "tile",
+  "assets/evilhack/Absurdly Evil 93.bmp": "tile",
 };
 
 function normalizeTilesetPresetLookupLabel(label: string): string {
@@ -105,6 +112,9 @@ function normalizeGeneratedTileLayoutVersion(
   if (tileLayoutVersion === "3.4.3") {
     return "3.4.3";
   }
+  if (tileLayoutVersion === "evilhack") {
+    return "evilhack";
+  }
   return "3.6.7";
 }
 
@@ -123,6 +133,9 @@ function normalizeUserTilesetTileLayoutVersion(
   if (tileLayoutVersion === "3.4.3") {
     return "3.4.3";
   }
+  if (tileLayoutVersion === "evilhack") {
+    return "evilhack";
+  }
   return "unknown";
 }
 
@@ -133,11 +146,16 @@ export function isNh3dTilesetLayoutCompatibleWithRuntime(
   if (tileLayoutVersion === "unknown") {
     return true;
   }
+  if (tileLayoutVersion === "evilhack") {
+    return runtimeVersion === "evilhack";
+  }
   if (tileLayoutVersion === "slashem") {
-    return runtimeVersion === "slashem";
+    // Slash'EM layout is also used as a fallback for EvilHack
+    // (similar expanded glyph layout vs vanilla 3.6.x).
+    return runtimeVersion === "slashem" || runtimeVersion === "evilhack";
   }
   if (tileLayoutVersion === "3.4.3") {
-    return runtimeVersion === "slashem";
+    return runtimeVersion === "slashem" || runtimeVersion === "evilhack";
   }
   if (tileLayoutVersion === "3.6.7") {
     return runtimeVersion === "3.6.7" || runtimeVersion === "5.0";
@@ -401,6 +419,7 @@ const preferredDefaultTilesetPathByRuntime: Readonly<
   Partial<Record<NethackRuntimeVersion, string>>
 > = {
   slashem: "assets/slashem/Absurd.png",
+  evilhack: "assets/evilhack/Absurdly Evil 93.bmp",
 };
 export const defaultNh3dTilesetPath: string =
   builtinTilesets.find((entry) => entry.path === preferredDefaultTilesetPath)

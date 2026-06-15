@@ -1,0 +1,6 @@
+#!/bin/bash
+node ./scripts/wasm/build-evilhack.mjs "$@"
+# Always patch evilhack.js glue after build
+node ./scripts/wasm/patch-evilhack-glue.mjs public/evilhack.js
+# Prettify evilhack.js for readability and patch stability
+npx prettier --write public/evilhack.js
