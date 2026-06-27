@@ -4682,7 +4682,7 @@ canvas {
   font-size: nh3d-scale-font(12px);
 }
 
-.nh3d-soundpack-accordion-play {
+.nh3d-soundpack-icon-play {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -4696,10 +4696,16 @@ canvas {
   cursor: pointer;
   transition:
     background-color 120ms ease,
-    border-color 120ms ease;
+    border-color 120ms ease,
+    transform 80ms ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: rgba(76, 111, 160, 0.3);
+    border-color: rgba(120, 170, 230, 0.7);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.94);
   }
 
   &.is-playing {
@@ -4710,6 +4716,17 @@ canvas {
   &:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+}
+
+.nh3d-soundpack-control-row-primary .nh3d-soundpack-variation-play {
+  justify-self: end;
+}
+
+@media (pointer: coarse) {
+  .nh3d-soundpack-control-row-primary .nh3d-soundpack-variation-play {
+    grid-column: 1 / -1;
+    justify-self: end;
   }
 }
 

@@ -962,14 +962,14 @@ export default function SoundPackSettings({
         }
         volumeLabel={soundPackStrings.volume}
         volumeAriaLabel={soundPackStrings.volumeAria(label)}
-        showPlay={!view.isBase}
+        showPlay
         isPlaying={playingSoundSlotKey === uploadSlotKey}
         onPlay={() => {
           void handlePlayPreview(soundKey, variationId);
         }}
         onStop={stopPreview}
-        playLabel={soundPackStrings.play}
-        playingLabel={soundPackStrings.playing}
+        playAriaLabel={soundPackStrings.play}
+        stopAriaLabel={soundPackStrings.stopPreview}
         showFile={!isDefaultDraft}
         fileLabel={soundPackStrings.soundFile}
         displayFileName={displayFileName}
@@ -1093,14 +1093,15 @@ export default function SoundPackSettings({
         }
         volumeLabel={soundPackStrings.volume}
         volumeAriaLabel={soundPackStrings.volumeAria(label)}
-        showPlay={!view.isBase}
+        showPlay
         isPlaying={playingSoundSlotKey === uploadSlotKey}
         onPlay={() => {
           void handlePlayAmbientPreview(trackKey, variationId);
         }}
         onStop={stopPreview}
-        playLabel={soundPackStrings.play}
-        playingLabel={soundPackStrings.playing}
+        playAriaLabel={soundPackStrings.play}
+        stopAriaLabel={soundPackStrings.stopPreview}
+        playDisabled={!canClear}
         showFile
         fileLabel={soundPackStrings.soundFile}
         displayFileName={displayFileName}
@@ -1422,10 +1423,7 @@ export default function SoundPackSettings({
             const variationViews = getSoundVariationViews(soundKey, sound);
             const rowKey = `sfx:${soundKey}`;
             const expanded = expandedKeys.has(rowKey);
-            const baseSlotKey = createNh3dSoundUploadSlotKey(
-              soundKey,
-              nh3dBaseSoundVariationId,
-            );
+            const previewKey = `preview:${rowKey}`;
             return (
               <SoundAccordionRow
                 key={soundKey}
@@ -1436,9 +1434,23 @@ export default function SoundPackSettings({
                 collapseAriaLabel={soundPackStrings.collapseAria(
                   definition.label,
                 )}
-                isPlaying={playingSoundSlotKey === baseSlotKey}
+                isPlaying={playingSoundSlotKey === previewKey}
                 onPlay={() => {
-                  void handlePlayPreview(soundKey, nh3dBaseSoundVariationId);
+                  const enabledViews = variationViews.filter(
+                    (view) => view.value.enabled,
+                  );
+                  const pool =
+                    enabledViews.length > 0 ? enabledViews : variationViews;
+                  const picked = pickWeightedVariationView(
+                    pool,
+                    lastPreviewVariationIdRef.current[rowKey],
+                    0.35,
+                  );
+                  if (!picked) {
+                    return;
+                  }
+                  lastPreviewVariationIdRef.current[rowKey] = picked.id;
+                  void handlePlayPreview(soundKey, picked.id, previewKey);
                 }}
                 onStop={stopPreview}
                 playAriaLabel={soundPackStrings.play}
@@ -1476,16 +1488,15 @@ export default function SoundPackSettings({
             const trackKey = definition.key;
             const track = draftPack.ambient[trackKey];
             const variationViews = getAmbientVariationViews(track);
-            const baseVariation = variationViews[0]?.value ?? null;
             const rowKey = `ambient:${trackKey}`;
             const expanded = expandedKeys.has(rowKey);
-            const baseSlotKey = createNh3dAmbientUploadSlotKey(
-              trackKey,
-              nh3dBaseSoundVariationId,
+            const previewKey = `preview:${rowKey}`;
+            const playableViews = variationViews.filter(
+              (view) =>
+                pendingUploads[
+                  createNh3dAmbientUploadSlotKey(trackKey, view.id)
+                ] instanceof Blob || Boolean(view.value.path),
             );
-            const basePlayable =
-              pendingUploads[baseSlotKey] instanceof Blob ||
-              Boolean(baseVariation?.path);
             return (
               <SoundAccordionRow
                 key={trackKey}
@@ -1496,17 +1507,28 @@ export default function SoundPackSettings({
                 collapseAriaLabel={soundPackStrings.collapseAria(
                   definition.label,
                 )}
-                isPlaying={playingSoundSlotKey === baseSlotKey}
+                isPlaying={playingSoundSlotKey === previewKey}
                 onPlay={() => {
-                  void handlePlayAmbientPreview(
-                    trackKey,
-                    nh3dBaseSoundVariationId,
+                  const enabledViews = playableViews.filter(
+                    (view) => view.value.enabled,
                   );
+                  const pool =
+                    enabledViews.length > 0 ? enabledViews : playableViews;
+                  const picked = pickWeightedVariationView(
+                    pool,
+                    lastPreviewVariationIdRef.current[rowKey],
+                    0.4,
+                  );
+                  if (!picked) {
+                    return;
+                  }
+                  lastPreviewVariationIdRef.current[rowKey] = picked.id;
+                  void handlePlayAmbientPreview(trackKey, picked.id, previewKey);
                 }}
                 onStop={stopPreview}
                 playAriaLabel={soundPackStrings.play}
                 stopAriaLabel={soundPackStrings.stopPreview}
-                playDisabled={isBusy || !basePlayable}
+                playDisabled={isBusy || playableViews.length === 0}
               >
                 <div className="nh3d-soundpack-variation-list">
                   {variationViews.map((view, index) =>
