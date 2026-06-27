@@ -357,6 +357,16 @@ export const esOverrides = {
             },
         },
     },
+    ambientTracks: {
+        byKey: {
+            dungeons_of_doom: "Mazmorras de la Perdición",
+            mines: "Minas de los Gnomos",
+            sokoban: "Sokoban",
+            quest: "La Misión",
+            vlads_tower: "La Torre de Vlad",
+            endgame: "Final del Juego",
+        },
+    },
     soundEffects: {
         byKey: {
             "player-walk": "Paseo del jugador",
@@ -1052,6 +1062,28 @@ export const esOverrides = {
             attributionAria: (label: string) => `Atribuci\u00F3n para${label}`,
             attributionPlaceholder: "Detalles de fuente, creador o licencia",
             addVariation: "+ Agregar variaci\u00F3n",
+            tabSoundEffects: "Efectos de sonido",
+            tabAmbient: "M\u00FAsica / Ambientes",
+            ambientDescription:
+                "M\u00FAsica de fondo en bucle por tipo de nivel de mazmorra. A\u00F1ade variantes seg\u00FAn la profundidad, el nivel del jugador o el Amuleto de Yendor para que la m\u00FAsica se intensifique a medida que avanza la partida.",
+            expandAria: (label: string) => `Expandir ${label}`,
+            collapseAria: (label: string) => `Contraer ${label}`,
+            conditionsHeading: "Condiciones de reproducci\u00F3n",
+            conditionsHint:
+                "Deja un campo vac\u00EDo para no poner l\u00EDmite. Una variante solo se reproduce cuando se cumplen todas las condiciones.",
+            depthRange: "Profundidad de la mazmorra",
+            minDepth: "Prof. m\u00EDn.",
+            maxDepth: "Prof. m\u00E1x.",
+            playerLevelRange: "Nivel de experiencia",
+            minLevel: "Nivel m\u00EDn.",
+            maxLevel: "Nivel m\u00E1x.",
+            anyValue: "Cualquiera",
+            amuletCondition: "Amuleto de Yendor",
+            amuletAny: "Cualquiera",
+            amuletCarried: "Llevado",
+            amuletNotCarried: "No llevado",
+            ambientUnassigned: "Sin pista asignada",
+            ambientNoTracks: "A\u00FAn no hay pistas de m\u00FAsica en este paquete.",
         },
         dialogs: {
             pauseMenu: {

@@ -186,6 +186,16 @@ export const zhCnOverrides = {
       verbose: { label: "详细消息", description: "使用更完整的状态和动作消息措辞。" },
     },
   },
+  ambientTracks: {
+    byKey: {
+      dungeons_of_doom: "厄运地下城",
+      mines: "侏儒矿坑",
+      sokoban: "推箱子",
+      quest: "任务",
+      vlads_tower: "弗拉德之塔",
+      endgame: "终局",
+    },
+  },
   soundEffects: {
     byKey: {
       "player-walk": "玩家行走",
@@ -866,6 +876,28 @@ export const zhCnOverrides = {
       attributionAria: (label: string) => `${label} 的署名信息`,
       attributionPlaceholder: "来源、作者或许可信息",
       addVariation: "+ 添加变体",
+      tabSoundEffects: "音效",
+      tabAmbient: "音乐 / 环境音景",
+      ambientDescription:
+        "按地下城层级类型循环播放的背景音乐。可添加按深度、玩家等级或是否持有延德的护身符触发的变体，让音乐随着游戏难度提升而愈发紧张。",
+      expandAria: (label: string) => `展开${label}`,
+      collapseAria: (label: string) => `收起${label}`,
+      conditionsHeading: "播放条件",
+      conditionsHint:
+        "留空表示不限制。仅当满足所有条件时才会播放该变体。",
+      depthRange: "地下城深度",
+      minDepth: "最小深度",
+      maxDepth: "最大深度",
+      playerLevelRange: "经验等级",
+      minLevel: "最低等级",
+      maxLevel: "最高等级",
+      anyValue: "任意",
+      amuletCondition: "延德的护身符",
+      amuletAny: "任意",
+      amuletCarried: "携带",
+      amuletNotCarried: "未携带",
+      ambientUnassigned: "未指定音轨",
+      ambientNoTracks: "此音效包还没有音乐音轨。",
     },
     dialogs: {
       pauseMenu: {

@@ -388,6 +388,16 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
       },
     },
   },
+  ambientTracks: {
+    byKey: {
+      dungeons_of_doom: "Verlies des Verderbens",
+      mines: "Gnomenminen",
+      sokoban: "Sokoban",
+      quest: "Die Queste",
+      vlads_tower: "Vlads Turm",
+      endgame: "Endspiel",
+    },
+  },
   soundEffects: {
     byKey: {
       "player-walk": "Spieler geht",
@@ -1159,6 +1169,28 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
       attributionPlaceholder:
         "Quelle, Urheber oder Lizenzdetails",
       addVariation: "+ Variation hinzuf\u00fcgen",
+      tabSoundEffects: "Soundeffekte",
+      tabAmbient: "Musik / Klanglandschaften",
+      ambientDescription:
+        "Schleifende Hintergrundmusik je Dungeon-Ebenentyp. F\u00fcge Varianten hinzu, die nach Tiefe, Spielerstufe oder dem Amulett von Yendor gesteuert werden, damit die Musik intensiver wird, je schwieriger der Lauf wird.",
+      expandAria: (label: string) => `${label} ausklappen`,
+      collapseAria: (label: string) => `${label} einklappen`,
+      conditionsHeading: "Abspielbedingungen",
+      conditionsHint:
+        "Leere Felder bedeuten keine Begrenzung. Eine Variante wird nur abgespielt, wenn alle Bedingungen erf\u00fcllt sind.",
+      depthRange: "Dungeon-Tiefe",
+      minDepth: "Min. Tiefe",
+      maxDepth: "Max. Tiefe",
+      playerLevelRange: "Erfahrungsstufe",
+      minLevel: "Min. Stufe",
+      maxLevel: "Max. Stufe",
+      anyValue: "Beliebig",
+      amuletCondition: "Amulett von Yendor",
+      amuletAny: "Beliebig",
+      amuletCarried: "Getragen",
+      amuletNotCarried: "Nicht getragen",
+      ambientUnassigned: "Kein Titel zugewiesen",
+      ambientNoTracks: "Noch keine Musiktitel in diesem Paket.",
     },
     dialogs: {
       pauseMenu: {

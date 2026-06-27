@@ -368,6 +368,16 @@ export const ko = {
       },
     },
   },
+  ambientTracks: {
+    byKey: {
+      dungeons_of_doom: "파멸의 던전",
+      mines: "노움 광산",
+      sokoban: "창고지기",
+      quest: "퀘스트",
+      vlads_tower: "블라드의 탑",
+      endgame: "엔드게임",
+    },
+  },
   soundEffects: {
     byKey: {
       "player-walk": "플레이어 걷기",
@@ -1131,6 +1141,28 @@ export const ko = {
       attributionAria: (label: string) => `${label} 출처 표기`,
       attributionPlaceholder: "출처, 제작자 또는 라이선스 정보",
       addVariation: "+ 변형 추가",
+      tabSoundEffects: "효과음",
+      tabAmbient: "음악 / 사운드스케이프",
+      ambientDescription:
+        "던전 층 유형별로 반복 재생되는 배경 음악입니다. 깊이, 플레이어 레벨, 옌도르의 부적 소지 여부로 조건을 건 변형을 추가하면 플레이가 어려워질수록 음악이 고조됩니다.",
+      expandAria: (label: string) => `${label} 펼치기`,
+      collapseAria: (label: string) => `${label} 접기`,
+      conditionsHeading: "재생 조건",
+      conditionsHint:
+        "칸을 비워 두면 제한이 없습니다. 모든 조건이 충족될 때만 변형이 재생됩니다.",
+      depthRange: "던전 깊이",
+      minDepth: "최소 깊이",
+      maxDepth: "최대 깊이",
+      playerLevelRange: "경험 레벨",
+      minLevel: "최소 레벨",
+      maxLevel: "최대 레벨",
+      anyValue: "모두",
+      amuletCondition: "옌도르의 부적",
+      amuletAny: "모두",
+      amuletCarried: "소지",
+      amuletNotCarried: "미소지",
+      ambientUnassigned: "지정된 트랙 없음",
+      ambientNoTracks: "이 팩에는 아직 음악 트랙이 없습니다.",
     },
     dialogs: {
       pauseMenu: {

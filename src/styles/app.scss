@@ -4584,6 +4584,209 @@ canvas {
   white-space: nowrap;
 }
 
+.nh3d-soundpack-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid rgba(74, 112, 164, 0.4);
+  border-radius: 10px;
+  background: rgba(6, 16, 26, 0.5);
+}
+
+.nh3d-soundpack-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--nh3d-ui-accent-soft);
+  font-size: nh3d-scale-font(14px);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+
+  &:hover {
+    background: rgba(76, 111, 160, 0.22);
+  }
+
+  &.is-active {
+    background: rgba(76, 111, 160, 0.42);
+    border-color: rgba(120, 170, 230, 0.7);
+    color: var(--nh3d-ui-text);
+  }
+}
+
+.nh3d-soundpack-ambient-description {
+  margin-bottom: 2px;
+}
+
+.nh3d-soundpack-accordion {
+  border: 1px solid rgba(74, 112, 164, 0.54);
+  border-radius: 8px;
+  background: rgba(12, 31, 48, 0.66);
+  overflow: hidden;
+
+  &.is-expanded {
+    border-color: rgba(120, 170, 230, 0.6);
+  }
+}
+
+.nh3d-soundpack-accordion-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px 5px 4px;
+}
+
+.nh3d-soundpack-accordion-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--nh3d-ui-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.nh3d-soundpack-accordion-chevron {
+  flex: 0 0 auto;
+  color: var(--nh3d-ui-accent-soft);
+  transition: transform 140ms ease;
+}
+
+.nh3d-soundpack-accordion.is-expanded .nh3d-soundpack-accordion-chevron {
+  transform: rotate(90deg);
+}
+
+.nh3d-soundpack-accordion-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: nh3d-scale-font(15px);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nh3d-soundpack-accordion-subtitle {
+  flex: 0 0 auto;
+  color: var(--nh3d-ui-accent-soft);
+  font-size: nh3d-scale-font(12px);
+}
+
+.nh3d-soundpack-accordion-play {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(74, 112, 164, 0.54);
+  border-radius: 7px;
+  background: rgba(8, 20, 33, 0.7);
+  color: var(--nh3d-ui-text);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  &:hover {
+    background: rgba(76, 111, 160, 0.3);
+  }
+
+  &.is-playing {
+    background: rgba(64, 150, 96, 0.6);
+    border-color: rgba(120, 220, 160, 0.7);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.nh3d-soundpack-accordion-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid rgba(74, 112, 164, 0.38);
+  background: rgba(6, 16, 26, 0.3);
+}
+
+.nh3d-soundpack-play-button-placeholder {
+  width: var(--nh3d-soundpack-action-width);
+
+  @media (pointer: coarse) {
+    display: none;
+  }
+}
+
+.nh3d-soundpack-control-row-extra {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.nh3d-soundpack-conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px dashed rgba(120, 170, 230, 0.4);
+  border-radius: 6px;
+  background: rgba(10, 26, 42, 0.5);
+}
+
+.nh3d-soundpack-conditions-heading {
+  font-size: nh3d-scale-font(13px);
+  font-weight: 700;
+  color: var(--nh3d-ui-text);
+}
+
+.nh3d-soundpack-conditions-hint {
+  margin: 0;
+}
+
+.nh3d-soundpack-conditions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.nh3d-soundpack-condition-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nh3d-soundpack-condition-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nh3d-soundpack-condition-range-dash {
+  color: var(--nh3d-ui-accent-soft);
+}
+
+.nh3d-soundpack-condition-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.nh3d-soundpack-condition-select {
+  width: 100%;
+}
+
 .delete-button {
   width: 30px;
   height: 30px;

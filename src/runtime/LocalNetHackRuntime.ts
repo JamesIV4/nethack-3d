@@ -9510,6 +9510,30 @@ class LocalNetHackRuntime {
     return null;
   }
 
+  resolveRuntimePlayerHasAmulet(u) {
+    // Best-effort detection of carrying the real Amulet of Yendor, read from
+    // the NetHack runtime's `u.uhave.amulet` bitfield when the WASM build
+    // exposes it. Optional gameplay signal; defaults to false when unavailable.
+    try {
+      if (!u || typeof u !== "object") {
+        return false;
+      }
+      const uhave = u.uhave;
+      if (uhave && typeof uhave === "object") {
+        const amulet = uhave.amulet;
+        if (typeof amulet === "number") {
+          return amulet !== 0;
+        }
+        if (typeof amulet === "boolean") {
+          return amulet;
+        }
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
   resolveRuntimeBranchTag(dnum, topology) {
     if (!topology || typeof topology !== "object") {
       return null;
@@ -9602,6 +9626,7 @@ class LocalNetHackRuntime {
             ? globalsRoot.dungeon_topology
             : null;
       const branchTag = this.resolveRuntimeBranchTag(dnum, topology);
+      const hasAmulet = this.resolveRuntimePlayerHasAmulet(u);
       return {
         dnum,
         dlevel,
@@ -9609,6 +9634,7 @@ class LocalNetHackRuntime {
         depth,
         dungeonName,
         branchTag,
+        hasAmulet,
       };
     } catch (error) {
       console.log("Failed to resolve runtime level identity:", error);

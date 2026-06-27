@@ -388,6 +388,16 @@ export const fr = {
       },
     },
   },
+  ambientTracks: {
+    byKey: {
+      dungeons_of_doom: "Donjons du Malheur",
+      mines: "Mines des Gnomes",
+      sokoban: "Sokoban",
+      quest: "La Quete",
+      vlads_tower: "Tour de Vlad",
+      endgame: "Fin de partie",
+    },
+  },
   soundEffects: {
     byKey: {
       "player-walk": "Pas du joueur",
@@ -1170,6 +1180,28 @@ export const fr = {
       attributionAria: (label: string) => `Attribution pour ${label}`,
       attributionPlaceholder: "Source, auteur ou details de licence",
       addVariation: "+ Ajouter une variation",
+      tabSoundEffects: "Effets sonores",
+      tabAmbient: "Musique / Ambiances",
+      ambientDescription:
+        "Musique d'ambiance en boucle selon le type de niveau du donjon. Ajoutez des variantes conditionnees par la profondeur, le niveau du joueur ou l'Amulette d'Yendor pour que la musique s'intensifie a mesure que la partie devient difficile.",
+      expandAria: (label: string) => `Developper ${label}`,
+      collapseAria: (label: string) => `Reduire ${label}`,
+      conditionsHeading: "Conditions de lecture",
+      conditionsHint:
+        "Laissez un champ vide pour ne pas limiter. Une variante n'est jouee que si toutes les conditions sont remplies.",
+      depthRange: "Profondeur du donjon",
+      minDepth: "Prof. min.",
+      maxDepth: "Prof. max.",
+      playerLevelRange: "Niveau d'experience",
+      minLevel: "Niveau min.",
+      maxLevel: "Niveau max.",
+      anyValue: "Indifferent",
+      amuletCondition: "Amulette d'Yendor",
+      amuletAny: "Indifferent",
+      amuletCarried: "Portee",
+      amuletNotCarried: "Non portee",
+      ambientUnassigned: "Aucune piste assignee",
+      ambientNoTracks: "Aucune piste musicale dans ce pack pour l'instant.",
     },
     dialogs: {
       pauseMenu: {

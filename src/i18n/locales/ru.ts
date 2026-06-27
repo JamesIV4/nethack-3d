@@ -367,6 +367,16 @@ export const ru = {
       },
     },
   },
+  ambientTracks: {
+    byKey: {
+      dungeons_of_doom: "Подземелья Рока",
+      mines: "Гномьи шахты",
+      sokoban: "Сокобан",
+      quest: "Квест",
+      vlads_tower: "Башня Влада",
+      endgame: "Финал",
+    },
+  },
   soundEffects: {
     byKey: {
       "player-walk": "Шаг игрока",
@@ -1139,6 +1149,28 @@ export const ru = {
       attributionAria: (label: string) => `Указание авторства для ${label}`,
       attributionPlaceholder: "Источник, автор или сведения о лицензии",
       addVariation: "+ Добавить вариант",
+      tabSoundEffects: "Звуковые эффекты",
+      tabAmbient: "Музыка / Эмбиент",
+      ambientDescription:
+        "Зацикленная фоновая музыка для каждого типа уровня подземелья. Добавляйте варианты с условиями по глубине, уровню персонажа или наличию Амулета Йендора, чтобы музыка становилась напряжённее по мере усложнения игры.",
+      expandAria: (label: string) => `Развернуть ${label}`,
+      collapseAria: (label: string) => `Свернуть ${label}`,
+      conditionsHeading: "Условия воспроизведения",
+      conditionsHint:
+        "Оставьте поле пустым, чтобы не ограничивать. Вариант играет, только когда выполнены все условия.",
+      depthRange: "Глубина подземелья",
+      minDepth: "Мин. глубина",
+      maxDepth: "Макс. глубина",
+      playerLevelRange: "Уровень опыта",
+      minLevel: "Мин. уровень",
+      maxLevel: "Макс. уровень",
+      anyValue: "Любой",
+      amuletCondition: "Амулет Йендора",
+      amuletAny: "Любой",
+      amuletCarried: "При себе",
+      amuletNotCarried: "Не при себе",
+      ambientUnassigned: "Трек не назначен",
+      ambientNoTracks: "В этом наборе пока нет музыкальных треков.",
     },
     dialogs: {
       pauseMenu: {

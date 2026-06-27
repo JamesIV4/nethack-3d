@@ -201,6 +201,151 @@ export type Nh3dSoundEffectKey = Nh3dSoundEffectDefinition["key"];
 export type Nh3dSoundEntrySource = "builtin" | "user";
 export const nh3dBaseSoundVariationId = "__base__";
 
+// --- Ambient music / audioscapes -------------------------------------------
+// One looping ambient track per dungeon "level type" (branch), matching the
+// runtime branch-detection tags produced by the engine. Tracks support the
+// same variation system as sound effects, plus optional gating by dungeon
+// depth range, Amulet of Yendor possession, and player experience level so the
+// music can escalate as the run gets harder.
+type Nh3dAmbientTrackDefinitionShape = {
+  key: string;
+  label: string;
+  branchTags: readonly string[];
+};
+const ambientTrackStrings = getTranslationStrings().ambientTracks.byKey;
+
+export const nh3dAmbientTrackDefinitions = [
+  {
+    key: "dungeons_of_doom",
+    label: ambientTrackStrings.dungeons_of_doom,
+    branchTags: ["dungeons_of_doom"],
+  },
+  { key: "mines", label: ambientTrackStrings.mines, branchTags: ["mines"] },
+  {
+    key: "sokoban",
+    label: ambientTrackStrings.sokoban,
+    branchTags: ["sokoban"],
+  },
+  { key: "quest", label: ambientTrackStrings.quest, branchTags: ["quest"] },
+  {
+    key: "vlads_tower",
+    label: ambientTrackStrings.vlads_tower,
+    branchTags: ["vlads_tower"],
+  },
+  {
+    key: "endgame",
+    label: ambientTrackStrings.endgame,
+    branchTags: ["endgame"],
+  },
+] as const satisfies ReadonlyArray<Nh3dAmbientTrackDefinitionShape>;
+
+export type Nh3dAmbientTrackDefinition =
+  (typeof nh3dAmbientTrackDefinitions)[number];
+export type Nh3dAmbientTrackKey = Nh3dAmbientTrackDefinition["key"];
+export const nh3dDefaultAmbientTrackKey: Nh3dAmbientTrackKey =
+  "dungeons_of_doom";
+
+export type Nh3dAmbientAmuletCondition = "any" | "carried" | "not-carried";
+
+export type Nh3dAmbientCondition = {
+  depthMin: number | null;
+  depthMax: number | null;
+  playerLevelMin: number | null;
+  playerLevelMax: number | null;
+  amulet: Nh3dAmbientAmuletCondition;
+};
+
+export type Nh3dAmbientPlaybackContext = {
+  depth: number | null;
+  playerLevel: number | null;
+  hasAmulet: boolean;
+};
+
+export function createNh3dDefaultAmbientCondition(): Nh3dAmbientCondition {
+  return {
+    depthMin: null,
+    depthMax: null,
+    playerLevelMin: null,
+    playerLevelMax: null,
+    amulet: "any",
+  };
+}
+
+export function resolveNh3dAmbientTrackKeyForBranch(
+  branchTag: string | null | undefined,
+): Nh3dAmbientTrackKey {
+  const normalized = String(branchTag ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+  if (normalized) {
+    for (const definition of nh3dAmbientTrackDefinitions) {
+      if (definition.branchTags.some((tag) => tag === normalized)) {
+        return definition.key;
+      }
+    }
+  }
+  return nh3dDefaultAmbientTrackKey;
+}
+
+export function doesNh3dAmbientConditionMatch(
+  condition: Nh3dAmbientCondition,
+  context: Nh3dAmbientPlaybackContext,
+): boolean {
+  const depth = context.depth;
+  if (condition.depthMin !== null && (depth === null || depth < condition.depthMin)) {
+    return false;
+  }
+  if (condition.depthMax !== null && (depth === null || depth > condition.depthMax)) {
+    return false;
+  }
+  const level = context.playerLevel;
+  if (
+    condition.playerLevelMin !== null &&
+    (level === null || level < condition.playerLevelMin)
+  ) {
+    return false;
+  }
+  if (
+    condition.playerLevelMax !== null &&
+    (level === null || level > condition.playerLevelMax)
+  ) {
+    return false;
+  }
+  if (condition.amulet === "carried" && !context.hasAmulet) {
+    return false;
+  }
+  if (condition.amulet === "not-carried" && context.hasAmulet) {
+    return false;
+  }
+  return true;
+}
+
+type Nh3dAmbientTrackEntryBase = {
+  key: Nh3dAmbientTrackKey;
+  enabled: boolean;
+  volume: number;
+  fileName: string;
+  mimeType: string;
+  path: string;
+  source: Nh3dSoundEntrySource;
+  attribution: string;
+  conditions: Nh3dAmbientCondition;
+};
+
+export type Nh3dAmbientTrackVariation = Nh3dAmbientTrackEntryBase & {
+  id: string;
+};
+
+export type Nh3dAmbientTrackAssignment = Nh3dAmbientTrackEntryBase & {
+  variations: Nh3dAmbientTrackVariation[];
+};
+
+export type Nh3dSoundPackAmbientMap = Record<
+  Nh3dAmbientTrackKey,
+  Nh3dAmbientTrackAssignment
+>;
+
 type Nh3dSoundEffectEntryBase = {
   key: Nh3dSoundEffectKey;
   enabled: boolean;
@@ -232,6 +377,7 @@ export type Nh3dSoundPackRecord = {
   createdAt: number;
   updatedAt: number;
   sounds: Nh3dSoundPackSoundMap;
+  ambient: Nh3dSoundPackAmbientMap;
 };
 
 export type Nh3dLoadedSoundPackState = {
@@ -244,7 +390,7 @@ export type Nh3dSoundFileUploadOverrides = Partial<Record<string, Blob | null>>;
 type Nh3dStoredSoundFileRecord = {
   path: string;
   packId: string;
-  soundKey: Nh3dSoundEffectKey;
+  soundKey: string;
   fileName: string;
   mimeType: string;
   blob: Blob;
@@ -259,9 +405,21 @@ type Nh3dMetaRecord = {
   updatedAt: number;
 };
 
+type Nh3dSoundPackManifestAmbientEntry = {
+  enabled: boolean;
+  volume: number;
+  fileName: string;
+  mimeType: string;
+  path: string;
+  source: Nh3dSoundEntrySource;
+  attribution: string;
+  conditions: Nh3dAmbientCondition;
+  archivePath: string | null;
+};
+
 type Nh3dSoundPackExportManifest = {
   schema: "nh3d-soundpack";
-  version: 2;
+  version: 3;
   exportedAt: string;
   pack: {
     name: string;
@@ -289,6 +447,17 @@ type Nh3dSoundPackExportManifest = {
         archivePath: string | null;
       }>;
     }>;
+    ambient: Array<
+      Nh3dSoundPackManifestAmbientEntry & {
+        key: Nh3dAmbientTrackKey;
+        label: string;
+        variations: Array<
+          Nh3dSoundPackManifestAmbientEntry & {
+            id: string;
+          }
+        >;
+      }
+    >;
   };
 };
 
@@ -315,6 +484,31 @@ type ParsedImportSoundEntry = {
   attribution: string;
   archivePath: string | null;
   variations: ParsedImportSoundVariationEntry[];
+};
+
+type ParsedImportAmbientVariationEntry = {
+  id: string;
+  enabled: boolean;
+  volume: number;
+  fileName: string;
+  mimeType: string;
+  path: string;
+  attribution: string;
+  conditions: Nh3dAmbientCondition;
+  archivePath: string | null;
+};
+
+type ParsedImportAmbientEntry = {
+  key: Nh3dAmbientTrackKey;
+  enabled: boolean;
+  volume: number;
+  fileName: string;
+  mimeType: string;
+  path: string;
+  attribution: string;
+  conditions: Nh3dAmbientCondition;
+  archivePath: string | null;
+  variations: ParsedImportAmbientVariationEntry[];
 };
 
 type RecordLike = Record<string, unknown>;
@@ -566,6 +760,77 @@ export function createNh3dSoundUploadSlotKey(
   return `${soundKey}::${normalizedVariationId || nh3dBaseSoundVariationId}`;
 }
 
+export const nh3dAmbientUploadSlotPrefix = "ambient";
+
+export function resolveNh3dUserAmbientPath(
+  packName: string,
+  trackKey: Nh3dAmbientTrackKey,
+  fileName: string,
+  variationId: string = nh3dBaseSoundVariationId,
+): string {
+  const packSegment = sanitizePathSegment(packName, "sound-pack");
+  const trackSegment = sanitizePathSegment(trackKey, "ambient");
+  const fileSegment = sanitizeFileName(fileName, `${trackKey}.bin`);
+  const normalizedVariationId = normalizeWhitespace(String(variationId || ""));
+  if (
+    normalizedVariationId &&
+    normalizedVariationId !== nh3dBaseSoundVariationId
+  ) {
+    const variationSegment = sanitizePathSegment(
+      normalizedVariationId,
+      "variation",
+    );
+    return `soundpacks/${packSegment}/ambient/${trackSegment}/${variationSegment}/${fileSegment}`;
+  }
+  return `soundpacks/${packSegment}/ambient/${trackSegment}/${fileSegment}`;
+}
+
+export function createNh3dAmbientUploadSlotKey(
+  trackKey: Nh3dAmbientTrackKey,
+  variationId: string = nh3dBaseSoundVariationId,
+): string {
+  const normalizedVariationId =
+    normalizeWhitespace(String(variationId || "")) || nh3dBaseSoundVariationId;
+  return `${nh3dAmbientUploadSlotPrefix}::${trackKey}::${normalizedVariationId}`;
+}
+
+function normalizeOptionalConditionInteger(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+  const parsed =
+    typeof value === "number" ? value : Number(String(value).trim());
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+  return Math.max(0, Math.trunc(parsed));
+}
+
+function normalizeAmbientAmuletCondition(
+  value: unknown,
+): Nh3dAmbientAmuletCondition {
+  return value === "carried" || value === "not-carried" ? value : "any";
+}
+
+function normalizeAmbientCondition(rawValue: unknown): Nh3dAmbientCondition {
+  if (!isRecordLike(rawValue)) {
+    return createNh3dDefaultAmbientCondition();
+  }
+  return {
+    depthMin: normalizeOptionalConditionInteger(rawValue.depthMin),
+    depthMax: normalizeOptionalConditionInteger(rawValue.depthMax),
+    playerLevelMin: normalizeOptionalConditionInteger(rawValue.playerLevelMin),
+    playerLevelMax: normalizeOptionalConditionInteger(rawValue.playerLevelMax),
+    amulet: normalizeAmbientAmuletCondition(rawValue.amulet),
+  };
+}
+
+function cloneAmbientCondition(
+  condition: Nh3dAmbientCondition,
+): Nh3dAmbientCondition {
+  return { ...condition };
+}
+
 function clampUnit(value: unknown, fallback = 1): number {
   const parsed =
     typeof value === "number" && Number.isFinite(value) ? value : fallback;
@@ -650,6 +915,295 @@ function cloneSoundMap(sounds: Nh3dSoundPackSoundMap): Nh3dSoundPackSoundMap {
     next[definition.key] = cloneSoundAssignment(sounds[definition.key]);
   }
   return next;
+}
+
+function generateAmbientVariationId(trackKey: Nh3dAmbientTrackKey): string {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return `${trackKey}-${crypto.randomUUID()}`;
+  }
+  return `${trackKey}-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
+}
+
+function normalizeAmbientVariationId(
+  rawId: unknown,
+  trackKey: Nh3dAmbientTrackKey,
+): string {
+  const normalized = normalizeWhitespace(String(rawId || ""));
+  if (normalized && normalized !== nh3dBaseSoundVariationId) {
+    return normalized;
+  }
+  return generateAmbientVariationId(trackKey);
+}
+
+function createDefaultAmbientEntryBase(
+  trackKey: Nh3dAmbientTrackKey,
+): Nh3dAmbientTrackEntryBase {
+  return {
+    key: trackKey,
+    enabled: false,
+    volume: 1,
+    fileName: "",
+    mimeType: "",
+    path: "",
+    source: "user",
+    attribution: "",
+    conditions: createNh3dDefaultAmbientCondition(),
+  };
+}
+
+function createDefaultAmbientAssignment(
+  trackKey: Nh3dAmbientTrackKey,
+): Nh3dAmbientTrackAssignment {
+  return { ...createDefaultAmbientEntryBase(trackKey), variations: [] };
+}
+
+function createDefaultAmbientMap(): Nh3dSoundPackAmbientMap {
+  const ambient = {} as Nh3dSoundPackAmbientMap;
+  for (const definition of nh3dAmbientTrackDefinitions) {
+    ambient[definition.key] = createDefaultAmbientAssignment(definition.key);
+  }
+  return ambient;
+}
+
+function cloneAmbientAssignment(
+  assignment: Nh3dAmbientTrackAssignment,
+): Nh3dAmbientTrackAssignment {
+  return {
+    ...assignment,
+    conditions: cloneAmbientCondition(assignment.conditions),
+    variations: Array.isArray(assignment.variations)
+      ? assignment.variations.map((variation) => ({
+          ...variation,
+          conditions: cloneAmbientCondition(variation.conditions),
+        }))
+      : [],
+  };
+}
+
+function cloneAmbientMap(
+  ambient: Nh3dSoundPackAmbientMap | undefined,
+): Nh3dSoundPackAmbientMap {
+  const next = {} as Nh3dSoundPackAmbientMap;
+  const source = ambient && typeof ambient === "object" ? ambient : null;
+  for (const definition of nh3dAmbientTrackDefinitions) {
+    const current = source ? source[definition.key] : undefined;
+    next[definition.key] = current
+      ? cloneAmbientAssignment(current)
+      : createDefaultAmbientAssignment(definition.key);
+  }
+  return next;
+}
+
+function ambientAssignmentToVariations(
+  assignment: Nh3dAmbientTrackAssignment,
+): Nh3dAmbientTrackVariation[] {
+  const baseVariation: Nh3dAmbientTrackVariation = {
+    id: nh3dBaseSoundVariationId,
+    key: assignment.key,
+    enabled: assignment.enabled,
+    volume: assignment.volume,
+    fileName: assignment.fileName,
+    mimeType: assignment.mimeType,
+    path: assignment.path,
+    source: assignment.source,
+    attribution: assignment.attribution,
+    conditions: cloneAmbientCondition(assignment.conditions),
+  };
+  return [
+    baseVariation,
+    ...(assignment.variations ?? []).map((entry) => ({
+      ...entry,
+      conditions: cloneAmbientCondition(entry.conditions),
+    })),
+  ];
+}
+
+export function getNh3dAmbientTrackVariations(
+  assignment: Nh3dAmbientTrackAssignment,
+): Nh3dAmbientTrackVariation[] {
+  return ambientAssignmentToVariations(assignment);
+}
+
+function ambientAssignmentFromVariations(
+  trackKey: Nh3dAmbientTrackKey,
+  variations: Nh3dAmbientTrackVariation[],
+  fallback: Nh3dAmbientTrackAssignment,
+): Nh3dAmbientTrackAssignment {
+  const normalizedVariations = Array.isArray(variations)
+    ? variations.map((entry) => ({
+        ...entry,
+        key: trackKey,
+        conditions: cloneAmbientCondition(entry.conditions),
+      }))
+    : [];
+  const baseIndex = normalizedVariations.findIndex(
+    (entry) => entry.id === nh3dBaseSoundVariationId,
+  );
+  const baseEntry =
+    baseIndex >= 0 ? normalizedVariations[baseIndex] : normalizedVariations[0];
+  const resolvedBase: Nh3dAmbientTrackVariation = baseEntry
+    ? { ...baseEntry, id: nh3dBaseSoundVariationId }
+    : {
+        id: nh3dBaseSoundVariationId,
+        key: trackKey,
+        enabled: fallback.enabled,
+        volume: fallback.volume,
+        fileName: fallback.fileName,
+        mimeType: fallback.mimeType,
+        path: fallback.path,
+        source: fallback.source,
+        attribution: fallback.attribution,
+        conditions: cloneAmbientCondition(fallback.conditions),
+      };
+
+  const extraVariations = normalizedVariations
+    .filter((entry, index) => {
+      if (!entry || entry.id === nh3dBaseSoundVariationId) {
+        return false;
+      }
+      if (baseIndex < 0 && index === 0) {
+        return false;
+      }
+      return true;
+    })
+    .map((entry) => ({ ...entry }));
+
+  return {
+    key: trackKey,
+    enabled: resolvedBase.enabled,
+    volume: resolvedBase.volume,
+    fileName: resolvedBase.fileName,
+    mimeType: resolvedBase.mimeType,
+    path: resolvedBase.path,
+    source: resolvedBase.source,
+    attribution: resolvedBase.attribution,
+    conditions: cloneAmbientCondition(resolvedBase.conditions),
+    variations: extraVariations,
+  };
+}
+
+function normalizeAmbientTrackEntry(
+  rawValue: unknown,
+  trackKey: Nh3dAmbientTrackKey,
+  fallback: Nh3dAmbientTrackEntryBase,
+  packName: string,
+  variationId: string = nh3dBaseSoundVariationId,
+): Nh3dAmbientTrackEntryBase {
+  if (!isRecordLike(rawValue)) {
+    return {
+      key: trackKey,
+      enabled: Boolean(fallback.enabled),
+      volume: clampUnit(fallback.volume, 1),
+      fileName: fallback.fileName,
+      mimeType: fallback.mimeType,
+      path: fallback.path,
+      source: fallback.source,
+      attribution: normalizeAttribution(fallback.attribution),
+      conditions: cloneAmbientCondition(fallback.conditions),
+    };
+  }
+  const volume = clampUnit(rawValue.volume, fallback.volume);
+  const attribution = normalizeAttribution(
+    rawValue.attribution,
+    fallback.attribution,
+  );
+  const conditions = normalizeAmbientCondition(rawValue.conditions);
+  const rawFileName = sanitizeFileName(String(rawValue.fileName || ""), "");
+  const rawPath = normalizeWhitespace(String(rawValue.path || ""));
+  if (!rawFileName && !rawPath) {
+    return {
+      key: trackKey,
+      enabled: false,
+      volume,
+      fileName: "",
+      mimeType: "",
+      path: "",
+      source: "user",
+      attribution,
+      conditions,
+    };
+  }
+  const fileName = rawFileName || `${trackKey}.bin`;
+  const mimeType =
+    normalizeWhitespace(String(rawValue.mimeType || "")) ||
+    fallback.mimeType ||
+    "application/octet-stream";
+  const path =
+    rawPath ||
+    resolveNh3dUserAmbientPath(packName, trackKey, fileName, variationId);
+  return {
+    key: trackKey,
+    enabled: Boolean(rawValue.enabled),
+    volume,
+    fileName,
+    mimeType,
+    path,
+    source: "user",
+    attribution,
+    conditions,
+  };
+}
+
+function normalizeAmbientTrackAssignment(
+  rawValue: unknown,
+  trackKey: Nh3dAmbientTrackKey,
+  fallback: Nh3dAmbientTrackAssignment,
+  packName: string,
+): Nh3dAmbientTrackAssignment {
+  if (!isRecordLike(rawValue)) {
+    return cloneAmbientAssignment(fallback);
+  }
+  const base = normalizeAmbientTrackEntry(
+    rawValue,
+    trackKey,
+    fallback,
+    packName,
+  );
+  const rawVariations = Array.isArray(rawValue.variations)
+    ? rawValue.variations
+    : [];
+  const seenVariationIds = new Set<string>();
+  const variations: Nh3dAmbientTrackVariation[] = [];
+  for (const rawVariation of rawVariations) {
+    if (!isRecordLike(rawVariation)) {
+      continue;
+    }
+    const nextId = normalizeAmbientVariationId(rawVariation.id, trackKey);
+    if (seenVariationIds.has(nextId)) {
+      continue;
+    }
+    const normalized = normalizeAmbientTrackEntry(
+      rawVariation,
+      trackKey,
+      createDefaultAmbientEntryBase(trackKey),
+      packName,
+      nextId,
+    );
+    seenVariationIds.add(nextId);
+    variations.push({ id: nextId, ...normalized });
+  }
+  return { ...base, variations };
+}
+
+function normalizeAmbientMap(
+  rawValue: unknown,
+  packName: string,
+): Nh3dSoundPackAmbientMap {
+  const rawMap = isRecordLike(rawValue) ? rawValue : null;
+  const ambient = {} as Nh3dSoundPackAmbientMap;
+  for (const definition of nh3dAmbientTrackDefinitions) {
+    const fallback = createDefaultAmbientAssignment(definition.key);
+    ambient[definition.key] = normalizeAmbientTrackAssignment(
+      rawMap ? rawMap[definition.key] : undefined,
+      definition.key,
+      fallback,
+      packName,
+    );
+  }
+  return ambient;
 }
 
 function normalizeVariationId(
@@ -746,6 +1300,7 @@ export function cloneNh3dSoundPack(
   return {
     ...pack,
     sounds: cloneSoundMap(pack.sounds),
+    ambient: cloneAmbientMap(pack.ambient),
   };
 }
 
@@ -757,6 +1312,7 @@ function createDefaultSoundPackRecord(now = Date.now()): Nh3dSoundPackRecord {
     createdAt: now,
     updatedAt: now,
     sounds: createDefaultSoundMap(),
+    ambient: createDefaultAmbientMap(),
   };
 }
 
@@ -951,6 +1507,7 @@ function normalizeSoundPackRecord(
     createdAt,
     updatedAt,
     sounds,
+    ambient: normalizeAmbientMap(rawValue.ambient, name),
   };
 }
 
@@ -1072,12 +1629,11 @@ function normalizeSoundFileRecord(
   if (!blob) {
     return null;
   }
-  const soundKey = String(rawValue.soundKey || "") as Nh3dSoundEffectKey;
-  if (
-    !nh3dSoundEffectDefinitions.some(
-      (definition) => definition.key === soundKey,
-    )
-  ) {
+  const soundKey = String(rawValue.soundKey || "");
+  const isKnownSoundKey =
+    nh3dSoundEffectDefinitions.some((definition) => definition.key === soundKey) ||
+    nh3dAmbientTrackDefinitions.some((definition) => definition.key === soundKey);
+  if (!isKnownSoundKey) {
     return null;
   }
   const fileName = sanitizeFileName(
@@ -1127,7 +1683,7 @@ async function writeSoundFileRecord(
   options: {
     path: string;
     packId: string;
-    soundKey: Nh3dSoundEffectKey;
+    soundKey: string;
     fileName: string;
     mimeType: string;
     blob: Blob;
@@ -1158,7 +1714,7 @@ async function moveSoundFileRecord(
   toPath: string,
   now: number,
   forcedPackId: string,
-  forcedKey: Nh3dSoundEffectKey,
+  forcedKey: string,
 ): Promise<void> {
   if (!fromPath || !toPath || fromPath === toPath) {
     return;
@@ -1198,6 +1754,30 @@ async function deleteUserSoundFilesForPack(
       if (entry.source !== "user") {
         continue;
       }
+      const path = normalizeWhitespace(entry.path || "");
+      if (!path) {
+        continue;
+      }
+      await idbRequestToPromise(fileStore.delete(path));
+    }
+  }
+}
+
+async function deleteUserAmbientFilesForPack(
+  fileStore: IDBObjectStore,
+  pack: Nh3dSoundPackRecord,
+): Promise<void> {
+  const ambientMap = pack.ambient;
+  if (!ambientMap) {
+    return;
+  }
+  for (const definition of nh3dAmbientTrackDefinitions) {
+    const track = ambientMap[definition.key];
+    if (!track) {
+      continue;
+    }
+    const entries = ambientAssignmentToVariations(track);
+    for (const entry of entries) {
       const path = normalizeWhitespace(entry.path || "");
       if (!path) {
         continue;
@@ -1514,6 +2094,7 @@ export async function deleteNh3dSoundPackFromIndexedDb(
         await idbRequestToPromise(fileStore.delete(path));
       }
     }
+    await deleteUserAmbientFilesForPack(fileStore, targetPack);
 
     await idbRequestToPromise(packStore.delete(targetPack.id));
 
@@ -1648,6 +2229,95 @@ async function cloneDefaultSoundMapForNewPack(
   return sounds;
 }
 
+async function cloneDefaultAmbientMapForNewPack(
+  defaultPack: Nh3dSoundPackRecord,
+  fileStore: IDBObjectStore,
+  nextPackId: string,
+  nextPackName: string,
+  now: number,
+): Promise<Nh3dSoundPackAmbientMap> {
+  const ambient = {} as Nh3dSoundPackAmbientMap;
+
+  for (const definition of nh3dAmbientTrackDefinitions) {
+    const trackKey = definition.key;
+    const fallback = createDefaultAmbientAssignment(trackKey);
+    const defaultTrack = defaultPack.ambient?.[trackKey] ?? fallback;
+    const defaultEntries = ambientAssignmentToVariations(defaultTrack);
+    const nextEntries: Nh3dAmbientTrackVariation[] = [];
+
+    for (const defaultEntry of defaultEntries) {
+      const isBase = defaultEntry.id === nh3dBaseSoundVariationId;
+      const sourcePath = normalizeWhitespace(defaultEntry.path || "");
+      if (!sourcePath) {
+        if (isBase) {
+          nextEntries.push({ ...defaultEntry });
+        }
+        continue;
+      }
+
+      const fileName = sanitizeFileName(
+        defaultEntry.fileName,
+        `${trackKey}.bin`,
+      );
+      const canonicalPath = resolveNh3dUserAmbientPath(
+        nextPackName,
+        trackKey,
+        fileName,
+        defaultEntry.id,
+      );
+      const storedRecord = await readSoundFileRecord(fileStore, sourcePath);
+      if (!storedRecord) {
+        if (isBase) {
+          nextEntries.push({
+            ...defaultEntry,
+            enabled: false,
+            fileName: "",
+            mimeType: "",
+            path: "",
+          });
+        }
+        continue;
+      }
+
+      const nextMimeType =
+        normalizeWhitespace(defaultEntry.mimeType || "") ||
+        normalizeWhitespace(storedRecord.mimeType || "") ||
+        normalizeWhitespace(storedRecord.blob.type || "") ||
+        "application/octet-stream";
+      await writeSoundFileRecord(fileStore, {
+        path: canonicalPath,
+        packId: nextPackId,
+        soundKey: trackKey,
+        fileName,
+        mimeType: nextMimeType,
+        blob: storedRecord.blob,
+        now,
+      });
+
+      nextEntries.push({
+        id: defaultEntry.id,
+        key: trackKey,
+        enabled: defaultEntry.enabled,
+        volume: defaultEntry.volume,
+        fileName,
+        mimeType: nextMimeType,
+        path: canonicalPath,
+        source: "user",
+        attribution: defaultEntry.attribution,
+        conditions: cloneAmbientCondition(defaultEntry.conditions),
+      });
+    }
+
+    ambient[trackKey] = ambientAssignmentFromVariations(
+      trackKey,
+      nextEntries,
+      fallback,
+    );
+  }
+
+  return ambient;
+}
+
 export async function createNh3dSoundPack(
   name: string,
 ): Promise<Nh3dSoundPackRecord> {
@@ -1685,6 +2355,13 @@ export async function createNh3dSoundPack(
       normalizedName,
       now,
     );
+    const nextAmbient = await cloneDefaultAmbientMapForNewPack(
+      defaultPack,
+      fileStore,
+      nextPackId,
+      normalizedName,
+      now,
+    );
     const nextPack: Nh3dSoundPackRecord = {
       id: nextPackId,
       name: normalizedName,
@@ -1692,6 +2369,7 @@ export async function createNh3dSoundPack(
       createdAt: now,
       updatedAt: now,
       sounds: nextSounds,
+      ambient: nextAmbient,
     };
 
     await idbRequestToPromise(packStore.put(nextPack));
@@ -1707,6 +2385,210 @@ export async function createNh3dSoundPack(
   } finally {
     db.close();
   }
+}
+
+async function persistAmbientMapForSave(
+  fileStore: IDBObjectStore,
+  existingPack: Nh3dSoundPackRecord,
+  incomingPack: Nh3dSoundPackRecord,
+  uploadedSoundFiles: Nh3dSoundFileUploadOverrides,
+  nextName: string,
+  packId: string,
+  now: number,
+): Promise<Nh3dSoundPackAmbientMap> {
+  const nextAmbient = {} as Nh3dSoundPackAmbientMap;
+
+  for (const definition of nh3dAmbientTrackDefinitions) {
+    const trackKey = definition.key;
+    const fallback = createDefaultAmbientAssignment(trackKey);
+    const existingTrack = existingPack.ambient?.[trackKey] ?? fallback;
+    const incomingTrack = incomingPack.ambient?.[trackKey] ?? existingTrack;
+    const existingEntries = ambientAssignmentToVariations(existingTrack);
+    const existingById = new Map(existingEntries.map((entry) => [entry.id, entry]));
+    const incomingEntriesRaw = ambientAssignmentToVariations(incomingTrack);
+
+    const seenIds = new Set<string>();
+    const nextEntries: Nh3dAmbientTrackVariation[] = [];
+    const retainedUserPaths = new Set<string>();
+
+    const pushUnassigned = (
+      variationId: string,
+      volume: number,
+      attribution: string,
+      conditions: Nh3dAmbientCondition,
+    ): void => {
+      nextEntries.push({
+        id: variationId,
+        key: trackKey,
+        enabled: false,
+        volume,
+        fileName: "",
+        mimeType: "",
+        path: "",
+        source: "user",
+        attribution,
+        conditions,
+      });
+    };
+
+    for (const rawEntry of incomingEntriesRaw) {
+      const isBase = rawEntry.id === nh3dBaseSoundVariationId;
+      let variationId = isBase
+        ? nh3dBaseSoundVariationId
+        : normalizeAmbientVariationId(rawEntry.id, trackKey);
+      if (seenIds.has(variationId)) {
+        if (isBase) {
+          continue;
+        }
+        do {
+          variationId = generateAmbientVariationId(trackKey);
+        } while (seenIds.has(variationId));
+      }
+      seenIds.add(variationId);
+
+      const existingEntry = existingById.get(variationId);
+      const volume = clampUnit(rawEntry.volume, existingEntry?.volume ?? 1);
+      const conditions = normalizeAmbientCondition(rawEntry.conditions);
+      const attribution = normalizeAttribution(
+        rawEntry.attribution,
+        existingEntry?.attribution,
+      );
+      const uploadSlotKey = createNh3dAmbientUploadSlotKey(trackKey, variationId);
+      const uploaded = uploadedSoundFiles[uploadSlotKey];
+
+      if (uploaded instanceof Blob) {
+        const uploadedFileName =
+          uploaded instanceof File && uploaded.name
+            ? uploaded.name
+            : rawEntry.fileName || `${trackKey}.bin`;
+        const fileName = sanitizeFileName(uploadedFileName, `${trackKey}.bin`);
+        const path = resolveNh3dUserAmbientPath(
+          nextName,
+          trackKey,
+          fileName,
+          variationId,
+        );
+        const mimeType =
+          normalizeWhitespace(uploaded.type) ||
+          normalizeWhitespace(rawEntry.mimeType) ||
+          "application/octet-stream";
+        await writeSoundFileRecord(fileStore, {
+          path,
+          packId,
+          soundKey: trackKey,
+          fileName,
+          mimeType,
+          blob: uploaded,
+          now,
+        });
+        retainedUserPaths.add(path);
+        nextEntries.push({
+          id: variationId,
+          key: trackKey,
+          enabled: Boolean(rawEntry.enabled),
+          volume,
+          fileName,
+          mimeType,
+          path,
+          source: "user",
+          attribution,
+          conditions,
+        });
+        continue;
+      }
+
+      if (uploaded === null) {
+        pushUnassigned(variationId, volume, attribution, conditions);
+        continue;
+      }
+
+      const incomingPath = normalizeWhitespace(rawEntry.path || "");
+      const incomingFileName = sanitizeFileName(rawEntry.fileName, "");
+      if (!incomingFileName && !incomingPath) {
+        pushUnassigned(variationId, volume, attribution, conditions);
+        continue;
+      }
+
+      const fileName = incomingFileName || `${trackKey}.bin`;
+      const canonicalPath = resolveNh3dUserAmbientPath(
+        nextName,
+        trackKey,
+        fileName,
+        variationId,
+      );
+      const existingSourcePath =
+        existingEntry && existingEntry.source === "user"
+          ? normalizeWhitespace(existingEntry.path || "")
+          : "";
+      let sourcePath = existingSourcePath;
+
+      if (!sourcePath && incomingPath && incomingPath !== canonicalPath) {
+        const candidateRecord = await readSoundFileRecord(fileStore, incomingPath);
+        if (candidateRecord) {
+          await writeSoundFileRecord(fileStore, {
+            path: canonicalPath,
+            packId,
+            soundKey: trackKey,
+            fileName,
+            mimeType: candidateRecord.mimeType,
+            blob: candidateRecord.blob,
+            now,
+          });
+          sourcePath = canonicalPath;
+        }
+      }
+
+      if (sourcePath && sourcePath !== canonicalPath) {
+        await moveSoundFileRecord(
+          fileStore,
+          sourcePath,
+          canonicalPath,
+          now,
+          packId,
+          trackKey,
+        );
+      }
+
+      const ensuredRecord = await readSoundFileRecord(fileStore, canonicalPath);
+      if (!ensuredRecord) {
+        pushUnassigned(variationId, volume, attribution, conditions);
+        continue;
+      }
+
+      retainedUserPaths.add(canonicalPath);
+      nextEntries.push({
+        id: variationId,
+        key: trackKey,
+        enabled: Boolean(rawEntry.enabled),
+        volume,
+        fileName,
+        mimeType:
+          normalizeWhitespace(rawEntry.mimeType) ||
+          normalizeWhitespace(ensuredRecord.mimeType) ||
+          "application/octet-stream",
+        path: canonicalPath,
+        source: "user",
+        attribution,
+        conditions,
+      });
+    }
+
+    for (const existingEntry of existingEntries) {
+      const existingPath = normalizeWhitespace(existingEntry.path || "");
+      if (!existingPath || retainedUserPaths.has(existingPath)) {
+        continue;
+      }
+      await idbRequestToPromise(fileStore.delete(existingPath));
+    }
+
+    nextAmbient[trackKey] = ambientAssignmentFromVariations(
+      trackKey,
+      nextEntries,
+      fallback,
+    );
+  }
+
+  return nextAmbient;
 }
 
 export async function saveNh3dSoundPackToIndexedDb(
@@ -2060,6 +2942,16 @@ export async function saveNh3dSoundPackToIndexedDb(
       );
     }
 
+    const nextAmbient = await persistAmbientMapForSave(
+      fileStore,
+      existingPack,
+      pack,
+      uploadedSoundFiles,
+      nextName,
+      existingPack.id,
+      now,
+    );
+
     const nextPack: Nh3dSoundPackRecord = {
       id: existingPack.id,
       name: nextName,
@@ -2067,6 +2959,7 @@ export async function saveNh3dSoundPackToIndexedDb(
       createdAt: existingPack.createdAt,
       updatedAt: now,
       sounds: nextSounds,
+      ambient: nextAmbient,
     };
 
     await idbRequestToPromise(packStore.put(nextPack));
@@ -2160,6 +3053,22 @@ export async function exportNh3dSoundPackToZip(
       }
     }
   }
+  for (const definition of nh3dAmbientTrackDefinitions) {
+    const trackKey = definition.key;
+    const track = normalizedPack.ambient[trackKey];
+    const entries = ambientAssignmentToVariations(track);
+    for (const entry of entries) {
+      const uploadSlotKey = createNh3dAmbientUploadSlotKey(trackKey, entry.id);
+      const pendingUpload = pendingUploads[uploadSlotKey];
+      if (pendingUpload instanceof Blob || pendingUpload === null) {
+        continue;
+      }
+      const entryPath = normalizeWhitespace(entry.path || "");
+      if (entryPath) {
+        storedPathSet.add(entryPath);
+      }
+    }
+  }
 
   const storedBlobsByPath = await readStoredSoundBlobs(
     Array.from(storedPathSet),
@@ -2167,12 +3076,13 @@ export async function exportNh3dSoundPackToZip(
   const archiveEntries: Record<string, Uint8Array> = {};
   const manifest: Nh3dSoundPackExportManifest = {
     schema: "nh3d-soundpack",
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     pack: {
       name: normalizedPack.name,
       isDefault: normalizedPack.isDefault,
       sounds: [],
+      ambient: [],
     },
   };
 
@@ -2273,6 +3183,103 @@ export async function exportNh3dSoundPackToZip(
     });
   }
 
+  for (const definition of nh3dAmbientTrackDefinitions) {
+    const trackKey = definition.key;
+    const track = normalizedPack.ambient[trackKey];
+    const entries = ambientAssignmentToVariations(track);
+    const baseEntry =
+      entries.find((entry) => entry.id === nh3dBaseSoundVariationId) ??
+      entries[0];
+    if (!baseEntry) {
+      continue;
+    }
+    const variationManifestEntries: Nh3dSoundPackExportManifest["pack"]["ambient"][number]["variations"] =
+      [];
+    let baseArchivePath: string | null = null;
+    let baseBlobForArchive: Blob | null = null;
+
+    for (const entry of entries) {
+      const archiveFileName = sanitizeFileName(
+        entry.fileName,
+        `${trackKey}.bin`,
+      );
+      const uploadSlotKey = createNh3dAmbientUploadSlotKey(trackKey, entry.id);
+      const pendingUpload = pendingUploads[uploadSlotKey];
+      const archiveFolder =
+        entry.id === nh3dBaseSoundVariationId
+          ? "base"
+          : sanitizePathSegment(entry.id, "variation");
+      let archivePath: string | null = null;
+      let blobForArchive: Blob | null = null;
+
+      if (pendingUpload instanceof Blob) {
+        blobForArchive = pendingUpload;
+        archivePath = `ambient/${trackKey}/${archiveFolder}/${archiveFileName}`;
+      } else if (pendingUpload === null) {
+        blobForArchive = null;
+        archivePath = null;
+      } else {
+        const entryPath = normalizeWhitespace(entry.path || "");
+        const storedBlob = entryPath
+          ? (storedBlobsByPath.get(entryPath) ?? null)
+          : null;
+        if (storedBlob) {
+          blobForArchive = storedBlob;
+          archivePath = `ambient/${trackKey}/${archiveFolder}/${archiveFileName}`;
+        }
+      }
+
+      if (archivePath && blobForArchive) {
+        archiveEntries[archivePath] = new Uint8Array(
+          await blobForArchive.arrayBuffer(),
+        );
+      }
+
+      if (entry.id === nh3dBaseSoundVariationId) {
+        baseArchivePath = archivePath;
+        baseBlobForArchive = blobForArchive;
+      } else {
+        variationManifestEntries.push({
+          id: entry.id,
+          enabled: Boolean(entry.enabled),
+          volume: clampUnit(entry.volume, 1),
+          fileName: archiveFileName,
+          mimeType:
+            normalizeWhitespace(entry.mimeType) ||
+            blobForArchive?.type ||
+            "application/octet-stream",
+          path: entry.path,
+          source: entry.source,
+          attribution: normalizeAttribution(entry.attribution),
+          conditions: cloneAmbientCondition(entry.conditions),
+          archivePath,
+        });
+      }
+    }
+
+    const baseArchiveFileName = sanitizeFileName(
+      baseEntry.fileName,
+      `${trackKey}.bin`,
+    );
+    manifest.pack.ambient.push({
+      key: trackKey,
+      label: definition.label,
+      enabled: Boolean(baseEntry.enabled),
+      volume: clampUnit(baseEntry.volume, 1),
+      fileName: baseArchiveFileName,
+      mimeType:
+        normalizeWhitespace(baseEntry.mimeType) ||
+        baseBlobForArchive?.type ||
+        "application/octet-stream",
+      path: baseEntry.path,
+      source: baseEntry.source,
+      attribution: normalizeAttribution(baseEntry.attribution),
+      conditions: cloneAmbientCondition(baseEntry.conditions),
+      archivePath: baseArchivePath,
+      variations: variationManifestEntries,
+    });
+  }
+
   archiveEntries[soundPackManifestPath] = strToU8(
     JSON.stringify(manifest, null, 2),
   );
@@ -2285,6 +3292,7 @@ export async function exportNh3dSoundPackToZip(
 function parseImportManifest(rawManifest: unknown): {
   packName: string;
   soundsByKey: Map<Nh3dSoundEffectKey, ParsedImportSoundEntry>;
+  ambientByKey: Map<Nh3dAmbientTrackKey, ParsedImportAmbientEntry>;
 } {
   if (!isRecordLike(rawManifest)) {
     throw new Error("Invalid sound pack archive manifest.");
@@ -2293,7 +3301,7 @@ function parseImportManifest(rawManifest: unknown): {
   if (
     rawManifest.schema !== "nh3d-soundpack" ||
     !Number.isFinite(rawVersion) ||
-    (rawVersion !== 1 && rawVersion !== 2)
+    (rawVersion !== 1 && rawVersion !== 2 && rawVersion !== 3)
   ) {
     throw new Error("Unsupported sound pack archive format.");
   }
@@ -2402,9 +3410,80 @@ function parseImportManifest(rawManifest: unknown): {
     }
   }
 
+  const rawAmbient = Array.isArray(rawManifest.pack.ambient)
+    ? rawManifest.pack.ambient
+    : [];
+  const ambientByKey = new Map<Nh3dAmbientTrackKey, ParsedImportAmbientEntry>();
+  for (const rawEntry of rawAmbient) {
+    if (!isRecordLike(rawEntry)) {
+      continue;
+    }
+    const trackKey = String(rawEntry.key || "") as Nh3dAmbientTrackKey;
+    if (
+      !nh3dAmbientTrackDefinitions.some(
+        (definition) => definition.key === trackKey,
+      )
+    ) {
+      continue;
+    }
+    if (ambientByKey.has(trackKey)) {
+      continue;
+    }
+    const parsedEntry: ParsedImportAmbientEntry = {
+      key: trackKey,
+      enabled: Boolean(rawEntry.enabled),
+      volume: clampUnit(rawEntry.volume, 1),
+      fileName: sanitizeFileName(String(rawEntry.fileName || ""), ""),
+      mimeType:
+        normalizeWhitespace(String(rawEntry.mimeType || "")) ||
+        "application/octet-stream",
+      path: normalizeWhitespace(String(rawEntry.path || "")),
+      attribution: normalizeAttribution(rawEntry.attribution),
+      conditions: normalizeAmbientCondition(rawEntry.conditions),
+      archivePath:
+        normalizeWhitespace(String(rawEntry.archivePath || "")) || null,
+      variations: [],
+    };
+
+    const rawVariations = Array.isArray(rawEntry.variations)
+      ? rawEntry.variations
+      : [];
+    const seenVariationIds = new Set<string>();
+    for (const rawVariation of rawVariations) {
+      if (!isRecordLike(rawVariation)) {
+        continue;
+      }
+      const variationId = normalizeAmbientVariationId(rawVariation.id, trackKey);
+      if (
+        variationId === nh3dBaseSoundVariationId ||
+        seenVariationIds.has(variationId)
+      ) {
+        continue;
+      }
+      seenVariationIds.add(variationId);
+      parsedEntry.variations.push({
+        id: variationId,
+        enabled: Boolean(rawVariation.enabled),
+        volume: clampUnit(rawVariation.volume, 1),
+        fileName: sanitizeFileName(String(rawVariation.fileName || ""), ""),
+        mimeType:
+          normalizeWhitespace(String(rawVariation.mimeType || "")) ||
+          "application/octet-stream",
+        path: normalizeWhitespace(String(rawVariation.path || "")),
+        attribution: normalizeAttribution(rawVariation.attribution),
+        conditions: normalizeAmbientCondition(rawVariation.conditions),
+        archivePath:
+          normalizeWhitespace(String(rawVariation.archivePath || "")) || null,
+      });
+    }
+
+    ambientByKey.set(trackKey, parsedEntry);
+  }
+
   return {
     packName,
     soundsByKey,
+    ambientByKey,
   };
 }
 
@@ -2608,6 +3687,113 @@ export async function importNh3dSoundPackFromZip(
       );
     }
 
+    let nextAmbient: Nh3dSoundPackAmbientMap;
+    if (
+      intoDefaultSlot &&
+      manifest.ambientByKey.size === 0 &&
+      existingDefaultPack
+    ) {
+      // Re-importing the bundled default pack (which carries no ambient music):
+      // preserve any ambient tracks the user added to the default pack.
+      nextAmbient = cloneAmbientMap(existingDefaultPack.ambient);
+    } else {
+      if (intoDefaultSlot && existingDefaultPack) {
+        await deleteUserAmbientFilesForPack(fileStore, existingDefaultPack);
+      }
+      nextAmbient = {} as Nh3dSoundPackAmbientMap;
+      for (const definition of nh3dAmbientTrackDefinitions) {
+        const trackKey = definition.key;
+        const fallback = createDefaultAmbientAssignment(trackKey);
+        const imported = manifest.ambientByKey.get(trackKey);
+        if (!imported) {
+          nextAmbient[trackKey] = fallback;
+          continue;
+        }
+        const importedEntries: Array<
+          ParsedImportAmbientEntry | ParsedImportAmbientVariationEntry
+        > = [imported, ...(imported.variations ?? [])];
+        const nextEntries: Nh3dAmbientTrackVariation[] = [];
+
+        for (const [entryIndex, importedEntry] of importedEntries.entries()) {
+          const isBase = entryIndex === 0;
+          const variationId = isBase
+            ? nh3dBaseSoundVariationId
+            : normalizeAmbientVariationId(
+                (importedEntry as ParsedImportAmbientVariationEntry).id,
+                trackKey,
+              );
+          const conditions = cloneAmbientCondition(importedEntry.conditions);
+          const archivePath = importedEntry.archivePath;
+          const archiveBytes = archivePath
+            ? archiveEntries[archivePath]
+            : undefined;
+
+          if (archiveBytes instanceof Uint8Array) {
+            const fileName = sanitizeFileName(
+              importedEntry.fileName || `${trackKey}.bin`,
+              `${trackKey}.bin`,
+            );
+            const mimeType =
+              normalizeWhitespace(importedEntry.mimeType || "") ||
+              "application/octet-stream";
+            const path = resolveNh3dUserAmbientPath(
+              uniqueName,
+              trackKey,
+              fileName,
+              variationId,
+            );
+            const fileBlob = new Blob(
+              [toArrayBufferBackedUint8Array(archiveBytes)],
+              { type: mimeType },
+            );
+            await writeSoundFileRecord(fileStore, {
+              path,
+              packId: nextPackId,
+              soundKey: trackKey,
+              fileName,
+              mimeType,
+              blob: fileBlob,
+              now,
+            });
+            nextEntries.push({
+              id: variationId,
+              key: trackKey,
+              enabled: Boolean(importedEntry.enabled),
+              volume: clampUnit(importedEntry.volume, 1),
+              fileName,
+              mimeType,
+              path,
+              source: "user",
+              attribution: normalizeAttribution(importedEntry.attribution),
+              conditions,
+            });
+            continue;
+          }
+
+          if (isBase) {
+            nextEntries.push({
+              id: nh3dBaseSoundVariationId,
+              key: trackKey,
+              enabled: false,
+              volume: clampUnit(importedEntry.volume, 1),
+              fileName: "",
+              mimeType: "",
+              path: "",
+              source: "user",
+              attribution: normalizeAttribution(importedEntry.attribution),
+              conditions,
+            });
+          }
+        }
+
+        nextAmbient[trackKey] = ambientAssignmentFromVariations(
+          trackKey,
+          nextEntries,
+          fallback,
+        );
+      }
+    }
+
     const importedPack: Nh3dSoundPackRecord = {
       id: nextPackId,
       name: uniqueName,
@@ -2617,6 +3803,7 @@ export async function importNh3dSoundPackFromZip(
         : now,
       updatedAt: now,
       sounds: nextSounds,
+      ambient: nextAmbient,
     };
 
     await idbRequestToPromise(packStore.put(importedPack));

@@ -385,6 +385,16 @@ export const ptBrOverrides = {
       },
     },
   },
+  ambientTracks: {
+    byKey: {
+      dungeons_of_doom: "Masmorras da Perdição",
+      mines: "Minas dos Gnomos",
+      sokoban: "Sokoban",
+      quest: "A Missão",
+      vlads_tower: "Torre de Vlad",
+      endgame: "Fim de Jogo",
+    },
+  },
   soundEffects: {
     byKey: {
       "player-walk": "Passos do jogador",
@@ -1165,6 +1175,28 @@ export const ptBrOverrides = {
       attributionAria: (label: string) => `Atribuição de ${label}`,
       attributionPlaceholder: "Fonte, criador ou detalhes de licença",
       addVariation: "+ Adicionar variação",
+      tabSoundEffects: "Efeitos sonoros",
+      tabAmbient: "Música / Ambientes",
+      ambientDescription:
+        "Música de fundo em loop por tipo de nível da masmorra. Adicione variantes condicionadas pela profundidade, pelo nível do jogador ou pelo Amuleto de Yendor para que a música fique mais intensa conforme a partida fica difícil.",
+      expandAria: (label: string) => `Expandir ${label}`,
+      collapseAria: (label: string) => `Recolher ${label}`,
+      conditionsHeading: "Condições de reprodução",
+      conditionsHint:
+        "Deixe um campo em branco para não limitar. Uma variante só toca quando todas as condições são atendidas.",
+      depthRange: "Profundidade da masmorra",
+      minDepth: "Prof. mín.",
+      maxDepth: "Prof. máx.",
+      playerLevelRange: "Nível de experiência",
+      minLevel: "Nível mín.",
+      maxLevel: "Nível máx.",
+      anyValue: "Qualquer",
+      amuletCondition: "Amuleto de Yendor",
+      amuletAny: "Qualquer",
+      amuletCarried: "Portando",
+      amuletNotCarried: "Não portando",
+      ambientUnassigned: "Nenhuma faixa atribuída",
+      ambientNoTracks: "Ainda não há faixas de música neste pacote.",
     },
     dialogs: {
       pauseMenu: {

@@ -87,9 +87,9 @@ Launch it from your Home Screen for a web app fullscreen experience.
 - `npm run electron:pack:mac` - Build an unpacked macOS app bundle to `release/` for local testing.
 - `npm run electron:dist:mac` - Build a macOS DMG to `release/` (pass `-- --universal` to produce a universal macOS build).
 - `npm run electron:dist:win` - Build and package a Windows NSIS `.exe` installer (x64) to `release/`.
-- `npm run electron:dist:win:portable` - Build and package portable Windows `.exe` files for x64 and legacy x86 to `release/`; the 32-bit artifact ends in `-legacy-x86.exe`.
-- `npm run electron:dist:linux:appimage` - Build and package a Linux AppImage (x64) to `release/` (uses WSL automatically on Windows, stages Linux runtime deps, and includes Linux icon assets).
-- `npm run electron:dist:all` - Build Electron assets once, then package the Windows setup, x64 and legacy x86 portable executables, and Linux AppImage back to back.
+- `npm run electron:dist:win:portable` - Build and package portable Windows `.exe` files for x64 and legacy x86 to `release/`; the 32-bit artifact ends in ` (Legacy x86).exe`.
+- `npm run electron:dist:linux:appimage` - Build and package Linux AppImages for x64 and legacy x86 to `release/`; the 32-bit artifact uses Electron 18 and a checksummed Ubuntu 18.04 `libcups` for older glibc compatibility, and ends in ` (Legacy x86).AppImage` (uses WSL automatically on Windows).
+- `npm run electron:dist:all` - Build Electron assets once, then package the Windows setup, x64 and legacy x86 portable executables, and x64 and legacy x86 Linux AppImages back to back.
 - `npm run electron:dist:all:parallel` - Same as above, but packages Windows and Linux at the same time after the shared Electron build.
 - `npm run android:add` - Create the native Android project with Capacitor (run once).
 - `npm run android:sync` - Build web assets and sync them into the Android project.

@@ -357,6 +357,16 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
       },
     },
   },
+  ambientTracks: {
+    byKey: {
+      dungeons_of_doom: "破滅のダンジョン",
+      mines: "ノームの鉱山",
+      sokoban: "倉庫番",
+      quest: "クエスト",
+      vlads_tower: "ヴラドの塔",
+      endgame: "終盤",
+    },
+  },
   soundEffects: {
     byKey: {
       "player-walk": "プレイヤー歩行",
@@ -1086,6 +1096,28 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
       attributionAria: (label: string) => `${label} のクレジット`,
       attributionPlaceholder: "出典、作者、ライセンス情報など",
       addVariation: "+ バリエーションを追加",
+      tabSoundEffects: "効果音",
+      tabAmbient: "音楽 / アンビエンス",
+      ambientDescription:
+        "ダンジョンの階層タイプごとにループ再生する環境音楽。深さ、プレイヤーのレベル、イェンダーの魔除けの所持を条件にしたバリエーションを追加すると、冒険が難しくなるほど音楽を盛り上げられます。",
+      expandAria: (label: string) => `${label}を展開`,
+      collapseAria: (label: string) => `${label}を折りたたむ`,
+      conditionsHeading: "再生条件",
+      conditionsHint:
+        "空欄にすると制限なしになります。すべての条件を満たした場合のみバリエーションが再生されます。",
+      depthRange: "ダンジョンの深さ",
+      minDepth: "最小の深さ",
+      maxDepth: "最大の深さ",
+      playerLevelRange: "経験レベル",
+      minLevel: "最小レベル",
+      maxLevel: "最大レベル",
+      anyValue: "指定なし",
+      amuletCondition: "イェンダーの魔除け",
+      amuletAny: "指定なし",
+      amuletCarried: "所持",
+      amuletNotCarried: "未所持",
+      ambientUnassigned: "トラック未設定",
+      ambientNoTracks: "このパックにはまだ音楽トラックがありません。",
     },
     dialogs: {
       pauseMenu: {

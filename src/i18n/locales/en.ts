@@ -401,6 +401,16 @@ export const en = {
       "magic-buff": "Magic buff",
     },
   },
+  ambientTracks: {
+    byKey: {
+      dungeons_of_doom: "Dungeons of Doom",
+      mines: "Gnomish Mines",
+      sokoban: "Sokoban",
+      quest: "The Quest",
+      vlads_tower: "Vlad's Tower",
+      endgame: "Endgame",
+    },
+  },
   characterSheet: {
     titleFallback: "Character Sheet",
     sectionTitles: {
@@ -1132,6 +1142,28 @@ export const en = {
       attributionAria: (label: string) => `Attribution for ${label}`,
       attributionPlaceholder: "Source, creator, or license details",
       addVariation: "+ Add variation",
+      tabSoundEffects: "Sound Effects",
+      tabAmbient: "Music / Audioscapes",
+      ambientDescription:
+        "Looping ambient music per dungeon level type. Add variants gated by depth, player level, or the Amulet of Yendor so the score escalates as the run gets harder.",
+      expandAria: (label: string) => `Expand ${label}`,
+      collapseAria: (label: string) => `Collapse ${label}`,
+      conditionsHeading: "Play conditions",
+      conditionsHint:
+        "Leave a field blank for no limit. A variant only plays when every condition is met.",
+      depthRange: "Dungeon depth",
+      minDepth: "Min depth",
+      maxDepth: "Max depth",
+      playerLevelRange: "Experience level",
+      minLevel: "Min level",
+      maxLevel: "Max level",
+      anyValue: "Any",
+      amuletCondition: "Amulet of Yendor",
+      amuletAny: "Any",
+      amuletCarried: "Carrying",
+      amuletNotCarried: "Not carrying",
+      ambientUnassigned: "No track assigned",
+      ambientNoTracks: "No music tracks in this pack yet.",
     },
     dialogs: {
       pauseMenu: {

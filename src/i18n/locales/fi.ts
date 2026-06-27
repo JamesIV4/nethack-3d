@@ -385,6 +385,16 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
       },
     },
   },
+  ambientTracks: {
+    byKey: {
+      dungeons_of_doom: "Tuhon luolastot",
+      mines: "Gnomien kaivokset",
+      sokoban: "Sokoban",
+      quest: "Tehtävä",
+      vlads_tower: "Vladin torni",
+      endgame: "Loppupeli",
+    },
+  },
   soundEffects: {
     byKey: {
       "player-walk": "Pelaajan askel",
@@ -1130,6 +1140,28 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
       attributionAria: (label: string) => `Attribution for ${label}`,
       attributionPlaceholder: "Lähde, tekijä tai lisenssitiedot",
       addVariation: "+ Lisää variaatio",
+      tabSoundEffects: "Ääniefektit",
+      tabAmbient: "Musiikki / Äänimaisemat",
+      ambientDescription:
+        "Taustalla toistuva tunnelmamusiikki luolaston tasotyypin mukaan. Lisää muunnelmia, joita rajaavat syvyys, pelaajan taso tai Yendorin amuletti, jotta musiikki tiivistyy pelin vaikeutuessa.",
+      expandAria: (label: string) => `Laajenna ${label}`,
+      collapseAria: (label: string) => `Tiivistä ${label}`,
+      conditionsHeading: "Toistoehdot",
+      conditionsHint:
+        "Jätä kenttä tyhjäksi, jos rajaa ei ole. Muunnelma soi vain, kun kaikki ehdot täyttyvät.",
+      depthRange: "Luolaston syvyys",
+      minDepth: "Väh. syvyys",
+      maxDepth: "Enint. syvyys",
+      playerLevelRange: "Kokemustaso",
+      minLevel: "Väh. taso",
+      maxLevel: "Enint. taso",
+      anyValue: "Mikä tahansa",
+      amuletCondition: "Yendorin amuletti",
+      amuletAny: "Mikä tahansa",
+      amuletCarried: "Kannetaan",
+      amuletNotCarried: "Ei kanneta",
+      ambientUnassigned: "Ei raitaa määritetty",
+      ambientNoTracks: "Ei vielä musiikkiraitoja tässä paketissa.",
     },
     dialogs: {
       pauseMenu: {

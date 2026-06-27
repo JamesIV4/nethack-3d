@@ -6,12 +6,69 @@ const isPrepareOnly = process.env.NH3D_APPIMAGE_PREPARE_ONLY === "1";
 const shouldSkipPrepare = process.env.NH3D_APPIMAGE_SKIP_PREPARE === "1";
 const shouldSkipElectronBuild = process.env.NH3D_SKIP_ELECTRON_BUILD === "1";
 const outputDirOverride = process.env.NH3D_ELECTRON_OUTPUT_DIR?.trim() || null;
-const stageLinuxRuntimeDepsCommand = [
-  "mkdir -p build/linux-libs",
-  "if [ -f /lib/x86_64-linux-gnu/libcups.so.2 ]; then cp -f /lib/x86_64-linux-gnu/libcups.so.2 build/linux-libs/libcups.so.2; " +
-    "elif [ -f /usr/lib/x86_64-linux-gnu/libcups.so.2 ]; then cp -f /usr/lib/x86_64-linux-gnu/libcups.so.2 build/linux-libs/libcups.so.2; " +
-    "else echo 'Missing libcups.so.2 on this Linux environment.' >&2; exit 1; fi",
+const electronBuilderCliPath = "node_modules/electron-builder/out/cli/cli.js";
+const legacyElectronBuilderConfigPath =
+  "scripts/electron/electron-builder-legacy-linux.cjs";
+const stagedLinuxRuntimeDepsDir = "build/linux-libs";
+const stagedLinuxRuntimeDepPath = `${stagedLinuxRuntimeDepsDir}/libcups.so.2`;
+const legacyLinuxLibcupsPackagePath =
+  `${stagedLinuxRuntimeDepsDir}/libcups-bionic-i386.deb`;
+const legacyLinuxLibcupsUrl =
+  "https://security.ubuntu.com/ubuntu/pool/main/c/cups/libcups2_2.2.7-1ubuntu2.10_i386.deb";
+const legacyLinuxLibcupsSha256 =
+  "aa0d2d9f37ff2b5f3b9f815e46aff8e6611d172ca6ade0a4d6b3ba67d00b4603";
+const legacyLinuxLibcupsArchivePath =
+  "./usr/lib/i386-linux-gnu/libcups.so.2";
+const linuxRuntimeDeps = {
+  x64: {
+    sourcePaths: [
+      "/lib/x86_64-linux-gnu/libcups.so.2",
+      "/usr/lib/x86_64-linux-gnu/libcups.so.2",
+    ],
+  },
+};
+
+function getSystemLinuxRuntimeDepCommand(arch, shouldCopy) {
+  const dependency = linuxRuntimeDeps[arch];
+  const copyAttempts = dependency.sourcePaths
+    .map((sourcePath, index) => {
+      const prefix = index === 0 ? "if" : "elif";
+      const action = shouldCopy
+        ? `cp -f ${bashQuote(sourcePath)} ${bashQuote(stagedLinuxRuntimeDepPath)}`
+        : ":";
+      return `${prefix} [ -f ${bashQuote(sourcePath)} ]; then ${action};`;
+    })
+    .join(" ");
+  const dependencyCheck =
+    `${copyAttempts} else echo ${bashQuote(`Missing ${arch} libcups.so.2. Install the ${arch} libcups package before packaging.`)} >&2; exit 1; fi`;
+
+  if (!shouldCopy) {
+    return dependencyCheck;
+  }
+
+  return `mkdir -p ${bashQuote(stagedLinuxRuntimeDepsDir)} && ${dependencyCheck}`;
+}
+
+const checkLinuxRuntimeDepsCommand = [
+  getSystemLinuxRuntimeDepCommand("x64", false),
+  "command -v curl >/dev/null 2>&1",
+  "command -v dpkg-deb >/dev/null 2>&1",
+  "command -v sha256sum >/dev/null 2>&1",
+  "command -v tar >/dev/null 2>&1",
 ].join(" && ");
+
+const cleanupLinuxRuntimeDepsCommand =
+  `rm -f ${bashQuote(stagedLinuxRuntimeDepPath)} ${bashQuote(legacyLinuxLibcupsPackagePath)}; rmdir ${bashQuote(stagedLinuxRuntimeDepsDir)} 2>/dev/null || true`;
+
+function getLegacyLinuxRuntimeDepCommand() {
+  return [
+    `mkdir -p ${bashQuote(stagedLinuxRuntimeDepsDir)}`,
+    `curl -fsSL ${bashQuote(legacyLinuxLibcupsUrl)} -o ${bashQuote(legacyLinuxLibcupsPackagePath)}`,
+    `printf '%s  %s\\n' ${bashQuote(legacyLinuxLibcupsSha256)} ${bashQuote(legacyLinuxLibcupsPackagePath)} | sha256sum -c -`,
+    `dpkg-deb --fsys-tarfile ${bashQuote(legacyLinuxLibcupsPackagePath)} | tar -xOf - ${bashQuote(legacyLinuxLibcupsArchivePath)} > ${bashQuote(stagedLinuxRuntimeDepPath)}`,
+    `rm -f ${bashQuote(legacyLinuxLibcupsPackagePath)}`,
+  ].join(" && ");
+}
 
 function runOrExit(command, args) {
   if (isDryRun) {
@@ -41,12 +98,35 @@ function bashQuote(value) {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
-function getElectronBuilderArgs() {
-  const args = ["electron-builder", "--linux", "AppImage", "--x64"];
+function getElectronBuilderArgs(arch, configPath = null) {
+  const args = [
+    "--linux",
+    "AppImage",
+    `--${arch}`,
+  ];
+  if (configPath) {
+    args.push("--config", configPath);
+  }
   if (outputDirOverride) {
     args.push(`-c.directories.output=${outputDirOverride}`);
   }
   return args;
+}
+
+function getLinuxPackagingCommand() {
+  const x64BuilderArgs = getElectronBuilderArgs("x64");
+  const legacyBuilderArgs = getElectronBuilderArgs(
+    "ia32",
+    legacyElectronBuilderConfigPath,
+  );
+
+  return [
+    `trap ${bashQuote(cleanupLinuxRuntimeDepsCommand)} EXIT`,
+    getSystemLinuxRuntimeDepCommand("x64", true),
+    `node ${bashQuote(electronBuilderCliPath)} ${x64BuilderArgs.map(bashQuote).join(" ")}`,
+    getLegacyLinuxRuntimeDepCommand(),
+    `node ${bashQuote(electronBuilderCliPath)} ${legacyBuilderArgs.map(bashQuote).join(" ")}`,
+  ].join(" && ");
 }
 
 function resolveWslShell() {
@@ -67,7 +147,7 @@ function resolveWslShell() {
 function runNative() {
   console.log("Using native Linux/macOS AppImage build flow.");
   if (!shouldSkipPrepare && process.platform === "linux") {
-    runOrExit("bash", ["-lc", stageLinuxRuntimeDepsCommand]);
+    runOrExit("bash", ["-lc", checkLinuxRuntimeDepsCommand]);
   }
   if (isPrepareOnly) {
     return;
@@ -75,7 +155,7 @@ function runNative() {
   if (!shouldSkipElectronBuild) {
     runOrExit("npm", ["run", "build:electron"]);
   }
-  runOrExit("npx", getElectronBuilderArgs());
+  runOrExit("bash", ["-lc", getLinuxPackagingCommand()]);
 }
 
 function runViaWsl() {
@@ -107,11 +187,11 @@ function runViaWsl() {
   }
 
   const wslShell = resolveWslShell();
-  const wslElectronBuilderCommand = `npx ${getElectronBuilderArgs().map(bashQuote).join(" ")}`;
+  const wslElectronBuilderCommand = getLinuxPackagingCommand();
   const wslInstallOptionalDepsCommand =
     `cd ${bashQuote(wslCwd)} && npm install --include=optional --no-audit --no-fund --no-save --package-lock=false`;
-  const wslStageLinuxRuntimeDepsCommand =
-    `cd ${bashQuote(wslCwd)} && ${stageLinuxRuntimeDepsCommand}`;
+  const wslCheckLinuxRuntimeDepsCommand =
+    `cd ${bashQuote(wslCwd)} && ${checkLinuxRuntimeDepsCommand}`;
   const wslRollupOptionalDepCheckCommand =
     `cd ${bashQuote(wslCwd)} && [ -f node_modules/@rollup/rollup-linux-x64-gnu/package.json ]`;
   const wslCommand = shouldSkipElectronBuild
@@ -147,7 +227,7 @@ function runViaWsl() {
         }
       }
 
-      runOrExit("wsl", [wslShell, "-lic", wslStageLinuxRuntimeDepsCommand]);
+      runOrExit("wsl", [wslShell, "-lic", wslCheckLinuxRuntimeDepsCommand]);
     }
   }
 

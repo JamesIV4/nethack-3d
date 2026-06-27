@@ -15,7 +15,7 @@ import { TAARenderPass } from "three/examples/jsm/postprocessing/TAARenderPass.j
 import { WorkerRuntimeBridge } from "../runtime";
 import type { RuntimeBridge, RuntimeEvent } from "../runtime";
 import type { NethackRuntimeVersion } from "../runtime/types";
-import { FmodRuntime } from "../audio";
+import { FmodRuntime, AmbientMusicController } from "../audio";
 import type { FmodRuntimeOptions, FmodThreadingDiagnostics } from "../audio";
 import { recordDebugSessionLogEvent } from "../debug-session-log";
 import {
@@ -951,6 +951,7 @@ type RuntimeLevelIdentity = {
   depth: number | null;
   dungeonName: string | null;
   branchTag: string | null;
+  hasAmulet: boolean;
 };
 
 type BloodGroundCacheSnapshot = {
@@ -1458,6 +1459,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private session: RuntimeBridge | null = null;
   private readonly fmodRuntime: FmodRuntime;
   private readonly messageSoundHooks: MessageSoundHooks;
+  private readonly ambientMusicController: AmbientMusicController;
+  private lastAmbientMusicContextKey: string | null = null;
   private readonly deploymentTarget: string = this.resolveDeploymentTarget();
   private fmodRuntimeInitializationInFlight: boolean = false;
   private readonly metaInputPrefix = "__META__:";
@@ -3238,6 +3241,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
       isSoundEnabled: () => this.clientOptions.soundEnabled,
     });
     this.messageSoundHooks.setEnabled(this.clientOptions.soundEnabled);
+    this.ambientMusicController = new AmbientMusicController({
+      isSoundEnabled: () => this.clientOptions.soundEnabled,
+    });
+    this.ambientMusicController.setEnabled(this.clientOptions.soundEnabled);
     this.webHaptics = this.shouldInitializeWebHaptics()
       ? new WebHaptics()
       : null;
@@ -3744,6 +3751,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       depth: parseInteger(identity.depth),
       dungeonName: this.normalizeLevelCacheName(identity.dungeonName),
       branchTag: this.normalizeLevelCacheName(identity.branchTag),
+      hasAmulet: identity.hasAmulet === true,
     };
   }
 
@@ -10231,6 +10239,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const enabled = Boolean(soundEnabled);
     this.fmodRuntime.setEnabled(enabled);
     this.messageSoundHooks.setEnabled(enabled);
+    this.ambientMusicController.setEnabled(enabled);
+    if (enabled) {
+      this.refreshAmbientMusicContext(true);
+    }
     if (!enabled) {
       return;
     }
@@ -10245,7 +10257,35 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
     this.messageSoundHooks.resumeFromUserGesture();
+    this.ambientMusicController.resumeFromUserGesture();
+    this.refreshAmbientMusicContext(true);
     this.fmodRuntime.resumeFromUserGesture();
+  }
+
+  private refreshAmbientMusicContext(force = false): void {
+    const identity = this.latestRuntimeLevelIdentity;
+    const branchTag = identity?.branchTag ?? null;
+    const depth =
+      identity && typeof identity.depth === "number"
+        ? Math.trunc(identity.depth)
+        : null;
+    const playerLevel = Number.isFinite(this.playerStats.level)
+      ? Math.trunc(this.playerStats.level)
+      : null;
+    const hasAmulet = identity?.hasAmulet === true;
+    const contextKey = `${branchTag ?? ""}|${depth ?? ""}|${playerLevel ?? ""}|${
+      hasAmulet ? "1" : "0"
+    }`;
+    if (!force && contextKey === this.lastAmbientMusicContextKey) {
+      return;
+    }
+    this.lastAmbientMusicContextKey = contextKey;
+    this.ambientMusicController.updateContext({
+      branchTag,
+      depth,
+      playerLevel,
+      hasAmulet,
+    });
   }
 
   private triggerDamageRumble(durationMs: number, intensity: number): void {
@@ -28760,6 +28800,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       ...this.playerStats,
     };
     this.uiAdapter.setPlayerStats(snapshot);
+    this.refreshAmbientMusicContext();
   }
 
   private clearMenuTilePreviewCache(): void {
@@ -32048,6 +32089,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.session?.dispose();
     this.session = null;
     this.messageSoundHooks.dispose();
+    this.ambientMusicController.dispose();
     this.clearPendingIncomingDamageRumble();
     this.webHaptics?.destroy();
     this.webHaptics = null;
