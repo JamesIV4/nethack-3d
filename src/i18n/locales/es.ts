@@ -1090,6 +1090,7 @@ export const esOverrides = {
             reverbIntensity: "Intensidad de reverberaci\u00F3n global",
             reverbLevelTypes: "Ajuste por tipo de nivel",
             reverbOffset: "Ajuste de reverberaci\u00F3n",
+            pitchVariation: "Variaci\u00F3n de tono",
         },
         dialogs: {
             pauseMenu: {

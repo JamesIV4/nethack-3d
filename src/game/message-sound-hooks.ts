@@ -260,6 +260,8 @@ export class MessageSoundHooks {
           path: resolveNh3dBundledBuiltinSoundPath(soundKey) ?? "",
           source: "builtin",
           attribution: "",
+          reverbOffset: 0,
+          pitchVariation: 0,
         },
       ];
     }
@@ -273,6 +275,8 @@ export class MessageSoundHooks {
       path: assignment.path,
       source: assignment.source,
       attribution: assignment.attribution,
+      reverbOffset: assignment.reverbOffset,
+      pitchVariation: assignment.pitchVariation,
     };
     return [baseVariation, ...(assignment.variations ?? [])];
   }

@@ -1197,6 +1197,7 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
       reverbIntensity: "Globale Hallintensität",
       reverbLevelTypes: "Versatz je Ebenentyp",
       reverbOffset: "Hall-Versatz",
+      pitchVariation: "Tonhöhenvariation",
     },
     dialogs: {
       pauseMenu: {

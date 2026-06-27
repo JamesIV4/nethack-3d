@@ -1170,6 +1170,7 @@ export const en = {
       reverbIntensity: "Global reverb intensity",
       reverbLevelTypes: "Per level type offset",
       reverbOffset: "Reverb offset",
+      pitchVariation: "Pitch variation",
     },
     dialogs: {
       pauseMenu: {

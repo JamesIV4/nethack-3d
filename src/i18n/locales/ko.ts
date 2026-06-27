@@ -1169,6 +1169,7 @@ export const ko = {
       reverbIntensity: "전역 리버브 강도",
       reverbLevelTypes: "층 유형별 오프셋",
       reverbOffset: "리버브 오프셋",
+      pitchVariation: "음 높이 변화",
     },
     dialogs: {
       pauseMenu: {

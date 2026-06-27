@@ -1168,6 +1168,7 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
       reverbIntensity: "Yleinen kaiun voimakkuus",
       reverbLevelTypes: "Poikkeama tasotyypeittäin",
       reverbOffset: "Kaiun poikkeama",
+      pitchVariation: "Sävelkorkeuden vaihtelu",
     },
     dialogs: {
       pauseMenu: {

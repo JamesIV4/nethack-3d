@@ -1208,6 +1208,7 @@ export const fr = {
       reverbIntensity: "Intensite de reverberation globale",
       reverbLevelTypes: "Decalage par type de niveau",
       reverbOffset: "Decalage de reverberation",
+      pitchVariation: "Variation de hauteur",
     },
     dialogs: {
       pauseMenu: {

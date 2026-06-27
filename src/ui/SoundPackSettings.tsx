@@ -23,6 +23,7 @@ import {
   nh3dSoundEffectDefinitions,
   resolveNh3dBundledBuiltinSoundPath,
   normalizeNh3dSoundPackName,
+  resolveNh3dRandomPitchRate,
   resolveNh3dUserAmbientPath,
   resolveNh3dUserSoundPath,
   saveNh3dSoundPackToIndexedDb,
@@ -93,6 +94,22 @@ function stripHtmlToPlainText(value: string): string {
   return withoutTags.replace(/\s+/g, " ").trim();
 }
 
+// Synthetic exponential-decay impulse response so previews can demonstrate the
+// in-progress reverb send without needing FMOD.
+function createPreviewReverbImpulse(context: AudioContext): AudioBuffer {
+  const seconds = 1.6;
+  const length = Math.max(1, Math.floor(context.sampleRate * seconds));
+  const impulse = context.createBuffer(2, length, context.sampleRate);
+  for (let channel = 0; channel < 2; channel += 1) {
+    const data = impulse.getChannelData(channel);
+    for (let i = 0; i < length; i += 1) {
+      const t = i / length;
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.4);
+    }
+  }
+  return impulse;
+}
+
 type SoundVariationView = {
   id: string;
   isBase: boolean;
@@ -129,6 +146,8 @@ function getSoundVariationViews(
     path: sound.path,
     source: sound.source,
     attribution: sound.attribution,
+    reverbOffset: sound.reverbOffset,
+    pitchVariation: sound.pitchVariation,
   };
   const extras = Array.isArray(sound.variations) ? sound.variations : [];
   return [
@@ -211,6 +230,9 @@ export default function SoundPackSettings({
   const lastPreviewVariationIdRef = useRef<Record<string, string>>({});
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const previewObjectUrlRef = useRef<string | null>(null);
+  const previewAudioContextRef = useRef<AudioContext | null>(null);
+  const previewWetGainRef = useRef<GainNode | null>(null);
+  const previewGraphFailedRef = useRef(false);
   const hasLoadedRef = useRef(false);
   const {
     dialog: localConfirmationDialog,
@@ -242,6 +264,12 @@ export default function SoundPackSettings({
   useEffect(() => {
     return () => {
       stopPreview();
+      const context = previewAudioContextRef.current;
+      previewAudioContextRef.current = null;
+      previewWetGainRef.current = null;
+      if (context) {
+        void context.close().catch(() => undefined);
+      }
     };
   }, [stopPreview]);
 
@@ -402,6 +430,8 @@ export default function SoundPackSettings({
         path: current.path,
         source: current.source,
         attribution: current.attribution,
+        reverbOffset: current.reverbOffset,
+        pitchVariation: current.pitchVariation,
       };
       return {
         ...current,
@@ -529,6 +559,7 @@ export default function SoundPackSettings({
         source: current.source,
         attribution: current.attribution,
         conditions: { ...current.conditions },
+        reverbOffset: current.reverbOffset,
       };
       return {
         ...current,
@@ -749,11 +780,56 @@ export default function SoundPackSettings({
     }
   };
 
+  // Lazily build a WebAudio graph around the preview element so previews can
+  // demonstrate the in-progress reverb send (dry + convolver wet). Pitch is
+  // applied via playbackRate and works even without the graph.
+  const ensurePreviewReverbGraph = (
+    audio: HTMLAudioElement,
+  ): GainNode | null => {
+    if (previewWetGainRef.current) {
+      return previewWetGainRef.current;
+    }
+    if (previewGraphFailedRef.current || typeof window === "undefined") {
+      return null;
+    }
+    const AudioContextCtor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioContextCtor) {
+      previewGraphFailedRef.current = true;
+      return null;
+    }
+    try {
+      const context = previewAudioContextRef.current ?? new AudioContextCtor();
+      previewAudioContextRef.current = context;
+      const source = context.createMediaElementSource(audio);
+      const dryGain = context.createGain();
+      dryGain.gain.value = 1;
+      const wetGain = context.createGain();
+      wetGain.gain.value = 0;
+      const convolver = context.createConvolver();
+      convolver.buffer = createPreviewReverbImpulse(context);
+      source.connect(dryGain);
+      dryGain.connect(context.destination);
+      source.connect(convolver);
+      convolver.connect(wetGain);
+      wetGain.connect(context.destination);
+      previewWetGainRef.current = wetGain;
+      return wetGain;
+    } catch {
+      previewGraphFailedRef.current = true;
+      return null;
+    }
+  };
+
   const playResolvedPreview = async (
     previewUrl: string,
     volume: number,
     revokeAfterPlay: boolean,
     indicatorSlotKey: string,
+    reverbSend: number,
+    pitchRate: number,
   ): Promise<void> => {
     const audio = previewAudioRef.current ?? new Audio();
     previewAudioRef.current = audio;
@@ -761,6 +837,15 @@ export default function SoundPackSettings({
     audio.pause();
     audio.currentTime = 0;
     audio.volume = Number.isFinite(previewVolume) ? previewVolume : 1;
+    const rate = Number.isFinite(pitchRate) && pitchRate > 0 ? pitchRate : 1;
+    try {
+      audio.playbackRate = rate;
+      (
+        audio as HTMLAudioElement & { preservesPitch?: boolean }
+      ).preservesPitch = false;
+    } catch {
+      // Some browsers reject playbackRate/preservesPitch changes; ignore.
+    }
     audio.src = previewUrl;
     audio.onended = () => {
       setPlayingSoundSlotKey(null);
@@ -780,6 +865,20 @@ export default function SoundPackSettings({
     if (revokeAfterPlay) {
       previewObjectUrlRef.current = previewUrl;
     }
+
+    const wetGain = ensurePreviewReverbGraph(audio);
+    const context = previewAudioContextRef.current;
+    if (wetGain && context) {
+      if (context.state === "suspended") {
+        try {
+          await context.resume();
+        } catch {
+          // Ignore resume rejections outside trusted gestures.
+        }
+      }
+      wetGain.gain.value = Math.max(0, Math.min(1, reverbSend));
+    }
+
     await audio.play();
     setPlayingSoundSlotKey(indicatorSlotKey);
   };
@@ -809,6 +908,13 @@ export default function SoundPackSettings({
         ? pendingUploads[soundKey]
         : undefined);
     const fallbackSound = defaultPack?.sounds[soundKey];
+    const previewReverbSend = Math.max(
+      0,
+      Math.min(1, draftPack.reverb.intensity + variation.reverbOffset),
+    );
+    const previewPitchRate = resolveNh3dRandomPitchRate(
+      variation.pitchVariation,
+    );
     let previewUrl = "";
     let revokeAfterPlay = false;
 
@@ -841,6 +947,8 @@ export default function SoundPackSettings({
         variation.volume,
         revokeAfterPlay,
         indicatorSlotKey ?? uploadSlotKey,
+        previewReverbSend,
+        previewPitchRate,
       );
     } catch (error) {
       if (revokeAfterPlay && previewUrl) {
@@ -870,6 +978,11 @@ export default function SoundPackSettings({
     }
     const uploadSlotKey = createNh3dAmbientUploadSlotKey(trackKey, variationId);
     const pendingUpload = pendingUploads[uploadSlotKey];
+    const previewReverbSend = Math.max(
+      0,
+      Math.min(1, draftPack.reverb.intensity + variation.reverbOffset),
+    );
+    const previewPitchRate = 1;
     let previewUrl = "";
     let revokeAfterPlay = false;
 
@@ -897,6 +1010,8 @@ export default function SoundPackSettings({
         variation.volume,
         revokeAfterPlay,
         indicatorSlotKey ?? uploadSlotKey,
+        previewReverbSend,
+        previewPitchRate,
       );
     } catch (error) {
       if (revokeAfterPlay && previewUrl) {
@@ -1058,6 +1173,35 @@ export default function SoundPackSettings({
             attribution: value,
           })),
         )}
+        extraContent={
+          <div className="nh3d-soundpack-clip-fx">
+            <ReverbSlider
+              ariaLabel={`${soundPackStrings.reverbOffset} ${label}`}
+              disabled={isBusy}
+              label={soundPackStrings.reverbOffset}
+              onChange={(value) =>
+                updateDraftSoundVariation(soundKey, variationId, (current) => ({
+                  ...current,
+                  reverbOffset: value,
+                }))
+              }
+              signed
+              value={variation.reverbOffset}
+            />
+            <ReverbSlider
+              ariaLabel={`${soundPackStrings.pitchVariation} ${label}`}
+              disabled={isBusy}
+              label={soundPackStrings.pitchVariation}
+              onChange={(value) =>
+                updateDraftSoundVariation(soundKey, variationId, (current) => ({
+                  ...current,
+                  pitchVariation: value,
+                }))
+              }
+              value={variation.pitchVariation}
+            />
+          </div>
+        }
       />
     );
   };
@@ -1190,31 +1334,54 @@ export default function SoundPackSettings({
           })),
         )}
         extraContent={
-          <AmbientConditionEditor
-            value={variation.conditions}
-            disabled={isBusy}
-            onChange={(nextConditions: Nh3dAmbientCondition) =>
-              updateDraftAmbientVariation(trackKey, variationId, (current) => ({
-                ...current,
-                conditions: nextConditions,
-              }))
-            }
-            strings={{
-              heading: soundPackStrings.conditionsHeading,
-              hint: soundPackStrings.conditionsHint,
-              depthRange: soundPackStrings.depthRange,
-              minDepth: soundPackStrings.minDepth,
-              maxDepth: soundPackStrings.maxDepth,
-              playerLevelRange: soundPackStrings.playerLevelRange,
-              minLevel: soundPackStrings.minLevel,
-              maxLevel: soundPackStrings.maxLevel,
-              amuletCondition: soundPackStrings.amuletCondition,
-              amuletAny: soundPackStrings.amuletAny,
-              amuletCarried: soundPackStrings.amuletCarried,
-              amuletNotCarried: soundPackStrings.amuletNotCarried,
-              anyValue: soundPackStrings.anyValue,
-            }}
-          />
+          <div className="nh3d-soundpack-clip-fx">
+            <ReverbSlider
+              ariaLabel={`${soundPackStrings.reverbOffset} ${label}`}
+              disabled={isBusy}
+              label={soundPackStrings.reverbOffset}
+              onChange={(value) =>
+                updateDraftAmbientVariation(
+                  trackKey,
+                  variationId,
+                  (current) => ({
+                    ...current,
+                    reverbOffset: value,
+                  }),
+                )
+              }
+              signed
+              value={variation.reverbOffset}
+            />
+            <AmbientConditionEditor
+              value={variation.conditions}
+              disabled={isBusy}
+              onChange={(nextConditions: Nh3dAmbientCondition) =>
+                updateDraftAmbientVariation(
+                  trackKey,
+                  variationId,
+                  (current) => ({
+                    ...current,
+                    conditions: nextConditions,
+                  }),
+                )
+              }
+              strings={{
+                heading: soundPackStrings.conditionsHeading,
+                hint: soundPackStrings.conditionsHint,
+                depthRange: soundPackStrings.depthRange,
+                minDepth: soundPackStrings.minDepth,
+                maxDepth: soundPackStrings.maxDepth,
+                playerLevelRange: soundPackStrings.playerLevelRange,
+                minLevel: soundPackStrings.minLevel,
+                maxLevel: soundPackStrings.maxLevel,
+                amuletCondition: soundPackStrings.amuletCondition,
+                amuletAny: soundPackStrings.amuletAny,
+                amuletCarried: soundPackStrings.amuletCarried,
+                amuletNotCarried: soundPackStrings.amuletNotCarried,
+                anyValue: soundPackStrings.anyValue,
+              }}
+            />
+          </div>
         }
       />
     );
@@ -1522,19 +1689,6 @@ export default function SoundPackSettings({
                     renderSoundEffectVariation(definition, view, index),
                   )}
                 </div>
-                <ReverbSlider
-                  ariaLabel={`${soundPackStrings.reverbOffset} ${definition.label}`}
-                  disabled={isBusy}
-                  label={soundPackStrings.reverbOffset}
-                  onChange={(value) =>
-                    updateDraftSound(soundKey, (current) => ({
-                      ...current,
-                      reverbOffset: value,
-                    }))
-                  }
-                  signed
-                  value={sound.reverbOffset}
-                />
                 {!isDefaultDraft ? (
                   <button
                     className="nh3d-menu-action-button"
@@ -1607,19 +1761,6 @@ export default function SoundPackSettings({
                     renderAmbientVariation(definition, view, index),
                   )}
                 </div>
-                <ReverbSlider
-                  ariaLabel={`${soundPackStrings.reverbOffset} ${definition.label}`}
-                  disabled={isBusy}
-                  label={soundPackStrings.reverbOffset}
-                  onChange={(value) =>
-                    updateDraftAmbient(trackKey, (current) => ({
-                      ...current,
-                      reverbOffset: value,
-                    }))
-                  }
-                  signed
-                  value={track.reverbOffset}
-                />
                 <button
                   className="nh3d-menu-action-button"
                   disabled={isBusy}

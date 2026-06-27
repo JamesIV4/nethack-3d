@@ -1203,6 +1203,7 @@ export const ptBrOverrides = {
       reverbIntensity: "Intensidade de reverberação global",
       reverbLevelTypes: "Ajuste por tipo de nível",
       reverbOffset: "Ajuste de reverberação",
+      pitchVariation: "Variação de tom",
     },
     dialogs: {
       pauseMenu: {

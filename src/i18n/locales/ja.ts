@@ -1124,6 +1124,7 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
       reverbIntensity: "全体のリバーブの強さ",
       reverbLevelTypes: "階層タイプごとのオフセット",
       reverbOffset: "リバーブのオフセット",
+      pitchVariation: "ピッチの変化",
     },
     dialogs: {
       pauseMenu: {
