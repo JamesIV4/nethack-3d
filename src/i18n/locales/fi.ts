@@ -1162,6 +1162,12 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
       amuletNotCarried: "Ei kanneta",
       ambientUnassigned: "Ei raitaa määritetty",
       ambientNoTracks: "Ei vielä musiikkiraitoja tässä paketissa.",
+      reverbHeading: "Kaiku",
+      reverbDescription:
+        "FMOD-kaiun voimakkuus tälle paketille. Äänen taso on yleinen voimakkuus plus nykyisen tasotyypin poikkeama plus äänen tai raidan oma poikkeama.",
+      reverbIntensity: "Yleinen kaiun voimakkuus",
+      reverbLevelTypes: "Poikkeama tasotyypeittäin",
+      reverbOffset: "Kaiun poikkeama",
     },
     dialogs: {
       pauseMenu: {

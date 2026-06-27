@@ -34,6 +34,7 @@ import {
   type Nh3dSoundEffectKey,
   type Nh3dSoundEffectVariation,
   type Nh3dSoundPackRecord,
+  type Nh3dSoundPackReverbSettings,
   type Nh3dSoundFileUploadOverrides,
 } from "../audio/sound-pack-storage";
 import {
@@ -45,6 +46,8 @@ import { getTranslationStrings } from "../i18n/core";
 import SoundAccordionRow from "./soundpack/SoundAccordionRow";
 import SoundVariationRow from "./soundpack/SoundVariationRow";
 import AmbientConditionEditor from "./soundpack/AmbientConditionEditor";
+import ReverbSettingsPanel from "./soundpack/ReverbSettingsPanel";
+import ReverbSlider from "./soundpack/ReverbSlider";
 
 const translationStrings = getTranslationStrings();
 const commonStrings = translationStrings.common;
@@ -200,6 +203,7 @@ export default function SoundPackSettings({
   const [activeAudioTab, setActiveAudioTab] =
     useState<SoundPackAudioTab>("effects");
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+  const [reverbPanelExpanded, setReverbPanelExpanded] = useState(false);
   const [playingSoundSlotKey, setPlayingSoundSlotKey] = useState<string | null>(
     null,
   );
@@ -431,6 +435,19 @@ export default function SoundPackSettings({
         (variation) => variation.id !== variationId,
       ),
     }));
+  };
+
+  // --- Reverb draft mutations -----------------------------------------------
+  const updateDraftReverb = (
+    updater: (current: Nh3dSoundPackReverbSettings) => Nh3dSoundPackReverbSettings,
+  ): void => {
+    setDraftPack((previous) => {
+      if (!previous) {
+        return previous;
+      }
+      return { ...previous, reverb: updater(previous.reverb) };
+    });
+    markDraftAsDirty();
   };
 
   // --- Ambient draft mutations ----------------------------------------------
@@ -1380,6 +1397,48 @@ export default function SoundPackSettings({
         />
       </div>
 
+      {draftPack ? (
+        <ReverbSettingsPanel
+          reverb={draftPack.reverb}
+          disabled={isBusy}
+          expanded={reverbPanelExpanded}
+          onToggleExpanded={() =>
+            setReverbPanelExpanded((previous) => !previous)
+          }
+          onIntensityChange={(value) =>
+            updateDraftReverb((current) => ({ ...current, intensity: value }))
+          }
+          onLevelTypeOffsetChange={(key, value) =>
+            updateDraftReverb((current) => ({
+              ...current,
+              levelTypeOffsets: {
+                ...current.levelTypeOffsets,
+                [key]: value,
+              },
+            }))
+          }
+          levelTypes={nh3dAmbientTrackDefinitions.map((definition) => ({
+            key: definition.key,
+            label: definition.label,
+          }))}
+          strings={{
+            heading: soundPackStrings.reverbHeading,
+            description: soundPackStrings.reverbDescription,
+            intensity: soundPackStrings.reverbIntensity,
+            intensityAria: soundPackStrings.reverbIntensity,
+            levelTypes: soundPackStrings.reverbLevelTypes,
+            offsetAria: (label: string) =>
+              `${soundPackStrings.reverbOffset} ${label}`,
+            expandAria: soundPackStrings.expandAria(
+              soundPackStrings.reverbHeading,
+            ),
+            collapseAria: soundPackStrings.collapseAria(
+              soundPackStrings.reverbHeading,
+            ),
+          }}
+        />
+      ) : null}
+
       <div className="nh3d-soundpack-tabs" role="tablist">
         <button
           aria-selected={activeAudioTab === "effects"}
@@ -1463,6 +1522,19 @@ export default function SoundPackSettings({
                     renderSoundEffectVariation(definition, view, index),
                   )}
                 </div>
+                <ReverbSlider
+                  ariaLabel={`${soundPackStrings.reverbOffset} ${definition.label}`}
+                  disabled={isBusy}
+                  label={soundPackStrings.reverbOffset}
+                  onChange={(value) =>
+                    updateDraftSound(soundKey, (current) => ({
+                      ...current,
+                      reverbOffset: value,
+                    }))
+                  }
+                  signed
+                  value={sound.reverbOffset}
+                />
                 {!isDefaultDraft ? (
                   <button
                     className="nh3d-menu-action-button"
@@ -1535,6 +1607,19 @@ export default function SoundPackSettings({
                     renderAmbientVariation(definition, view, index),
                   )}
                 </div>
+                <ReverbSlider
+                  ariaLabel={`${soundPackStrings.reverbOffset} ${definition.label}`}
+                  disabled={isBusy}
+                  label={soundPackStrings.reverbOffset}
+                  onChange={(value) =>
+                    updateDraftAmbient(trackKey, (current) => ({
+                      ...current,
+                      reverbOffset: value,
+                    }))
+                  }
+                  signed
+                  value={track.reverbOffset}
+                />
                 <button
                   className="nh3d-menu-action-button"
                   disabled={isBusy}

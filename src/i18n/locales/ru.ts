@@ -1171,6 +1171,12 @@ export const ru = {
       amuletNotCarried: "Не при себе",
       ambientUnassigned: "Трек не назначен",
       ambientNoTracks: "В этом наборе пока нет музыкальных треков.",
+      reverbHeading: "Реверберация",
+      reverbDescription:
+        "Интенсивность реверберации FMOD для этого набора. Уровень для звука — это глобальная интенсивность плюс смещение текущего типа уровня плюс собственное смещение звука или трека.",
+      reverbIntensity: "Общая интенсивность реверберации",
+      reverbLevelTypes: "Смещение по типу уровня",
+      reverbOffset: "Смещение реверберации",
     },
     dialogs: {
       pauseMenu: {

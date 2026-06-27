@@ -1202,6 +1202,12 @@ export const fr = {
       amuletNotCarried: "Non portee",
       ambientUnassigned: "Aucune piste assignee",
       ambientNoTracks: "Aucune piste musicale dans ce pack pour l'instant.",
+      reverbHeading: "Reverberation",
+      reverbDescription:
+        "Intensite de reverberation FMOD pour ce pack. Le niveau d'un son est l'intensite globale plus le decalage du type de niveau actuel plus le decalage propre du son ou de la piste.",
+      reverbIntensity: "Intensite de reverberation globale",
+      reverbLevelTypes: "Decalage par type de niveau",
+      reverbOffset: "Decalage de reverberation",
     },
     dialogs: {
       pauseMenu: {

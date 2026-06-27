@@ -1164,6 +1164,12 @@ export const en = {
       amuletNotCarried: "Not carrying",
       ambientUnassigned: "No track assigned",
       ambientNoTracks: "No music tracks in this pack yet.",
+      reverbHeading: "Reverb",
+      reverbDescription:
+        "FMOD reverb intensity for this pack. The level for a sound is the global intensity plus the current level type's offset plus the sound or track's own offset.",
+      reverbIntensity: "Global reverb intensity",
+      reverbLevelTypes: "Per level type offset",
+      reverbOffset: "Reverb offset",
     },
     dialogs: {
       pauseMenu: {

@@ -1118,6 +1118,12 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
       amuletNotCarried: "未所持",
       ambientUnassigned: "トラック未設定",
       ambientNoTracks: "このパックにはまだ音楽トラックがありません。",
+      reverbHeading: "リバーブ",
+      reverbDescription:
+        "このパックの FMOD リバーブの強さ。各サウンドの値は、全体の強さ＋現在の階層タイプのオフセット＋サウンドまたはトラック自身のオフセットになります。",
+      reverbIntensity: "全体のリバーブの強さ",
+      reverbLevelTypes: "階層タイプごとのオフセット",
+      reverbOffset: "リバーブのオフセット",
     },
     dialogs: {
       pauseMenu: {

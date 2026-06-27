@@ -4804,6 +4804,53 @@ canvas {
   width: 100%;
 }
 
+.nh3d-soundpack-reverb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nh3d-soundpack-reverb-field-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nh3d-soundpack-reverb-field-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nh3d-soundpack-reverb-field-value {
+  flex: 0 0 auto;
+  color: var(--nh3d-ui-accent-soft);
+  font-size: nh3d-scale-font(14px);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.nh3d-soundpack-reverb-slider {
+  width: 100%;
+  min-width: 0;
+}
+
+.nh3d-soundpack-reverb-leveltypes-heading {
+  margin-top: 4px;
+  font-size: nh3d-scale-font(13px);
+  font-weight: 700;
+  color: var(--nh3d-ui-text);
+}
+
+.nh3d-soundpack-reverb-leveltypes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
 .delete-button {
   width: 30px;
   height: 30px;

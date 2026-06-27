@@ -898,6 +898,12 @@ export const zhCnOverrides = {
       amuletNotCarried: "未携带",
       ambientUnassigned: "未指定音轨",
       ambientNoTracks: "此音效包还没有音乐音轨。",
+      reverbHeading: "混响",
+      reverbDescription:
+        "此音效包的 FMOD 混响强度。某个声音的强度等于全局强度加上当前层级类型的偏移再加上该声音或音轨自身的偏移。",
+      reverbIntensity: "全局混响强度",
+      reverbLevelTypes: "按层级类型偏移",
+      reverbOffset: "混响偏移",
     },
     dialogs: {
       pauseMenu: {

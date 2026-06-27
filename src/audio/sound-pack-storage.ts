@@ -339,12 +339,110 @@ export type Nh3dAmbientTrackVariation = Nh3dAmbientTrackEntryBase & {
 
 export type Nh3dAmbientTrackAssignment = Nh3dAmbientTrackEntryBase & {
   variations: Nh3dAmbientTrackVariation[];
+  // Signed reverb intensity offset (-1..1) added on top of the pack-global
+  // reverb intensity and the current level type's offset.
+  reverbOffset: number;
 };
 
 export type Nh3dSoundPackAmbientMap = Record<
   Nh3dAmbientTrackKey,
   Nh3dAmbientTrackAssignment
 >;
+
+// --- Reverb ----------------------------------------------------------------
+// FMOD reverb is expressed as an "intensity" in 0..1 that maps to the reverb
+// wet-send level on each playing channel. The effective send for a given sound
+// is: clamp01(pack.reverb.intensity + levelTypeOffsets[branch] + assignment
+// reverbOffset). Offsets are signed (-1..1) so a sound can pull reverb above or
+// below the global baseline.
+export type Nh3dSoundPackReverbSettings = {
+  intensity: number;
+  levelTypeOffsets: Record<Nh3dAmbientTrackKey, number>;
+};
+
+export const nh3dReverbDefaultIntensity = 0;
+
+export function clampNh3dReverbIntensity(value: unknown, fallback = 0): number {
+  const parsed =
+    typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return Math.max(0, Math.min(1, Number(parsed.toFixed(4))));
+}
+
+export function clampNh3dReverbOffset(value: unknown, fallback = 0): number {
+  const parsed =
+    typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return Math.max(-1, Math.min(1, Number(parsed.toFixed(4))));
+}
+
+function createDefaultReverbLevelOffsets(): Record<Nh3dAmbientTrackKey, number> {
+  const offsets = {} as Record<Nh3dAmbientTrackKey, number>;
+  for (const definition of nh3dAmbientTrackDefinitions) {
+    offsets[definition.key] = 0;
+  }
+  return offsets;
+}
+
+export function createNh3dDefaultReverbSettings(): Nh3dSoundPackReverbSettings {
+  return {
+    intensity: nh3dReverbDefaultIntensity,
+    levelTypeOffsets: createDefaultReverbLevelOffsets(),
+  };
+}
+
+function normalizeReverbSettings(
+  rawValue: unknown,
+): Nh3dSoundPackReverbSettings {
+  if (!isRecordLike(rawValue)) {
+    return createNh3dDefaultReverbSettings();
+  }
+  const intensity = clampNh3dReverbIntensity(
+    rawValue.intensity,
+    nh3dReverbDefaultIntensity,
+  );
+  const rawOffsets = isRecordLike(rawValue.levelTypeOffsets)
+    ? rawValue.levelTypeOffsets
+    : null;
+  const levelTypeOffsets = {} as Record<Nh3dAmbientTrackKey, number>;
+  for (const definition of nh3dAmbientTrackDefinitions) {
+    levelTypeOffsets[definition.key] = clampNh3dReverbOffset(
+      rawOffsets ? rawOffsets[definition.key] : 0,
+      0,
+    );
+  }
+  return { intensity, levelTypeOffsets };
+}
+
+function cloneReverbSettings(
+  reverb: Nh3dSoundPackReverbSettings,
+): Nh3dSoundPackReverbSettings {
+  return {
+    intensity: reverb.intensity,
+    levelTypeOffsets: { ...reverb.levelTypeOffsets },
+  };
+}
+
+/**
+ * Effective reverb wet-send level (0..1) for a sound, combining the pack-global
+ * reverb intensity, the current level type's offset, and the sound/track's own
+ * reverb offset.
+ */
+export function resolveNh3dReverbSendLevel(
+  pack: Nh3dSoundPackRecord | null | undefined,
+  levelTypeKey: Nh3dAmbientTrackKey,
+  entryReverbOffset: number,
+): number {
+  if (!pack) {
+    return 0;
+  }
+  const reverb = pack.reverb ?? createNh3dDefaultReverbSettings();
+  const base = clampNh3dReverbIntensity(reverb.intensity, 0);
+  const levelOffset = clampNh3dReverbOffset(
+    reverb.levelTypeOffsets?.[levelTypeKey],
+    0,
+  );
+  const entryOffset = clampNh3dReverbOffset(entryReverbOffset, 0);
+  return Math.max(0, Math.min(1, base + levelOffset + entryOffset));
+}
 
 type Nh3dSoundEffectEntryBase = {
   key: Nh3dSoundEffectKey;
@@ -363,6 +461,8 @@ export type Nh3dSoundEffectVariation = Nh3dSoundEffectEntryBase & {
 
 export type Nh3dSoundEffectAssignment = Nh3dSoundEffectEntryBase & {
   variations: Nh3dSoundEffectVariation[];
+  // Signed reverb intensity offset (-1..1) for this sound effect.
+  reverbOffset: number;
 };
 
 export type Nh3dSoundPackSoundMap = Record<
@@ -378,6 +478,7 @@ export type Nh3dSoundPackRecord = {
   updatedAt: number;
   sounds: Nh3dSoundPackSoundMap;
   ambient: Nh3dSoundPackAmbientMap;
+  reverb: Nh3dSoundPackReverbSettings;
 };
 
 export type Nh3dLoadedSoundPackState = {
@@ -419,11 +520,12 @@ type Nh3dSoundPackManifestAmbientEntry = {
 
 type Nh3dSoundPackExportManifest = {
   schema: "nh3d-soundpack";
-  version: 3;
+  version: 4;
   exportedAt: string;
   pack: {
     name: string;
     isDefault: boolean;
+    reverb: Nh3dSoundPackReverbSettings;
     sounds: Array<{
       key: Nh3dSoundEffectKey;
       label: string;
@@ -434,6 +536,7 @@ type Nh3dSoundPackExportManifest = {
       path: string;
       source: Nh3dSoundEntrySource;
       attribution: string;
+      reverbOffset: number;
       archivePath: string | null;
       variations: Array<{
         id: string;
@@ -451,6 +554,7 @@ type Nh3dSoundPackExportManifest = {
       Nh3dSoundPackManifestAmbientEntry & {
         key: Nh3dAmbientTrackKey;
         label: string;
+        reverbOffset: number;
         variations: Array<
           Nh3dSoundPackManifestAmbientEntry & {
             id: string;
@@ -482,6 +586,7 @@ type ParsedImportSoundEntry = {
   path: string;
   source: Nh3dSoundEntrySource;
   attribution: string;
+  reverbOffset: number;
   archivePath: string | null;
   variations: ParsedImportSoundVariationEntry[];
 };
@@ -507,6 +612,7 @@ type ParsedImportAmbientEntry = {
   path: string;
   attribution: string;
   conditions: Nh3dAmbientCondition;
+  reverbOffset: number;
   archivePath: string | null;
   variations: ParsedImportAmbientVariationEntry[];
 };
@@ -887,6 +993,7 @@ function createDefaultSoundAssignment(
       attribution: "No bundled sound assigned.",
     }),
     variations: [],
+    reverbOffset: 0,
   };
 }
 
@@ -957,7 +1064,11 @@ function createDefaultAmbientEntryBase(
 function createDefaultAmbientAssignment(
   trackKey: Nh3dAmbientTrackKey,
 ): Nh3dAmbientTrackAssignment {
-  return { ...createDefaultAmbientEntryBase(trackKey), variations: [] };
+  return {
+    ...createDefaultAmbientEntryBase(trackKey),
+    variations: [],
+    reverbOffset: 0,
+  };
 }
 
 function createDefaultAmbientMap(): Nh3dSoundPackAmbientMap {
@@ -1031,6 +1142,7 @@ function ambientAssignmentFromVariations(
   trackKey: Nh3dAmbientTrackKey,
   variations: Nh3dAmbientTrackVariation[],
   fallback: Nh3dAmbientTrackAssignment,
+  reverbOffset: number = fallback.reverbOffset,
 ): Nh3dAmbientTrackAssignment {
   const normalizedVariations = Array.isArray(variations)
     ? variations.map((entry) => ({
@@ -1082,6 +1194,7 @@ function ambientAssignmentFromVariations(
     attribution: resolvedBase.attribution,
     conditions: cloneAmbientCondition(resolvedBase.conditions),
     variations: extraVariations,
+    reverbOffset: clampNh3dReverbOffset(reverbOffset, 0),
   };
 }
 
@@ -1185,7 +1298,14 @@ function normalizeAmbientTrackAssignment(
     seenVariationIds.add(nextId);
     variations.push({ id: nextId, ...normalized });
   }
-  return { ...base, variations };
+  return {
+    ...base,
+    variations,
+    reverbOffset: clampNh3dReverbOffset(
+      rawValue.reverbOffset,
+      fallback.reverbOffset,
+    ),
+  };
 }
 
 function normalizeAmbientMap(
@@ -1246,6 +1366,7 @@ function soundAssignmentFromVariations(
   soundKey: Nh3dSoundEffectKey,
   variations: Nh3dSoundEffectVariation[],
   fallback: Nh3dSoundEffectAssignment,
+  reverbOffset: number = fallback.reverbOffset,
 ): Nh3dSoundEffectAssignment {
   const normalizedVariations = Array.isArray(variations)
     ? variations.map((entry) => ({ ...entry, key: soundKey }))
@@ -1291,6 +1412,7 @@ function soundAssignmentFromVariations(
     source: resolvedBase.source,
     attribution: resolvedBase.attribution,
     variations: extraVariations,
+    reverbOffset: clampNh3dReverbOffset(reverbOffset, 0),
   };
 }
 
@@ -1301,6 +1423,7 @@ export function cloneNh3dSoundPack(
     ...pack,
     sounds: cloneSoundMap(pack.sounds),
     ambient: cloneAmbientMap(pack.ambient),
+    reverb: cloneReverbSettings(pack.reverb ?? createNh3dDefaultReverbSettings()),
   };
 }
 
@@ -1313,6 +1436,7 @@ function createDefaultSoundPackRecord(now = Date.now()): Nh3dSoundPackRecord {
     updatedAt: now,
     sounds: createDefaultSoundMap(),
     ambient: createDefaultAmbientMap(),
+    reverb: createNh3dDefaultReverbSettings(),
   };
 }
 
@@ -1441,6 +1565,10 @@ function normalizeSoundAssignment(
   return {
     ...base,
     variations,
+    reverbOffset: clampNh3dReverbOffset(
+      rawValue.reverbOffset,
+      fallback.reverbOffset,
+    ),
   };
 }
 
@@ -1508,6 +1636,7 @@ function normalizeSoundPackRecord(
     updatedAt,
     sounds,
     ambient: normalizeAmbientMap(rawValue.ambient, name),
+    reverb: normalizeReverbSettings(rawValue.reverb),
   };
 }
 
@@ -2223,6 +2352,7 @@ async function cloneDefaultSoundMapForNewPack(
       soundKey,
       nextEntries,
       fallbackDefault,
+      defaultSound.reverbOffset,
     );
   }
 
@@ -2312,6 +2442,7 @@ async function cloneDefaultAmbientMapForNewPack(
       trackKey,
       nextEntries,
       fallback,
+      defaultTrack.reverbOffset,
     );
   }
 
@@ -2370,6 +2501,9 @@ export async function createNh3dSoundPack(
       updatedAt: now,
       sounds: nextSounds,
       ambient: nextAmbient,
+      reverb: cloneReverbSettings(
+        defaultPack.reverb ?? createNh3dDefaultReverbSettings(),
+      ),
     };
 
     await idbRequestToPromise(packStore.put(nextPack));
@@ -2585,6 +2719,7 @@ async function persistAmbientMapForSave(
       trackKey,
       nextEntries,
       fallback,
+      incomingTrack.reverbOffset,
     );
   }
 
@@ -2708,6 +2843,10 @@ export async function saveNh3dSoundPackToIndexedDb(
           volume: clampUnit(baseIncoming?.volume, fallbackDefault.volume),
           attribution: fallbackDefault.attribution,
           variations: [],
+          reverbOffset: clampNh3dReverbOffset(
+            incomingSound.reverbOffset,
+            fallbackDefault.reverbOffset,
+          ),
         };
         continue;
       }
@@ -2939,6 +3078,7 @@ export async function saveNh3dSoundPackToIndexedDb(
         soundKey,
         nextEntries,
         fallbackDefault,
+        incomingSound.reverbOffset,
       );
     }
 
@@ -2960,6 +3100,7 @@ export async function saveNh3dSoundPackToIndexedDb(
       updatedAt: now,
       sounds: nextSounds,
       ambient: nextAmbient,
+      reverb: normalizeReverbSettings(pack.reverb),
     };
 
     await idbRequestToPromise(packStore.put(nextPack));
@@ -3076,11 +3217,14 @@ export async function exportNh3dSoundPackToZip(
   const archiveEntries: Record<string, Uint8Array> = {};
   const manifest: Nh3dSoundPackExportManifest = {
     schema: "nh3d-soundpack",
-    version: 3,
+    version: 4,
     exportedAt: new Date().toISOString(),
     pack: {
       name: normalizedPack.name,
       isDefault: normalizedPack.isDefault,
+      reverb: cloneReverbSettings(
+        normalizedPack.reverb ?? createNh3dDefaultReverbSettings(),
+      ),
       sounds: [],
       ambient: [],
     },
@@ -3178,6 +3322,7 @@ export async function exportNh3dSoundPackToZip(
       path: baseEntry.path,
       source: baseEntry.source,
       attribution: normalizeAttribution(baseEntry.attribution),
+      reverbOffset: clampNh3dReverbOffset(sound.reverbOffset, 0),
       archivePath: baseArchivePath,
       variations: variationManifestEntries,
     });
@@ -3264,6 +3409,7 @@ export async function exportNh3dSoundPackToZip(
     manifest.pack.ambient.push({
       key: trackKey,
       label: definition.label,
+      reverbOffset: clampNh3dReverbOffset(track.reverbOffset, 0),
       enabled: Boolean(baseEntry.enabled),
       volume: clampUnit(baseEntry.volume, 1),
       fileName: baseArchiveFileName,
@@ -3293,6 +3439,7 @@ function parseImportManifest(rawManifest: unknown): {
   packName: string;
   soundsByKey: Map<Nh3dSoundEffectKey, ParsedImportSoundEntry>;
   ambientByKey: Map<Nh3dAmbientTrackKey, ParsedImportAmbientEntry>;
+  reverb: Nh3dSoundPackReverbSettings | null;
 } {
   if (!isRecordLike(rawManifest)) {
     throw new Error("Invalid sound pack archive manifest.");
@@ -3301,7 +3448,10 @@ function parseImportManifest(rawManifest: unknown): {
   if (
     rawManifest.schema !== "nh3d-soundpack" ||
     !Number.isFinite(rawVersion) ||
-    (rawVersion !== 1 && rawVersion !== 2 && rawVersion !== 3)
+    (rawVersion !== 1 &&
+      rawVersion !== 2 &&
+      rawVersion !== 3 &&
+      rawVersion !== 4)
   ) {
     throw new Error("Unsupported sound pack archive format.");
   }
@@ -3311,6 +3461,9 @@ function parseImportManifest(rawManifest: unknown): {
   const packName =
     normalizeNh3dSoundPackName(String(rawManifest.pack.name || "")) ||
     "Imported Sound Pack";
+  const reverb = isRecordLike(rawManifest.pack.reverb)
+    ? normalizeReverbSettings(rawManifest.pack.reverb)
+    : null;
 
   const rawSounds = Array.isArray(rawManifest.pack.sounds)
     ? rawManifest.pack.sounds
@@ -3350,6 +3503,7 @@ function parseImportManifest(rawManifest: unknown): {
             : (resolveNh3dBundledBuiltinSoundPath(targetKey) ?? "")),
         source,
         attribution: normalizeAttribution(rawEntry.attribution),
+        reverbOffset: clampNh3dReverbOffset(rawEntry.reverbOffset, 0),
         archivePath:
           normalizeWhitespace(String(rawEntry.archivePath || "")) || null,
         variations: [],
@@ -3440,6 +3594,7 @@ function parseImportManifest(rawManifest: unknown): {
       path: normalizeWhitespace(String(rawEntry.path || "")),
       attribution: normalizeAttribution(rawEntry.attribution),
       conditions: normalizeAmbientCondition(rawEntry.conditions),
+      reverbOffset: clampNh3dReverbOffset(rawEntry.reverbOffset, 0),
       archivePath:
         normalizeWhitespace(String(rawEntry.archivePath || "")) || null,
       variations: [],
@@ -3484,6 +3639,7 @@ function parseImportManifest(rawManifest: unknown): {
     packName,
     soundsByKey,
     ambientByKey,
+    reverb,
   };
 }
 
@@ -3569,6 +3725,7 @@ export async function importNh3dSoundPackFromZip(
         path: defaultSound.path,
         source: defaultSound.source,
         attribution: defaultSound.attribution,
+        reverbOffset: defaultSound.reverbOffset,
         archivePath: null,
         variations: [],
       };
@@ -3684,6 +3841,7 @@ export async function importNh3dSoundPackFromZip(
         soundKey,
         nextEntries,
         defaultSound,
+        imported?.reverbOffset ?? defaultSound.reverbOffset,
       );
     }
 
@@ -3790,9 +3948,17 @@ export async function importNh3dSoundPackFromZip(
           trackKey,
           nextEntries,
           fallback,
+          imported.reverbOffset,
         );
       }
     }
+
+    const importedReverb =
+      intoDefaultSlot && manifest.reverb === null && existingDefaultPack
+        ? cloneReverbSettings(
+            existingDefaultPack.reverb ?? createNh3dDefaultReverbSettings(),
+          )
+        : (manifest.reverb ?? createNh3dDefaultReverbSettings());
 
     const importedPack: Nh3dSoundPackRecord = {
       id: nextPackId,
@@ -3804,6 +3970,7 @@ export async function importNh3dSoundPackFromZip(
       updatedAt: now,
       sounds: nextSounds,
       ambient: nextAmbient,
+      reverb: importedReverb,
     };
 
     await idbRequestToPromise(packStore.put(importedPack));

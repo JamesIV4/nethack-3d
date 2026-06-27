@@ -1191,6 +1191,12 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
       amuletNotCarried: "Nicht getragen",
       ambientUnassigned: "Kein Titel zugewiesen",
       ambientNoTracks: "Noch keine Musiktitel in diesem Paket.",
+      reverbHeading: "Hall",
+      reverbDescription:
+        "FMOD-Hallintensität für dieses Paket. Der Wert für einen Klang ist die globale Intensität plus der Versatz des aktuellen Ebenentyps plus der eigene Versatz des Klangs oder Titels.",
+      reverbIntensity: "Globale Hallintensität",
+      reverbLevelTypes: "Versatz je Ebenentyp",
+      reverbOffset: "Hall-Versatz",
     },
     dialogs: {
       pauseMenu: {

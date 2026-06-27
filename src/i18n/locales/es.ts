@@ -1084,6 +1084,12 @@ export const esOverrides = {
             amuletNotCarried: "No llevado",
             ambientUnassigned: "Sin pista asignada",
             ambientNoTracks: "A\u00FAn no hay pistas de m\u00FAsica en este paquete.",
+            reverbHeading: "Reverberaci\u00F3n",
+            reverbDescription:
+                "Intensidad de reverberaci\u00F3n FMOD para este paquete. El nivel de un sonido es la intensidad global m\u00E1s el ajuste del tipo de nivel actual m\u00E1s el ajuste propio del sonido o pista.",
+            reverbIntensity: "Intensidad de reverberaci\u00F3n global",
+            reverbLevelTypes: "Ajuste por tipo de nivel",
+            reverbOffset: "Ajuste de reverberaci\u00F3n",
         },
         dialogs: {
             pauseMenu: {
