@@ -249,27 +249,35 @@ export default function SoundPackSettings({
   const stopPreview = useCallback((): void => {
     const audio = previewAudioRef.current;
     if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
       audio.onended = null;
       audio.onerror = null;
+      try {
+        audio.pause();
+      } catch {
+        // Ignore
+      }
+      previewAudioRef.current = null;
     }
     if (previewObjectUrlRef.current) {
       URL.revokeObjectURL(previewObjectUrlRef.current);
       previewObjectUrlRef.current = null;
     }
+    const context = previewAudioContextRef.current;
+    previewAudioContextRef.current = null;
+    previewWetGainRef.current = null;
+    previewGraphFailedRef.current = false;
+    if (context) {
+      void context.close().catch(() => undefined);
+    }
     setPlayingSoundSlotKey(null);
   }, []);
 
   useEffect(() => {
+    if (!visible) {
+      stopPreview();
+    }
     return () => {
       stopPreview();
-      const context = previewAudioContextRef.current;
-      previewAudioContextRef.current = null;
-      previewWetGainRef.current = null;
-      if (context) {
-        void context.close().catch(() => undefined);
-      }
     };
   }, [stopPreview]);
 
@@ -834,27 +842,27 @@ export default function SoundPackSettings({
     reverbSend: number,
     pitchRate: number,
   ): Promise<void> => {
-    const audio = previewAudioRef.current ?? new Audio();
+    stopPreview();
+
+    const audio = new Audio();
     previewAudioRef.current = audio;
     const previewVolume = Math.max(0, Math.min(1, Number(volume ?? 1)));
-    audio.pause();
-    audio.currentTime = 0;
     audio.volume = Number.isFinite(previewVolume) ? previewVolume : 1;
     const rate = Number.isFinite(pitchRate) && pitchRate > 0 ? pitchRate : 1;
     audio.src = previewUrl;
+    
+    try {
+      audio.playbackRate = rate;
+      (audio as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = false;
+    } catch {
+      // Ignore browsers rejecting playbackRate/preservesPitch
+    }
+
     audio.onended = () => {
       setPlayingSoundSlotKey(null);
-      if (revokeAfterPlay && previewObjectUrlRef.current) {
-        URL.revokeObjectURL(previewObjectUrlRef.current);
-        previewObjectUrlRef.current = null;
-      }
     };
     audio.onerror = () => {
       setPlayingSoundSlotKey(null);
-      if (revokeAfterPlay && previewObjectUrlRef.current) {
-        URL.revokeObjectURL(previewObjectUrlRef.current);
-        previewObjectUrlRef.current = null;
-      }
       setErrorText(soundPackStrings.unableToPreview);
     };
     if (revokeAfterPlay) {

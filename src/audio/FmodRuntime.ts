@@ -1,5 +1,16 @@
 type FmodOut<T> = { val?: T };
 
+export interface FmodSound {
+  release(): number;
+}
+
+export interface FmodChannel {
+  setVolume(volume: number): number;
+  setPitch(pitch: number): number;
+  setReverbProperties(instance: number, wet: number): number;
+  stop(): number;
+}
+
 export interface FmodCoreSystem {
   setDSPBufferSize(bufferLength: number, numBuffers: number): number;
   getDriverInfo(
@@ -17,6 +28,18 @@ export interface FmodCoreSystem {
   ): number;
   mixerSuspend(): number;
   mixerResume(): number;
+  createSound(
+    nameOrData: string,
+    mode: number,
+    exinfo: unknown,
+    soundOut: FmodOut<FmodSound>,
+  ): number;
+  playSound(
+    sound: FmodSound,
+    channelGroupOrNull: unknown,
+    paused: boolean,
+    channelOut: FmodOut<FmodChannel>,
+  ): number;
 }
 
 export interface FmodStudioSystem {

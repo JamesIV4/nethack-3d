@@ -9,4 +9,6 @@ export type {
   FmodRuntimeOptions,
   FmodThreadingDiagnostics,
   FmodStudioSystem,
+  FmodSound,
+  FmodChannel,
 } from "./FmodRuntime";

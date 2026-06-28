@@ -9,11 +9,19 @@ import {
   type Nh3dSoundEffectVariation,
   type Nh3dSoundPackRecord,
 } from "../audio/sound-pack-storage";
+import {
+  FmodRuntime,
+  FmodCoreSystem,
+  FmodRuntimeModule,
+  FmodSound,
+  FmodChannel,
+} from "../audio";
 
 type MessageSoundHooksOptions = {
   isSoundEnabled: () => boolean;
   debounceMs?: number;
   soundPackCacheTtlMs?: number;
+  fmodRuntime?: FmodRuntime;
 };
 
 type WebAudioPlaybackResult =
@@ -48,6 +56,9 @@ export class MessageSoundHooks {
     new Map();
   private audioDecodeErrorLoggedByUrl: Set<string> = new Set();
   private userGestureAudioResumed: boolean = false;
+  private readonly fmodRuntime?: FmodRuntime;
+  private readonly fmodSoundCache: Map<string, FmodSound> = new Map();
+  private readonly fmodSoundLoadingPromiseByUrl: Map<string, Promise<FmodSound | null>> = new Map();
 
   constructor(options: MessageSoundHooksOptions) {
     this.isSoundEnabled = options.isSoundEnabled;
@@ -56,6 +67,7 @@ export class MessageSoundHooks {
       250,
       Math.round(options.soundPackCacheTtlMs ?? 3000),
     );
+    this.fmodRuntime = options.fmodRuntime;
   }
 
   public playDamageEffectSound(variant: "hit" | "defeat"): void {
@@ -136,6 +148,7 @@ export class MessageSoundHooks {
     this.userGestureAudioResumed = false;
     this.clearUserSoundBlobUrlCache();
     this.clearDecodedAudioBufferCache();
+    this.clearFmodSoundCache();
     const context = this.audioContext;
     this.audioContext = null;
     if (context) {
@@ -153,6 +166,18 @@ export class MessageSoundHooks {
   private clearDecodedAudioBufferCache(): void {
     this.decodedAudioBufferPromiseByUrl.clear();
     this.audioDecodeErrorLoggedByUrl.clear();
+  }
+
+  private clearFmodSoundCache(): void {
+    for (const [url, sound] of this.fmodSoundCache.entries()) {
+      try {
+        sound.release();
+      } catch (error) {
+        console.warn(`Failed to release FMOD sound for URL: ${url}`, error);
+      }
+    }
+    this.fmodSoundCache.clear();
+    this.fmodSoundLoadingPromiseByUrl.clear();
   }
 
   private async resolveActiveSoundPack(): Promise<Nh3dSoundPackRecord | null> {
@@ -181,6 +206,7 @@ export class MessageSoundHooks {
         if (nextRevision !== this.cachedSoundPackRevision) {
           this.clearUserSoundBlobUrlCache();
           this.clearDecodedAudioBufferCache();
+          this.clearFmodSoundCache();
           this.cachedSoundPackRevision = nextRevision;
         }
         this.cachedSoundPack = activePack;
@@ -385,10 +411,26 @@ export class MessageSoundHooks {
       selectedVariation.pitchVariation,
     );
 
+    const globalReverb = soundPack?.reverb?.intensity ?? 0;
+    const totalReverb = Math.max(0, Math.min(1, globalReverb + (selectedVariation.reverbOffset || 0)));
+
+    const fmodPlayed = await this.tryPlaySoundEffectViaFmod(
+      sourceUrl,
+      effectiveVolume,
+      pitchRate,
+      totalReverb,
+      selectedVariation.fileName || selectedVariation.path || "",
+      selectedVariation.mimeType,
+    );
+    if (fmodPlayed) {
+      return;
+    }
+
     const webAudioResult = await this.tryPlaySoundEffectViaWebAudio(
       sourceUrl,
       effectiveVolume,
       pitchRate,
+      totalReverb,
     );
     if (webAudioResult === "played" || webAudioResult === "not-ready") {
       return;
@@ -507,10 +549,28 @@ export class MessageSoundHooks {
     return decodePromise;
   }
 
+  private cachedReverbImpulse: AudioBuffer | null = null;
+  private getReverbImpulse(context: AudioContext): AudioBuffer {
+    if (this.cachedReverbImpulse) return this.cachedReverbImpulse;
+    const seconds = 1.6;
+    const length = Math.max(1, Math.floor(context.sampleRate * seconds));
+    const impulse = context.createBuffer(2, length, context.sampleRate);
+    for (let channel = 0; channel < 2; channel += 1) {
+      const data = impulse.getChannelData(channel);
+      for (let i = 0; i < length; i += 1) {
+        const t = i / length;
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.4);
+      }
+    }
+    this.cachedReverbImpulse = impulse;
+    return impulse;
+  }
+
   private async tryPlaySoundEffectViaWebAudio(
     sourceUrl: string,
     volume: number,
     pitchRate: number,
+    reverbOffset: number,
   ): Promise<WebAudioPlaybackResult> {
     const context = this.ensureAudioContext();
     if (!context) {
@@ -533,13 +593,33 @@ export class MessageSoundHooks {
       const source = context.createBufferSource();
       source.buffer = buffer;
       source.playbackRate.value = pitchRate;
-      const gainNode = context.createGain();
-      gainNode.gain.value = volume;
-      source.connect(gainNode);
-      gainNode.connect(context.destination);
+      
+      const mainGain = context.createGain();
+      mainGain.gain.value = volume;
+      mainGain.connect(context.destination);
+
+      if (reverbOffset > 0) {
+        const convolver = context.createConvolver();
+        convolver.buffer = this.getReverbImpulse(context);
+        
+        const dryGain = context.createGain();
+        dryGain.gain.value = 1;
+        
+        const wetGain = context.createGain();
+        wetGain.gain.value = reverbOffset;
+
+        source.connect(dryGain);
+        dryGain.connect(mainGain);
+        
+        source.connect(convolver);
+        convolver.connect(wetGain);
+        wetGain.connect(mainGain);
+      } else {
+        source.connect(mainGain);
+      }
+
       source.onended = () => {
         source.disconnect();
-        gainNode.disconnect();
       };
       source.start();
       return "played";
@@ -569,6 +649,161 @@ export class MessageSoundHooks {
       void audio.play().catch(() => undefined);
     } catch {
       // Browser autoplay policies can block playback until a user gesture.
+    }
+  }
+
+  private async fetchSoundBytes(sourceUrl: string): Promise<Uint8Array | null> {
+    try {
+      const response = await fetch(sourceUrl, { credentials: "same-origin" });
+      if (!response.ok) {
+        return null;
+      }
+      const buffer = await response.arrayBuffer();
+      return new Uint8Array(buffer);
+    } catch (error) {
+      console.warn(`Unable to fetch sound bytes for FMOD from '${sourceUrl}'.`, error);
+      return null;
+    }
+  }
+
+  private getSoundExtension(fileNameOrPath: string, mimeType?: string): string {
+    if (mimeType) {
+      if (mimeType.includes("ogg")) return ".ogg";
+      if (mimeType.includes("mpeg") || mimeType.includes("mp3")) return ".mp3";
+      if (mimeType.includes("wav")) return ".wav";
+      if (mimeType.includes("webm")) return ".webm";
+    }
+    const candidatePath = fileNameOrPath || "";
+    const lastDot = candidatePath.lastIndexOf(".");
+    if (lastDot !== -1) {
+      const candidateExt = candidatePath.substring(lastDot).toLowerCase().split(/[?#]/)[0];
+      if ([".mp3", ".wav", ".ogg", ".aac", ".flac", ".m4a", ".webm", ".opus"].some((e) => candidateExt.startsWith(e))) {
+        return candidateExt;
+      }
+    }
+    return ".wav";
+  }
+
+  private async getOrCreateFmodSound(
+    sourceUrl: string,
+    coreSystem: FmodCoreSystem,
+    module: FmodRuntimeModule,
+    fileNameOrPath: string,
+    mimeType?: string,
+  ): Promise<FmodSound | null> {
+    const existing = this.fmodSoundCache.get(sourceUrl);
+    if (existing) {
+      return existing;
+    }
+
+    if (this.fmodSoundLoadingPromiseByUrl.has(sourceUrl)) {
+      return this.fmodSoundLoadingPromiseByUrl.get(sourceUrl)!;
+    }
+
+    const loadPromise = (async () => {
+      const bytes = await this.fetchSoundBytes(sourceUrl);
+      if (!bytes) {
+        return null;
+      }
+
+      const ext = this.getSoundExtension(fileNameOrPath, mimeType);
+      const tempFileName = `sound_${Math.random().toString(36).substring(2, 10)}_${Date.now()}${ext}`;
+      const tempFilePath = `/${tempFileName}`;
+
+      try {
+        (module as any).FS_createDataFile("/", tempFileName, bytes, true, true, true);
+
+        const soundOut: { val?: FmodSound } = {};
+        const mode =
+          (module.DEFAULT as number ?? 0x00000000) |
+          (module.LOOP_OFF as number ?? 0x00000001) |
+          (module._2D as number ?? module.FMOD_2D as number ?? 0x00000008) |
+          (module.MPEGSEARCH as number ?? 0x00200000); // 0x00200000 is FMOD_MPEGSEARCH
+
+        const result = coreSystem.createSound(tempFilePath, mode, null, soundOut);
+        if (result !== module.OK || !soundOut.val) {
+          // FMOD_ERR_FORMAT is 19. Browser MediaRecorder blobs (webm) are not natively
+          // supported by FMOD, so we silently fall back to Web Audio for them.
+          if (result !== 19) {
+            console.warn(`FMOD createSound failed for '${sourceUrl}': ${result}`);
+          }
+          return null;
+        }
+
+        return soundOut.val;
+      } catch (error) {
+        console.warn(`FMOD load error for '${sourceUrl}':`, error);
+        return null;
+      } finally {
+        try {
+          (module as any).FS_unlink(tempFilePath);
+        } catch {
+          // Ignore unlink failures
+        }
+      }
+    })();
+
+    this.fmodSoundLoadingPromiseByUrl.set(sourceUrl, loadPromise);
+    const sound = await loadPromise;
+    this.fmodSoundLoadingPromiseByUrl.delete(sourceUrl);
+
+    if (sound) {
+      this.fmodSoundCache.set(sourceUrl, sound);
+    }
+    return sound;
+  }
+
+  private async tryPlaySoundEffectViaFmod(
+    sourceUrl: string,
+    volume: number,
+    pitchRate: number,
+    reverbOffset: number,
+    fileNameOrPath: string,
+    mimeType?: string,
+  ): Promise<boolean> {
+    const fmod = this.fmodRuntime;
+    if (!fmod || !fmod.isInitialized()) {
+      return false;
+    }
+    const coreSystem = fmod.getCoreSystem();
+    const module = fmod.getModule();
+    if (!coreSystem || !module) {
+      return false;
+    }
+
+    try {
+      const sound = await this.getOrCreateFmodSound(
+        sourceUrl,
+        coreSystem,
+        module,
+        fileNameOrPath,
+        mimeType,
+      );
+      if (!sound) {
+        return false;
+      }
+
+      const channelOut: { val?: FmodChannel } = {};
+      const playResult = coreSystem.playSound(sound, null, false, channelOut);
+      if (playResult !== module.OK || !channelOut.val) {
+        console.warn(`FMOD playSound failed: ${playResult}`);
+        return false;
+      }
+
+      const channel = channelOut.val;
+      channel.setVolume(volume);
+      channel.setPitch(pitchRate);
+      if (reverbOffset > 0) {
+        try {
+          channel.setReverbProperties(0, reverbOffset);
+        } catch {
+          // ignore
+        }
+      }
+      return true;
+    } catch (error) {
+      // Ignore errors so it gracefully falls back to Web Audio
+      return false;
     }
   }
 }

@@ -3239,6 +3239,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.fmodRuntime = new FmodRuntime(this.resolveFmodRuntimeOptions());
     this.messageSoundHooks = new MessageSoundHooks({
       isSoundEnabled: () => this.clientOptions.soundEnabled,
+      fmodRuntime: this.fmodRuntime,
     });
     this.messageSoundHooks.setEnabled(this.clientOptions.soundEnabled);
     this.ambientMusicController = new AmbientMusicController({
