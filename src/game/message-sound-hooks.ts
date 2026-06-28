@@ -4,6 +4,7 @@ import {
   loadStoredNh3dSoundBlob,
   resolveNh3dMessageLogSoundEffectKeys,
   resolveNh3dBundledBuiltinSoundPath,
+  resolveNh3dRandomPitchRate,
   type Nh3dSoundEffectKey,
   type Nh3dSoundEffectVariation,
   type Nh3dSoundPackRecord,
@@ -380,14 +381,19 @@ export class MessageSoundHooks {
       return;
     }
 
+    const pitchRate = resolveNh3dRandomPitchRate(
+      selectedVariation.pitchVariation,
+    );
+
     const webAudioResult = await this.tryPlaySoundEffectViaWebAudio(
       sourceUrl,
       effectiveVolume,
+      pitchRate,
     );
     if (webAudioResult === "played" || webAudioResult === "not-ready") {
       return;
     }
-    this.tryPlaySoundEffectViaHtmlAudio(sourceUrl, effectiveVolume);
+    this.tryPlaySoundEffectViaHtmlAudio(sourceUrl, effectiveVolume, pitchRate);
   }
 
   private ensureAudioContext(): AudioContext | null {
@@ -504,6 +510,7 @@ export class MessageSoundHooks {
   private async tryPlaySoundEffectViaWebAudio(
     sourceUrl: string,
     volume: number,
+    pitchRate: number,
   ): Promise<WebAudioPlaybackResult> {
     const context = this.ensureAudioContext();
     if (!context) {
@@ -525,6 +532,7 @@ export class MessageSoundHooks {
     try {
       const source = context.createBufferSource();
       source.buffer = buffer;
+      source.playbackRate.value = pitchRate;
       const gainNode = context.createGain();
       gainNode.gain.value = volume;
       source.connect(gainNode);
@@ -540,11 +548,24 @@ export class MessageSoundHooks {
     }
   }
 
-  private tryPlaySoundEffectViaHtmlAudio(sourceUrl: string, volume: number): void {
+  private tryPlaySoundEffectViaHtmlAudio(
+    sourceUrl: string,
+    volume: number,
+    pitchRate: number,
+  ): void {
     try {
-      const audio = new Audio(sourceUrl);
+      const audio = new Audio();
       audio.volume = volume;
       audio.preload = "auto";
+      audio.src = sourceUrl;
+      try {
+        audio.playbackRate = pitchRate;
+        (
+          audio as HTMLAudioElement & { preservesPitch?: boolean }
+        ).preservesPitch = false;
+      } catch {
+        // Ignore browsers rejecting playbackRate/preservesPitch.
+      }
       void audio.play().catch(() => undefined);
     } catch {
       // Browser autoplay policies can block playback until a user gesture.

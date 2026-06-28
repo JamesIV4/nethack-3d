@@ -407,6 +407,8 @@ export default function SoundPackSettings({
         path: baseView.value.path,
         source: baseView.value.source,
         attribution: baseView.value.attribution,
+        reverbOffset: baseView.value.reverbOffset,
+        pitchVariation: baseView.value.pitchVariation,
         variations: nextViews
           .filter((view) => view.id !== nh3dBaseSoundVariationId)
           .map((view) => ({
@@ -535,6 +537,7 @@ export default function SoundPackSettings({
         source: baseView.value.source,
         attribution: baseView.value.attribution,
         conditions: baseView.value.conditions,
+        reverbOffset: baseView.value.reverbOffset,
         variations: nextViews
           .filter((view) => view.id !== nh3dBaseSoundVariationId)
           .map((view) => ({
@@ -838,14 +841,6 @@ export default function SoundPackSettings({
     audio.currentTime = 0;
     audio.volume = Number.isFinite(previewVolume) ? previewVolume : 1;
     const rate = Number.isFinite(pitchRate) && pitchRate > 0 ? pitchRate : 1;
-    try {
-      audio.playbackRate = rate;
-      (
-        audio as HTMLAudioElement & { preservesPitch?: boolean }
-      ).preservesPitch = false;
-    } catch {
-      // Some browsers reject playbackRate/preservesPitch changes; ignore.
-    }
     audio.src = previewUrl;
     audio.onended = () => {
       setPlayingSoundSlotKey(null);
@@ -877,6 +872,15 @@ export default function SoundPackSettings({
         }
       }
       wetGain.gain.value = Math.max(0, Math.min(1, reverbSend));
+    }
+
+    try {
+      audio.playbackRate = rate;
+      (
+        audio as HTMLAudioElement & { preservesPitch?: boolean }
+      ).preservesPitch = false;
+    } catch {
+      // Some browsers reject playbackRate/preservesPitch changes; ignore.
     }
 
     await audio.play();
