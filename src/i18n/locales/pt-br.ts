@@ -881,7 +881,7 @@ export const ptBrOverrides = {
         soundEnabled: {
           label: "Ativar som",
           description:
-            "Liga ou desliga o áudio FMOD. Desativar reduz o processamento de áudio em dispositivos mais fracos.",
+            "Liga ou desliga o áudio. Desativar reduz o processamento de áudio em dispositivos mais fracos.",
         },
         groupMobileControls: "Controles móveis",
         invertTouchPanningDirection: {
@@ -1199,7 +1199,7 @@ export const ptBrOverrides = {
       ambientNoTracks: "Ainda não há faixas de música neste pacote.",
       reverbHeading: "Reverberação",
       reverbDescription:
-        "Intensidade de reverberação FMOD para este pacote. O nível de um som é a intensidade global mais o ajuste do tipo de nível atual mais o ajuste do próprio som ou faixa.",
+        "Intensidade de reverberação para este pacote. O nível de um som é a intensidade global mais o ajuste do tipo de nível atual mais o ajuste do próprio som ou faixa.",
       reverbIntensity: "Intensidade de reverberação global",
       reverbLevelTypes: "Ajuste por tipo de nível",
       reverbOffset: "Ajuste de reverberação",

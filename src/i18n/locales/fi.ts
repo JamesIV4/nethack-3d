@@ -880,7 +880,7 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
         soundEnabled: {
           label: "Ota ääni käyttöön",
           description:
-            "Ota FMOD-ääni käyttöön tai pois käytöstä. Poistaminen vähentää äänenkäsittelyn kuormaa heikommilla laitteilla.",
+            "Ota ääni käyttöön tai pois käytöstä. Poistaminen vähentää äänenkäsittelyn kuormaa heikommilla laitteilla.",
         },
         groupMobileControls: "Mobiiliohjaimet",
         invertTouchPanningDirection: {
@@ -1164,7 +1164,7 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
       ambientNoTracks: "Ei vielä musiikkiraitoja tässä paketissa.",
       reverbHeading: "Kaiku",
       reverbDescription:
-        "FMOD-kaiun voimakkuus tälle paketille. Äänen taso on yleinen voimakkuus plus nykyisen tasotyypin poikkeama plus äänen tai raidan oma poikkeama.",
+        "Kaiun voimakkuus tälle paketille. Äänen taso on yleinen voimakkuus plus nykyisen tasotyypin poikkeama plus äänen tai raidan oma poikkeama.",
       reverbIntensity: "Yleinen kaiun voimakkuus",
       reverbLevelTypes: "Poikkeama tasotyypeittäin",
       reverbOffset: "Kaiun poikkeama",

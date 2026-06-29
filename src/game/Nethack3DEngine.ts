@@ -15,8 +15,7 @@ import { TAARenderPass } from "three/examples/jsm/postprocessing/TAARenderPass.j
 import { WorkerRuntimeBridge } from "../runtime";
 import type { RuntimeBridge, RuntimeEvent } from "../runtime";
 import type { NethackRuntimeVersion } from "../runtime/types";
-import { FmodRuntime, AmbientMusicController } from "../audio";
-import type { FmodRuntimeOptions, FmodThreadingDiagnostics } from "../audio";
+import { AmbientMusicController } from "../audio";
 import { recordDebugSessionLogEvent } from "../debug-session-log";
 import {
   isLoggingEnabled,
@@ -1457,12 +1456,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
   };
 
   private session: RuntimeBridge | null = null;
-  private readonly fmodRuntime: FmodRuntime;
   private readonly messageSoundHooks: MessageSoundHooks;
   private readonly ambientMusicController: AmbientMusicController;
   private lastAmbientMusicContextKey: string | null = null;
-  private readonly deploymentTarget: string = this.resolveDeploymentTarget();
-  private fmodRuntimeInitializationInFlight: boolean = false;
   private readonly metaInputPrefix = "__META__:";
   private readonly ctrlInputPrefix = "__CTRL__:";
   private readonly menuSelectionInputPrefix = "__MENU_SELECT__:";
@@ -3236,10 +3232,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (typeof options.loggingEnabled === "boolean") {
       setLoggingEnabled(options.loggingEnabled);
     }
-    this.fmodRuntime = new FmodRuntime(this.resolveFmodRuntimeOptions());
     this.messageSoundHooks = new MessageSoundHooks({
       isSoundEnabled: () => this.clientOptions.soundEnabled,
-      fmodRuntime: this.fmodRuntime,
     });
     this.messageSoundHooks.setEnabled(this.clientOptions.soundEnabled);
     this.ambientMusicController = new AmbientMusicController({
@@ -7222,7 +7216,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.clearPendingIncomingDamageRumble();
       this.webHaptics?.cancel();
     }
-    this.syncFmodRuntimeWithClientOptions(normalized.soundEnabled);
+    this.syncAudioPlaybackWithClientOptions(normalized.soundEnabled);
     this.syncVultureWallProjectionDebugPanelVisibility();
     this.refreshTilesetCompilationLoadingState();
     if (
@@ -10192,75 +10186,22 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.renderVultureWallProjectionDebugCanvas(family);
   }
 
-  private async initializeFmodRuntime(): Promise<void> {
-    if (
-      this.fmodRuntime.isInitialized() ||
-      this.fmodRuntimeInitializationInFlight
-    ) {
-      return;
-    }
-    this.fmodRuntimeInitializationInFlight = true;
-    try {
-      await this.fmodRuntime.initialize();
-      this.fmodRuntime.setEnabled(this.clientOptions.soundEnabled);
-      if (!this.clientOptions.soundEnabled) {
-        logWithOriginal(
-          "[NetHack 3D] FMOD Studio runtime initialized (audio disabled in client options).",
-        );
-        return;
-      }
-      logWithOriginal("[NetHack 3D] FMOD Studio runtime initialized.");
-      const diagnostics = this.fmodRuntime.getThreadingDiagnostics();
-      logWithOriginal(
-        `[NetHack 3D] FMOD audio backend: ${diagnostics.backendMode} (update ${diagnostics.updateIntervalMs}ms, dsp ${diagnostics.dspBufferLength}x${diagnostics.dspBufferCount}, recover ${diagnostics.resumeRecoveryIntervalMs}ms).`,
-      );
-      if (!this.fmodRuntime.isUsingThreadedAudioMixing()) {
-        console.warn(
-          "FMOD fell back to ScriptProcessor (main-thread audio). AudioWorklet support is recommended for best performance.",
-        );
-      } else if (diagnostics.backendMode === "audio-worklet-copy") {
-        const copyModeHint = this.getFmodAudioWorkletCopyModeHint(diagnostics);
-        if (copyModeHint.level === "warn") {
-          console.warn(copyModeHint.message);
-        } else {
-          logWithOriginal(copyModeHint.message);
-        }
-      }
-    } catch (error) {
-      console.warn(
-        "FMOD Studio runtime is unavailable; continuing without audio.",
-        error,
-      );
-    } finally {
-      this.fmodRuntimeInitializationInFlight = false;
-    }
-  }
-
-  private syncFmodRuntimeWithClientOptions(soundEnabled: boolean): void {
+  private syncAudioPlaybackWithClientOptions(soundEnabled: boolean): void {
     const enabled = Boolean(soundEnabled);
-    this.fmodRuntime.setEnabled(enabled);
     this.messageSoundHooks.setEnabled(enabled);
     this.ambientMusicController.setEnabled(enabled);
     if (enabled) {
       this.refreshAmbientMusicContext(true);
     }
-    if (!enabled) {
-      return;
-    }
-    if (this.fmodRuntime.isInitialized()) {
-      return;
-    }
-    void this.initializeFmodRuntime();
   }
 
-  private resumeFmodFromUserGesture(): void {
+  private resumeAudioFromUserGesture(): void {
     if (!this.clientOptions.soundEnabled) {
       return;
     }
     this.messageSoundHooks.resumeFromUserGesture();
     this.ambientMusicController.resumeFromUserGesture();
     this.refreshAmbientMusicContext(true);
-    this.fmodRuntime.resumeFromUserGesture();
   }
 
   private refreshAmbientMusicContext(force = false): void {
@@ -10458,81 +10399,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.pendingIncomingDamageRumbleStartingHp = null;
   }
 
-  private getFmodAudioWorkletCopyModeHint(
-    diagnostics: FmodThreadingDiagnostics,
-  ): {
-    level: "warn" | "info";
-    message: string;
-  } {
-    if (this.deploymentTarget === "github-pages") {
-      return {
-        level: "info",
-        message:
-          "FMOD is using AudioWorklet copy mode on GitHub Pages. This host does not support custom COOP/COEP response headers.",
-      };
-    }
-
-    if (
-      diagnostics.crossOriginIsolated &&
-      !diagnostics.sharedArrayBufferAvailable
-    ) {
-      return {
-        level: "info",
-        message:
-          "FMOD is using AudioWorklet copy mode. This browser/runtime does not expose SharedArrayBuffer, so shared mode is unavailable.",
-      };
-    }
-
-    const protocol =
-      typeof window !== "undefined"
-        ? window.location.protocol.toLowerCase()
-        : "";
-    if (this.isLikelyCapacitorEnvironment()) {
-      return {
-        level: "info",
-        message:
-          "FMOD is using AudioWorklet copy mode (Capacitor WebView). This is expected unless the embedded host is configured for COOP/COEP and supports SharedArrayBuffer.",
-      };
-    }
-
-    if (this.isLikelyElectronEnvironment() && protocol === "file:") {
-      return {
-        level: "info",
-        message:
-          "FMOD is using AudioWorklet copy mode (Electron packaged file://). Shared-buffer mode requires cross-origin isolation over an HTTP(S) origin.",
-      };
-    }
-
-    if (this.isLikelyLocalhostOrigin()) {
-      return {
-        level: "warn",
-        message:
-          "FMOD is using AudioWorklet copy mode. For localhost dev, run `npm run dev:isolated` to enable COOP/COEP and shared-buffer mode.",
-      };
-    }
-
-    return {
-      level: "warn",
-      message:
-        "FMOD is using AudioWorklet copy mode. Enable cross-origin isolation (COOP/COEP) on your host for lower-overhead shared-buffer mode.",
-    };
-  }
-
-  private isLikelyLocalhostOrigin(): boolean {
-    if (typeof window === "undefined") {
-      return false;
-    }
-    const host = window.location.hostname.toLowerCase();
-    return host === "localhost" || host === "127.0.0.1" || host === "::1";
-  }
-
-  private isLikelyElectronEnvironment(): boolean {
-    if (typeof navigator === "undefined") {
-      return false;
-    }
-    return /\belectron\b/i.test(navigator.userAgent || "");
-  }
-
   private isLikelyCapacitorEnvironment(): boolean {
     if (typeof window === "undefined") {
       return false;
@@ -10545,50 +10411,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
     const protocol = window.location.protocol.toLowerCase();
     return protocol === "capacitor:" || protocol === "ionic:";
-  }
-
-  private resolveDeploymentTarget(): string {
-    const candidate =
-      typeof import.meta.env.VITE_DEPLOY_TARGET === "string"
-        ? import.meta.env.VITE_DEPLOY_TARGET.trim().toLowerCase()
-        : "";
-    if (!candidate) {
-      return "web";
-    }
-    return candidate;
-  }
-
-  private resolveFmodRuntimeOptions(): FmodRuntimeOptions {
-    switch (this.deploymentTarget) {
-      case "electron":
-        return {
-          dspBufferLength: 1024,
-          dspBufferCount: 4,
-          updateIntervalMs: 16,
-          resumeRecoveryIntervalMs: 1000,
-        };
-      case "capacitor":
-        return {
-          dspBufferLength: 2048,
-          dspBufferCount: 6,
-          updateIntervalMs: 16,
-          resumeRecoveryIntervalMs: 1000,
-        };
-      case "github-pages":
-        return {
-          dspBufferLength: 2048,
-          dspBufferCount: 4,
-          updateIntervalMs: 16,
-          resumeRecoveryIntervalMs: 1250,
-        };
-      default:
-        return {
-          dspBufferLength: 2048,
-          dspBufferCount: 4,
-          updateIntervalMs: 16,
-          resumeRecoveryIntervalMs: 1250,
-        };
-    }
   }
 
   private async connectToRuntime(): Promise<void> {
@@ -32094,7 +31916,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.clearPendingIncomingDamageRumble();
     this.webHaptics?.destroy();
     this.webHaptics = null;
-    this.fmodRuntime.dispose();
 
     this.directionPromptOverlay?.dispose();
     this.directionPromptOverlay = null;
@@ -36637,7 +36458,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.releaseDeferredGameOverUiReveal();
       return;
     }
-    this.resumeFmodFromUserGesture();
+    this.resumeAudioFromUserGesture();
     if (this.handleFpsDebugShortcutKeyDown(event)) {
       return;
     }
@@ -42147,7 +41968,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       (actionId) => rawSnapshot.pressed[actionId],
     );
     if (hadButtonPress) {
-      this.resumeFmodFromUserGesture();
+      this.resumeAudioFromUserGesture();
     }
 
     if (this.isControllerGameplayInputContextActive()) {
@@ -42586,7 +42407,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       event.preventDefault();
       return;
     }
-    this.resumeFmodFromUserGesture();
+    this.resumeAudioFromUserGesture();
     if (event.button === 0 && this.releaseDeferredGameOverUiReveal()) {
       event.preventDefault();
       return;
@@ -42750,7 +42571,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       event.preventDefault();
       return;
     }
-    this.resumeFmodFromUserGesture();
+    this.resumeAudioFromUserGesture();
 
     if (
       !this.isFpsMode() &&

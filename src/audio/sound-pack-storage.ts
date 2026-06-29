@@ -349,14 +349,14 @@ export type Nh3dSoundPackAmbientMap = Record<
 >;
 
 // --- Reverb & pitch --------------------------------------------------------
-// FMOD reverb is expressed as an "intensity" in 0..1 that maps to the reverb
-// wet-send level on each playing channel. The effective send for a given clip
-// is: clamp01(pack.reverb.intensity + levelTypeOffsets[branch] + clip
+// Reverb is expressed as an "intensity" in 0..1 that maps to the wet-send
+// level on each playing clip. The effective send for a given clip is:
+// clamp01(pack.reverb.intensity + levelTypeOffsets[branch] + clip
 // reverbOffset). Offsets are signed (-1..1) per clip so an individual clip can
 // pull reverb above or below the global baseline.
 //
 // Pitch variation is a per-sound-effect-clip randomization range (0..1, where
-// 0.1 == +/-10% playback rate), applied through FMOD channel pitch at playback.
+// 0.1 == +/-10% playback rate), applied through WebAudio playback rate.
 export type Nh3dSoundPackReverbSettings = {
   intensity: number;
   levelTypeOffsets: Record<Nh3dAmbientTrackKey, number>;
@@ -385,7 +385,7 @@ export function clampNh3dPitchVariation(value: unknown, fallback = 0): number {
 /**
  * Resolve a random playback pitch rate for a clip given its pitch variation
  * range (0..1). 0 means no variation (rate 1). 0.1 yields a rate uniformly in
- * [0.9, 1.1]. Used by both gameplay (FMOD channel pitch) and previews.
+ * [0.9, 1.1]. Used by both gameplay and previews.
  */
 export function resolveNh3dRandomPitchRate(pitchVariation: number): number {
   const range = clampNh3dPitchVariation(pitchVariation, 0);

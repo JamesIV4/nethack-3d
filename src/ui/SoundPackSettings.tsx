@@ -95,7 +95,7 @@ function stripHtmlToPlainText(value: string): string {
 }
 
 // Synthetic exponential-decay impulse response so previews can demonstrate the
-// in-progress reverb send without needing FMOD.
+// in-progress reverb send.
 function createPreviewReverbImpulse(context: AudioContext): AudioBuffer {
   const seconds = 1.6;
   const length = Math.max(1, Math.floor(context.sampleRate * seconds));

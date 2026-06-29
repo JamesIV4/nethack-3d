@@ -887,7 +887,7 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
         soundEnabled: {
           label: "Sound aktivieren",
           description:
-            "Schaltet FMOD-Audio ein oder aus. Das Deaktivieren reduziert die Audioverarbeitung auf schw\u00e4cheren Ger\u00e4ten.",
+            "Schaltet Audio ein oder aus. Das Deaktivieren reduziert die Audioverarbeitung auf schw\u00e4cheren Ger\u00e4ten.",
         },
         groupMobileControls: "Mobile Steuerung",
         invertTouchPanningDirection: {
@@ -1193,7 +1193,7 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
       ambientNoTracks: "Noch keine Musiktitel in diesem Paket.",
       reverbHeading: "Hall",
       reverbDescription:
-        "FMOD-Hallintensität für dieses Paket. Der Wert für einen Klang ist die globale Intensität plus der Versatz des aktuellen Ebenentyps plus der eigene Versatz des Klangs oder Titels.",
+        "Hallintensität für dieses Paket. Der Wert für einen Klang ist die globale Intensität plus der Versatz des aktuellen Ebenentyps plus der eigene Versatz des Klangs oder Titels.",
       reverbIntensity: "Globale Hallintensität",
       reverbLevelTypes: "Versatz je Ebenentyp",
       reverbOffset: "Hall-Versatz",

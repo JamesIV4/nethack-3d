@@ -859,7 +859,7 @@ export const ko = {
         soundEnabled: {
           label: "사운드 사용",
           description:
-            "FMOD 오디오를 켜거나 끕니다. 끄면 저사양 기기의 오디오 처리 부담이 줄어듭니다.",
+            "오디오를 켜거나 끕니다. 끄면 저사양 기기의 오디오 처리 부담이 줄어듭니다.",
         },
         groupMobileControls: "모바일 조작",
         invertTouchPanningDirection: {
@@ -1165,7 +1165,7 @@ export const ko = {
       ambientNoTracks: "이 팩에는 아직 음악 트랙이 없습니다.",
       reverbHeading: "리버브",
       reverbDescription:
-        "이 팩의 FMOD 리버브 강도입니다. 사운드의 값은 전역 강도에 현재 층 유형의 오프셋과 사운드 또는 트랙 자체의 오프셋을 더한 값입니다.",
+        "이 팩의 리버브 강도입니다. 사운드의 값은 전역 강도에 현재 층 유형의 오프셋과 사운드 또는 트랙 자체의 오프셋을 더한 값입니다.",
       reverbIntensity: "전역 리버브 강도",
       reverbLevelTypes: "층 유형별 오프셋",
       reverbOffset: "리버브 오프셋",

@@ -834,7 +834,7 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
         soundEnabled: {
           label: "サウンドを有効化",
           description:
-            "FMOD オーディオのオン/オフを切り替えます。無効にすると低性能デバイスでの音声処理負荷を軽減できます。",
+            "オーディオのオン/オフを切り替えます。無効にすると低性能デバイスでの音声処理負荷を軽減できます。",
         },
         groupMobileControls: "モバイル操作",
         invertTouchPanningDirection: {
@@ -1120,7 +1120,7 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
       ambientNoTracks: "このパックにはまだ音楽トラックがありません。",
       reverbHeading: "リバーブ",
       reverbDescription:
-        "このパックの FMOD リバーブの強さ。各サウンドの値は、全体の強さ＋現在の階層タイプのオフセット＋サウンドまたはトラック自身のオフセットになります。",
+        "このパックのリバーブの強さ。各サウンドの値は、全体の強さ＋現在の階層タイプのオフセット＋サウンドまたはトラック自身のオフセットになります。",
       reverbIntensity: "全体のリバーブの強さ",
       reverbLevelTypes: "階層タイプごとのオフセット",
       reverbOffset: "リバーブのオフセット",

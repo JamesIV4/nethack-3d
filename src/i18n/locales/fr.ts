@@ -888,7 +888,7 @@ export const fr = {
         soundEnabled: {
           label: "Activer le son",
           description:
-            "Active ou desactive l'audio FMOD. La desactivation reduit la charge de traitement audio sur les appareils moins puissants.",
+            "Active ou desactive l'audio. La desactivation reduit la charge de traitement audio sur les appareils moins puissants.",
         },
         groupMobileControls: "Commandes mobiles",
         invertTouchPanningDirection: {
@@ -1204,7 +1204,7 @@ export const fr = {
       ambientNoTracks: "Aucune piste musicale dans ce pack pour l'instant.",
       reverbHeading: "Reverberation",
       reverbDescription:
-        "Intensite de reverberation FMOD pour ce pack. Le niveau d'un son est l'intensite globale plus le decalage du type de niveau actuel plus le decalage propre du son ou de la piste.",
+        "Intensite de reverberation pour ce pack. Le niveau d'un son est l'intensite globale plus le decalage du type de niveau actuel plus le decalage propre du son ou de la piste.",
       reverbIntensity: "Intensite de reverberation globale",
       reverbLevelTypes: "Decalage par type de niveau",
       reverbOffset: "Decalage de reverberation",

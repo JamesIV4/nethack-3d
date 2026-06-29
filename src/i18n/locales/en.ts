@@ -859,7 +859,7 @@ export const en = {
         soundEnabled: {
           label: "Enable sound",
           description:
-            "Turn FMOD audio on or off. Disabling reduces audio processing overhead on lower-end devices.",
+            "Turn audio on or off. Disabling reduces audio processing overhead on lower-end devices.",
         },
         groupMobileControls: "Mobile controls",
         invertTouchPanningDirection: {
@@ -1166,7 +1166,7 @@ export const en = {
       ambientNoTracks: "No music tracks in this pack yet.",
       reverbHeading: "Reverb",
       reverbDescription:
-        "FMOD reverb intensity for this pack. The level for a sound is the global intensity plus the current level type's offset plus the sound or track's own offset.",
+        "Reverb intensity for this pack. The level for a sound is the global intensity plus the current level type's offset plus the sound or track's own offset.",
       reverbIntensity: "Global reverb intensity",
       reverbLevelTypes: "Per level type offset",
       reverbOffset: "Reverb offset",

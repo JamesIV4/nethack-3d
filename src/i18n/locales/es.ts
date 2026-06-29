@@ -808,7 +808,7 @@ export const esOverrides = {
                 groupSound: "Sonido",
                 soundEnabled: {
                     label: "Habilitar sonido",
-                    description: "Activa o desactiva el audio FMOD. La desactivaci\u00F3n reduce la sobrecarga de procesamiento de audio en dispositivos de gama baja.",
+                    description: "Activa o desactiva el audio. La desactivaci\u00F3n reduce la sobrecarga de procesamiento de audio en dispositivos de gama baja.",
                 },
                 groupMobileControls: "Controles m\u00F3viles",
                 invertTouchPanningDirection: {
@@ -1086,7 +1086,7 @@ export const esOverrides = {
             ambientNoTracks: "A\u00FAn no hay pistas de m\u00FAsica en este paquete.",
             reverbHeading: "Reverberaci\u00F3n",
             reverbDescription:
-                "Intensidad de reverberaci\u00F3n FMOD para este paquete. El nivel de un sonido es la intensidad global m\u00E1s el ajuste del tipo de nivel actual m\u00E1s el ajuste propio del sonido o pista.",
+                "Intensidad de reverberaci\u00F3n para este paquete. El nivel de un sonido es la intensidad global m\u00E1s el ajuste del tipo de nivel actual m\u00E1s el ajuste propio del sonido o pista.",
             reverbIntensity: "Intensidad de reverberaci\u00F3n global",
             reverbLevelTypes: "Ajuste por tipo de nivel",
             reverbOffset: "Ajuste de reverberaci\u00F3n",
