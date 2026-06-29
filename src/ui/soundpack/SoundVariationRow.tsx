@@ -21,6 +21,7 @@ export type SoundVariationRowProps = {
   playAriaLabel: string;
   stopAriaLabel: string;
   playDisabled?: boolean;
+  playRetriggerable?: boolean;
 
   showFile: boolean;
   fileLabel: string;
@@ -70,6 +71,7 @@ export default function SoundVariationRow({
   playAriaLabel,
   stopAriaLabel,
   playDisabled,
+  playRetriggerable,
   showFile,
   fileLabel,
   displayFileName,
@@ -147,6 +149,7 @@ export default function SoundVariationRow({
             onPlay={onPlay}
             onStop={onStop}
             playAriaLabel={playAriaLabel}
+            retriggerable={playRetriggerable}
             stopAriaLabel={stopAriaLabel}
           />
         ) : (

@@ -100,9 +100,13 @@ function stripHtmlToPlainText(value: string): string {
 
 // Synthetic exponential-decay impulse response so previews can demonstrate the
 // in-progress reverb send.
+const previewReverbImpulseSeconds = 1.6;
+
 function createPreviewReverbImpulse(context: AudioContext): AudioBuffer {
-  const seconds = 1.6;
-  const length = Math.max(1, Math.floor(context.sampleRate * seconds));
+  const length = Math.max(
+    1,
+    Math.floor(context.sampleRate * previewReverbImpulseSeconds),
+  );
   const impulse = context.createBuffer(2, length, context.sampleRate);
   for (let channel = 0; channel < 2; channel += 1) {
     const data = impulse.getChannelData(channel);
@@ -124,6 +128,10 @@ type AmbientVariationView = {
   id: string;
   isBase: boolean;
   value: Nh3dAmbientTrackVariation;
+};
+
+type OneShotPreviewHandle = {
+  stop: () => void;
 };
 
 function createVariationId(prefix: string): string {
@@ -238,6 +246,9 @@ export default function SoundPackSettings({
   const previewWetGainRef = useRef<GainNode | null>(null);
   const previewGraphFailedRef = useRef(false);
   const previewEndTimerRef = useRef<number | null>(null);
+  const oneShotPreviewHandlesRef = useRef<Set<OneShotPreviewHandle>>(
+    new Set(),
+  );
   const hasLoadedRef = useRef(false);
   const {
     dialog: localConfirmationDialog,
@@ -252,6 +263,10 @@ export default function SoundPackSettings({
   const isDefaultDraft = Boolean(draftPack?.isDefault);
 
   const stopPreview = useCallback((): void => {
+    for (const handle of oneShotPreviewHandlesRef.current) {
+      handle.stop();
+    }
+    oneShotPreviewHandlesRef.current.clear();
     if (previewEndTimerRef.current !== null) {
       window.clearTimeout(previewEndTimerRef.current);
       previewEndTimerRef.current = null;
@@ -843,6 +858,24 @@ export default function SoundPackSettings({
     }
   };
 
+  const registerOneShotPreviewHandle = (
+    cleanup: () => void,
+  ): OneShotPreviewHandle => {
+    let stopped = false;
+    const handle: OneShotPreviewHandle = {
+      stop: () => {
+        if (stopped) {
+          return;
+        }
+        stopped = true;
+        cleanup();
+        oneShotPreviewHandlesRef.current.delete(handle);
+      },
+    };
+    oneShotPreviewHandlesRef.current.add(handle);
+    return handle;
+  };
+
   const playPitchShiftedPreview = async (
     previewUrl: string,
     volume: number,
@@ -923,10 +956,11 @@ export default function SoundPackSettings({
       };
 
       setPlayingSoundSlotKey(indicatorSlotKey);
+      const reverbTailMs = reverbSend > 0 ? previewReverbImpulseSeconds * 1000 : 0;
       previewEndTimerRef.current = window.setTimeout(() => {
         previewEndTimerRef.current = null;
         stopPreview();
-      }, Math.max(1, Math.ceil(buffer.duration * 1000) + 50));
+      }, Math.max(1, Math.ceil(buffer.duration * 1000 + reverbTailMs) + 50));
       return true;
     } catch {
       const context = previewAudioContextRef.current;
@@ -935,6 +969,234 @@ export default function SoundPackSettings({
         void context.close().catch(() => undefined);
       }
       return false;
+    }
+  };
+
+  const playResolvedOneShotSoundEffectPreview = async (
+    previewUrl: string,
+    volume: number,
+    revokeAfterPlay: boolean,
+    reverbSend: number,
+    pitchRate: number,
+  ): Promise<void> => {
+    const rate = Number.isFinite(pitchRate) && pitchRate > 0 ? pitchRate : 1;
+    const reverbTailMs =
+      reverbSend > 0 ? previewReverbImpulseSeconds * 1000 : 0;
+
+    let pitchShiftedPreviewStarted = false;
+    if (
+      isNh3dPitchShiftRatioSignificant(rate) &&
+      typeof window !== "undefined"
+    ) {
+      let context: AudioContext | null = null;
+      let timerId: number | null = null;
+      let source: AudioBufferSourceNode | null = null;
+      let pitchNode: Awaited<
+        ReturnType<typeof createNh3dPitchShiftNode>
+      > = null;
+      let pitchInput: GainNode | null = null;
+      let mainGain: GainNode | null = null;
+      let played = false;
+      let shouldRevokePreviewUrl = true;
+
+      const handle = registerOneShotPreviewHandle(() => {
+        if (timerId !== null) {
+          window.clearTimeout(timerId);
+          timerId = null;
+        }
+        try {
+          source?.stop();
+        } catch {
+          // Source may already have ended.
+        }
+        try {
+          source?.disconnect();
+          pitchNode?.disconnect();
+          pitchInput?.disconnect();
+          mainGain?.disconnect();
+        } catch {
+          // Ignore graph cleanup races.
+        }
+        if (context) {
+          void context.close().catch(() => undefined);
+          context = null;
+        }
+        if (revokeAfterPlay && shouldRevokePreviewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
+      });
+
+      try {
+        const AudioContextCtor =
+          window.AudioContext ??
+          (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext;
+        if (!AudioContextCtor) {
+          throw new Error("AudioContext is unavailable.");
+        }
+
+        const response = await fetch(previewUrl, { credentials: "same-origin" });
+        if (!response.ok) {
+          throw new Error("Unable to fetch preview audio.");
+        }
+
+        context = new AudioContextCtor();
+        const buffer = await context.decodeAudioData(
+          (await response.arrayBuffer()).slice(0),
+        );
+        const previewVolume = Math.max(0, Math.min(1, Number(volume ?? 1)));
+        source = context.createBufferSource();
+        pitchInput = context.createGain();
+        mainGain = context.createGain();
+        pitchNode = await createNh3dPitchShiftNode(context, rate);
+        if (!pitchNode) {
+          throw new Error("Pitch shifting is unavailable.");
+        }
+
+        source.buffer = buffer;
+        mainGain.gain.value = Number.isFinite(previewVolume)
+          ? previewVolume
+          : 1;
+        mainGain.connect(context.destination);
+
+        if (reverbSend > 0) {
+          const dryGain = context.createGain();
+          const wetGain = context.createGain();
+          const convolver = context.createConvolver();
+          dryGain.gain.value = 1;
+          wetGain.gain.value = Math.max(0, Math.min(1, reverbSend));
+          convolver.buffer = createPreviewReverbImpulse(context);
+          pitchInput.connect(dryGain);
+          dryGain.connect(mainGain);
+          pitchInput.connect(convolver);
+          convolver.connect(wetGain);
+          wetGain.connect(mainGain);
+        } else {
+          pitchInput.connect(mainGain);
+        }
+
+        if (context.state === "suspended") {
+          try {
+            await context.resume();
+          } catch {
+            // Ignore resume rejections outside trusted gestures.
+          }
+        }
+
+        source.connect(pitchNode);
+        pitchNode.connect(pitchInput);
+        source.start();
+        source.stop(context.currentTime + buffer.duration);
+        source.onended = () => {
+          try {
+            source?.disconnect();
+          } catch {
+            // Ignore graph cleanup races.
+          }
+        };
+        timerId = window.setTimeout(() => {
+          timerId = null;
+          handle.stop();
+        }, Math.max(1, Math.ceil(buffer.duration * 1000 + reverbTailMs) + 50));
+        played = true;
+        pitchShiftedPreviewStarted = true;
+      } catch {
+        shouldRevokePreviewUrl = false;
+        // Fall back to an ordinary one-shot preview if pitch shifting cannot start.
+      } finally {
+        if (!played) {
+          handle.stop();
+        }
+      }
+      if (pitchShiftedPreviewStarted) {
+        return;
+      }
+    }
+
+    const audio = new Audio();
+    let context: AudioContext | null = null;
+    let timerId: number | null = null;
+    const handle = registerOneShotPreviewHandle(() => {
+      if (timerId !== null) {
+        window.clearTimeout(timerId);
+        timerId = null;
+      }
+      audio.onended = null;
+      audio.onerror = null;
+      try {
+        audio.pause();
+      } catch {
+        // Ignore pause errors.
+      }
+      if (context) {
+        void context.close().catch(() => undefined);
+        context = null;
+      }
+      if (revokeAfterPlay) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    });
+
+    const previewVolume = Math.max(0, Math.min(1, Number(volume ?? 1)));
+    audio.volume = Number.isFinite(previewVolume) ? previewVolume : 1;
+    audio.src = previewUrl;
+    audio.playbackRate = 1;
+    audio.onended = () => {
+      if (reverbTailMs > 0) {
+        timerId = window.setTimeout(() => {
+          timerId = null;
+          handle.stop();
+        }, Math.max(1, Math.ceil(reverbTailMs) + 50));
+      } else {
+        handle.stop();
+      }
+    };
+    audio.onerror = () => {
+      handle.stop();
+      setErrorText(soundPackStrings.unableToPreview);
+    };
+
+    if (reverbSend > 0 && typeof window !== "undefined") {
+      const AudioContextCtor =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (AudioContextCtor) {
+        try {
+          context = new AudioContextCtor();
+          const source = context.createMediaElementSource(audio);
+          const dryGain = context.createGain();
+          const wetGain = context.createGain();
+          const convolver = context.createConvolver();
+          dryGain.gain.value = 1;
+          wetGain.gain.value = Math.max(0, Math.min(1, reverbSend));
+          convolver.buffer = createPreviewReverbImpulse(context);
+          source.connect(dryGain);
+          dryGain.connect(context.destination);
+          source.connect(convolver);
+          convolver.connect(wetGain);
+          wetGain.connect(context.destination);
+          if (context.state === "suspended") {
+            try {
+              await context.resume();
+            } catch {
+              // Ignore resume rejections outside trusted gestures.
+            }
+          }
+        } catch {
+          if (context) {
+            void context.close().catch(() => undefined);
+            context = null;
+          }
+        }
+      }
+    }
+
+    try {
+      await audio.play();
+    } catch (error) {
+      handle.stop();
+      throw error;
     }
   };
 
@@ -999,13 +1261,11 @@ export default function SoundPackSettings({
   const handlePlayPreview = async (
     soundKey: Nh3dSoundEffectKey,
     variationId: string = nh3dBaseSoundVariationId,
-    indicatorSlotKey?: string,
   ): Promise<void> => {
     if (!draftPack) {
       return;
     }
     setErrorText("");
-    stopPreview();
     const sound = draftPack.sounds[soundKey];
     const variation =
       getSoundVariationViews(soundKey, sound).find(
@@ -1055,11 +1315,10 @@ export default function SoundPackSettings({
       if (!previewUrl) {
         throw new Error(soundPackStrings.noPreviewSource);
       }
-      await playResolvedPreview(
+      await playResolvedOneShotSoundEffectPreview(
         previewUrl,
         variation.volume,
         revokeAfterPlay,
-        indicatorSlotKey ?? uploadSlotKey,
         previewReverbSend,
         previewPitchRate,
       );
@@ -1214,6 +1473,7 @@ export default function SoundPackSettings({
         }}
         onStop={stopPreview}
         playAriaLabel={soundPackStrings.play}
+        playRetriggerable
         stopAriaLabel={soundPackStrings.stopPreview}
         showFile={!isDefaultDraft}
         fileLabel={soundPackStrings.soundFile}
@@ -1789,10 +2049,11 @@ export default function SoundPackSettings({
                     return;
                   }
                   lastPreviewVariationIdRef.current[rowKey] = picked.id;
-                  void handlePlayPreview(soundKey, picked.id, previewKey);
+                  void handlePlayPreview(soundKey, picked.id);
                 }}
                 onStop={stopPreview}
                 playAriaLabel={soundPackStrings.play}
+                playRetriggerable
                 stopAriaLabel={soundPackStrings.stopPreview}
                 playDisabled={isBusy}
                 isDefaultPack={isDefaultDraft}

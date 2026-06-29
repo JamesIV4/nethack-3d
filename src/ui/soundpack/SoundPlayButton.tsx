@@ -9,6 +9,7 @@ export type SoundPlayButtonProps = {
   stopAriaLabel: string;
   disabled?: boolean;
   className?: string;
+  retriggerable?: boolean;
 };
 
 /**
@@ -23,18 +24,20 @@ export default function SoundPlayButton({
   stopAriaLabel,
   disabled,
   className,
+  retriggerable,
 }: SoundPlayButtonProps): JSX.Element {
+  const showStopState = isPlaying && !retriggerable;
   return (
     <button
-      aria-label={isPlaying ? stopAriaLabel : playAriaLabel}
-      className={`nh3d-soundpack-icon-play${isPlaying ? " is-playing" : ""}${
+      aria-label={showStopState ? stopAriaLabel : playAriaLabel}
+      className={`nh3d-soundpack-icon-play${showStopState ? " is-playing" : ""}${
         className ? ` ${className}` : ""
       }`}
       disabled={disabled}
-      onClick={isPlaying ? onStop : onPlay}
+      onClick={showStopState ? onStop : onPlay}
       type="button"
     >
-      <Nh3dIcon icon={isPlaying ? Square : Play} size={16} />
+      <Nh3dIcon icon={showStopState ? Square : Play} size={16} />
     </button>
   );
 }

@@ -16,6 +16,7 @@ export type SoundAccordionRowProps = {
   playAriaLabel: string;
   stopAriaLabel: string;
   playDisabled?: boolean;
+  playRetriggerable?: boolean;
   isDefaultPack?: boolean;
   children: ReactNode;
 };
@@ -39,6 +40,7 @@ export default function SoundAccordionRow({
   playAriaLabel,
   stopAriaLabel,
   playDisabled,
+  playRetriggerable,
   isDefaultPack,
   children,
 }: SoundAccordionRowProps): JSX.Element {
@@ -75,6 +77,7 @@ export default function SoundAccordionRow({
           onPlay={onPlay}
           onStop={onStop}
           playAriaLabel={playAriaLabel}
+          retriggerable={playRetriggerable}
           stopAriaLabel={stopAriaLabel}
         />
       </div>
