@@ -9,6 +9,7 @@ import {
   type Nh3dSoundEffectVariation,
   type Nh3dSoundPackRecord,
 } from "../audio/sound-pack-storage";
+import { createNh3dPitchShiftNode } from "../audio/pitch-shift";
 
 type MessageSoundHooksOptions = {
   isSoundEnabled: () => boolean;
@@ -400,7 +401,7 @@ export class MessageSoundHooks {
     if (webAudioResult === "played") {
       return;
     }
-    this.tryPlaySoundEffectViaHtmlAudio(sourceUrl, effectiveVolume, pitchRate);
+    this.tryPlaySoundEffectViaHtmlAudio(sourceUrl, effectiveVolume);
   }
 
   private ensureAudioContext(): AudioContext | null {
@@ -557,36 +558,56 @@ export class MessageSoundHooks {
     try {
       const source = context.createBufferSource();
       source.buffer = buffer;
-      source.playbackRate.value = pitchRate;
-      
       const mainGain = context.createGain();
+      const pitchInput = context.createGain();
       mainGain.gain.value = volume;
       mainGain.connect(context.destination);
 
       if (reverbOffset > 0) {
         const convolver = context.createConvolver();
         convolver.buffer = this.getReverbImpulse(context);
-        
+
         const dryGain = context.createGain();
         dryGain.gain.value = 1;
-        
+
         const wetGain = context.createGain();
         wetGain.gain.value = reverbOffset;
 
-        source.connect(dryGain);
+        pitchInput.connect(dryGain);
         dryGain.connect(mainGain);
-        
-        source.connect(convolver);
+
+        pitchInput.connect(convolver);
         convolver.connect(wetGain);
         wetGain.connect(mainGain);
       } else {
-        source.connect(mainGain);
+        pitchInput.connect(mainGain);
       }
 
-      source.onended = () => {
-        source.disconnect();
-      };
+      const pitchNode = await createNh3dPitchShiftNode(context, pitchRate);
+      if (pitchNode) {
+        source.connect(pitchNode);
+        pitchNode.connect(pitchInput);
+      } else {
+        source.connect(pitchInput);
+      }
       source.start();
+      source.stop(context.currentTime + buffer.duration);
+      source.onended = () => {
+        try {
+          source.disconnect();
+        } catch {
+          // Ignore graph cleanup races.
+        }
+      };
+      globalThis.setTimeout(() => {
+        try {
+          pitchInput.disconnect();
+          mainGain.disconnect();
+          pitchNode?.disconnect();
+        } catch {
+          // The graph may already have been torn down by source completion.
+        }
+      }, Math.max(1, Math.ceil(buffer.duration * 1000) + 100));
       return "played";
     } catch {
       return "failed";
@@ -596,21 +617,13 @@ export class MessageSoundHooks {
   private tryPlaySoundEffectViaHtmlAudio(
     sourceUrl: string,
     volume: number,
-    pitchRate: number,
   ): void {
     try {
       const audio = new Audio();
       audio.volume = volume;
       audio.preload = "auto";
       audio.src = sourceUrl;
-      try {
-        audio.playbackRate = pitchRate;
-        (
-          audio as HTMLAudioElement & { preservesPitch?: boolean }
-        ).preservesPitch = false;
-      } catch {
-        // Ignore browsers rejecting playbackRate/preservesPitch.
-      }
+      audio.playbackRate = 1;
       void audio.play().catch(() => undefined);
     } catch {
       // Browser autoplay policies can block playback until a user gesture.

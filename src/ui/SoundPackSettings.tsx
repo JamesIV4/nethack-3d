@@ -49,6 +49,10 @@ import SoundVariationRow from "./soundpack/SoundVariationRow";
 import AmbientConditionEditor from "./soundpack/AmbientConditionEditor";
 import ReverbSettingsPanel from "./soundpack/ReverbSettingsPanel";
 import ReverbSlider from "./soundpack/ReverbSlider";
+import {
+  createNh3dPitchShiftNode,
+  isNh3dPitchShiftRatioSignificant,
+} from "../audio/pitch-shift";
 
 const translationStrings = getTranslationStrings();
 const commonStrings = translationStrings.common;
@@ -233,6 +237,7 @@ export default function SoundPackSettings({
   const previewAudioContextRef = useRef<AudioContext | null>(null);
   const previewWetGainRef = useRef<GainNode | null>(null);
   const previewGraphFailedRef = useRef(false);
+  const previewEndTimerRef = useRef<number | null>(null);
   const hasLoadedRef = useRef(false);
   const {
     dialog: localConfirmationDialog,
@@ -247,6 +252,10 @@ export default function SoundPackSettings({
   const isDefaultDraft = Boolean(draftPack?.isDefault);
 
   const stopPreview = useCallback((): void => {
+    if (previewEndTimerRef.current !== null) {
+      window.clearTimeout(previewEndTimerRef.current);
+      previewEndTimerRef.current = null;
+    }
     const audio = previewAudioRef.current;
     if (audio) {
       audio.onended = null;
@@ -792,8 +801,8 @@ export default function SoundPackSettings({
   };
 
   // Lazily build a WebAudio graph around the preview element so previews can
-  // demonstrate the in-progress reverb send (dry + convolver wet). Pitch is
-  // applied via playbackRate and works even without the graph.
+  // demonstrate the in-progress reverb send (dry + convolver wet). Pitch-shifted
+  // previews use decoded WebAudio buffers so the clip duration stays unchanged.
   const ensurePreviewReverbGraph = (
     audio: HTMLAudioElement,
   ): GainNode | null => {
@@ -834,6 +843,101 @@ export default function SoundPackSettings({
     }
   };
 
+  const playPitchShiftedPreview = async (
+    previewUrl: string,
+    volume: number,
+    indicatorSlotKey: string,
+    reverbSend: number,
+    pitchRate: number,
+  ): Promise<boolean> => {
+    if (previewGraphFailedRef.current || typeof window === "undefined") {
+      return false;
+    }
+
+    const AudioContextCtor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioContextCtor) {
+      previewGraphFailedRef.current = true;
+      return false;
+    }
+
+    try {
+      const response = await fetch(previewUrl, { credentials: "same-origin" });
+      if (!response.ok) {
+        return false;
+      }
+
+      const context = new AudioContextCtor();
+      previewAudioContextRef.current = context;
+      const buffer = await context.decodeAudioData(
+        (await response.arrayBuffer()).slice(0),
+      );
+      const previewVolume = Math.max(0, Math.min(1, Number(volume ?? 1)));
+      const source = context.createBufferSource();
+      const mainGain = context.createGain();
+      const pitchInput = context.createGain();
+      const pitchNode = await createNh3dPitchShiftNode(context, pitchRate);
+      source.buffer = buffer;
+      mainGain.gain.value = Number.isFinite(previewVolume) ? previewVolume : 1;
+      mainGain.connect(context.destination);
+
+      if (reverbSend > 0) {
+        const dryGain = context.createGain();
+        const wetGain = context.createGain();
+        const convolver = context.createConvolver();
+        dryGain.gain.value = 1;
+        wetGain.gain.value = Math.max(0, Math.min(1, reverbSend));
+        convolver.buffer = createPreviewReverbImpulse(context);
+        pitchInput.connect(dryGain);
+        dryGain.connect(mainGain);
+        pitchInput.connect(convolver);
+        convolver.connect(wetGain);
+        wetGain.connect(mainGain);
+      } else {
+        pitchInput.connect(mainGain);
+      }
+
+      if (context.state === "suspended") {
+        try {
+          await context.resume();
+        } catch {
+          // Ignore resume rejections outside trusted gestures.
+        }
+      }
+
+      if (!pitchNode) {
+        return false;
+      }
+      source.connect(pitchNode);
+      pitchNode.connect(pitchInput);
+      source.start();
+      source.stop(context.currentTime + buffer.duration);
+      source.onended = () => {
+        try {
+          source.disconnect();
+        } catch {
+          // Ignore graph cleanup races.
+        }
+      };
+
+      setPlayingSoundSlotKey(indicatorSlotKey);
+      previewEndTimerRef.current = window.setTimeout(() => {
+        previewEndTimerRef.current = null;
+        stopPreview();
+      }, Math.max(1, Math.ceil(buffer.duration * 1000) + 50));
+      return true;
+    } catch {
+      const context = previewAudioContextRef.current;
+      previewAudioContextRef.current = null;
+      if (context) {
+        void context.close().catch(() => undefined);
+      }
+      return false;
+    }
+  };
+
   const playResolvedPreview = async (
     previewUrl: string,
     volume: number,
@@ -843,20 +947,30 @@ export default function SoundPackSettings({
     pitchRate: number,
   ): Promise<void> => {
     stopPreview();
+    if (revokeAfterPlay) {
+      previewObjectUrlRef.current = previewUrl;
+    }
+
+    const rate = Number.isFinite(pitchRate) && pitchRate > 0 ? pitchRate : 1;
+    if (isNh3dPitchShiftRatioSignificant(rate)) {
+      const playedPitchShifted = await playPitchShiftedPreview(
+        previewUrl,
+        volume,
+        indicatorSlotKey,
+        reverbSend,
+        rate,
+      );
+      if (playedPitchShifted) {
+        return;
+      }
+    }
 
     const audio = new Audio();
     previewAudioRef.current = audio;
     const previewVolume = Math.max(0, Math.min(1, Number(volume ?? 1)));
     audio.volume = Number.isFinite(previewVolume) ? previewVolume : 1;
-    const rate = Number.isFinite(pitchRate) && pitchRate > 0 ? pitchRate : 1;
     audio.src = previewUrl;
-    
-    try {
-      audio.playbackRate = rate;
-      (audio as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = false;
-    } catch {
-      // Ignore browsers rejecting playbackRate/preservesPitch
-    }
+    audio.playbackRate = 1;
 
     audio.onended = () => {
       setPlayingSoundSlotKey(null);
@@ -865,10 +979,6 @@ export default function SoundPackSettings({
       setPlayingSoundSlotKey(null);
       setErrorText(soundPackStrings.unableToPreview);
     };
-    if (revokeAfterPlay) {
-      previewObjectUrlRef.current = previewUrl;
-    }
-
     const wetGain = ensurePreviewReverbGraph(audio);
     const context = previewAudioContextRef.current;
     if (wetGain && context) {
@@ -880,15 +990,6 @@ export default function SoundPackSettings({
         }
       }
       wetGain.gain.value = Math.max(0, Math.min(1, reverbSend));
-    }
-
-    try {
-      audio.playbackRate = rate;
-      (
-        audio as HTMLAudioElement & { preservesPitch?: boolean }
-      ).preservesPitch = false;
-    } catch {
-      // Some browsers reject playbackRate/preservesPitch changes; ignore.
     }
 
     await audio.play();

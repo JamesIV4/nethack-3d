@@ -159,6 +159,7 @@
   },
   "dependencies": {
     "@capacitor/haptics": "^8.0.2",
+    "@soundtouchjs/audio-worklet": "^2.0.4",
     "lucide-react": "^1.16.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
