@@ -2881,35 +2881,6 @@ export async function saveNh3dSoundPackToIndexedDb(
         });
       }
 
-      if (existingPack.isDefault) {
-        for (const existingEntry of existingEntries) {
-          if (existingEntry.source !== "user") {
-            continue;
-          }
-          const existingPath = normalizeWhitespace(existingEntry.path || "");
-          if (!existingPath) {
-            continue;
-          }
-          await idbRequestToPromise(fileStore.delete(existingPath));
-        }
-        const baseIncoming =
-          incomingEntries.find(
-            (entry) => entry.id === nh3dBaseSoundVariationId,
-          ) ?? incomingEntries[0];
-        nextSounds[soundKey] = {
-          ...fallbackDefault,
-          enabled: Boolean(baseIncoming?.enabled),
-          volume: clampUnit(baseIncoming?.volume, fallbackDefault.volume),
-          attribution: fallbackDefault.attribution,
-          variations: [],
-          reverbOffset: clampNh3dReverbOffset(
-            incomingSound.reverbOffset,
-            fallbackDefault.reverbOffset,
-          ),
-        };
-        continue;
-      }
-
       const nextEntries: Nh3dSoundEffectVariation[] = [];
       const retainedUserPaths = new Set<string>();
 
