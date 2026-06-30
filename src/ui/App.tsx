@@ -23,8 +23,13 @@ import type {
   Nh3dClientOptions,
   NethackMenuItem,
   PlayerStatsSnapshot,
+  RunTelemetryBreakdownEntry,
+  RunTelemetryLootEvent,
+  RunTelemetrySnapshot,
 } from "../game/ui-types";
 import {
+  createEmptyGameOverPostmortemReports,
+  createEmptyRunTelemetrySnapshot,
   nh3dCloseControllerActionWheelEventName,
   nh3dCloseInventoryContextMenuEventName,
   defaultNh3dClientOptions,
@@ -66,12 +71,22 @@ import {
   type StartupInitOptionValue,
   type StartupInitOptionValues,
 } from "../runtime/startup-init-options";
-import { supportsRuntimeCheckpointRecovery } from "../runtime/runtime-capabilities";
+import {
+  supportsRuntimeCheckpointRecovery,
+  supportsRuntimeTopScores,
+} from "../runtime/runtime-capabilities";
 import {
   resolveRuntimeSaveDbNames,
   getStoredFileByteLength,
   isRecoverableCheckpointLevelZeroByteLength,
 } from "../runtime/save-storage";
+import {
+  fetchTopScores,
+  saveTopScoreDetailSnapshot,
+  type TopScoreInventoryItem,
+  type TopScoreRecord,
+  type TopScoreTimelineEvent,
+} from "../runtime/top-score-storage";
 import {
   findNh3dTilesetByPath,
   getNh3dTilesetAtlasTileColumns,
@@ -183,6 +198,14 @@ const commonStrings = translationStrings.common;
 const t = translationStrings.app;
 const supportedLocaleOptions = getSupportedLocaleOptions();
 const messageInfoMenuCacheLimit = 50;
+const topScoresPageSize = 10;
+const topScoreSortOptions: readonly TopScoreSortOption[] = [
+  { id: "date", label: "Date" },
+  { id: "score", label: "Score" },
+  { id: "depth", label: "Depth" },
+  { id: "turns", label: "Turns" },
+  { id: "kills", label: "Kills" },
+];
 
 function UpdateReleaseNotesMarkdown({
   markdown,
@@ -1123,6 +1146,1874 @@ function renderCharacterSheetFieldRows(
         );
       })}
     </div>
+  );
+}
+
+function formatTopScoreInteger(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "--";
+  }
+  return Math.trunc(value).toLocaleString();
+}
+
+function formatTopScoreText(value: string | null | undefined): string {
+  const normalized = String(value ?? "").trim();
+  return normalized || "--";
+}
+
+function formatTopScoreDateTime(value: string | null | undefined): string {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) {
+    return "--";
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    return normalized;
+  }
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) {
+    return normalized;
+  }
+  return date.toLocaleString();
+}
+
+function formatTopScoreDuration(seconds: number | null | undefined): string {
+  if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds < 0) {
+    return "--";
+  }
+  const totalSeconds = Math.trunc(seconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainder = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${remainder}s`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${remainder}s`;
+  }
+  return `${remainder}s`;
+}
+
+function formatTopScoreList(labels: ReadonlyArray<string>): string {
+  return labels.length > 0 ? labels.join(", ") : "None";
+}
+
+type TopScoreMetric = {
+  label: string;
+  value: string;
+  detail?: string;
+};
+
+type TopScoreSortId = "date" | "score" | "depth" | "turns" | "kills";
+
+type TopScoreSortOption = {
+  id: TopScoreSortId;
+  label: string;
+};
+
+type TopScoreChipGroup = {
+  label: string;
+  values: string[];
+  emptyLabel: string;
+};
+
+type TopScoreInventorySection = {
+  title: string;
+  items: TopScoreInventoryItem[];
+};
+
+type TopScoreBreakdownGroup = {
+  label: string;
+  values: RunTelemetryBreakdownEntry[];
+  emptyLabel: string;
+};
+
+type TopScoreRawReportSection = {
+  id: string;
+  title: string;
+  lines: string[] | null;
+  emptyLabel: string;
+};
+
+type TopScoreLootTimelineSection = {
+  title: string;
+  events: RunTelemetryLootEvent[];
+};
+
+type TopScoreTimelineFilterId =
+  | "kills"
+  | "gold"
+  | "loot"
+  | "secrets"
+  | "levels"
+  | "hazards"
+  | "magic"
+  | "milestones";
+
+type TopScoreTimelineFilterConfig = {
+  id: TopScoreTimelineFilterId;
+  label: string;
+  detail: string;
+  color: string;
+  tint: string;
+  rowType: "line" | "markers";
+};
+
+type TopScoreTimelineDisplayEvent = TopScoreTimelineEvent & {
+  filterId: TopScoreTimelineFilterId;
+};
+
+type TopScoreTimelinePoint = {
+  x: number;
+  y: number;
+  turn: number;
+  value: number;
+  event: TopScoreTimelineDisplayEvent;
+};
+
+type TopScoreTimelineCluster = {
+  id: string;
+  filterId: TopScoreTimelineFilterId;
+  filterLabel: string;
+  color: string;
+  isLineAnchored: boolean;
+  x: number;
+  y: number;
+  stackLevel: number;
+  turnStart: number;
+  turnEnd: number;
+  events: TopScoreTimelineDisplayEvent[];
+};
+
+type TopScoreTimelineSeries = {
+  id: TopScoreTimelineFilterId;
+  label: string;
+  detail: string;
+  color: string;
+  tint: string;
+  rowType: "line" | "markers";
+  summaryValue: string;
+  linePath?: string;
+};
+
+type TopScoreTimelineModel = {
+  width: number;
+  height: number;
+  leftPadding: number;
+  rightPadding: number;
+  topPadding: number;
+  bottomPadding: number;
+  plotTop: number;
+  plotBottom: number;
+  startTurn: number;
+  endTurn: number;
+  progressTicks: number[];
+  series: TopScoreTimelineSeries[];
+  ticks: number[];
+  clusters: TopScoreTimelineCluster[];
+};
+
+const topScoreTimelineFilterConfigs: readonly TopScoreTimelineFilterConfig[] = [
+  {
+    id: "kills",
+    label: "Kills",
+    detail: "Defeated enemies",
+    color: "#ff8a8a",
+    tint: "rgba(255, 138, 138, 0.18)",
+    rowType: "line",
+  },
+  {
+    id: "gold",
+    label: "Gold",
+    detail: "Gold gathered",
+    color: "#f2d06f",
+    tint: "rgba(242, 208, 111, 0.18)",
+    rowType: "line",
+  },
+  {
+    id: "loot",
+    label: "Loot",
+    detail: "Items picked up",
+    color: "#8fe4c3",
+    tint: "rgba(143, 228, 195, 0.18)",
+    rowType: "line",
+  },
+  {
+    id: "secrets",
+    label: "Hidden Finds",
+    detail: "Hidden doors, passages, and traps",
+    color: "#c7b8ff",
+    tint: "rgba(199, 184, 255, 0.18)",
+    rowType: "line",
+  },
+  {
+    id: "levels",
+    label: "Level",
+    detail: "Character level",
+    color: "#9bd470",
+    tint: "rgba(155, 212, 112, 0.18)",
+    rowType: "line",
+  },
+  {
+    id: "hazards",
+    label: "Hazards",
+    detail: "Traps and bad surprises",
+    color: "#ffb17a",
+    tint: "rgba(255, 177, 122, 0.18)",
+    rowType: "line",
+  },
+  {
+    id: "magic",
+    label: "Magic",
+    detail: "Spells learned",
+    color: "#80e2ff",
+    tint: "rgba(128, 226, 255, 0.18)",
+    rowType: "line",
+  },
+  {
+    id: "milestones",
+    label: "Milestones",
+    detail: "Places and the ending",
+    color: "#7ec8ff",
+    tint: "rgba(126, 200, 255, 0.18)",
+    rowType: "markers",
+  },
+] as const;
+
+const defaultTopScoreTimelineFilters: TopScoreTimelineFilterId[] = [
+  "kills",
+  "gold",
+  "loot",
+  "secrets",
+  "levels",
+  "hazards",
+  "milestones",
+];
+
+const topScoreRoleLabels: Record<string, string> = {
+  Arc: "Archeologist",
+  Bar: "Barbarian",
+  Cav: "Caveman",
+  Hea: "Healer",
+  Kni: "Knight",
+  Mon: "Monk",
+  Pri: "Priest",
+  Ran: "Ranger",
+  Rog: "Rogue",
+  Sam: "Samurai",
+  Tou: "Tourist",
+  Val: "Valkyrie",
+  Wiz: "Wizard",
+};
+
+const topScoreRaceLabels: Record<string, string> = {
+  Dwa: "Dwarf",
+  Elf: "Elf",
+  Gno: "Gnome",
+  Hum: "Human",
+  Orc: "Orc",
+};
+
+const topScoreGenderLabels: Record<string, string> = {
+  Fem: "Female",
+  F: "Female",
+  Mal: "Male",
+  M: "Male",
+};
+
+const topScoreAlignmentLabels: Record<string, string> = {
+  Cha: "Chaotic",
+  Law: "Lawful",
+  Neu: "Neutral",
+  Unc: "Unaligned",
+};
+
+function normalizeTopScoreTimelineTurn(value: number | null | undefined): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.max(0, Math.trunc(value))
+    : 0;
+}
+
+function resolveTopScoreLiveLocationLabel(stats: PlayerStatsSnapshot): string {
+  const locationLabel = String(stats.locationLabel ?? "").trim();
+  if (locationLabel) {
+    return locationLabel;
+  }
+  const dungeon = String(stats.dungeon ?? "").trim();
+  const dungeonLevel =
+    typeof stats.dlevel === "number" && Number.isFinite(stats.dlevel)
+      ? Math.trunc(stats.dlevel)
+      : null;
+  if (dungeon && dungeonLevel !== null) {
+    return `${dungeon} ${dungeonLevel}`;
+  }
+  if (dungeonLevel !== null) {
+    return `Depth ${dungeonLevel}`;
+  }
+  return dungeon;
+}
+
+function resolveTopScoreLiveLocationKey(
+  stats: PlayerStatsSnapshot,
+  runtimeVersion: NethackRuntimeVersion,
+  locationLabel: string,
+): string {
+  const dungeonLevel =
+    typeof stats.dlevel === "number" && Number.isFinite(stats.dlevel)
+      ? Math.trunc(stats.dlevel)
+      : null;
+  if (runtimeVersion === "slashem" && dungeonLevel !== null) {
+    return `slashem-depth:${dungeonLevel}`;
+  }
+  const dungeon = String(stats.dungeon ?? "").trim().toLowerCase();
+  if (dungeon && dungeonLevel !== null) {
+    return `${dungeon}:${dungeonLevel}`;
+  }
+  return String(locationLabel ?? "").trim().toLowerCase();
+}
+
+function isTopScoreKillMessage(message: string): boolean {
+  return /^you\s+(?:kill|destroy|defeat|dispatch|smite|slay|annihilate|murder|vaporize|disintegrate)\b/i.test(
+    message,
+  );
+}
+
+function isTopScoreTrapEscapeMessage(message: string): boolean {
+  return /^you\s+escape\b/i.test(message);
+}
+
+function extractPrependedMessages(
+  currentMessages: ReadonlyArray<string>,
+  previousMessages: ReadonlyArray<string>,
+): string[] {
+  if (currentMessages.length <= 0) {
+    return [];
+  }
+  if (previousMessages.length <= 0) {
+    return [...currentMessages];
+  }
+
+  for (
+    let prefixLength = 0;
+    prefixLength <= currentMessages.length;
+    prefixLength += 1
+  ) {
+    const overlapLength = Math.min(
+      previousMessages.length,
+      currentMessages.length - prefixLength,
+    );
+    let matches = true;
+    for (let index = 0; index < overlapLength; index += 1) {
+      if (currentMessages[prefixLength + index] !== previousMessages[index]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) {
+      return currentMessages.slice(0, prefixLength);
+    }
+  }
+
+  return [...currentMessages];
+}
+
+function resolveTopScoreTimelineFilterId(
+  event: TopScoreTimelineEvent,
+): TopScoreTimelineFilterId {
+  switch (event.kind) {
+    case "kill":
+      return "kills";
+    case "gold":
+      return "gold";
+    case "loot":
+      return "loot";
+    case "hidden-find":
+      return "secrets";
+    case "experience-level":
+      return "levels";
+    case "trap":
+      return "hazards";
+    case "spell-learned":
+      return "magic";
+    default:
+      return "milestones";
+  }
+}
+
+function resolveTopScoreTimelineFilterConfig(
+  filterId: TopScoreTimelineFilterId,
+): TopScoreTimelineFilterConfig {
+  return (
+    topScoreTimelineFilterConfigs.find((config) => config.id === filterId) ??
+    topScoreTimelineFilterConfigs[0]
+  );
+}
+
+function resolveTopScoreDisplayLabel(
+  value: string | null | undefined,
+  labels: Record<string, string>,
+): string {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) {
+    return "";
+  }
+  return labels[normalized] ?? normalized;
+}
+
+function hasTopScoreDisplayValue(value: string | null | undefined): boolean {
+  const normalized = String(value ?? "").trim();
+  return normalized.length > 0 && normalized !== "--";
+}
+
+function pushTopScoreMetric(
+  metrics: TopScoreMetric[],
+  label: string,
+  value: string | null | undefined,
+  detail?: string | null | undefined,
+): void {
+  const normalizedValue = String(value ?? "").trim();
+  if (!hasTopScoreDisplayValue(normalizedValue)) {
+    return;
+  }
+  const normalizedDetail = String(detail ?? "").trim();
+  metrics.push({
+    label,
+    value: normalizedValue,
+    detail: hasTopScoreDisplayValue(normalizedDetail)
+      ? normalizedDetail
+      : undefined,
+  });
+}
+
+function pushTopScoreRow(
+  rows: Array<[string, string]>,
+  label: string,
+  value: string | null | undefined,
+): void {
+  const normalized = String(value ?? "").trim();
+  if (!hasTopScoreDisplayValue(normalized)) {
+    return;
+  }
+  rows.push([label, normalized]);
+}
+
+function formatTopScoreHp(score: TopScoreRecord): string {
+  const hp =
+    typeof score.hp === "number" && Number.isFinite(score.hp)
+      ? String(Math.trunc(score.hp))
+      : "--";
+  const maxhp =
+    typeof score.maxhp === "number" && Number.isFinite(score.maxhp)
+      ? String(Math.trunc(score.maxhp))
+      : "--";
+  if (hp === "--" && maxhp === "--") {
+    return "--";
+  }
+  if (maxhp === "--") {
+    return hp;
+  }
+  if (hp === "--") {
+    return `--/${maxhp}`;
+  }
+  return `${hp}/${maxhp}`;
+}
+
+function formatTopScoreRoleLabel(value: string | null | undefined): string {
+  return resolveTopScoreDisplayLabel(value, topScoreRoleLabels);
+}
+
+function formatTopScoreRaceLabel(value: string | null | undefined): string {
+  return resolveTopScoreDisplayLabel(value, topScoreRaceLabels);
+}
+
+function formatTopScoreGenderLabel(value: string | null | undefined): string {
+  return resolveTopScoreDisplayLabel(value, topScoreGenderLabels);
+}
+
+function formatTopScoreAlignmentLabel(value: string | null | undefined): string {
+  return resolveTopScoreDisplayLabel(value, topScoreAlignmentLabels);
+}
+
+function formatTopScorePlayerName(score: TopScoreRecord): string {
+  const normalized = String(score.name ?? "").trim();
+  return normalized || "Unknown hero";
+}
+
+function resolveTopScoreAttributeValue(
+  score: TopScoreRecord,
+  key: string,
+): string {
+  return String(score.detail?.attributes[key] ?? "").trim();
+}
+
+function formatTopScoreCharacterLine(score: TopScoreRecord): string {
+  const parts = [
+    formatTopScoreRoleLabel(score.role),
+    formatTopScoreRaceLabel(score.race),
+    formatTopScoreGenderLabel(score.gender),
+    formatTopScoreAlignmentLabel(score.align),
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" / ") : "Unclassified adventurer";
+}
+
+function formatTopScoreShortDateTime(value: string | null | undefined): string {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) {
+    return "--";
+  }
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) {
+    return normalized;
+  }
+  return date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function resolveTopScoreLocationLabel(score: TopScoreRecord): string {
+  const location = resolveTopScoreAttributeValue(score, "Location");
+  if (location) {
+    return location;
+  }
+
+  const dungeon = resolveTopScoreAttributeValue(score, "Dungeon");
+  const dungeonLevel = resolveTopScoreAttributeValue(score, "Dungeon level");
+  if (dungeon && dungeonLevel) {
+    return `${dungeon} ${dungeonLevel}`;
+  }
+  if (dungeon) {
+    return dungeon;
+  }
+  if (dungeonLevel) {
+    return `Depth ${dungeonLevel}`;
+  }
+
+  const deathLevel =
+    typeof score.deathlev === "number" && Number.isFinite(score.deathlev)
+      ? String(Math.trunc(score.deathlev))
+      : "";
+  const maxLevel =
+    typeof score.maxlvl === "number" && Number.isFinite(score.maxlvl)
+      ? String(Math.trunc(score.maxlvl))
+      : "";
+  if (deathLevel && maxLevel && deathLevel !== maxLevel) {
+    return `Depth ${deathLevel} / deepest ${maxLevel}`;
+  }
+  if (maxLevel) {
+    return `Depth ${maxLevel}`;
+  }
+  if (deathLevel) {
+    return `Depth ${deathLevel}`;
+  }
+  if (typeof score.deathdnum === "number" && Number.isFinite(score.deathdnum)) {
+    return `Dungeon ${Math.trunc(score.deathdnum)}`;
+  }
+  return "Unknown depth";
+}
+
+function resolveTopScoreDepthMetric(score: TopScoreRecord): string {
+  const dungeonLevel = resolveTopScoreAttributeValue(score, "Dungeon level");
+  if (dungeonLevel) {
+    return dungeonLevel;
+  }
+  const deathLevel = formatTopScoreInteger(score.deathlev);
+  const maxLevel = formatTopScoreInteger(score.maxlvl);
+  if (
+    hasTopScoreDisplayValue(deathLevel) &&
+    hasTopScoreDisplayValue(maxLevel) &&
+    deathLevel !== maxLevel
+  ) {
+    return `${deathLevel} / ${maxLevel}`;
+  }
+  if (hasTopScoreDisplayValue(maxLevel)) {
+    return maxLevel;
+  }
+  return deathLevel;
+}
+
+function resolveTopScoreDateSortValue(score: TopScoreRecord): number {
+  const parsed = Date.parse(
+    score.endtime || score.deathdate || score.detail?.capturedAtIso || "",
+  );
+  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
+}
+
+function resolveTopScoreDepthSortValue(score: TopScoreRecord): number {
+  const candidates = [
+    score.maxlvl,
+    score.deathlev,
+    Number.parseInt(resolveTopScoreAttributeValue(score, "Dungeon level"), 10),
+  ].filter(
+    (value): value is number =>
+      typeof value === "number" && Number.isFinite(value),
+  );
+  return candidates.length > 0
+    ? Math.max(...candidates.map((value) => Math.trunc(value)))
+    : 0;
+}
+
+function resolveTopScoreTurnsSortValue(score: TopScoreRecord): number {
+  const turnCandidate =
+    typeof score.turns === "number" && Number.isFinite(score.turns)
+      ? score.turns
+      : Number.parseInt(resolveTopScoreAttributeValue(score, "Turn"), 10);
+  return Number.isFinite(turnCandidate)
+    ? Math.max(0, Math.trunc(turnCandidate))
+    : 0;
+}
+
+function resolveTopScoreKillsSortValue(score: TopScoreRecord): number {
+  const timelineKills = resolveTopScoreTimelineEvents(score).reduce(
+    (total, event) =>
+      event.kind === "kill"
+        ? total + resolveTopScoreTimelineLineIncrement("kills", {
+            ...event,
+            filterId: "kills",
+          })
+        : total,
+    0,
+  );
+  const telemetry = resolveTopScoreTelemetry(score);
+  const breakdownKills = [
+    ...telemetry.weaponKills,
+    ...telemetry.spellKills,
+    ...telemetry.petKills,
+  ].reduce((total, entry) => total + Math.max(0, Math.trunc(entry.count)), 0);
+  return Math.max(timelineKills, breakdownKills);
+}
+
+function compareTopScoresBySort(
+  left: TopScoreRecord,
+  right: TopScoreRecord,
+  sortId: TopScoreSortId,
+): number {
+  const compareNumericDescending = (
+    leftValue: number,
+    rightValue: number,
+  ): number => rightValue - leftValue;
+
+  let result = 0;
+  switch (sortId) {
+    case "date":
+      result = compareNumericDescending(
+        resolveTopScoreDateSortValue(left),
+        resolveTopScoreDateSortValue(right),
+      );
+      break;
+    case "depth":
+      result = compareNumericDescending(
+        resolveTopScoreDepthSortValue(left),
+        resolveTopScoreDepthSortValue(right),
+      );
+      break;
+    case "turns":
+      result = compareNumericDescending(
+        resolveTopScoreTurnsSortValue(left),
+        resolveTopScoreTurnsSortValue(right),
+      );
+      break;
+    case "kills":
+      result = compareNumericDescending(
+        resolveTopScoreKillsSortValue(left),
+        resolveTopScoreKillsSortValue(right),
+      );
+      break;
+    case "score":
+    default:
+      result = compareNumericDescending(left.points, right.points);
+      break;
+  }
+  if (result !== 0) {
+    return result;
+  }
+  if (right.points !== left.points) {
+    return right.points - left.points;
+  }
+  return left.rank - right.rank || right.sourceLine - left.sourceLine;
+}
+
+function formatTopScoreSnapshotStatus(score: TopScoreRecord): string | null {
+  return score.detail ? null : "Archive only";
+}
+
+function formatTopScoreResultSummary(score: TopScoreRecord): string {
+  const cause = String(score.death ?? "").trim();
+  const location = resolveTopScoreLocationLabel(score);
+  if (cause && location !== "Unknown depth") {
+    return `${capitalizeFirstLetter(cause)} in ${location}.`;
+  }
+  if (cause) {
+    return capitalizeFirstLetter(cause);
+  }
+  if (location !== "Unknown depth") {
+    return `Recorded in ${location}.`;
+  }
+  return "A recorded expedition.";
+}
+
+function buildTopScoreCardMetrics(score: TopScoreRecord): TopScoreMetric[] {
+  const metrics: TopScoreMetric[] = [];
+  pushTopScoreMetric(metrics, "Turns", formatTopScoreInteger(score.turns));
+  pushTopScoreMetric(metrics, "Depth", resolveTopScoreDepthMetric(score));
+  pushTopScoreMetric(metrics, "Final HP", formatTopScoreHp(score));
+  pushTopScoreMetric(
+    metrics,
+    "Ended",
+    formatTopScoreShortDateTime(
+      score.endtime || score.deathdate || score.detail?.capturedAtIso,
+    ),
+  );
+  return metrics;
+}
+
+function buildTopScoreOverviewRows(score: TopScoreRecord): Array<[string, string]> {
+  const rows: Array<[string, string]> = [];
+  pushTopScoreRow(rows, "Adventurer", formatTopScorePlayerName(score));
+  pushTopScoreRow(rows, "Path", formatTopScoreCharacterLine(score));
+  pushTopScoreRow(
+    rows,
+    "Final score",
+    `${formatTopScoreInteger(score.points)} points`,
+  );
+  pushTopScoreRow(rows, "Cause of end", formatTopScoreText(score.death));
+  pushTopScoreRow(rows, "Final location", resolveTopScoreLocationLabel(score));
+  pushTopScoreRow(rows, "Turns survived", formatTopScoreInteger(score.turns));
+  pushTopScoreRow(rows, "Real time", formatTopScoreDuration(score.realtimeSeconds));
+  pushTopScoreRow(rows, "Final HP", formatTopScoreHp(score));
+  pushTopScoreRow(rows, "Started", formatTopScoreDateTime(score.starttime));
+  pushTopScoreRow(
+    rows,
+    "Ended",
+    formatTopScoreDateTime(
+      score.endtime || score.deathdate || score.detail?.capturedAtIso,
+    ),
+  );
+  pushTopScoreRow(rows, "State at death", formatTopScoreText(score.whileHelpless));
+  return rows;
+}
+
+function buildTopScoreAdventureMetrics(score: TopScoreRecord): TopScoreMetric[] {
+  const metrics: TopScoreMetric[] = [];
+  const hitPoints = resolveTopScoreAttributeValue(score, "Hit points");
+  const power = resolveTopScoreAttributeValue(score, "Power");
+  const armorClass = resolveTopScoreAttributeValue(score, "Armor class");
+  const experience = resolveTopScoreAttributeValue(score, "Experience");
+  const level = resolveTopScoreAttributeValue(score, "Level");
+  const gold = resolveTopScoreAttributeValue(score, "Gold");
+  const alignment =
+    resolveTopScoreAttributeValue(score, "Alignment") ||
+    formatTopScoreAlignmentLabel(score.align);
+  const turn =
+    resolveTopScoreAttributeValue(score, "Turn") || formatTopScoreInteger(score.turns);
+
+  pushTopScoreMetric(
+    metrics,
+    "Hit points",
+    hitPoints || formatTopScoreHp(score),
+    power ? `Power ${power}` : undefined,
+  );
+  pushTopScoreMetric(metrics, "Armor class", armorClass);
+  pushTopScoreMetric(
+    metrics,
+    "Experience",
+    experience,
+    level ? `Level ${level}` : undefined,
+  );
+  pushTopScoreMetric(metrics, "Gold", gold);
+  pushTopScoreMetric(metrics, "Alignment", alignment);
+  pushTopScoreMetric(metrics, "Turn", turn);
+
+  if (metrics.length < 4) {
+    pushTopScoreMetric(metrics, "Depth", resolveTopScoreDepthMetric(score));
+    pushTopScoreMetric(metrics, "Real time", formatTopScoreDuration(score.realtimeSeconds));
+    pushTopScoreMetric(metrics, "Deaths on file", formatTopScoreInteger(score.deaths));
+  }
+
+  return metrics;
+}
+
+function buildTopScoreAttributeMetrics(score: TopScoreRecord): TopScoreMetric[] {
+  return [
+    { label: "Strength", value: resolveTopScoreAttributeValue(score, "Strength") },
+    { label: "Dexterity", value: resolveTopScoreAttributeValue(score, "Dexterity") },
+    {
+      label: "Constitution",
+      value: resolveTopScoreAttributeValue(score, "Constitution"),
+    },
+    {
+      label: "Intelligence",
+      value: resolveTopScoreAttributeValue(score, "Intelligence"),
+    },
+    { label: "Wisdom", value: resolveTopScoreAttributeValue(score, "Wisdom") },
+    { label: "Charisma", value: resolveTopScoreAttributeValue(score, "Charisma") },
+  ].filter((metric) => hasTopScoreDisplayValue(metric.value));
+}
+
+function buildTopScoreChallengeGroups(score: TopScoreRecord): TopScoreChipGroup[] {
+  return [
+    {
+      label: "Challenge streaks",
+      values: score.conductLabels,
+      emptyLabel: "No conduct streaks were recorded for this run.",
+    },
+    {
+      label: "Milestones",
+      values: score.achievementLabels,
+      emptyLabel: "No milestone flags were recorded for this run.",
+    },
+    {
+      label: "Run rules",
+      values: score.flagLabels.length > 0 ? score.flagLabels : ["Normal"],
+      emptyLabel: "Normal",
+    },
+  ];
+}
+
+function buildTopScorePreviewLabels(score: TopScoreRecord): string[] {
+  const allLabels = [
+    ...score.flagLabels.filter(
+      (label) => label.trim().toLowerCase() !== "bones disabled",
+    ),
+    ...score.conductLabels,
+    ...score.achievementLabels,
+  ];
+  const deduped: string[] = [];
+  const seen = new Set<string>();
+  for (const label of allLabels) {
+    const normalized = label.trim();
+    if (!normalized) {
+      continue;
+    }
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(normalized);
+  }
+  const visible = deduped.slice(0, 5);
+  if (deduped.length > visible.length) {
+    visible.push(`+${deduped.length - visible.length} more`);
+  }
+  return visible;
+}
+
+function resolveTopScoreTelemetry(score: TopScoreRecord): RunTelemetrySnapshot {
+  return score.detail?.telemetry ?? createEmptyRunTelemetrySnapshot();
+}
+
+function buildTopScoreTelemetryTimelineEvents(
+  score: TopScoreRecord,
+): TopScoreTimelineEvent[] {
+  const telemetry = resolveTopScoreTelemetry(score);
+  const lootEvents = telemetry.lootEvents.map<TopScoreTimelineEvent>((event) => ({
+    id: `telemetry-loot-${event.id}`,
+    turn: normalizeTopScoreTimelineTurn(event.turn),
+    kind: "loot",
+    label:
+      event.quantity === 1
+        ? "Loot picked up"
+        : `${formatTopScoreInteger(event.quantity)} items picked up`,
+    summary:
+      event.quantity === 1
+        ? `Picked up ${event.label}.`
+        : `Picked up ${formatTopScoreInteger(event.quantity)} ${event.label}.`,
+    detail: event.category || event.detail,
+    amount: event.quantity,
+    location: event.location,
+  }));
+  const trapEvents = telemetry.trapEvents.map<TopScoreTimelineEvent>((event) => ({
+    id: `telemetry-trap-${event.id}`,
+    turn: normalizeTopScoreTimelineTurn(event.turn),
+    kind: "trap",
+    label: event.label,
+    summary: event.detail || `${event.label} triggered.`,
+    detail: event.detail,
+    location: event.location,
+  }));
+  const hiddenFindEvents = telemetry.hiddenFindEvents.map<TopScoreTimelineEvent>(
+    (event) => ({
+      id: `telemetry-hidden-find-${event.id}`,
+      turn: normalizeTopScoreTimelineTurn(event.turn),
+      kind: "hidden-find",
+      label: event.label,
+      summary: event.detail || `Found ${event.label}.`,
+      detail: event.category,
+      amount: 1,
+      location: event.location,
+    }),
+  );
+  const spellEvents = telemetry.spellLearnedEvents.map<TopScoreTimelineEvent>((event) => ({
+    id: `telemetry-spell-${event.id}`,
+    turn: normalizeTopScoreTimelineTurn(event.turn),
+    kind: "spell-learned",
+    label: event.spell,
+    summary: `Learned ${event.spell}.`,
+    detail: event.detail,
+    location: event.location,
+  }));
+  const petKillEvents =
+    telemetry.petKillEvents.length > 0
+      ? telemetry.petKillEvents.map<TopScoreTimelineEvent>((event) => ({
+          id: `telemetry-pet-kill-${event.id}`,
+          turn: normalizeTopScoreTimelineTurn(event.turn),
+          kind: "kill",
+          label:
+            event.count === 1
+              ? "Pet defeated an enemy"
+              : `Pet defeated ${formatTopScoreInteger(event.count)} enemies`,
+          summary:
+            event.count === 1
+              ? `${event.label} defeated an enemy.`
+              : `${event.label} defeated ${formatTopScoreInteger(event.count)} enemies.`,
+          detail: event.detail,
+          amount: event.count,
+          location: event.location,
+        }))
+      : telemetry.petKills.map<TopScoreTimelineEvent>((entry, index) => ({
+          id: `telemetry-pet-kill-aggregate-${index}`,
+          turn: normalizeTopScoreTimelineTurn(score.turns ?? score.detail?.turns),
+          kind: "kill",
+          label:
+            entry.count === 1
+              ? "Pet defeated an enemy"
+              : `Pet defeated ${formatTopScoreInteger(entry.count)} enemies`,
+          summary:
+            entry.count === 1
+              ? `${entry.label} defeated an enemy.`
+              : `${entry.label} defeated ${formatTopScoreInteger(entry.count)} enemies.`,
+          detail: entry.detail,
+          amount: entry.count,
+        }));
+  return [
+    ...lootEvents,
+    ...trapEvents,
+    ...hiddenFindEvents,
+    ...spellEvents,
+    ...petKillEvents,
+  ];
+}
+
+function buildFallbackTopScoreTimeline(score: TopScoreRecord): TopScoreTimelineEvent[] {
+  const turn = normalizeTopScoreTimelineTurn(score.turns);
+  const summary = formatTopScoreText(score.death) || "Run ended.";
+  return [
+    {
+      id: `fallback-death-${score.id}`,
+      turn,
+      kind: "death",
+      label: "Run ended",
+      summary,
+      location: resolveTopScoreLocationLabel(score),
+    },
+  ];
+}
+
+function dedupeSlashemLocationTimelineEvents(
+  events: TopScoreTimelineEvent[],
+  score: TopScoreRecord,
+): TopScoreTimelineEvent[] {
+  if (score.detail?.runtimeVersion !== "slashem" && score.version !== "slashem") {
+    return events;
+  }
+
+  const seenLocationKeys = new Set<string>();
+  return events.filter((event) => {
+    if (event.kind !== "location") {
+      return true;
+    }
+    const label = String(
+      event.location || event.summary || event.detail || event.label || "",
+    ).trim();
+    const depthMatch = label.match(/-?\d+\s*\.?$/);
+    const key = depthMatch
+      ? `slashem-depth:${Number.parseInt(depthMatch[0], 10)}`
+      : label.toLowerCase();
+    if (!key) {
+      return true;
+    }
+    if (seenLocationKeys.has(key)) {
+      return false;
+    }
+    seenLocationKeys.add(key);
+    return true;
+  });
+}
+
+function resolveTopScoreTimelineEvents(score: TopScoreRecord): TopScoreTimelineEvent[] {
+  const savedTimeline = score.detail?.timeline ?? [];
+  const telemetryTimeline = buildTopScoreTelemetryTimelineEvents(score);
+  const mergedTimeline = [...savedTimeline, ...telemetryTimeline].filter(
+    (event) => event.kind !== "search",
+  );
+  return mergedTimeline.length > 0
+    ? dedupeSlashemLocationTimelineEvents(
+        mergedTimeline.sort(
+          (left, right) => left.turn - right.turn || left.label.localeCompare(right.label),
+        ),
+        score,
+      )
+    : buildFallbackTopScoreTimeline(score);
+}
+
+function buildTopScoreTimelineSummaryMetrics(score: TopScoreRecord): TopScoreMetric[] {
+  const events = resolveTopScoreTimelineEvents(score);
+  if (events.length <= 0) {
+    return [];
+  }
+
+  const killCount = events.reduce(
+    (total, event) =>
+      event.kind === "kill"
+        ? total + resolveTopScoreTimelineLineIncrement("kills", {
+            ...event,
+            filterId: "kills",
+          })
+        : total,
+    0,
+  );
+  const goldCollected = events.reduce((total, event) => {
+    if (event.kind !== "gold") {
+      return total;
+    }
+    return total + Math.max(0, event.amount ?? 0);
+  }, 0);
+  const telemetry = resolveTopScoreTelemetry(score);
+  const locationsVisited = new Set(
+    events
+      .filter((event) => event.kind === "location")
+      .map((event) => String(event.location || event.label).trim())
+      .filter(Boolean),
+  ).size;
+  const maxCharacterLevel = resolveTopScoreMaxCharacterLevel(score, events);
+  const hiddenFindCount = telemetry.hiddenFindEvents.length;
+  const lootCount = telemetry.lootEvents.reduce(
+    (total, event) => total + Math.max(0, event.quantity),
+    0,
+  );
+  const spellsLearned = telemetry.spellLearnedEvents.length;
+
+  return [
+    {
+      label: "Foes defeated",
+      value: formatTopScoreInteger(killCount),
+      detail: killCount === 1 ? "one recorded kill" : "recorded kills",
+    },
+    {
+      label: "Gold gathered",
+      value: formatTopScoreInteger(goldCollected),
+      detail: goldCollected === 1 ? "piece picked up" : "pieces picked up",
+    },
+    {
+      label: "Hidden finds",
+      value: formatTopScoreInteger(hiddenFindCount),
+      detail:
+        hiddenFindCount === 1 ? "one secret revealed" : "secrets revealed",
+    },
+    {
+      label: "Loot collected",
+      value: formatTopScoreInteger(lootCount),
+      detail: lootCount === 1 ? "one item tracked" : "items tracked",
+    },
+    {
+      label: "Spells learned",
+      value: formatTopScoreInteger(spellsLearned),
+      detail:
+        spellsLearned === 1 ? "one spell discovered" : "spells discovered",
+    },
+    {
+      label: "Traps sprung",
+      value: formatTopScoreInteger(telemetry.trapEvents.length),
+      detail:
+        telemetry.trapEvents.length === 1
+          ? "one hazard triggered"
+          : "hazards triggered",
+    },
+    {
+      label: "Places reached",
+      value: formatTopScoreInteger(locationsVisited),
+      detail:
+        locationsVisited === 1 ? "floor or branch logged" : "floors or branches logged",
+    },
+    {
+      label: "Max level",
+      value:
+        maxCharacterLevel === null
+          ? "--"
+          : formatTopScoreInteger(maxCharacterLevel),
+      detail: "peak character level",
+    },
+  ];
+}
+
+function formatTopScoreTimelineClusterTurnLabel(
+  cluster: TopScoreTimelineCluster,
+): string {
+  if (cluster.turnStart === cluster.turnEnd) {
+    return `Turn ${formatTopScoreInteger(cluster.turnStart)}`;
+  }
+  return `Turns ${formatTopScoreInteger(cluster.turnStart)}-${formatTopScoreInteger(cluster.turnEnd)}`;
+}
+
+function formatTopScoreTimelineEventBadge(event: TopScoreTimelineEvent): string {
+  switch (event.kind) {
+    case "kill":
+      return "Kill";
+    case "gold":
+      return "Gold";
+    case "loot":
+      return "Loot";
+    case "location":
+      return "Location";
+    case "experience-level":
+      return "Level";
+    case "trap":
+      return "Trap";
+    case "escape":
+      return "Escape";
+    case "hidden-find":
+      return "Hidden";
+    case "search":
+      return "Search";
+    case "spell-learned":
+      return "Spell";
+    case "death":
+      return "Ending";
+    default:
+      return "Moment";
+  }
+}
+
+function formatTopScoreTimelineEventMeta(event: TopScoreTimelineEvent): string {
+  switch (event.kind) {
+    case "gold": {
+      const parts: string[] = [];
+      if (typeof event.amount === "number" && Number.isFinite(event.amount)) {
+        const amount = Math.trunc(event.amount);
+        parts.push(`${amount > 0 ? "+" : ""}${amount} gold`);
+      }
+      if (typeof event.total === "number" && Number.isFinite(event.total)) {
+        parts.push(`purse ${Math.trunc(event.total)}`);
+      }
+      return parts.join(" / ");
+    }
+    case "loot": {
+      const parts: string[] = [];
+      if (typeof event.amount === "number" && Number.isFinite(event.amount)) {
+        parts.push(
+          `${formatTopScoreInteger(Math.trunc(event.amount))} collected`,
+        );
+      }
+      if (event.detail) {
+        parts.push(event.detail);
+      }
+      return parts.join(" / ");
+    }
+    case "location":
+      return event.location ?? "";
+    case "experience-level": {
+      const parts: string[] = [];
+      if (typeof event.amount === "number" && Number.isFinite(event.amount)) {
+        const amount = Math.trunc(event.amount);
+        if (amount !== 0) {
+          parts.push(
+            `${amount > 0 ? "+" : ""}${amount} ${Math.abs(amount) === 1 ? "level" : "levels"}`,
+          );
+        }
+      }
+      if (typeof event.total === "number" && Number.isFinite(event.total)) {
+        parts.push(`level ${Math.trunc(event.total)}`);
+      }
+      if (event.detail) {
+        parts.push(event.detail);
+      }
+      return parts.join(" / ");
+    }
+    case "trap":
+      return event.location ?? event.detail ?? "";
+    case "escape":
+      return event.location ?? event.detail ?? "";
+    case "hidden-find":
+      return event.location ?? event.detail ?? "";
+    case "search":
+      return event.location ?? "";
+    case "spell-learned":
+      return event.detail ?? event.location ?? "";
+    case "death":
+      return event.location ?? "";
+    default:
+      return event.detail ?? "";
+  }
+}
+
+function buildTopScoreTimelineTicks(startTurn: number, endTurn: number): number[] {
+  if (endTurn <= startTurn) {
+    return [startTurn];
+  }
+
+  const range = endTurn - startTurn;
+  const roughStep = Math.max(1, range / 5);
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+  const normalized = roughStep / magnitude;
+  const stepMultiplier =
+    normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  const step = stepMultiplier * magnitude;
+  const ticks = [startTurn];
+  let nextTick = Math.ceil((startTurn + step) / step) * step;
+  while (nextTick < endTurn) {
+    ticks.push(nextTick);
+    nextTick += step;
+  }
+  if (ticks[ticks.length - 1] !== endTurn) {
+    ticks.push(endTurn);
+  }
+  return ticks;
+}
+
+function buildTopScoreTimelineStepPath(
+  points: ReadonlyArray<{ x: number; y: number }>,
+): string {
+  if (points.length <= 0) {
+    return "";
+  }
+  let path = `M ${points[0].x} ${points[0].y}`;
+  for (let index = 1; index < points.length; index += 1) {
+    path += ` L ${points[index].x} ${points[index].y}`;
+  }
+  return path;
+}
+
+function resolveTopScoreTimelineLineIncrement(
+  filterId: TopScoreTimelineFilterId,
+  event: TopScoreTimelineDisplayEvent,
+): number {
+  switch (filterId) {
+    case "hazards":
+    case "magic":
+      return 1;
+    case "kills": {
+      const amount =
+        typeof event.amount === "number" && Number.isFinite(event.amount)
+          ? Math.trunc(event.amount)
+          : 0;
+      return amount > 0 ? amount : 1;
+    }
+    case "gold":
+    case "loot":
+    case "secrets": {
+      const amount =
+        typeof event.amount === "number" && Number.isFinite(event.amount)
+          ? Math.trunc(event.amount)
+          : 0;
+      if (amount > 0) {
+        return amount;
+      }
+      return filterId === "gold" ? 0 : 1;
+    }
+    default:
+      return 0;
+  }
+}
+
+function resolveTopScoreTimelineLevelValue(
+  event: TopScoreTimelineEvent,
+): number | null {
+  if (event.kind !== "experience-level") {
+    return null;
+  }
+  if (typeof event.total === "number" && Number.isFinite(event.total)) {
+    return Math.max(1, Math.trunc(event.total));
+  }
+
+  const levelText = [event.label, event.summary, event.detail]
+    .filter(Boolean)
+    .join(" ");
+  const levelMatch = /\blevel\s+(-?\d+)\b/i.exec(levelText);
+  if (!levelMatch) {
+    return null;
+  }
+  const parsedLevel = Number.parseInt(levelMatch[1]!, 10);
+  return Number.isFinite(parsedLevel) ? Math.max(1, parsedLevel) : null;
+}
+
+function resolveTopScoreFinalCharacterLevel(score: TopScoreRecord): number | null {
+  const snapshotLevel =
+    typeof score.detail?.playerStats.level === "number" &&
+    Number.isFinite(score.detail.playerStats.level)
+      ? Math.trunc(score.detail.playerStats.level)
+      : null;
+  if (snapshotLevel !== null) {
+    return Math.max(1, snapshotLevel);
+  }
+
+  const attributeLevel = Number.parseInt(
+    resolveTopScoreAttributeValue(score, "Level"),
+    10,
+  );
+  return Number.isFinite(attributeLevel) ? Math.max(1, attributeLevel) : null;
+}
+
+function resolveTopScoreMaxCharacterLevel(
+  score: TopScoreRecord,
+  events = resolveTopScoreTimelineEvents(score),
+): number | null {
+  const levels = events
+    .map((event) => resolveTopScoreTimelineLevelValue(event))
+    .filter((level): level is number => level !== null);
+  const finalLevel = resolveTopScoreFinalCharacterLevel(score);
+  if (finalLevel !== null) {
+    levels.push(finalLevel);
+  }
+  return levels.length > 0 ? Math.max(...levels) : null;
+}
+
+function formatTopScoreTimelineLineSummary(
+  filterId: TopScoreTimelineFilterId,
+  value: number,
+): string {
+  switch (filterId) {
+    case "kills":
+      return `${formatTopScoreInteger(value)} defeated`;
+    case "gold":
+      return `${formatTopScoreInteger(value)} gathered`;
+    case "loot":
+      return `${formatTopScoreInteger(value)} picked up`;
+    case "secrets":
+      return `${formatTopScoreInteger(value)} found`;
+    case "levels":
+      return `peak level ${formatTopScoreInteger(value)}`;
+    case "hazards":
+      return `${formatTopScoreInteger(value)} triggered`;
+    case "magic":
+      return `${formatTopScoreInteger(value)} learned`;
+    default:
+      return `${formatTopScoreInteger(value)} logged`;
+  }
+}
+
+function buildTopScoreTimelineClusters(
+  filter: TopScoreTimelineFilterConfig,
+  events: ReadonlyArray<TopScoreTimelineDisplayEvent>,
+  toX: (turn: number) => number,
+  resolveY: (event: TopScoreTimelineDisplayEvent) => number,
+  turnBucketSize: number,
+): TopScoreTimelineCluster[] {
+  if (events.length <= 0) {
+    return [];
+  }
+
+  const clusters: TopScoreTimelineCluster[] = [];
+  for (const event of events) {
+    const x = toX(event.turn);
+    const y = resolveY(event);
+    const previousCluster =
+      clusters.length > 0 ? clusters[clusters.length - 1] : null;
+    if (
+      previousCluster &&
+      event.turn - previousCluster.turnEnd <= turnBucketSize
+    ) {
+      const previousEventCount = previousCluster.events.length;
+      previousCluster.turnEnd = event.turn;
+      if (filter.rowType === "line") {
+        previousCluster.x = x;
+        previousCluster.y = y;
+      } else {
+        previousCluster.x =
+          (previousCluster.x * previousEventCount + x) /
+          (previousEventCount + 1);
+      }
+      previousCluster.events.push(event);
+      continue;
+    }
+
+    clusters.push({
+      id: `${filter.id}-${event.turn}-${clusters.length}`,
+      filterId: filter.id,
+      filterLabel: filter.label,
+      color: filter.color,
+      isLineAnchored: filter.rowType === "line",
+      x,
+      y,
+      stackLevel: 0,
+      turnStart: event.turn,
+      turnEnd: event.turn,
+      events: [event],
+    });
+  }
+
+  return clusters;
+}
+
+function layoutTopScoreTimelineBottomClusters(
+  clusters: ReadonlyArray<TopScoreTimelineCluster>,
+  bottomMarkerY: number,
+  markerStackGap: number,
+  minClusterSeparation: number,
+  minMarkerY: number,
+): TopScoreTimelineCluster[] {
+  if (clusters.length <= 0) {
+    return [];
+  }
+
+  const laneEndX: number[] = [];
+  return [...clusters]
+    .sort(
+      (left, right) =>
+        left.x - right.x ||
+        left.turnStart - right.turnStart ||
+        left.filterLabel.localeCompare(right.filterLabel),
+    )
+    .map((cluster) => {
+      let stackLevel = 0;
+      while (
+        stackLevel < laneEndX.length &&
+        cluster.x - laneEndX[stackLevel]! < minClusterSeparation
+      ) {
+        stackLevel += 1;
+      }
+      laneEndX[stackLevel] = cluster.x;
+      return {
+        ...cluster,
+        stackLevel,
+        y: Math.max(minMarkerY, bottomMarkerY - stackLevel * markerStackGap),
+      };
+    });
+}
+
+function buildTopScoreTimelineModel(
+  score: TopScoreRecord | null,
+  activeFilters: ReadonlyArray<TopScoreTimelineFilterId>,
+): TopScoreTimelineModel | null {
+  if (!score) {
+    return null;
+  }
+
+  const allEvents = resolveTopScoreTimelineEvents(score)
+    .filter(
+      (event) =>
+        typeof event.turn === "number" &&
+        Number.isFinite(event.turn) &&
+        event.turn >= 0,
+    )
+    .map<TopScoreTimelineDisplayEvent>((event) => ({
+      ...event,
+      filterId: resolveTopScoreTimelineFilterId(event),
+    }));
+  if (allEvents.length <= 0) {
+    return null;
+  }
+
+  const endTurn = Math.max(
+    1,
+    normalizeTopScoreTimelineTurn(score.turns),
+    ...allEvents.map((event) => event.turn),
+  );
+  const startTurn = 1;
+  const rowConfigs = topScoreTimelineFilterConfigs.filter(
+    (config) =>
+      activeFilters.includes(config.id) &&
+      allEvents.some((event) => event.filterId === config.id),
+  );
+  if (rowConfigs.length <= 0) {
+    return null;
+  }
+
+  const leftPadding = 64;
+  const rightPadding = 26;
+  const topPadding = 20;
+  const bottomPadding = 54;
+  const plotTop = topPadding;
+  const linePlotHeight = 236;
+  const plotBottom = plotTop + linePlotHeight;
+  const clusterMarkerSize = 22;
+  const clusterMarkerSpacing = 28;
+  const bottomMarkerY = plotBottom - clusterMarkerSize / 2;
+  const topMarkerY = plotTop + clusterMarkerSize / 2;
+  const plotWidth = Math.max(
+    620,
+    Math.min(2800, 640 + endTurn * 2 + allEvents.length * 22),
+  );
+  const width = leftPadding + rightPadding + plotWidth;
+  const turnRange = Math.max(1, endTurn - startTurn);
+  const toX = (turn: number): number =>
+    leftPadding +
+    ((Math.max(startTurn, Math.min(endTurn, turn)) - startTurn) / turnRange) *
+      plotWidth;
+  const turnBucketSize = Math.max(1, Math.ceil(endTurn / 48));
+
+  const eventsByFilter = new Map<
+    TopScoreTimelineFilterId,
+    TopScoreTimelineDisplayEvent[]
+  >();
+  for (const config of rowConfigs) {
+    eventsByFilter.set(
+      config.id,
+      allEvents
+        .filter((event) => event.filterId === config.id)
+        .sort(
+          (left, right) =>
+            left.turn - right.turn || left.label.localeCompare(right.label),
+        ),
+      );
+  }
+
+  const eventYByEvent = new Map<TopScoreTimelineDisplayEvent, number>();
+  const series = rowConfigs.map<TopScoreTimelineSeries>((config) => {
+    const rowEvents = eventsByFilter.get(config.id) ?? [];
+    const seriesBase: TopScoreTimelineSeries = {
+      id: config.id,
+      label: config.label,
+      detail: config.detail,
+      color: config.color,
+      tint: config.tint,
+      rowType: config.rowType,
+      summaryValue: "",
+    };
+
+    if (config.rowType === "line") {
+      if (config.id === "levels") {
+        const actualPoints = rowEvents.reduce<TopScoreTimelinePoint[]>(
+          (points, event) => {
+            const levelValue = resolveTopScoreTimelineLevelValue(event);
+            if (levelValue === null) {
+              return points;
+            }
+            points.push({
+              x: 0,
+              y: 0,
+              turn: event.turn,
+              value: levelValue,
+              event,
+            });
+            return points;
+          },
+          [],
+        );
+        if (actualPoints.length <= 0) {
+          seriesBase.summaryValue = "no level changes";
+          return seriesBase;
+        }
+
+        const firstPoint = actualPoints[0]!;
+        const firstDelta =
+          typeof firstPoint.event.amount === "number" &&
+          Number.isFinite(firstPoint.event.amount)
+            ? Math.trunc(firstPoint.event.amount)
+            : 0;
+        const startValue =
+          firstDelta === 0
+            ? 1
+            : Math.max(1, firstPoint.value - firstDelta);
+        const minValue = Math.min(
+          startValue,
+          ...actualPoints.map((point) => point.value),
+        );
+        const maxValue = Math.max(
+          startValue,
+          ...actualPoints.map((point) => point.value),
+        );
+        const verticalRange = Math.max(20, plotBottom - plotTop);
+        const resolveY = (value: number): number =>
+          maxValue <= minValue
+            ? plotBottom
+            : plotBottom -
+              ((value - minValue) / (maxValue - minValue)) * verticalRange;
+        const pathPoints: Array<{ x: number; y: number }> = [
+          { x: leftPadding, y: resolveY(startValue) },
+        ];
+
+        for (const point of actualPoints) {
+          point.x = toX(point.turn);
+          point.y = resolveY(point.value);
+          eventYByEvent.set(point.event, point.y);
+          const previousPoint = pathPoints[pathPoints.length - 1];
+          if (previousPoint.x !== point.x) {
+            pathPoints.push({ x: point.x, y: previousPoint.y });
+          }
+          pathPoints.push({ x: point.x, y: point.y });
+        }
+
+        const endX = toX(endTurn);
+        const previousPoint = pathPoints[pathPoints.length - 1];
+        if (previousPoint.x !== endX) {
+          pathPoints.push({ x: endX, y: previousPoint.y });
+        }
+
+        seriesBase.summaryValue = formatTopScoreTimelineLineSummary(
+          config.id,
+          maxValue,
+        );
+        seriesBase.linePath = buildTopScoreTimelineStepPath(pathPoints);
+        return seriesBase;
+      }
+
+      const actualPoints: TopScoreTimelinePoint[] = [];
+      let runningValue = 0;
+      for (const event of rowEvents) {
+        runningValue += resolveTopScoreTimelineLineIncrement(config.id, event);
+        actualPoints.push({
+          x: 0,
+          y: 0,
+          turn: event.turn,
+          value: runningValue,
+          event,
+        });
+      }
+      const maxValue =
+        actualPoints.length > 0 ? actualPoints[actualPoints.length - 1].value : 0;
+      const verticalRange = Math.max(20, plotBottom - plotTop);
+      const resolveY = (value: number): number =>
+        maxValue <= 0
+          ? plotBottom
+          : plotBottom - (value / maxValue) * verticalRange;
+
+      const pathPoints: Array<{ x: number; y: number }> = [
+        { x: leftPadding, y: resolveY(0) },
+      ];
+      for (const point of actualPoints) {
+        point.x = toX(point.turn);
+        point.y = resolveY(point.value);
+        eventYByEvent.set(point.event, point.y);
+        const previousPoint = pathPoints[pathPoints.length - 1];
+        if (previousPoint.x !== point.x) {
+          pathPoints.push({ x: point.x, y: previousPoint.y });
+        }
+        pathPoints.push({ x: point.x, y: point.y });
+      }
+      const endX = toX(endTurn);
+      const previousPoint = pathPoints[pathPoints.length - 1];
+      if (previousPoint.x !== endX) {
+        pathPoints.push({ x: endX, y: previousPoint.y });
+      }
+
+      seriesBase.summaryValue = formatTopScoreTimelineLineSummary(
+        config.id,
+        runningValue,
+      );
+      seriesBase.linePath = buildTopScoreTimelineStepPath(pathPoints);
+      return seriesBase;
+    }
+
+    for (const event of rowEvents) {
+      eventYByEvent.set(event, bottomMarkerY);
+    }
+    seriesBase.summaryValue =
+      rowEvents.length === 1
+        ? "one marked moment"
+        : `${formatTopScoreInteger(rowEvents.length)} marked moments`;
+    return seriesBase;
+  });
+
+  const provisionalClusters = rowConfigs.flatMap((config) =>
+    buildTopScoreTimelineClusters(
+      config,
+      eventsByFilter.get(config.id) ?? [],
+      toX,
+      (event) => eventYByEvent.get(event) ?? bottomMarkerY,
+      turnBucketSize,
+    ),
+  );
+  const stackedBottomClusters = layoutTopScoreTimelineBottomClusters(
+    provisionalClusters.filter((cluster) => !cluster.isLineAnchored),
+    bottomMarkerY,
+    clusterMarkerSpacing,
+    clusterMarkerSize + 8,
+    topMarkerY,
+  );
+  const lineClusters = provisionalClusters.filter(
+    (cluster) => cluster.isLineAnchored,
+  );
+  const clusters = [...lineClusters, ...stackedBottomClusters].sort(
+    (left, right) =>
+      left.x - right.x ||
+      left.turnStart - right.turnStart ||
+      left.filterLabel.localeCompare(right.filterLabel),
+  );
+
+  return {
+    width,
+    height: plotBottom + bottomPadding,
+    leftPadding,
+    rightPadding,
+    topPadding,
+    bottomPadding,
+    plotTop,
+    plotBottom,
+    startTurn,
+    endTurn,
+    progressTicks: [0, 0.25, 0.5, 0.75, 1],
+    series,
+    ticks: buildTopScoreTimelineTicks(startTurn, endTurn),
+    clusters,
+  };
+}
+
+function resolveTopScoreInventoryFallbackGlyph(
+  item: TopScoreInventoryItem,
+  fallback = "?",
+): string {
+  const glyphCandidate =
+    typeof item.glyphChar === "string" ? item.glyphChar.trim() : "";
+  const glyphCodePoint = glyphCandidate.codePointAt(0);
+  if (
+    typeof glyphCodePoint === "number" &&
+    glyphCodePoint >= 32 &&
+    glyphCodePoint !== 127
+  ) {
+    return glyphCandidate.charAt(0);
+  }
+  const accelerator =
+    typeof item.accelerator === "string" ? item.accelerator.trim() : "";
+  if (accelerator.length > 0) {
+    return accelerator.charAt(0);
+  }
+  return fallback;
+}
+
+function groupTopScoreInventoryItems(
+  inventory: ReadonlyArray<TopScoreInventoryItem>,
+): TopScoreInventorySection[] {
+  if (!Array.isArray(inventory) || inventory.length <= 0) {
+    return [];
+  }
+
+  const sections: TopScoreInventorySection[] = [];
+  let currentSection: TopScoreInventorySection = {
+    title: "Pack",
+    items: [],
+  };
+
+  const pushCurrentSection = (): void => {
+    if (currentSection.items.length <= 0) {
+      return;
+    }
+    sections.push(currentSection);
+  };
+
+  for (const item of inventory) {
+    if (item.isCategory) {
+      pushCurrentSection();
+      currentSection = {
+        title: item.text || "Pack",
+        items: [],
+      };
+      continue;
+    }
+    currentSection.items.push(item);
+  }
+
+  pushCurrentSection();
+  return sections;
+}
+
+function buildTopScoreKillBreakdownGroups(
+  score: TopScoreRecord,
+): TopScoreBreakdownGroup[] {
+  const telemetry = resolveTopScoreTelemetry(score);
+  return [
+    {
+      label: "Kills by weapon",
+      values: telemetry.weaponKills,
+      emptyLabel: "No weapon-attributed kills were tracked for this run.",
+    },
+    {
+      label: "Kills by spell",
+      values: telemetry.spellKills,
+      emptyLabel: "No spell-attributed kills were tracked for this run.",
+    },
+    {
+      label: "Kills by pet",
+      values: telemetry.petKills,
+      emptyLabel: "No pet-attributed kills were tracked for this run.",
+    },
+  ];
+}
+
+function groupTopScoreLootTimelineEvents(
+  score: TopScoreRecord,
+): TopScoreLootTimelineSection[] {
+  const telemetry = resolveTopScoreTelemetry(score);
+  if (telemetry.lootEvents.length <= 0) {
+    return [];
+  }
+  const sections = new Map<string, RunTelemetryLootEvent[]>();
+  for (const event of telemetry.lootEvents) {
+    const title = String(event.category || "Pack").trim() || "Pack";
+    const existing = sections.get(title) ?? [];
+    existing.push(event);
+    sections.set(title, existing);
+  }
+  return Array.from(sections.entries())
+    .map(([title, events]) => ({
+      title,
+      events: [...events].sort((left, right) => left.turn - right.turn),
+    }))
+    .sort(
+      (left, right) =>
+        right.events.length - left.events.length ||
+        left.title.localeCompare(right.title),
+    );
+}
+
+function buildTopScoreRawReportSections(
+  score: TopScoreRecord,
+): TopScoreRawReportSection[] {
+  const reports =
+    score.detail?.postmortemReports ?? createEmptyGameOverPostmortemReports();
+  return [
+    {
+      id: "attributes",
+      title: "Final attributes",
+      lines: reports.attributes,
+      emptyLabel: "No final-attributes report was archived for this run.",
+    },
+    {
+      id: "vanquished",
+      title: "Creatures vanquished",
+      lines: reports.vanquished,
+      emptyLabel: "No vanquished-creatures report was archived for this run.",
+    },
+    {
+      id: "conduct",
+      title: "Conduct",
+      lines: reports.conduct,
+      emptyLabel: "No conduct report was archived for this run.",
+    },
+    {
+      id: "dungeon-overview",
+      title: "Dungeon overview",
+      lines: reports.dungeonOverview,
+      emptyLabel: "No dungeon-overview report was archived for this run.",
+    },
+  ];
+}
+
+function renderTopScoreRawReportBlock(
+  section: TopScoreRawReportSection,
+): JSX.Element {
+  return (
+    <details
+      className="nh3d-top-score-report-block"
+      key={`top-score-report-${section.id}`}
+      open={Boolean(section.lines?.length)}
+    >
+      <summary className="nh3d-top-score-report-summary">
+        <span>{section.title}</span>
+        <span>
+          {section.lines?.length
+            ? `${formatTopScoreInteger(section.lines.length)} lines`
+            : "Not captured"}
+        </span>
+      </summary>
+      {section.lines?.length ? (
+        <pre className="nh3d-top-score-report-pre">
+          {section.lines.join("\n")}
+        </pre>
+      ) : (
+        <div className="nh3d-top-scores-empty">{section.emptyLabel}</div>
+      )}
+    </details>
   );
 }
 
@@ -6042,11 +7933,24 @@ async function fetchSavedGames(
           "record",
           "logfile",
           "xlogfile",
+          "nhdat",
+          "sysconf",
           "perm",
           "timestamp",
           ".keep",
+          "save",
+          "tmp",
+          "home",
+          "dev",
+          "proc",
         ];
         if (knownNonSaves.includes(normalizedFilename)) continue;
+        if (
+          /^bon\d?[a-z].*\./i.test(normalizedFilename) ||
+          normalizedFilename.endsWith(".bn")
+        ) {
+          continue;
+        }
         if (normalizedFilename.includes("level")) {
           continue;
         }
@@ -6060,7 +7964,8 @@ async function fetchSavedGames(
         const isLockArtifact =
           normalizedFilename === "lock" ||
           /^[a-z]lock$/i.test(normalizedFilename) ||
-          normalizedFilename.endsWith(".lock");
+          normalizedFilename.endsWith(".lock") ||
+          normalizedFilename.endsWith("_lock");
         if (isLockArtifact && !isCheckpointShard) {
           continue;
         }
@@ -6311,6 +8216,17 @@ export default function App(): JSX.Element {
   const [hasHydratedStartupInitOptions, setHasHydratedStartupInitOptions] =
     useState(false);
   const [savedGames, setSavedGames] = useState<SaveGameRecord[]>([]);
+  const [topScoresDialogRuntime, setTopScoresDialogRuntime] =
+    useState<NethackRuntimeVersion | null>(null);
+  const [topScores, setTopScores] = useState<TopScoreRecord[]>([]);
+  const [topScoresLoading, setTopScoresLoading] = useState(false);
+  const [topScoresError, setTopScoresError] = useState("");
+  const [topScoresPageIndex, setTopScoresPageIndex] = useState(0);
+  const [topScoresSortId, setTopScoresSortId] =
+    useState<TopScoreSortId>("score");
+  const [topScoresSortMenuOpen, setTopScoresSortMenuOpen] = useState(false);
+  const [selectedTopScore, setSelectedTopScore] =
+    useState<TopScoreRecord | null>(null);
   const resumableSavedGames = useMemo(
     () => savedGames.filter((save) => save.isResumable),
     [savedGames],
@@ -6338,6 +8254,237 @@ export default function App(): JSX.Element {
         },
       ].filter((section) => section.saves.length > 0),
     [resumableSavedGames],
+  );
+  const sortedTopScores = useMemo(
+    () =>
+      [...topScores].sort((left, right) =>
+        compareTopScoresBySort(left, right, topScoresSortId),
+      ),
+    [topScores, topScoresSortId],
+  );
+  const selectedTopScoreSortOption =
+    topScoreSortOptions.find((option) => option.id === topScoresSortId) ??
+    topScoreSortOptions[1]!;
+  useEffect(() => {
+    if (!topScoresDialogRuntime || topScoresLoading || topScores.length <= 1) {
+      setTopScoresSortMenuOpen(false);
+    }
+  }, [topScores.length, topScoresDialogRuntime, topScoresLoading]);
+  const topScoresPageCount = useMemo(
+    () => Math.max(1, Math.ceil(sortedTopScores.length / topScoresPageSize)),
+    [sortedTopScores.length],
+  );
+  const topScoresCurrentPageIndex = Math.max(
+    0,
+    Math.min(topScoresPageIndex, topScoresPageCount - 1),
+  );
+  const visibleTopScores = useMemo(() => {
+    return sortedTopScores.slice(
+      topScoresCurrentPageIndex * topScoresPageSize,
+      topScoresCurrentPageIndex * topScoresPageSize + topScoresPageSize,
+    );
+  }, [sortedTopScores, topScoresCurrentPageIndex]);
+  const topScoresSummaryStats = useMemo(() => {
+    if (topScores.length <= 0) {
+      return [] as TopScoreMetric[];
+    }
+
+    const latestScore = topScores.reduce((latest, candidate) => {
+      const latestTime = Date.parse(
+        latest.endtime || latest.deathdate || latest.detail?.capturedAtIso || "",
+      );
+      const candidateTime = Date.parse(
+        candidate.endtime ||
+          candidate.deathdate ||
+          candidate.detail?.capturedAtIso ||
+          "",
+      );
+      if (!Number.isFinite(candidateTime)) {
+        return latest;
+      }
+      if (!Number.isFinite(latestTime) || candidateTime > latestTime) {
+        return candidate;
+      }
+      return latest;
+    }, topScores[0]);
+
+    const snapshotCount = topScores.filter((score) => Boolean(score.detail)).length;
+    return [
+      {
+        label: "Recorded runs",
+        value: formatTopScoreInteger(topScores.length),
+        detail:
+          topScores.length === 1
+            ? "One name in the ledger"
+            : "Names in the ledger",
+      },
+      {
+        label: "Best score",
+        value: formatTopScoreInteger(topScores[0]?.points),
+        detail: formatTopScorePlayerName(topScores[0]),
+      },
+      {
+        label: "Latest entry",
+        value: formatTopScoreShortDateTime(
+          latestScore.endtime ||
+            latestScore.deathdate ||
+            latestScore.detail?.capturedAtIso,
+        ),
+        detail: formatTopScorePlayerName(latestScore),
+      },
+      {
+        label: "Snapshots",
+        value: formatTopScoreInteger(snapshotCount),
+        detail:
+          snapshotCount === 1
+            ? "final build saved"
+            : "final builds saved",
+      },
+    ] satisfies TopScoreMetric[];
+  }, [topScores]);
+  const selectedTopScoreOverviewRows = useMemo(
+    () => (selectedTopScore ? buildTopScoreOverviewRows(selectedTopScore) : []),
+    [selectedTopScore],
+  );
+  const selectedTopScoreCardMetrics = useMemo(
+    () => (selectedTopScore ? buildTopScoreCardMetrics(selectedTopScore) : []),
+    [selectedTopScore],
+  );
+  const selectedTopScoreAdventureMetrics = useMemo(
+    () =>
+      selectedTopScore ? buildTopScoreAdventureMetrics(selectedTopScore) : [],
+    [selectedTopScore],
+  );
+  const selectedTopScoreAttributeMetrics = useMemo(
+    () =>
+      selectedTopScore ? buildTopScoreAttributeMetrics(selectedTopScore) : [],
+    [selectedTopScore],
+  );
+  const selectedTopScoreChallengeGroups = useMemo(
+    () => (selectedTopScore ? buildTopScoreChallengeGroups(selectedTopScore) : []),
+    [selectedTopScore],
+  );
+  const selectedTopScoreKillBreakdownGroups = useMemo(
+    () => (selectedTopScore ? buildTopScoreKillBreakdownGroups(selectedTopScore) : []),
+    [selectedTopScore],
+  );
+  const selectedTopScoreLootTimelineSections = useMemo(
+    () => (selectedTopScore ? groupTopScoreLootTimelineEvents(selectedTopScore) : []),
+    [selectedTopScore],
+  );
+  const selectedTopScoreRawReportSections = useMemo(
+    () => (selectedTopScore ? buildTopScoreRawReportSections(selectedTopScore) : []),
+    [selectedTopScore],
+  );
+  const selectedTopScoreFinalAttributesReport = useMemo(
+    () =>
+      selectedTopScoreRawReportSections.find(
+        (section) => section.id === "attributes",
+      ) ?? null,
+    [selectedTopScoreRawReportSections],
+  );
+  const selectedTopScorePostmortemReportSections = useMemo(
+    () =>
+      selectedTopScoreRawReportSections.filter(
+        (section) => section.id !== "attributes",
+      ),
+    [selectedTopScoreRawReportSections],
+  );
+  const selectedTopScoreInventorySections = useMemo(
+    () =>
+      selectedTopScore?.detail
+        ? groupTopScoreInventoryItems(selectedTopScore.detail.inventory)
+        : [],
+    [selectedTopScore],
+  );
+  const [selectedTopScoreTimelineFilters, setSelectedTopScoreTimelineFilters] =
+    useState<TopScoreTimelineFilterId[]>(defaultTopScoreTimelineFilters);
+  const [activeTopScoreTimelineClusterId, setActiveTopScoreTimelineClusterId] =
+    useState<string | null>(null);
+  const selectedTopScoreTimelineEvents = useMemo(
+    () => (selectedTopScore ? resolveTopScoreTimelineEvents(selectedTopScore) : []),
+    [selectedTopScore],
+  );
+  const selectedTopScoreTimelineFilterCounts = useMemo(() => {
+    const counts: Record<TopScoreTimelineFilterId, number> = {
+      kills: 0,
+      gold: 0,
+      loot: 0,
+      secrets: 0,
+      levels: 0,
+      hazards: 0,
+      magic: 0,
+      milestones: 0,
+    };
+    for (const event of selectedTopScoreTimelineEvents) {
+      counts[resolveTopScoreTimelineFilterId(event)] += 1;
+    }
+    return counts;
+  }, [selectedTopScoreTimelineEvents]);
+  const selectedTopScoreTimelineSummaryMetrics = useMemo(
+    () =>
+      selectedTopScore ? buildTopScoreTimelineSummaryMetrics(selectedTopScore) : [],
+    [selectedTopScore],
+  );
+  const selectedTopScoreTimelineModel = useMemo(
+    () => buildTopScoreTimelineModel(selectedTopScore, selectedTopScoreTimelineFilters),
+    [selectedTopScore, selectedTopScoreTimelineFilters],
+  );
+  const activeTopScoreTimelineCluster = useMemo(() => {
+    if (
+      !selectedTopScoreTimelineModel ||
+      selectedTopScoreTimelineModel.clusters.length <= 0
+    ) {
+      return null;
+    }
+    return (
+      selectedTopScoreTimelineModel.clusters.find(
+        (cluster) => cluster.id === activeTopScoreTimelineClusterId,
+      ) ??
+      selectedTopScoreTimelineModel.clusters[
+        selectedTopScoreTimelineModel.clusters.length - 1
+      ]
+    );
+  }, [activeTopScoreTimelineClusterId, selectedTopScoreTimelineModel]);
+  useEffect(() => {
+    setSelectedTopScoreTimelineFilters(defaultTopScoreTimelineFilters);
+    setActiveTopScoreTimelineClusterId(null);
+  }, [selectedTopScore?.id]);
+  useEffect(() => {
+    if (
+      !selectedTopScoreTimelineModel ||
+      selectedTopScoreTimelineModel.clusters.length <= 0
+    ) {
+      setActiveTopScoreTimelineClusterId(null);
+      return;
+    }
+    setActiveTopScoreTimelineClusterId((current) =>
+      current &&
+      selectedTopScoreTimelineModel.clusters.some(
+        (cluster) => cluster.id === current,
+      )
+        ? current
+        : selectedTopScoreTimelineModel.clusters[
+            selectedTopScoreTimelineModel.clusters.length - 1
+          ]!.id,
+    );
+  }, [selectedTopScoreTimelineModel]);
+  const toggleSelectedTopScoreTimelineFilter = useCallback(
+    (filterId: TopScoreTimelineFilterId): void => {
+      setSelectedTopScoreTimelineFilters((current) => {
+        const isActive = current.includes(filterId);
+        if (isActive && current.length <= 1) {
+          return current;
+        }
+        const next = isActive
+          ? current.filter((candidate) => candidate !== filterId)
+          : [...current, filterId];
+        return topScoreTimelineFilterConfigs.map((config) => config.id).filter((candidate) =>
+          next.includes(candidate),
+        );
+      });
+    },
+    [],
   );
   const [isLoadingSaves, setIsLoadingSaves] = useState(false);
   const startupUpdateCheckStartedRef = useRef(false);
@@ -6394,6 +8541,41 @@ export default function App(): JSX.Element {
       setIsLoadingSaves(false);
     }
   };
+
+  const loadTopScoresForRuntime = useCallback(
+    async (targetRuntimeVersion: NethackRuntimeVersion): Promise<void> => {
+      setTopScoresLoading(true);
+      setTopScoresError("");
+      try {
+        const scores = await fetchTopScores(targetRuntimeVersion);
+        setTopScores(scores);
+        setTopScoresPageIndex(0);
+      } catch (error) {
+        console.error("Failed to load top scores:", error);
+        setTopScores([]);
+        setTopScoresError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load top scores.",
+        );
+      } finally {
+        setTopScoresLoading(false);
+      }
+    },
+    [],
+  );
+
+  const openTopScoresDialog = useCallback((): void => {
+    const targetRuntimeVersion = runtimeVersion;
+    setTopScoresDialogRuntime(targetRuntimeVersion);
+    setSelectedTopScore(null);
+    void loadTopScoresForRuntime(targetRuntimeVersion);
+  }, [loadTopScoresForRuntime, runtimeVersion]);
+
+  const closeTopScoresDialog = useCallback((): void => {
+    setTopScoresDialogRuntime(null);
+    setSelectedTopScore(null);
+  }, []);
 
   const handleStartNewGame = async (config: CharacterCreationConfig) => {
     const runtimeVersionForLaunch = config.runtimeVersion ?? runtimeVersion;
@@ -6735,6 +8917,15 @@ export default function App(): JSX.Element {
   );
   const startupControllerCursorPulseTimerRef = useRef<number | null>(null);
   const startupBuildLabelToastTimerRef = useRef<number | null>(null);
+  const persistedTopScoreSignatureRef = useRef("");
+  const persistedTopScoreSnapshotIdRef = useRef("");
+  const topScoreTimelineEventsRef = useRef<TopScoreTimelineEvent[]>([]);
+  const previousTopScoreTimelineStatsRef = useRef<PlayerStatsSnapshot | null>(
+    null,
+  );
+  const previousTopScoreTimelineMessagesRef = useRef<string[]>([]);
+  const seenTopScoreTimelineSignaturesRef = useRef<Set<string>>(new Set());
+  const visitedTopScoreLocationsRef = useRef<Set<string>>(new Set());
   const startupControllerCursorVisibleRef = useRef(false);
   const startupControllerCursorXRef = useRef<number>(Number.NaN);
   const startupControllerCursorYRef = useRef<number>(Number.NaN);
@@ -6781,6 +8972,324 @@ export default function App(): JSX.Element {
   const controller = useGameStore((state) => state.engineController);
   const newGamePrompt = useGameStore((state) => state.newGamePrompt);
   const gameOver = useGameStore((state) => state.gameOver);
+
+  const appendTopScoreTimelineEvent = useCallback(
+    (
+      event: Omit<TopScoreTimelineEvent, "id"> & {
+        id?: string | null | undefined;
+      },
+    ): void => {
+      const turn = normalizeTopScoreTimelineTurn(event.turn);
+      const label = String(event.label ?? "").trim();
+      const summary = String(event.summary ?? "").trim();
+      if (!label || !summary) {
+        return;
+      }
+
+      const detail = String(event.detail ?? "").trim();
+      const location = String(event.location ?? "").trim();
+      const amount =
+        typeof event.amount === "number" && Number.isFinite(event.amount)
+          ? Math.trunc(event.amount)
+          : undefined;
+      const total =
+        typeof event.total === "number" && Number.isFinite(event.total)
+          ? Math.trunc(event.total)
+          : undefined;
+      const signature = [
+        event.kind,
+        turn,
+        label.toLowerCase(),
+        summary.toLowerCase(),
+        detail.toLowerCase(),
+        location.toLowerCase(),
+        typeof amount === "number" ? String(amount) : "",
+        typeof total === "number" ? String(total) : "",
+      ].join("|");
+      if (seenTopScoreTimelineSignaturesRef.current.has(signature)) {
+        return;
+      }
+      seenTopScoreTimelineSignaturesRef.current.add(signature);
+
+      const nextEvent: TopScoreTimelineEvent = {
+        id:
+          String(event.id ?? "").trim() ||
+          `${event.kind}-${turn}-${topScoreTimelineEventsRef.current.length}`,
+        turn,
+        kind: event.kind,
+        label,
+        summary,
+        detail: detail || undefined,
+        amount,
+        total,
+        location: location || undefined,
+      };
+      topScoreTimelineEventsRef.current = [
+        ...topScoreTimelineEventsRef.current,
+        nextEvent,
+      ].sort((left, right) => left.turn - right.turn || left.label.localeCompare(right.label));
+    },
+    [],
+  );
+
+  const resetTopScoreTimelineTracking = useCallback((): void => {
+    persistedTopScoreSignatureRef.current = "";
+    persistedTopScoreSnapshotIdRef.current = "";
+    topScoreTimelineEventsRef.current = [];
+    previousTopScoreTimelineStatsRef.current = null;
+    previousTopScoreTimelineMessagesRef.current = [];
+    seenTopScoreTimelineSignaturesRef.current = new Set();
+    visitedTopScoreLocationsRef.current = new Set();
+  }, []);
+
+  const captureTopScoreTimelineFromPlayerStats = useCallback(
+    (stats: PlayerStatsSnapshot): void => {
+      const currentTurn = normalizeTopScoreTimelineTurn(stats.time);
+      const playerName = String(stats.name ?? "").trim();
+      const currentLocation = resolveTopScoreLiveLocationLabel(stats);
+      const previousStats = previousTopScoreTimelineStatsRef.current;
+
+      const rememberLocation = (): void => {
+        if (!currentLocation) {
+          return;
+        }
+        const locationKey = resolveTopScoreLiveLocationKey(
+          stats,
+          activeRuntimeVersion,
+          currentLocation,
+        );
+        if (visitedTopScoreLocationsRef.current.has(locationKey)) {
+          return;
+        }
+        visitedTopScoreLocationsRef.current.add(locationKey);
+        appendTopScoreTimelineEvent({
+          turn: currentTurn,
+          kind: "location",
+          label: "Reached new depth",
+          summary: `Reached ${currentLocation}.`,
+          location: currentLocation,
+        });
+      };
+
+      if (
+        !previousStats ||
+        playerName !== String(previousStats.name ?? "").trim() ||
+        currentTurn < normalizeTopScoreTimelineTurn(previousStats.time)
+      ) {
+        rememberLocation();
+        previousTopScoreTimelineStatsRef.current = { ...stats };
+        return;
+      }
+
+      rememberLocation();
+
+      const goldDelta = Math.trunc(stats.gold - previousStats.gold);
+      if (goldDelta > 0) {
+        appendTopScoreTimelineEvent({
+          turn: currentTurn,
+          kind: "gold",
+          label: `+${goldDelta} gold`,
+          summary:
+            goldDelta === 1
+              ? "Picked up 1 gold piece."
+              : `Picked up ${goldDelta} gold pieces.`,
+          amount: goldDelta,
+          total: stats.gold,
+          location: currentLocation || undefined,
+        });
+      }
+
+      if (stats.level !== previousStats.level) {
+        const levelValue = Math.max(1, Math.trunc(stats.level));
+        const previousLevelValue = Math.max(1, Math.trunc(previousStats.level));
+        const levelDelta = levelValue - previousLevelValue;
+        appendTopScoreTimelineEvent({
+          turn: currentTurn,
+          kind: "experience-level",
+          label: `Level ${levelValue}`,
+          summary:
+            stats.level > previousStats.level
+              ? `Reached experience level ${levelValue}.`
+              : `Slipped to experience level ${levelValue}.`,
+          amount: levelDelta,
+          total: levelValue,
+          detail: currentLocation || undefined,
+          location: currentLocation || undefined,
+        });
+      }
+
+      previousTopScoreTimelineStatsRef.current = { ...stats };
+    },
+    [activeRuntimeVersion, appendTopScoreTimelineEvent],
+  );
+
+  const captureTopScoreTimelineFromMessages = useCallback(
+    (
+      messages: ReadonlyArray<string>,
+      turn: number,
+      location: string,
+    ): void => {
+      const normalizedMessages = messages
+        .map((message) => String(message ?? "").replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+      const newMessages = extractPrependedMessages(
+        normalizedMessages,
+        previousTopScoreTimelineMessagesRef.current,
+      );
+      previousTopScoreTimelineMessagesRef.current = normalizedMessages;
+
+      for (const message of [...newMessages].reverse()) {
+        if (isTopScoreTrapEscapeMessage(message)) {
+          appendTopScoreTimelineEvent({
+            turn,
+            kind: "escape",
+            label: "Escaped",
+            summary: capitalizeFirstLetter(message),
+            detail: location || undefined,
+            location: location || undefined,
+          });
+        }
+        if (isTopScoreKillMessage(message)) {
+          appendTopScoreTimelineEvent({
+            turn,
+            kind: "kill",
+            label: "Enemy defeated",
+            summary: capitalizeFirstLetter(message),
+            detail: location || undefined,
+            location: location || undefined,
+          });
+        }
+      }
+    },
+    [appendTopScoreTimelineEvent],
+  );
+
+  const captureTopScoreTimelineDeath = useCallback(
+    (turn: number, deathMessage: string | null | undefined, location: string): void => {
+      const summary =
+        capitalizeFirstLetter(String(deathMessage ?? "").trim()) || "Run ended.";
+      appendTopScoreTimelineEvent({
+        turn,
+        kind: "death",
+        label: "Run ended",
+        summary,
+        location: location || undefined,
+      });
+    },
+    [appendTopScoreTimelineEvent],
+  );
+
+  useEffect(() => {
+    resetTopScoreTimelineTracking();
+  }, [activeRuntimeVersion, characterCreationConfig, resetTopScoreTimelineTracking]);
+
+  useEffect(() => {
+    if (
+      !supportsRuntimeTopScores(activeRuntimeVersion) ||
+      !characterCreationConfig
+    ) {
+      return;
+    }
+    captureTopScoreTimelineFromPlayerStats(playerStats);
+  }, [
+    activeRuntimeVersion,
+    captureTopScoreTimelineFromPlayerStats,
+    characterCreationConfig,
+    playerStats,
+  ]);
+
+  useEffect(() => {
+    if (
+      !supportsRuntimeTopScores(activeRuntimeVersion) ||
+      !characterCreationConfig
+    ) {
+      return;
+    }
+    captureTopScoreTimelineFromMessages(
+      gameMessages,
+      normalizeTopScoreTimelineTurn(playerStats.time),
+      resolveTopScoreLiveLocationLabel(playerStats),
+    );
+  }, [
+    activeRuntimeVersion,
+    captureTopScoreTimelineFromMessages,
+    characterCreationConfig,
+    gameMessages,
+    playerStats,
+  ]);
+
+  useEffect(() => {
+    if (
+      !supportsRuntimeTopScores(activeRuntimeVersion) ||
+      !gameOver.active ||
+      !gameOver.promptReady
+    ) {
+      return;
+    }
+
+    const signature = JSON.stringify([
+      activeRuntimeVersion,
+      playerStats.name,
+      playerStats.score,
+      playerStats.time,
+      gameOver.deathMessage ?? "",
+      gameOver.telemetry ?? null,
+      gameOver.postmortemReports ?? null,
+    ]);
+    if (persistedTopScoreSignatureRef.current === signature) {
+      return;
+    }
+    persistedTopScoreSignatureRef.current = signature;
+
+    const currentTurn = normalizeTopScoreTimelineTurn(playerStats.time);
+    const currentLocation = resolveTopScoreLiveLocationLabel(playerStats);
+    captureTopScoreTimelineFromPlayerStats(playerStats);
+    captureTopScoreTimelineFromMessages(
+      gameMessages,
+      currentTurn,
+      currentLocation,
+    );
+    captureTopScoreTimelineDeath(
+      currentTurn,
+      gameOver.deathMessage,
+      currentLocation,
+    );
+
+    void (async () => {
+      try {
+        const snapshotId = await saveTopScoreDetailSnapshot({
+          id: persistedTopScoreSnapshotIdRef.current || undefined,
+          runtimeVersion: activeRuntimeVersion,
+          playerStats,
+          inventoryItems: inventory.items,
+          timeline: topScoreTimelineEventsRef.current,
+          deathMessage: gameOver.deathMessage,
+          tombstoneLines: gameOver.tombstoneLines,
+          telemetry: gameOver.telemetry,
+          postmortemReports: gameOver.postmortemReports,
+        });
+        if (snapshotId) {
+          persistedTopScoreSnapshotIdRef.current = snapshotId;
+        }
+      } catch (error) {
+        console.warn("Failed to save top score detail snapshot:", error);
+      }
+    })();
+  }, [
+    activeRuntimeVersion,
+    captureTopScoreTimelineDeath,
+    captureTopScoreTimelineFromMessages,
+    captureTopScoreTimelineFromPlayerStats,
+    gameOver.active,
+    gameOver.deathMessage,
+    gameOver.postmortemReports,
+    gameOver.promptReady,
+    gameOver.telemetry,
+    gameOver.tombstoneLines,
+    gameMessages,
+    inventory.items,
+    playerStats,
+  ]);
   const [messageInfoMenuHistory, setMessageInfoMenuHistory] =
     useState<MessageInfoMenuHistoryState>({
       entries: [],
@@ -8521,6 +11030,24 @@ export default function App(): JSX.Element {
     );
     return tilePreviewDataUrlById.get(clampedTileId) ?? null;
   };
+  const getTilePreviewDataUrlForRuntimeVersion = (
+    runtimeVersion: NethackRuntimeVersion,
+    tileId: number,
+  ): string | null => {
+    if (tileAtlasState.tileCount <= 0) {
+      return null;
+    }
+    const remappedTileId = resolvePreviewAtlasTileIdForRuntime(
+      runtimeVersion,
+      tileId,
+      tileAtlasState.tileCount,
+    );
+    const clampedTileId = Math.max(
+      0,
+      Math.min(tileAtlasState.tileCount - 1, Math.trunc(remappedTileId)),
+    );
+    return tilePreviewDataUrlById.get(clampedTileId) ?? null;
+  };
   const renderTilePreviewImageFromDataUrl = (
     tilePreviewDataUrl: string,
   ): JSX.Element | null => {
@@ -8542,6 +11069,28 @@ export default function App(): JSX.Element {
       return null;
     }
     return renderTilePreviewImageFromDataUrl(tilePreviewDataUrl);
+  };
+  const renderTopScoreInventoryPreview = (
+    item: TopScoreInventoryItem,
+    runtimeVersion: NethackRuntimeVersion,
+  ): JSX.Element => {
+    const tilePreviewDataUrl =
+      typeof item.tileIndex === "number" && Number.isFinite(item.tileIndex)
+        ? getTilePreviewDataUrlForRuntimeVersion(runtimeVersion, item.tileIndex)
+        : null;
+    return (
+      <span className="nh3d-top-score-inventory-icon-shell">
+        {tilePreviewDataUrl ? (
+          <span className="nh3d-top-score-inventory-icon-art">
+            {renderTilePreviewImageFromDataUrl(tilePreviewDataUrl)}
+          </span>
+        ) : (
+          <span className="nh3d-top-score-inventory-icon-fallback">
+            {resolveTopScoreInventoryFallbackGlyph(item)}
+          </span>
+        )}
+      </span>
+    );
   };
   const renderMenuItemTilePreview = (
     item: NethackMenuItem | null | undefined,
@@ -11021,6 +13570,8 @@ export default function App(): JSX.Element {
       deathMessage: null,
       promptReady: false,
       tombstoneLines: null,
+      postmortemReports: createEmptyGameOverPostmortemReports(),
+      telemetry: createEmptyRunTelemetrySnapshot(),
     });
     setPositionRequest(null);
     setInventoryContextMenu(null);
@@ -15397,6 +17948,15 @@ export default function App(): JSX.Element {
             >
               {t.dialogs.startup.loadGame}
             </button>
+            {supportsRuntimeTopScores(runtimeVersion) ? (
+              <button
+                className="nh3d-choice-button nh3d-character-setup-choice-button"
+                onClick={openTopScoresDialog}
+                type="button"
+              >
+                Top Scores
+              </button>
+            ) : null}
             <button
               className="nh3d-choice-button nh3d-character-setup-choice-button"
               onClick={openClientOptionsDialog}
@@ -15593,6 +18153,931 @@ export default function App(): JSX.Element {
             {commonStrings.back}
           </button>
         </div>
+      </AnimatedDialog>
+
+      <AnimatedDialog
+        className="nh3d-dialog nh3d-dialog-options nh3d-dialog-fixed-actions nh3d-dialog-has-mobile-close nh3d-top-scores-dialog"
+        disableAnimations={startupInitialLoadingVisible}
+        open={Boolean(topScoresDialogRuntime)}
+        id="nh3d-top-scores-dialog"
+        onBlurCapture={handleStartupMainMenuBlurCapture}
+        onChangeCapture={handleStartupMainMenuChangeCapture}
+        onKeyDown={handleStartupMainMenuKeyDown}
+        onPointerDownCapture={handleStartupMainMenuPointerDownCapture}
+      >
+        {renderMobileDialogCloseButton(closeTopScoresDialog, "Close top scores")}
+        {topScoresDialogRuntime ? (
+          <RuntimeVersionBadge
+            label={resolveRuntimeVersionDisplayLabel(topScoresDialogRuntime)}
+            startup
+          />
+        ) : null}
+        <div className="nh3d-options-title">Top Scores</div>
+        <div className="nh3d-top-scores-summary">
+          {topScoresSummaryStats.length > 0 ? (
+            <div className="nh3d-top-scores-summary-grid">
+              {topScoresSummaryStats.map((metric) => (
+                <div
+                  className="nh3d-top-scores-summary-card"
+                  key={`top-score-summary-${metric.label}`}
+                >
+                  <div className="nh3d-top-scores-summary-label">
+                    {metric.label}
+                  </div>
+                  <div className="nh3d-top-scores-summary-value">
+                    {metric.value}
+                  </div>
+                  {metric.detail ? (
+                    <div className="nh3d-top-scores-summary-detail">
+                      {metric.detail}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="nh3d-top-scores-summary-empty">
+              {topScoresLoading ? "Loading the ledger..." : "No scores yet."}
+            </div>
+          )}
+        </div>
+        <div className="nh3d-top-scores-toolbar">
+          <div
+            className="nh3d-top-scores-sort"
+            onBlur={(event) => {
+              const nextFocusedElement = event.relatedTarget;
+              if (
+                !(nextFocusedElement instanceof Node) ||
+                !event.currentTarget.contains(nextFocusedElement)
+              ) {
+                setTopScoresSortMenuOpen(false);
+              }
+            }}
+          >
+            <span>Sort by</span>
+            <span className="nh3d-top-scores-select-shell">
+              <button
+                aria-expanded={topScoresSortMenuOpen}
+                aria-haspopup="listbox"
+                className="nh3d-top-scores-sort-trigger"
+                disabled={topScoresLoading || topScores.length <= 1}
+                onClick={() => {
+                  setTopScoresSortMenuOpen((previous) => !previous);
+                }}
+                type="button"
+              >
+                {selectedTopScoreSortOption.label}
+              </button>
+              {topScoresSortMenuOpen ? (
+                <div
+                  aria-label="Sort top scores by"
+                  className="nh3d-top-scores-sort-menu"
+                  role="listbox"
+                >
+                  {topScoreSortOptions.map((option) => (
+                    <button
+                      aria-selected={option.id === topScoresSortId}
+                      className={`nh3d-top-scores-sort-option${
+                        option.id === topScoresSortId ? " is-selected" : ""
+                      }`}
+                      key={`top-score-sort-${option.id}`}
+                      onClick={() => {
+                        setTopScoresSortId(option.id);
+                        setTopScoresPageIndex(0);
+                        setTopScoresSortMenuOpen(false);
+                      }}
+                      role="option"
+                      type="button"
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </span>
+          </div>
+        </div>
+        <div className="nh3d-overflow-glow-frame nh3d-top-scores-table-frame">
+          <div
+            className="nh3d-top-scores-table-scroll"
+            data-nh3d-overflow-glow
+            data-nh3d-overflow-glow-host="parent"
+          >
+            {topScoresLoading ? (
+              <div className="nh3d-top-scores-empty">Loading the ledger...</div>
+            ) : topScoresError ? (
+              <div className="nh3d-top-scores-empty">{topScoresError}</div>
+            ) : visibleTopScores.length <= 0 ? (
+              <div className="nh3d-top-scores-empty">
+                No adventurers have claimed a place in the ledger yet. Finish a
+                scoring run to write the first entry.
+              </div>
+            ) : (
+              <div className="nh3d-top-scores-list">
+                {visibleTopScores.map((score) => {
+                  const previewLabels = buildTopScorePreviewLabels(score);
+                  const cardMetrics = buildTopScoreCardMetrics(score);
+                  const snapshotStatus = formatTopScoreSnapshotStatus(score);
+                  return (
+                    <article
+                      className={`nh3d-top-score-card${
+                        score.rank <= 3 ? " is-podium" : ""
+                      }`}
+                      key={score.id}
+                    >
+                      <div className="nh3d-top-score-card-header">
+                        <div className="nh3d-top-score-card-rank">
+                          #{formatTopScoreInteger(score.rank)}
+                        </div>
+                        <div className="nh3d-top-score-card-copy">
+                          <div className="nh3d-top-score-card-heading">
+                            <div className="nh3d-top-score-card-name">
+                              {formatTopScorePlayerName(score)}
+                            </div>
+                            <div className="nh3d-top-score-card-points">
+                              {formatTopScoreInteger(score.points)} pts
+                            </div>
+                          </div>
+                          <div className="nh3d-top-score-card-archetype">
+                            {formatTopScoreCharacterLine(score)}
+                          </div>
+                          <div className="nh3d-top-score-card-summary">
+                            {formatTopScoreResultSummary(score)}
+                          </div>
+                        </div>
+                        {snapshotStatus ? (
+                          <div className="nh3d-top-score-card-status">
+                            <span className="nh3d-top-score-badge">
+                              {snapshotStatus}
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="nh3d-top-score-card-metrics">
+                        {cardMetrics.map((metric) => (
+                          <div
+                            className="nh3d-top-score-mini-stat"
+                            key={`${score.id}-${metric.label}`}
+                          >
+                            <div className="nh3d-top-score-mini-stat-label">
+                              {metric.label}
+                            </div>
+                            <div className="nh3d-top-score-mini-stat-value">
+                              {metric.value}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="nh3d-top-score-card-footer">
+                        <div className="nh3d-top-score-card-tags">
+                          {previewLabels.map((label) => (
+                            <span
+                              className="nh3d-top-score-badge"
+                              key={`${score.id}-label-${label}`}
+                            >
+                              {label}
+                            </span>
+                          ))}
+                        </div>
+                        <button
+                          className="nh3d-top-scores-link-button"
+                          onClick={() => setSelectedTopScore(score)}
+                          type="button"
+                        >
+                          Open run breakdown
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="nh3d-top-scores-pagination">
+          Page {topScoresCurrentPageIndex + 1} of {topScoresPageCount}
+        </div>
+        <div className="nh3d-menu-actions">
+          <button
+            className="nh3d-menu-action-button"
+            disabled={topScoresLoading || topScoresCurrentPageIndex <= 0}
+            onClick={() =>
+              setTopScoresPageIndex((previous) => Math.max(0, previous - 1))
+            }
+            type="button"
+          >
+            Previous
+          </button>
+          <button
+            className="nh3d-menu-action-button"
+            disabled={
+              topScoresLoading ||
+              topScoresCurrentPageIndex >= topScoresPageCount - 1
+            }
+            onClick={() =>
+              setTopScoresPageIndex((previous) =>
+                Math.min(topScoresPageCount - 1, previous + 1),
+              )
+            }
+            type="button"
+          >
+            Next
+          </button>
+          <button
+            className="nh3d-menu-action-button"
+            disabled={topScoresLoading || !topScoresDialogRuntime}
+            onClick={() => {
+              if (topScoresDialogRuntime) {
+                void loadTopScoresForRuntime(topScoresDialogRuntime);
+              }
+            }}
+            type="button"
+          >
+            Refresh
+          </button>
+          <button
+            className="nh3d-menu-action-button nh3d-menu-action-cancel"
+            onClick={closeTopScoresDialog}
+            type="button"
+          >
+            {commonStrings.close}
+          </button>
+        </div>
+      </AnimatedDialog>
+
+      <AnimatedDialog
+        className="nh3d-dialog nh3d-dialog-character nh3d-dialog-fixed-actions nh3d-dialog-has-mobile-close nh3d-overflow-glow-frame nh3d-top-score-detail-dialog"
+        open={Boolean(selectedTopScore)}
+        id="nh3d-top-score-detail-dialog"
+      >
+        {selectedTopScore ? (
+          <>
+            {renderMobileDialogCloseButton(
+              () => setSelectedTopScore(null),
+              "Close top score details",
+            )}
+            <div
+              className="nh3d-character-sheet-scroll"
+              data-nh3d-overflow-glow
+              data-nh3d-overflow-glow-host="parent"
+            >
+              <div className="nh3d-info-title">
+                #{selectedTopScore.rank}{" "}
+                {formatTopScorePlayerName(selectedTopScore)}
+              </div>
+              <div className="nh3d-top-score-hero">
+                <div className="nh3d-top-score-hero-copy">
+                  <div className="nh3d-top-score-hero-score">
+                    {formatTopScoreInteger(selectedTopScore.points)} points
+                  </div>
+                  <div className="nh3d-top-score-hero-archetype">
+                    {formatTopScoreCharacterLine(selectedTopScore)}
+                  </div>
+                  <div className="nh3d-top-score-hero-summary">
+                    {formatTopScoreResultSummary(selectedTopScore)}
+                  </div>
+                </div>
+              </div>
+              <div className="nh3d-top-score-hero-stats">
+                {selectedTopScoreCardMetrics.map((metric) => (
+                  <div
+                    className="nh3d-top-score-hero-stat"
+                    key={`top-score-hero-stat-${metric.label}`}
+                  >
+                    <div className="nh3d-top-score-hero-stat-label">
+                      {metric.label}
+                    </div>
+                    <div className="nh3d-top-score-hero-stat-value">
+                      {metric.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <section className="nh3d-character-panel nh3d-top-score-panel-wide nh3d-top-score-timeline-panel">
+                <div className="nh3d-character-panel-title">Run Timeline</div>
+                {selectedTopScoreTimelineSummaryMetrics.length > 0 ? (
+                  <div className="nh3d-top-score-timeline-summary-grid">
+                    {selectedTopScoreTimelineSummaryMetrics.map((metric) => (
+                      <div
+                        className="nh3d-top-score-timeline-summary-card"
+                        key={`top-score-timeline-summary-${metric.label}`}
+                      >
+                        <div className="nh3d-top-score-timeline-summary-label">
+                          {metric.label}
+                        </div>
+                        <div className="nh3d-top-score-timeline-summary-value">
+                          {metric.value}
+                        </div>
+                        {metric.detail ? (
+                          <div className="nh3d-top-score-timeline-summary-detail">
+                            {metric.detail}
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                {selectedTopScoreTimelineModel ? (
+                  <>
+                    <div className="nh3d-top-score-timeline-toolbar">
+                      <div className="nh3d-top-score-timeline-intro">
+                        Filter the run by what mattered most.
+                      </div>
+                      <div className="nh3d-top-score-timeline-filters">
+                        {topScoreTimelineFilterConfigs.map((filter) => {
+                          const count =
+                            selectedTopScoreTimelineFilterCounts[filter.id];
+                          if (count <= 0) {
+                            return null;
+                          }
+                          const isActive =
+                            selectedTopScoreTimelineFilters.includes(filter.id);
+                          return (
+                            <button
+                              className={`nh3d-top-score-timeline-filter${
+                                isActive ? " is-active" : ""
+                              }`}
+                              key={`top-score-timeline-filter-${filter.id}`}
+                              onClick={() =>
+                                toggleSelectedTopScoreTimelineFilter(filter.id)
+                              }
+                              style={
+                                {
+                                  "--nh3d-top-score-timeline-color": filter.color,
+                                  "--nh3d-top-score-timeline-tint": filter.tint,
+                                } as CSSProperties
+                              }
+                              type="button"
+                            >
+                              <span>{filter.label}</span>
+                              <span>{count}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="nh3d-top-score-timeline-hint">
+                      Lines show how each active thread of the run climbed over
+                      time. Touch a cluster to unpack a busy stretch.
+                    </div>
+                    <div className="nh3d-top-score-timeline-viewport">
+                      <div
+                        className="nh3d-top-score-timeline-canvas"
+                        style={{
+                          width: `${selectedTopScoreTimelineModel.width}px`,
+                          height: `${selectedTopScoreTimelineModel.height}px`,
+                        }}
+                      >
+                        <svg
+                          aria-hidden="true"
+                          className="nh3d-top-score-timeline-svg"
+                          height={selectedTopScoreTimelineModel.height}
+                          viewBox={`0 0 ${selectedTopScoreTimelineModel.width} ${selectedTopScoreTimelineModel.height}`}
+                          width={selectedTopScoreTimelineModel.width}
+                        >
+                          <rect
+                            className="nh3d-top-score-timeline-plot-frame"
+                            height={
+                              selectedTopScoreTimelineModel.plotBottom -
+                              selectedTopScoreTimelineModel.plotTop
+                            }
+                            rx={14}
+                            width={
+                              selectedTopScoreTimelineModel.width -
+                              selectedTopScoreTimelineModel.leftPadding -
+                              selectedTopScoreTimelineModel.rightPadding
+                            }
+                            x={selectedTopScoreTimelineModel.leftPadding}
+                            y={selectedTopScoreTimelineModel.plotTop}
+                          />
+                          {selectedTopScoreTimelineModel.progressTicks.map(
+                            (progress) => {
+                              const y =
+                                selectedTopScoreTimelineModel.plotBottom -
+                                progress *
+                                  (selectedTopScoreTimelineModel.plotBottom -
+                                    selectedTopScoreTimelineModel.plotTop);
+                              return (
+                                <Fragment
+                                  key={`top-score-timeline-progress-${progress}`}
+                                >
+                                  <line
+                                    className="nh3d-top-score-timeline-progress-line"
+                                    x1={selectedTopScoreTimelineModel.leftPadding}
+                                    x2={
+                                      selectedTopScoreTimelineModel.width -
+                                      selectedTopScoreTimelineModel.rightPadding
+                                    }
+                                    y1={y}
+                                    y2={y}
+                                  />
+                                  <text
+                                    className="nh3d-top-score-timeline-progress-label"
+                                    x={16}
+                                    y={y + 4}
+                                  >
+                                    {`${Math.round(progress * 100)}%`}
+                                  </text>
+                                </Fragment>
+                              );
+                            },
+                          )}
+                          {selectedTopScoreTimelineModel.ticks.map((tick) => {
+                            const turnRange = Math.max(
+                              1,
+                              selectedTopScoreTimelineModel.endTurn -
+                                selectedTopScoreTimelineModel.startTurn,
+                            );
+                            const plotWidth =
+                              selectedTopScoreTimelineModel.width -
+                              selectedTopScoreTimelineModel.leftPadding -
+                              selectedTopScoreTimelineModel.rightPadding;
+                            const x =
+                              selectedTopScoreTimelineModel.leftPadding +
+                              ((tick - selectedTopScoreTimelineModel.startTurn) /
+                                turnRange) *
+                                plotWidth;
+                            return (
+                              <Fragment key={`top-score-timeline-tick-${tick}`}>
+                                <line
+                                  className="nh3d-top-score-timeline-tick-line"
+                                  x1={x}
+                                  x2={x}
+                                  y1={selectedTopScoreTimelineModel.plotTop}
+                                  y2={
+                                    selectedTopScoreTimelineModel.height -
+                                    selectedTopScoreTimelineModel.bottomPadding +
+                                    8
+                                  }
+                                />
+                                <text
+                                  className="nh3d-top-score-timeline-tick-label"
+                                  textAnchor="middle"
+                                  x={x}
+                                  y={
+                                    selectedTopScoreTimelineModel.height -
+                                    selectedTopScoreTimelineModel.bottomPadding +
+                                    26
+                                  }
+                                >
+                                  {formatTopScoreInteger(tick)}
+                                </text>
+                              </Fragment>
+                            );
+                          })}
+                          <text
+                            className="nh3d-top-score-timeline-axis-caption"
+                            textAnchor="end"
+                            x={selectedTopScoreTimelineModel.width - 10}
+                            y={
+                              selectedTopScoreTimelineModel.height -
+                              selectedTopScoreTimelineModel.bottomPadding +
+                              44
+                            }
+                          >
+                            Turns
+                          </text>
+                          {selectedTopScoreTimelineModel.clusters
+                            .filter((cluster) => !cluster.isLineAnchored)
+                            .map((cluster) => (
+                              <line
+                                className="nh3d-top-score-timeline-marker-guide"
+                                key={`top-score-timeline-marker-guide-${cluster.id}`}
+                                stroke={cluster.color}
+                                x1={cluster.x}
+                                x2={cluster.x}
+                                y1={selectedTopScoreTimelineModel.plotTop}
+                                y2={selectedTopScoreTimelineModel.plotBottom}
+                              />
+                            ))}
+                          {selectedTopScoreTimelineModel.series.map((series) =>
+                            series.linePath ? (
+                              <Fragment key={`top-score-timeline-series-${series.id}`}>
+                                <path
+                                  className="nh3d-top-score-timeline-line is-glow"
+                                  d={series.linePath}
+                                  stroke={series.color}
+                                />
+                                <path
+                                  className="nh3d-top-score-timeline-line"
+                                  d={series.linePath}
+                                  stroke={series.color}
+                                />
+                              </Fragment>
+                            ) : null,
+                          )}
+                        </svg>
+                        <div className="nh3d-top-score-timeline-marker-layer">
+                          {selectedTopScoreTimelineModel.clusters.map((cluster) => (
+                            <button
+                              aria-label={`${cluster.filterLabel} at ${formatTopScoreTimelineClusterTurnLabel(cluster)}`}
+                              className={`nh3d-top-score-timeline-marker${
+                                activeTopScoreTimelineCluster?.id === cluster.id
+                                  ? " is-active"
+                                  : ""
+                              }`}
+                              key={cluster.id}
+                              onClick={() =>
+                                setActiveTopScoreTimelineClusterId(cluster.id)
+                              }
+                              onFocus={() =>
+                                setActiveTopScoreTimelineClusterId(cluster.id)
+                              }
+                              onMouseEnter={() =>
+                                setActiveTopScoreTimelineClusterId(cluster.id)
+                              }
+                              style={
+                                {
+                                  left: `${cluster.x}px`,
+                                  top: `${cluster.y}px`,
+                                  "--nh3d-top-score-timeline-color": cluster.color,
+                                } as CSSProperties
+                              }
+                              type="button"
+                            >
+                              <span>
+                                {cluster.events.length > 1
+                                  ? cluster.events.length
+                                  : ""}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    {activeTopScoreTimelineCluster ? (
+                      <div className="nh3d-top-score-timeline-focus">
+                        <div className="nh3d-top-score-timeline-focus-header">
+                          <div>
+                            <div className="nh3d-top-score-timeline-focus-eyebrow">
+                              {activeTopScoreTimelineCluster.filterLabel}
+                            </div>
+                            <div className="nh3d-top-score-timeline-focus-turn">
+                              {formatTopScoreTimelineClusterTurnLabel(
+                                activeTopScoreTimelineCluster,
+                              )}
+                            </div>
+                          </div>
+                          {activeTopScoreTimelineCluster.events.length > 1 ? (
+                            <div className="nh3d-top-score-timeline-focus-count">
+                              {`${formatTopScoreInteger(activeTopScoreTimelineCluster.events.length)} moments`}
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="nh3d-top-score-timeline-focus-list">
+                          {activeTopScoreTimelineCluster.events.map((event, index) => {
+                            const filterConfig = resolveTopScoreTimelineFilterConfig(
+                              resolveTopScoreTimelineFilterId(event),
+                            );
+                            const eventMeta = formatTopScoreTimelineEventMeta(event);
+                            return (
+                              <div
+                                className="nh3d-top-score-timeline-focus-card"
+                                key={`${activeTopScoreTimelineCluster.id}-${event.id}-${index}`}
+                              >
+                                <div className="nh3d-top-score-timeline-focus-card-header">
+                                  <span
+                                    className="nh3d-top-score-timeline-focus-badge"
+                                    style={
+                                      {
+                                        "--nh3d-top-score-timeline-color":
+                                          filterConfig.color,
+                                      } as CSSProperties
+                                    }
+                                  >
+                                    {formatTopScoreTimelineEventBadge(event)}
+                                  </span>
+                                  <span className="nh3d-top-score-timeline-focus-card-turn">
+                                    Turn {formatTopScoreInteger(event.turn)}
+                                  </span>
+                                </div>
+                                <div className="nh3d-top-score-timeline-focus-card-title">
+                                  {event.label}
+                                </div>
+                                <div className="nh3d-top-score-timeline-focus-card-summary">
+                                  {event.summary}
+                                </div>
+                                {eventMeta ? (
+                                  <div className="nh3d-top-score-timeline-focus-card-meta">
+                                    {eventMeta}
+                                  </div>
+                                ) : null}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="nh3d-top-scores-empty">
+                    This run was archived before turn-by-turn history was being
+                    kept.
+                  </div>
+                )}
+              </section>
+              <div className="nh3d-character-grid nh3d-top-score-detail-grid">
+                <section className="nh3d-character-panel nh3d-top-score-summary-panel">
+                  <div className="nh3d-character-panel-title">Run Summary</div>
+                  <div className="nh3d-character-field-list">
+                    {selectedTopScoreOverviewRows.map(([label, value]) => (
+                      <div
+                        className="nh3d-character-field-row"
+                        key={`top-score-stat-${label}`}
+                      >
+                        <div className="nh3d-character-field-label">
+                          {label}
+                        </div>
+                        <div className="nh3d-character-field-value-group">
+                          <span className="nh3d-character-field-value">
+                            {value}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="nh3d-character-panel nh3d-top-score-final-panel">
+                  <div className="nh3d-character-panel-title">
+                    Final Snapshot
+                  </div>
+                  {selectedTopScoreAdventureMetrics.length > 0 ? (
+                    <div className="nh3d-character-stat-grid">
+                      {selectedTopScoreAdventureMetrics.map((metric) => (
+                        <div
+                          className="nh3d-character-stat"
+                          key={`top-score-adventure-${metric.label}`}
+                        >
+                          <div className="nh3d-character-stat-label">
+                            {metric.label}
+                          </div>
+                          <div className="nh3d-character-stat-value">
+                            <span className="nh3d-character-stat-current">
+                              {metric.value}
+                            </span>
+                          </div>
+                          {metric.detail ? (
+                            <div className="nh3d-character-stat-description">
+                              {metric.detail}
+                            </div>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="nh3d-top-scores-empty">
+                      Only the archived score line was available for this run.
+                    </div>
+                  )}
+                </section>
+
+                <section className="nh3d-character-panel nh3d-top-score-core-panel">
+                  <div className="nh3d-character-panel-title">Core Attributes</div>
+                  {selectedTopScoreAttributeMetrics.length > 0 ? (
+                    <div className="nh3d-character-stat-grid nh3d-top-score-core-stat-grid">
+                      {selectedTopScoreAttributeMetrics.map((metric) => (
+                        <div
+                          className="nh3d-character-stat"
+                          key={`top-score-attribute-${metric.label}`}
+                        >
+                          <div className="nh3d-character-stat-label">
+                            {metric.label}
+                          </div>
+                          <div className="nh3d-character-stat-value">
+                            <span className="nh3d-character-stat-current">
+                              {metric.value}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="nh3d-top-scores-empty">
+                      No core attribute snapshot was captured for this run.
+                    </div>
+                  )}
+                </section>
+
+                <section className="nh3d-character-panel nh3d-top-score-challenge-panel">
+                  <div className="nh3d-character-panel-title">
+                    Challenge Ledger
+                  </div>
+                  <div className="nh3d-top-score-chip-groups">
+                    {selectedTopScoreChallengeGroups.map((group) => (
+                      <div
+                        className="nh3d-top-score-chip-group"
+                        key={`top-score-group-${group.label}`}
+                      >
+                        <div className="nh3d-top-score-chip-group-title">
+                          {group.label}
+                        </div>
+                        {group.values.length > 0 ? (
+                          <div className="nh3d-character-chip-list">
+                            {group.values.map((value) => (
+                              <div
+                                className="nh3d-character-chip"
+                                key={`top-score-group-${group.label}-${value}`}
+                              >
+                                {value}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="nh3d-top-scores-empty">
+                            {group.emptyLabel}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="nh3d-character-panel nh3d-top-score-panel-wide">
+                  <div className="nh3d-character-panel-title">
+                    Battle Breakdown
+                  </div>
+                  <div className="nh3d-top-score-breakdown-grid">
+                    {selectedTopScoreKillBreakdownGroups.map((group) => (
+                      <div
+                        className="nh3d-top-score-breakdown-group"
+                        key={`top-score-breakdown-${group.label}`}
+                      >
+                        <div className="nh3d-top-score-breakdown-title">
+                          {group.label}
+                        </div>
+                        {group.values.length > 0 ? (
+                          <div className="nh3d-character-field-list">
+                            {group.values.map((entry) => (
+                              <div
+                                className="nh3d-character-field-row"
+                                key={`top-score-breakdown-${group.label}-${entry.label}`}
+                              >
+                                <div className="nh3d-character-field-label">
+                                  {entry.label}
+                                </div>
+                                <div className="nh3d-character-field-value-group">
+                                  <span className="nh3d-character-field-value">
+                                    {formatTopScoreInteger(entry.count)}
+                                  </span>
+                                  {entry.detail ? (
+                                    <span className="nh3d-character-field-detail">
+                                      {entry.detail}
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="nh3d-top-scores-empty">
+                            {group.emptyLabel}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="nh3d-character-panel nh3d-top-score-panel-wide">
+                  <div className="nh3d-character-panel-title">Loot Trail</div>
+                  {selectedTopScoreLootTimelineSections.length > 0 ? (
+                    <div className="nh3d-top-score-loot-sections">
+                      {selectedTopScoreLootTimelineSections.map((section) => (
+                        <div
+                          className="nh3d-top-score-loot-section"
+                          key={`top-score-loot-${section.title}`}
+                        >
+                          <div className="nh3d-top-score-loot-section-header">
+                            <span>{section.title}</span>
+                            <span>{section.events.length}</span>
+                          </div>
+                          <div className="nh3d-character-field-list">
+                            {section.events.map((event) => (
+                              <div
+                                className="nh3d-character-field-row"
+                                key={`top-score-loot-event-${event.id}`}
+                              >
+                                <div className="nh3d-character-field-label">
+                                  Turn {formatTopScoreInteger(event.turn)}
+                                </div>
+                                <div className="nh3d-character-field-value-group">
+                                  <span className="nh3d-character-field-value">
+                                    {event.quantity === 1
+                                      ? event.label
+                                      : `${formatTopScoreInteger(event.quantity)} x ${event.label}`}
+                                  </span>
+                                  <span className="nh3d-character-field-detail">
+                                    {event.location || event.detail || "Pack update"}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="nh3d-top-scores-empty">
+                      No loot pickups were archived for this run.
+                    </div>
+                  )}
+                </section>
+
+                <section className="nh3d-character-panel nh3d-top-score-panel-wide">
+                  <div className="nh3d-character-panel-title">Pack at the End</div>
+                  {selectedTopScoreInventorySections.length > 0 &&
+                  selectedTopScore.detail ? (
+                    <div className="nh3d-top-score-inventory-sections">
+                      {selectedTopScoreInventorySections.map((section) => (
+                        <div
+                          className="nh3d-top-score-inventory-section"
+                          key={`top-score-inventory-section-${section.title}`}
+                        >
+                          <div className="nh3d-top-score-inventory-section-header">
+                            <span>{section.title}</span>
+                            <span>{section.items.length}</span>
+                          </div>
+                          <div className="nh3d-top-score-inventory-grid">
+                            {section.items.map((item, index) => (
+                              <div
+                                className="nh3d-top-score-inventory-card"
+                                key={`${section.title}-${index}-${item.text}`}
+                              >
+                                <div className="nh3d-top-score-inventory-card-leading">
+                                  {renderTopScoreInventoryPreview(
+                                    item,
+                                    selectedTopScore.detail!.runtimeVersion,
+                                  )}
+                                  <span className="nh3d-top-score-inventory-key">
+                                    {item.accelerator ?? "-"}
+                                  </span>
+                                </div>
+                                <div className="nh3d-top-score-inventory-card-text">
+                                  {item.text}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="nh3d-top-scores-empty">
+                      No inventory snapshot was captured for this run.
+                    </div>
+                  )}
+                </section>
+
+                <section className="nh3d-character-panel nh3d-top-score-panel-wide">
+                  <div className="nh3d-character-panel-title">
+                    Postmortem Archives
+                  </div>
+                  <div className="nh3d-top-score-postmortem-archives">
+                    <div className="nh3d-top-score-postmortem-feature-row">
+                      <div className="nh3d-top-score-report-block nh3d-top-score-tombstone-block">
+                        <div className="nh3d-top-score-breakdown-title">
+                          Tombstone
+                        </div>
+                        {selectedTopScore.detail?.tombstoneLines.length ? (
+                          <pre className="nh3d-top-score-tombstone">
+                            {selectedTopScore.detail.tombstoneLines.join("\n")}
+                          </pre>
+                        ) : (
+                          <div className="nh3d-top-scores-empty">
+                            No tombstone snapshot was archived for this run.
+                          </div>
+                        )}
+                      </div>
+                      {selectedTopScoreFinalAttributesReport
+                        ? renderTopScoreRawReportBlock(
+                            selectedTopScoreFinalAttributesReport,
+                          )
+                        : null}
+                    </div>
+                    <div className="nh3d-top-score-postmortem-report-grid">
+                      {selectedTopScorePostmortemReportSections.map((section) =>
+                        renderTopScoreRawReportBlock(section),
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            </div>
+            <div className="nh3d-menu-actions">
+              <button
+                className="nh3d-menu-action-button nh3d-menu-action-cancel"
+                onClick={() => setSelectedTopScore(null)}
+                type="button"
+              >
+                {commonStrings.close}
+              </button>
+            </div>
+          </>
+        ) : null}
       </AnimatedDialog>
 
       <AnimatedDialog

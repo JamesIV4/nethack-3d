@@ -55,3 +55,13 @@ export function supportsRuntimeCheckpointRecovery(
   }
   return false;
 }
+
+export function supportsRuntimeTopScores(
+  runtimeVersion: NethackRuntimeVersion,
+): boolean {
+  return (
+    runtimeVersion === "3.6.7" ||
+    runtimeVersion === "5.0" ||
+    runtimeVersion === "slashem"
+  );
+}

@@ -11,6 +11,10 @@ import type {
   QuestionDialogState,
   TextInputRequestState,
 } from "../game/ui-types";
+import {
+  createEmptyGameOverPostmortemReports,
+  createEmptyRunTelemetrySnapshot,
+} from "../game/ui-types";
 
 export type FloatingMessage = {
   id: number;
@@ -134,6 +138,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     deathMessage: null,
     promptReady: false,
     tombstoneLines: null,
+    postmortemReports: createEmptyGameOverPostmortemReports(),
+    telemetry: createEmptyRunTelemetrySnapshot(),
   },
   engineController: null,
   nextFloatingMessageId: 1,
