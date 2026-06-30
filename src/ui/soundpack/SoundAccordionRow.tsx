@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { Nh3dIcon, Nh3dIconInfo } from "../icons";
+import Nh3dTooltip from "../Nh3dTooltip";
 import SoundPlayButton from "./SoundPlayButton";
 
 export type SoundAccordionRowProps = {
@@ -81,14 +82,15 @@ export default function SoundAccordionRow({
           ) : null}
         </button>
         {matchInfo ? (
-          <button
-            aria-label={matchInfoAriaLabel}
-            className="nh3d-soundpack-accordion-info"
-            title={matchInfo}
-            type="button"
-          >
-            <Nh3dIcon icon={Nh3dIconInfo} size={15} />
-          </button>
+          <Nh3dTooltip content={matchInfo}>
+            <button
+              aria-label={matchInfoAriaLabel}
+              className="nh3d-soundpack-accordion-info"
+              type="button"
+            >
+              <Nh3dIcon icon={Nh3dIconInfo} size={15} />
+            </button>
+          </Nh3dTooltip>
         ) : null}
         <SoundPlayButton
           className="nh3d-soundpack-accordion-play"

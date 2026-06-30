@@ -120,6 +120,7 @@ import {
 } from "./tileset-367-to-5-translation";
 import { getItemTextClassName } from "./helpers/helpers";
 import { MessageSoundHooks } from "./message-sound-hooks";
+import type { Nh3dSoundEffectKey } from "../audio/sound-pack-storage";
 import {
   VultureTilesetTranslator,
   type VultureTileLookup,
@@ -150,6 +151,13 @@ type PendingCharacterDamage = {
     x: number;
     y: number;
   } | null;
+  /**
+   * A more specific sound key (e.g. "pain-canine") resolved from the combat
+   * message that produced this damage, used in place of the generic "hit"
+   * cue if that sound is actually configured. Null when no specific sound
+   * applies or none is configured, so the generic "hit" sound is used.
+   */
+  combatOverrideSoundKey: Nh3dSoundEffectKey | null;
 };
 
 type Nh3dAndroidBridge = {
@@ -345,6 +353,8 @@ type DamageEffectOptions = {
   directionX?: number;
   directionY?: number;
   billboardShatter?: MonsterBillboardShatterOptions;
+  /** See PendingCharacterDamage.combatOverrideSoundKey. */
+  combatOverrideSoundKey?: Nh3dSoundEffectKey | null;
 };
 
 type BillboardShardParticle = {
@@ -2130,6 +2140,15 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private readonly incomingDamageRumbleDebounceMs: number = 140;
   private pendingCharacterDamageQueue: PendingCharacterDamage[] = [];
   private readonly pendingCharacterDamageMaxAgeMs: number = 420;
+  /**
+   * Set by captureDamageFromMessage() right before addGameMessage() processes
+   * the same message text, so the keyword-matching sound system doesn't also
+   * fire the same specific combat sound that triggerDamageEffectsAtTile() is
+   * about to play in place of the generic "hit" cue. Consumed (reset to
+   * null) by addGameMessage() on every call.
+   */
+  private pendingCombatOverrideSoundKeyForMessage: Nh3dSoundEffectKey | null =
+    null;
   private readonly glyphDamageFlashDurationMs: number = 180;
   private readonly monsterBillboardDamageFlashDurationMs: number = 320;
   private readonly glyphDamageFlashTextureSize: number = 256;
@@ -13651,12 +13670,17 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return { x: context.x, y: context.y };
   }
 
-  private tryTriggerPointerMonsterHitSpray(amount: number): boolean {
+  private tryTriggerPointerMonsterHitSpray(
+    amount: number,
+    combatOverrideSoundKey: Nh3dSoundEffectKey | null = null,
+  ): boolean {
     const target = this.getRecentPointerAttackTarget(Date.now());
     if (!target) {
       return false;
     }
-    this.triggerDamageEffectsAtTile(target.x, target.y, amount, "hit");
+    this.triggerDamageEffectsAtTile(target.x, target.y, amount, "hit", {
+      combatOverrideSoundKey,
+    });
     return true;
   }
 
@@ -13834,7 +13858,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
   }
 
-  private queuePendingCharacterDamage(amount: number): void {
+  private queuePendingCharacterDamage(
+    amount: number,
+    combatOverrideSoundKey: Nh3dSoundEffectKey | null = null,
+  ): void {
     const sanitized = Math.max(1, Math.round(Math.abs(amount)));
     const now = Date.now();
     this.pendingCharacterDamageQueue.push({
@@ -13842,6 +13869,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       createdAtMs: now,
       expectedDirection: this.getRecentDirectionalAttackContext(now),
       expectedTile: this.getRecentPointerAttackTarget(now),
+      combatOverrideSoundKey,
     });
 
     if (this.pendingCharacterDamageQueue.length > 8) {
@@ -13859,7 +13887,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
     );
   }
 
-  private tryTriggerDirectionalMonsterHitSpray(amount: number): boolean {
+  private tryTriggerDirectionalMonsterHitSpray(
+    amount: number,
+    combatOverrideSoundKey: Nh3dSoundEffectKey | null = null,
+  ): boolean {
     const now = Date.now();
     const context = this.getRecentDirectionalAttackContext(now);
     if (!context) {
@@ -13871,7 +13902,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return false;
     }
 
-    this.triggerDamageEffectsAtTile(target.x, target.y, amount, "hit");
+    this.triggerDamageEffectsAtTile(target.x, target.y, amount, "hit", {
+      combatOverrideSoundKey,
+    });
     return true;
   }
 
@@ -13894,6 +13927,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private captureDamageFromMessage(messageLike: unknown): void {
+    this.pendingCombatOverrideSoundKeyForMessage = null;
     if (typeof messageLike !== "string") {
       return;
     }
@@ -13933,15 +13967,29 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.lastParsedDamageAtMs = now;
     this.triggerOutgoingDamageRumble();
 
-    if (this.tryTriggerPointerMonsterHitSpray(amount)) {
+    // Resolve a more specific "pain-*" sound for this hit (if one is both
+    // matched by the message text and actually configured with audio) so
+    // the generic "hit" cue can be swapped out below instead of layering on
+    // top of it. addGameMessage(), called right after this with the same
+    // message text, picks this up to suppress its own keyword-matched play
+    // of the same key.
+    const combatOverrideSoundKey =
+      this.messageSoundHooks.resolveCombatOverrideSoundKeyForMessage(
+        normalized,
+      );
+    this.pendingCombatOverrideSoundKeyForMessage = combatOverrideSoundKey;
+
+    if (this.tryTriggerPointerMonsterHitSpray(amount, combatOverrideSoundKey)) {
       return;
     }
 
-    if (this.tryTriggerDirectionalMonsterHitSpray(amount)) {
+    if (
+      this.tryTriggerDirectionalMonsterHitSpray(amount, combatOverrideSoundKey)
+    ) {
       return;
     }
 
-    this.queuePendingCharacterDamage(amount);
+    this.queuePendingCharacterDamage(amount, combatOverrideSoundKey);
   }
 
   private tryResolvePendingCharacterDamage(tile: any): void {
@@ -13991,7 +14039,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
 
-    this.triggerDamageEffectsAtTile(tile.x, tile.y, nextDamage.amount);
+    this.triggerDamageEffectsAtTile(tile.x, tile.y, nextDamage.amount, "hit", {
+      combatOverrideSoundKey: nextDamage.combatOverrideSoundKey,
+    });
   }
 
   private triggerDamageEffectsAtTile(
@@ -14010,7 +14060,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
 
     const damage = Math.max(1, Math.round(Math.abs(amount)));
-    this.messageSoundHooks.playDamageEffectSound(variant);
+    this.messageSoundHooks.playDamageEffectSound(
+      variant,
+      options.combatOverrideSoundKey ?? null,
+    );
     const key = `${x},${y}`;
     const hadElevatedBillboard = this.monsterBillboards.has(key);
     if (variant === "defeat") {
@@ -27283,8 +27336,30 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!message || message.trim() === "") return;
     const suppressMissedAttackSound =
       this.consumeFpsHeldWeaponMissedAttackMessageSoundSuppression(message);
+    const suppressKeys: Nh3dSoundEffectKey[] = [];
+    if (suppressMissedAttackSound) {
+      suppressKeys.push("missed-attack");
+    }
+    // captureDamageFromMessage() (called just before this, for the same
+    // message) already played this key in place of the generic "hit" sound;
+    // suppress it here so the keyword-matching pass doesn't play it twice.
+    if (this.pendingCombatOverrideSoundKeyForMessage) {
+      suppressKeys.push(this.pendingCombatOverrideSoundKeyForMessage);
+      this.pendingCombatOverrideSoundKeyForMessage = null;
+    } else {
+      // Not a player-hits-monster message handled above — this covers a
+      // monster hitting the player, where the code-driven generic "hit"
+      // trigger comes from a separate runtime event with no message text of
+      // its own and is currently waiting on this message to decide what to
+      // play.
+      const resolvedKey =
+        this.messageSoundHooks.resolveAwaitedGenericHitFromMessage(message);
+      if (resolvedKey) {
+        suppressKeys.push(resolvedKey);
+      }
+    }
     this.messageSoundHooks.playMessageLogSoundEffects(message, {
-      suppressKeys: suppressMissedAttackSound ? ["missed-attack"] : [],
+      suppressKeys,
     });
 
     this.gameMessages.unshift(message);

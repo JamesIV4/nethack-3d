@@ -4709,6 +4709,28 @@ canvas {
   }
 }
 
+.nh3d-tooltip-trigger {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nh3d-tooltip-bubble {
+  position: fixed;
+  z-index: 10000;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 8px 10px;
+  border: 1px solid rgba(120, 170, 230, 0.5);
+  border-radius: 6px;
+  background: rgba(8, 16, 28, 0.97);
+  color: var(--nh3d-ui-text);
+  font-size: nh3d-scale-font(12.5px);
+  line-height: 1.4;
+  white-space: pre-line;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
 .nh3d-soundpack-icon-play {
   flex: 0 0 auto;
   display: inline-flex;

@@ -2005,6 +2005,19 @@ function doesMessageLogKeywordMatch(
   return matched;
 }
 
+/**
+ * True for sound-effect keys representing a specific combat reaction (a
+ * "pain-*" monster-class sound for the player hitting a monster, or a
+ * "hit-by-*" attack-type sound for a monster hitting the player) that should
+ * take priority over the generic "hit" cue whenever one is actually
+ * configured with audio.
+ */
+export function isNh3dCombatOverrideSoundEffectKey(
+  key: Nh3dSoundEffectKey,
+): boolean {
+  return key.startsWith("pain-") || key.startsWith("hit-by-");
+}
+
 export function resolveNh3dMessageLogSoundEffectKeys(
   messageLike: unknown,
 ): Nh3dSoundEffectKey[] {

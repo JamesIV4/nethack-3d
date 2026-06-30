@@ -1,5 +1,6 @@
 import {
   nh3dBaseSoundVariationId,
+  isNh3dCombatOverrideSoundEffectKey,
   loadNh3dSoundPackStateFromIndexedDb,
   loadStoredNh3dSoundBlob,
   resolveNh3dMessageLogSoundEffectKeys,
@@ -49,6 +50,17 @@ export class MessageSoundHooks {
     new Map();
   private audioDecodeErrorLoggedByUrl: Set<string> = new Set();
   private userGestureAudioResumed: boolean = false;
+  /**
+   * A code-driven generic "hit" trigger (a monster hitting the player) holds
+   * off playing anything for up to this long, waiting to see whether the
+   * message explaining the attack (e.g. "The wolf bites you!") arrives and
+   * resolves it with a more specific sound. NetHack message text for an
+   * attack that just happened arrives quickly and reliably, so this window
+   * only needs to be a small safety margin, not a real "maybe it won't show
+   * up" allowance.
+   */
+  private readonly genericHitLogWaitMs: number = 250;
+  private pendingGenericHitWaits: Array<{ timeoutId: number }> = [];
 
   constructor(options: MessageSoundHooksOptions) {
     this.isSoundEnabled = options.isSoundEnabled;
@@ -59,12 +71,119 @@ export class MessageSoundHooks {
     );
   }
 
-  public playDamageEffectSound(variant: "hit" | "defeat"): void {
+  public playDamageEffectSound(
+    variant: "hit" | "defeat",
+    overrideSoundKey: Nh3dSoundEffectKey | null = null,
+  ): void {
     if (variant === "defeat") {
       void this.playSoundEffect("monster-killed");
       return;
     }
-    void this.playSoundEffect("hit");
+    if (overrideSoundKey) {
+      // Already resolved synchronously by the caller from the same message
+      // text driving this trigger (the player-hits-monster path).
+      void this.playSoundEffect(overrideSoundKey);
+      return;
+    }
+    // A monster hitting the player: hold off playing anything until either
+    // resolveAwaitedGenericHitFromMessage() identifies the right sound from
+    // the attack message (typically within a turn tick), or this timeout
+    // elapses without one showing up.
+    const timeoutId = globalThis.setTimeout(() => {
+      this.pendingGenericHitWaits = this.pendingGenericHitWaits.filter(
+        (wait) => wait.timeoutId !== timeoutId,
+      );
+      void this.playSoundEffect("hit");
+    }, this.genericHitLogWaitMs);
+    this.pendingGenericHitWaits.push({ timeoutId });
+  }
+
+  /**
+   * Looks at the same message text the keyword-matching sound system uses
+   * and, if it matches a "pain-*"/"hit-by-*" combat sound that the active
+   * pack actually has audio configured for, returns that key so the caller
+   * can play it in place of (rather than alongside) the generic "hit" cue.
+   * Returns null — meaning "fall back to the generic hit sound" — when no
+   * such sound matches, or when one matches but has no audio assigned.
+   *
+   * Uses only the currently cached sound pack (no fresh async load) since
+   * this needs to return synchronously from inside the combat hit path; the
+   * pack is normally already warm from other sound playback.
+   */
+  public resolveCombatOverrideSoundKeyForMessage(
+    messageLike: unknown,
+  ): Nh3dSoundEffectKey | null {
+    const soundPack = this.cachedSoundPack;
+    if (!soundPack) {
+      return null;
+    }
+    const candidateKeys = resolveNh3dMessageLogSoundEffectKeys(
+      messageLike,
+    ).filter(isNh3dCombatOverrideSoundEffectKey);
+    for (const candidateKey of candidateKeys) {
+      const hasConfiguredAudio = this.collectSoundVariations(
+        candidateKey,
+        soundPack,
+      ).some((variation) => variation.enabled);
+      if (hasConfiguredAudio) {
+        return candidateKey;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Called once per incoming game message, for messages not already handled
+   * by the synchronous player-hits-monster path (resolveCombatOverrideSound
+   * KeyForMessage) — chiefly "a monster hits you" messages, where the
+   * code-driven generic "hit" trigger comes from a separate runtime event
+   * with no message text of its own and is currently waiting (see
+   * playDamageEffectSound()) to find out what should actually play.
+   *
+   * If a wait is pending and this message is a combat-hit message, resolves
+   * the oldest pending wait immediately: plays the matching "hit-by-*" sound
+   * if one is configured and enabled, or the generic "hit" sound right away
+   * otherwise — no reason to sit out the rest of the window once we already
+   * know there's nothing more specific to play. Returns the key it played
+   * (only when it's a non-generic override) so the caller can suppress that
+   * same key from also being played by the normal keyword-matching pass.
+   *
+   * Returns null if nothing is currently waiting or this message doesn't
+   * match any combat sound at all, leaving the keyword-matching pass to
+   * handle the message exactly as it would otherwise.
+   */
+  public resolveAwaitedGenericHitFromMessage(
+    messageLike: unknown,
+  ): Nh3dSoundEffectKey | null {
+    const combatCandidates = resolveNh3dMessageLogSoundEffectKeys(
+      messageLike,
+    ).filter(isNh3dCombatOverrideSoundEffectKey);
+    if (combatCandidates.length === 0) {
+      return null;
+    }
+
+    const pendingWait = this.pendingGenericHitWaits.shift();
+    if (!pendingWait) {
+      return null;
+    }
+    globalThis.clearTimeout(pendingWait.timeoutId);
+
+    const soundPack = this.cachedSoundPack;
+    let resolvedKey: Nh3dSoundEffectKey | null = null;
+    if (soundPack) {
+      for (const candidateKey of combatCandidates) {
+        const hasConfiguredAudio = this.collectSoundVariations(
+          candidateKey,
+          soundPack,
+        ).some((variation) => variation.enabled);
+        if (hasConfiguredAudio) {
+          resolvedKey = candidateKey;
+          break;
+        }
+      }
+    }
+    void this.playSoundEffect(resolvedKey ?? "hit");
+    return resolvedKey;
   }
 
   public playOtherMonsterKilledSound(): void {
@@ -107,6 +226,10 @@ export class MessageSoundHooks {
   public reset(): void {
     this.lastPlayedAtByKey.clear();
     this.lastPlayedVariationIdByKey.clear();
+    for (const wait of this.pendingGenericHitWaits) {
+      globalThis.clearTimeout(wait.timeoutId);
+    }
+    this.pendingGenericHitWaits = [];
   }
 
   public setEnabled(enabled: boolean): void {
