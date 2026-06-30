@@ -904,6 +904,473 @@ export const nh3dSoundEffectDefinitions = [
     label: soundEffectStrings["teleport-spell-fails"],
     messageLogKeywords: ["attempted teleport spell fails."],
   },
+  // --- Being hit by a monster, grouped by attack type ---------------------
+  // NetHack varies the hit-on-player message by the attacker's attack type
+  // (uhitm.c-equivalent hitmsg() in mhitu.c), not by which monster used it,
+  // so these sounds are keyed by attack verb (bite/sting/weapon/etc.) rather
+  // than by monster kind. Claw attacks and bare-handed/weapon hits share the
+  // same generic "hits!" text in the source, so they can't be distinguished
+  // from message text alone and fall under the single generic entry below.
+  {
+    key: "hit-by-bite",
+    label: soundEffectStrings["hit-by-bite"],
+    messageLogKeywords: [/\bbites(?: again)?!/i],
+  },
+  {
+    key: "hit-by-kick",
+    label: soundEffectStrings["hit-by-kick"],
+    messageLogKeywords: [/\bkicks(?: again)?[.!]/i],
+  },
+  {
+    key: "hit-by-sting",
+    label: soundEffectStrings["hit-by-sting"],
+    messageLogKeywords: [/\bstings(?: again)?!/i],
+  },
+  {
+    key: "hit-by-headbutt",
+    label: soundEffectStrings["hit-by-headbutt"],
+    messageLogKeywords: [/\bbutts(?: again)?!/i],
+  },
+  {
+    key: "hit-by-touch",
+    label: soundEffectStrings["hit-by-touch"],
+    messageLogKeywords: [/\btouches you(?: again)?!/i],
+  },
+  {
+    key: "hit-by-mind-flayer-tentacle",
+    label: soundEffectStrings["hit-by-mind-flayer-tentacle"],
+    messageLogKeywords: ["tentacles suck your brain"],
+  },
+  {
+    key: "hit-by-monster-self-destructs",
+    label: soundEffectStrings["hit-by-monster-self-destructs"],
+    messageLogKeywords: [/(?<!suddenly )\bexplodes(?: again)?!/i],
+  },
+  {
+    key: "hit-by-engulf",
+    label: soundEffectStrings["hit-by-engulf"],
+    messageLogKeywords: [
+      "swallows you whole!",
+      "folds itself around you!",
+      "engulfs you!",
+    ],
+  },
+  {
+    key: "hit-by-venom-spit",
+    label: soundEffectStrings["hit-by-venom-spit"],
+    messageLogKeywords: ["spits venom!"],
+  },
+  {
+    key: "hit-by-breath-weapon",
+    label: soundEffectStrings["hit-by-breath-weapon"],
+    messageLogKeywords: [/\bbreathes\b/i],
+  },
+  {
+    key: "hit-by-weapon-swing",
+    label: soundEffectStrings["hit-by-weapon-swing"],
+    messageLogKeywords: [/\b(?:swings|thrusts|lashes|bashes with)\b/i],
+  },
+  {
+    key: "hit-by-claw-or-weapon",
+    label: soundEffectStrings["hit-by-claw-or-weapon"],
+    messageLogKeywords: [/\bhits(?: again)?!/i],
+  },
+  // --- Hitting a monster — pain/reaction sound by monster symbol class ----
+  // All 58 real NetHack 3.7 monster-symbol classes (excluding worm-tail
+  // segment and mimic-disguised-state pseudo-symbols). Each regex requires
+  // "you hit" before the monster's name so the sound fires only when the
+  // *player* lands a hit, not when the monster's name appears in other
+  // message contexts. Lycanthrope names appear only in their animal class
+  // (d/r), not also in the human class (@), to prevent double-firing.
+  {
+    key: "pain-ant",
+    label: soundEffectStrings["pain-ant"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:giant ant|killer bee|soldier ant|fire ant|giant beetle|queen bee)\b/i,
+    ],
+  },
+  {
+    key: "pain-blob",
+    label: soundEffectStrings["pain-blob"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:acid blob|quivering blob|gelatinous cube)\b/i,
+    ],
+  },
+  {
+    key: "pain-cockatrice",
+    label: soundEffectStrings["pain-cockatrice"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:chickatrice|cockatrice|pyrolisk)\b/i,
+    ],
+  },
+  {
+    key: "pain-canine",
+    label: soundEffectStrings["pain-canine"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:jackal|fox|coyote|werejackal|little dog|dingo|dog|large dog|wolf|werewolf|winter wolf cub|warg|winter wolf|hell hound pup|hell hound|Cerberus)\b/i,
+    ],
+  },
+  {
+    key: "pain-eye",
+    label: soundEffectStrings["pain-eye"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:gas spore|floating eye|freezing sphere|flaming sphere|shocking sphere|beholder)\b/i,
+    ],
+  },
+  {
+    key: "pain-feline",
+    label: soundEffectStrings["pain-feline"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:kitten|housecat|jaguar|lynx|panther|large cat|tiger|displacer beast)\b/i,
+    ],
+  },
+  {
+    key: "pain-gremlin",
+    label: soundEffectStrings["pain-gremlin"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:gremlin|gargoyle|winged gargoyle)\b/i,
+    ],
+  },
+  {
+    key: "pain-humanoid-small",
+    label: soundEffectStrings["pain-humanoid-small"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:hobbit|dwarf|bugbear|dwarf lord|dwarf king|mind flayer|master mind flayer)\b/i,
+    ],
+  },
+  {
+    key: "pain-imp",
+    label: soundEffectStrings["pain-imp"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:manes|homunculus|imp|lemure|quasit|tengu)\b/i,
+    ],
+  },
+  {
+    key: "pain-jelly",
+    label: soundEffectStrings["pain-jelly"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:blue jelly|spotted jelly|ochre jelly)\b/i,
+    ],
+  },
+  {
+    key: "pain-kobold",
+    label: soundEffectStrings["pain-kobold"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:kobold|large kobold|kobold lord|kobold shaman)\b/i,
+    ],
+  },
+  {
+    key: "pain-leprechaun",
+    label: soundEffectStrings["pain-leprechaun"],
+    messageLogKeywords: [/\byou hit\b.*\bleprechaun\b/i],
+  },
+  {
+    key: "pain-mimic",
+    label: soundEffectStrings["pain-mimic"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:small mimic|large mimic|giant mimic)\b/i,
+    ],
+  },
+  {
+    key: "pain-nymph",
+    label: soundEffectStrings["pain-nymph"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:wood nymph|water nymph|mountain nymph)\b/i,
+    ],
+  },
+  {
+    key: "pain-orc",
+    label: soundEffectStrings["pain-orc"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:goblin|hobgoblin|orc|hill orc|Mordor orc|Uruk-hai|orc shaman|orc-captain|Goblin King)\b/i,
+    ],
+  },
+  {
+    key: "pain-piercer",
+    label: soundEffectStrings["pain-piercer"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:rock piercer|iron piercer|glass piercer)\b/i,
+    ],
+  },
+  {
+    key: "pain-quadruped",
+    label: soundEffectStrings["pain-quadruped"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:rothe|mumak|leocrotta|wumpus|titanothere|baluchitherium|mastodon)\b/i,
+    ],
+  },
+  {
+    key: "pain-rodent",
+    label: soundEffectStrings["pain-rodent"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:sewer rat|giant rat|rabid rat|wererat|rock mole|woodchuck)\b/i,
+    ],
+  },
+  {
+    key: "pain-arachnid",
+    label: soundEffectStrings["pain-arachnid"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:cave spider|centipede|giant spider|scorpion|Scorpius)\b/i,
+    ],
+  },
+  {
+    key: "pain-trapper",
+    label: soundEffectStrings["pain-trapper"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:lurker above|trapper)\b/i,
+    ],
+  },
+  {
+    key: "pain-equine",
+    label: soundEffectStrings["pain-equine"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:pony|white unicorn|gray unicorn|black unicorn|horse|warhorse)\b/i,
+    ],
+  },
+  {
+    key: "pain-vortex",
+    label: soundEffectStrings["pain-vortex"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:fog cloud|dust vortex|ice vortex|energy vortex|steam vortex|fire vortex)\b/i,
+    ],
+  },
+  {
+    key: "pain-worm",
+    label: soundEffectStrings["pain-worm"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:baby long worm|baby purple worm|long worm|purple worm)\b/i,
+    ],
+  },
+  {
+    key: "pain-xan",
+    label: soundEffectStrings["pain-xan"],
+    messageLogKeywords: [/\byou hit\b.*\b(?:grid bug|xan)\b/i],
+  },
+  {
+    key: "pain-light",
+    label: soundEffectStrings["pain-light"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:yellow light|black light)\b/i,
+    ],
+  },
+  {
+    key: "pain-zruty",
+    label: soundEffectStrings["pain-zruty"],
+    messageLogKeywords: [/\byou hit\b.*\bzruty\b/i],
+  },
+  {
+    key: "pain-angel",
+    label: soundEffectStrings["pain-angel"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:couatl|Aleax|Angel|ki-rin|Archon)\b/i,
+    ],
+  },
+  {
+    key: "pain-bat",
+    label: soundEffectStrings["pain-bat"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:bat|giant bat|raven|vampire bat)\b/i,
+    ],
+  },
+  {
+    key: "pain-centaur",
+    label: soundEffectStrings["pain-centaur"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:plains centaur|forest centaur|mountain centaur)\b/i,
+    ],
+  },
+  {
+    key: "pain-dragon",
+    label: soundEffectStrings["pain-dragon"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:baby gray dragon|baby gold dragon|baby silver dragon|baby shimmering dragon|baby red dragon|baby white dragon|baby orange dragon|baby black dragon|baby blue dragon|baby green dragon|baby yellow dragon|gray dragon|gold dragon|silver dragon|shimmering dragon|red dragon|white dragon|orange dragon|black dragon|blue dragon|green dragon|yellow dragon|Chromatic Dragon|Ixoth)\b/i,
+    ],
+  },
+  {
+    key: "pain-elemental",
+    label: soundEffectStrings["pain-elemental"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:stalker|air elemental|fire elemental|earth elemental|water elemental)\b/i,
+    ],
+  },
+  {
+    key: "pain-fungus",
+    label: soundEffectStrings["pain-fungus"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:lichen|brown mold|yellow mold|green mold|red mold|shrieker|violet fungus)\b/i,
+    ],
+  },
+  {
+    key: "pain-gnome",
+    label: soundEffectStrings["pain-gnome"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:gnome|gnome lord|gnomish wizard|gnome king)\b/i,
+    ],
+  },
+  {
+    key: "pain-giant",
+    label: soundEffectStrings["pain-giant"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:giant|stone giant|hill giant|fire giant|frost giant|ettin|storm giant|titan|minotaur|Cyclops|Lord Surtur)\b/i,
+    ],
+  },
+  {
+    key: "pain-jabberwock",
+    label: soundEffectStrings["pain-jabberwock"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:jabberwock|vorpal jabberwock)\b/i,
+    ],
+  },
+  {
+    key: "pain-kop",
+    label: soundEffectStrings["pain-kop"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:Keystone Kop|Kop Sergeant|Kop Lieutenant|Kop Kaptain)\b/i,
+    ],
+  },
+  {
+    key: "pain-lich",
+    label: soundEffectStrings["pain-lich"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:lich|demilich|master lich|arch-lich)\b/i,
+    ],
+  },
+  {
+    key: "pain-mummy",
+    label: soundEffectStrings["pain-mummy"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:kobold mummy|gnome mummy|orc mummy|dwarf mummy|elf mummy|human mummy|ettin mummy|giant mummy)\b/i,
+    ],
+  },
+  {
+    key: "pain-naga",
+    label: soundEffectStrings["pain-naga"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:red naga hatchling|black naga hatchling|golden naga hatchling|guardian naga hatchling|red naga|black naga|golden naga|guardian naga)\b/i,
+    ],
+  },
+  {
+    key: "pain-ogre",
+    label: soundEffectStrings["pain-ogre"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:ogre|ogre lord|ogre king)\b/i,
+    ],
+  },
+  {
+    key: "pain-ooze",
+    label: soundEffectStrings["pain-ooze"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:gray ooze|brown pudding|green slime|black pudding)\b/i,
+    ],
+  },
+  {
+    key: "pain-quantum-mechanic",
+    label: soundEffectStrings["pain-quantum-mechanic"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:quantum mechanic|genetic engineer)\b/i,
+    ],
+  },
+  {
+    key: "pain-rust-monster",
+    label: soundEffectStrings["pain-rust-monster"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:rust monster|disenchanter)\b/i,
+    ],
+  },
+  {
+    key: "pain-snake",
+    label: soundEffectStrings["pain-snake"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:garter snake|snake|water moccasin|python|pit viper|cobra)\b/i,
+    ],
+  },
+  {
+    key: "pain-troll",
+    label: soundEffectStrings["pain-troll"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:troll|ice troll|rock troll|water troll|Olog-hai)\b/i,
+    ],
+  },
+  {
+    key: "pain-umber-hulk",
+    label: soundEffectStrings["pain-umber-hulk"],
+    messageLogKeywords: [/\byou hit\b.*\bumber hulk\b/i],
+  },
+  {
+    key: "pain-vampire",
+    label: soundEffectStrings["pain-vampire"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:vampire|vampire lord|vampire mage|Vlad the Impaler)\b/i,
+    ],
+  },
+  {
+    key: "pain-wraith",
+    label: soundEffectStrings["pain-wraith"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:barrow wight|wraith|Nazgul)\b/i,
+    ],
+  },
+  {
+    key: "pain-xorn",
+    label: soundEffectStrings["pain-xorn"],
+    messageLogKeywords: [/\byou hit\b.*\bxorn\b/i],
+  },
+  {
+    key: "pain-yeti",
+    label: soundEffectStrings["pain-yeti"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:monkey|ape|owlbear|yeti|carnivorous ape|sasquatch)\b/i,
+    ],
+  },
+  {
+    key: "pain-zombie",
+    label: soundEffectStrings["pain-zombie"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:kobold zombie|gnome zombie|orc zombie|dwarf zombie|elf zombie|human zombie|ettin zombie|ghoul|giant zombie|skeleton)\b/i,
+    ],
+  },
+  {
+    key: "pain-human",
+    label: soundEffectStrings["pain-human"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:human|elf|Woodland-elf|Green-elf|Grey-elf|elf-lord|Elvenking|doppelganger|shopkeeper|guard|prisoner|Oracle|priest|high priest|soldier|sergeant|nurse|lieutenant|captain|watchman|watch captain|Medusa|Wizard of Yendor|Croesus|Charon|archeologist|barbarian|caveman|healer|knight|monk|ranger|rogue|samurai|tourist|valkyrie|wizard|Lord Carnarvon|Pelias|Shaman Karnov|Earendil|Elwing|Hippocrates|King Arthur|Grand Master|Arch Priest|Orion|Master of Thieves|Lord Sato|Twoflower|Norn|Neferet the Green|Thoth Amon|Master Kaen|Master Assassin|Ashikaga Takauji|Dark One|student|chieftain|neanderthal|High-elf|attendant|page|abbot|acolyte|hunter|thug|ninja|roshi|guide|warrior|apprentice)\b/i,
+    ],
+  },
+  {
+    key: "pain-ghost",
+    label: soundEffectStrings["pain-ghost"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:ghost|shade)\b/i,
+    ],
+  },
+  {
+    key: "pain-golem",
+    label: soundEffectStrings["pain-golem"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:straw golem|paper golem|rope golem|gold golem|leather golem|wood golem|flesh golem|clay golem|stone golem|glass golem|iron golem)\b/i,
+    ],
+  },
+  {
+    key: "pain-demon",
+    label: soundEffectStrings["pain-demon"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:water demon|incubus|horned devil|erinys|barbed devil|marilith|vrock|hezrou|bone devil|ice devil|nalfeshnee|pit fiend|sandestin|balrog|Juiblex|Yeenoghu|Orcus|Geryon|Dispater|Baalzebub|Asmodeus|Demogorgon|Death|Pestilence|Famine|mail daemon|djinni|Minion of Huhetotl|Nalzok)\b/i,
+    ],
+  },
+  {
+    key: "pain-sea-monster",
+    label: soundEffectStrings["pain-sea-monster"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:jellyfish|piranha|shark|giant eel|electric eel|kraken)\b/i,
+    ],
+  },
+  {
+    key: "pain-lizard",
+    label: soundEffectStrings["pain-lizard"],
+    messageLogKeywords: [
+      /\byou hit\b.*\b(?:newt|gecko|iguana|baby crocodile|lizard|chameleon|crocodile|salamander)\b/i,
+    ],
+  },
 ] as const satisfies ReadonlyArray<Nh3dSoundEffectDefinitionShape>;
 
 export type Nh3dSoundEffectDefinition =
@@ -1573,6 +2040,28 @@ export function resolveNh3dMessageLogSoundEffectKeys(
     }
   }
   return matchedKeys;
+}
+
+/** Human-readable form of a single message-log keyword for display in UI tooltips. */
+function formatNh3dMessageLogKeywordForDisplay(
+  keyword: Nh3dMessageLogKeyword,
+): string {
+  return typeof keyword === "string" ? `"${keyword}"` : keyword.toString();
+}
+
+/**
+ * Formats a sound effect definition's `messageLogKeywords` as a list of
+ * human-readable lines, one per keyword, for display in a hover tooltip.
+ * Returns an empty array if the definition has no message-log keywords
+ * (e.g. it isn't triggered by game log text at all).
+ */
+export function formatNh3dMessageLogKeywordsForDisplay(
+  keywords: readonly Nh3dMessageLogKeyword[] | undefined,
+): string[] {
+  if (!keywords || keywords.length === 0) {
+    return [];
+  }
+  return keywords.map(formatNh3dMessageLogKeywordForDisplay);
 }
 
 export function resolveNh3dUserSoundPath(

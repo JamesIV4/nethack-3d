@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
-import { Nh3dIcon } from "../icons";
+import { Nh3dIcon, Nh3dIconInfo } from "../icons";
 import SoundPlayButton from "./SoundPlayButton";
 
 export type SoundAccordionRowProps = {
@@ -18,6 +18,14 @@ export type SoundAccordionRowProps = {
   playDisabled?: boolean;
   playRetriggerable?: boolean;
   isDefaultPack?: boolean;
+  /**
+   * Hover/focus tooltip text describing exactly which game log text or
+   * patterns trigger this sound (e.g. the literal strings/regexes in
+   * `messageLogKeywords`). When omitted, no info icon is rendered — used
+   * for sounds that aren't triggered from the message log at all.
+   */
+  matchInfo?: string;
+  matchInfoAriaLabel?: string;
   children: ReactNode;
 };
 
@@ -42,6 +50,8 @@ export default function SoundAccordionRow({
   playDisabled,
   playRetriggerable,
   isDefaultPack,
+  matchInfo,
+  matchInfoAriaLabel,
   children,
 }: SoundAccordionRowProps): JSX.Element {
   return (
@@ -70,6 +80,16 @@ export default function SoundAccordionRow({
             </span>
           ) : null}
         </button>
+        {matchInfo ? (
+          <button
+            aria-label={matchInfoAriaLabel}
+            className="nh3d-soundpack-accordion-info"
+            title={matchInfo}
+            type="button"
+          >
+            <Nh3dIcon icon={Nh3dIconInfo} size={15} />
+          </button>
+        ) : null}
         <SoundPlayButton
           className="nh3d-soundpack-accordion-play"
           disabled={playDisabled}

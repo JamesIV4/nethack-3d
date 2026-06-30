@@ -14,6 +14,7 @@ import {
   createNh3dSoundPack,
   deleteNh3dSoundPackFromIndexedDb,
   exportNh3dSoundPackToZip,
+  formatNh3dMessageLogKeywordsForDisplay,
   getNh3dAmbientTrackVariations,
   importNh3dSoundPackFromZip,
   loadNh3dSoundPackStateFromIndexedDb,
@@ -2023,6 +2024,15 @@ export default function SoundPackSettings({
             const rowKey = `sfx:${soundKey}`;
             const expanded = expandedKeys.has(rowKey);
             const previewKey = `preview:${rowKey}`;
+            const matchInfoLines = formatNh3dMessageLogKeywordsForDisplay(
+              "messageLogKeywords" in definition
+                ? definition.messageLogKeywords
+                : undefined,
+            );
+            const matchInfo =
+              matchInfoLines.length > 0
+                ? `${soundPackStrings.matchInfoHeading}\n${matchInfoLines.join("\n")}`
+                : undefined;
             return (
               <SoundAccordionRow
                 key={soundKey}
@@ -2031,6 +2041,10 @@ export default function SoundPackSettings({
                 onToggleExpanded={() => toggleExpanded(rowKey)}
                 expandAriaLabel={soundPackStrings.expandAria(definition.label)}
                 collapseAriaLabel={soundPackStrings.collapseAria(
+                  definition.label,
+                )}
+                matchInfo={matchInfo}
+                matchInfoAriaLabel={soundPackStrings.matchInfoAria(
                   definition.label,
                 )}
                 isPlaying={playingSoundSlotKey === previewKey}

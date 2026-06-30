@@ -4688,6 +4688,27 @@ canvas {
   font-size: nh3d-scale-font(12px);
 }
 
+.nh3d-soundpack-accordion-info {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--nh3d-ui-accent-soft);
+  cursor: help;
+  transition: color 120ms ease, background-color 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--nh3d-ui-text);
+    background: rgba(76, 111, 160, 0.25);
+  }
+}
+
 .nh3d-soundpack-icon-play {
   flex: 0 0 auto;
   display: inline-flex;
