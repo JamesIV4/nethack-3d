@@ -5714,6 +5714,7 @@ canvas {
 }
 
 .nh3d-top-score-detail-dialog {
+  container-type: inline-size;
   width: min(96vw, 1180px);
 
   .nh3d-character-sheet-scroll > * {
@@ -5722,6 +5723,113 @@ canvas {
 
   .nh3d-top-score-detail-grid {
     align-items: start;
+
+    @media (min-width: 961px) {
+      grid-template-areas:
+        "summary final"
+        "summary challenge"
+        "core core";
+    }
+  }
+}
+
+@container (max-width: 960px) {
+  .nh3d-top-score-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "summary"
+      "final"
+      "challenge"
+      "core";
+  }
+
+  .nh3d-top-score-summary-panel,
+  .nh3d-top-score-final-panel,
+  .nh3d-top-score-challenge-panel,
+  .nh3d-top-score-core-panel,
+  .nh3d-top-score-panel-wide {
+    grid-column: 1 / -1;
+  }
+
+  .nh3d-top-score-timeline-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nh3d-top-score-breakdown-grid,
+  .nh3d-top-score-loot-sections,
+  .nh3d-top-score-postmortem-feature-row,
+  .nh3d-top-score-postmortem-report-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nh3d-top-score-breakdown-group,
+  .nh3d-top-score-loot-section,
+  .nh3d-top-score-report-block,
+  .nh3d-top-score-tombstone-block {
+    min-width: 0;
+  }
+
+  .nh3d-top-score-breakdown-group .nh3d-character-field-row,
+  .nh3d-top-score-loot-section .nh3d-character-field-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 5px;
+  }
+
+  .nh3d-top-score-breakdown-group .nh3d-character-field-value-group,
+  .nh3d-top-score-loot-section .nh3d-character-field-value-group {
+    justify-self: start;
+  }
+}
+
+@container (max-width: 480px) {
+  .nh3d-top-score-timeline-summary-grid,
+  .nh3d-top-score-core-stat-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.nh3d-top-score-summary-panel {
+  grid-area: summary;
+}
+
+.nh3d-top-score-final-panel {
+  grid-area: final;
+}
+
+.nh3d-top-score-challenge-panel {
+  grid-area: challenge;
+}
+
+.nh3d-top-score-core-panel {
+  grid-area: core;
+  grid-column: 1 / -1;
+}
+
+.nh3d-top-score-core-stat-grid {
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+
+  .nh3d-character-stat {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    padding: 10px 12px;
+  }
+
+  .nh3d-character-stat-label {
+    color: rgba(196, 223, 244, 0.74);
+    font-size: nh3d-scale-font(11px);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .nh3d-character-stat-value {
+    justify-self: center;
+    font-size: nh3d-scale-font(22px);
+    line-height: 1.05;
   }
 }
 
@@ -6205,8 +6313,34 @@ canvas {
   gap: 12px;
 }
 
+.nh3d-top-score-postmortem-archives {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nh3d-top-score-postmortem-feature-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nh3d-top-score-postmortem-report-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 960px) {
+  .nh3d-top-score-postmortem-feature-row,
+  .nh3d-top-score-postmortem-report-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .nh3d-top-score-breakdown-group,
 .nh3d-top-score-loot-section,
+.nh3d-top-score-tombstone-block,
 .nh3d-top-score-report-block {
   min-width: 0;
   display: flex;
@@ -6238,6 +6372,22 @@ canvas {
 
 .nh3d-top-score-report-block[open] {
   background: rgba(255, 255, 255, 0.035);
+}
+
+.nh3d-top-score-tombstone-block {
+  align-self: stretch;
+
+  .nh3d-top-score-tombstone {
+    flex: 1 1 auto;
+    min-width: 0;
+    box-sizing: border-box;
+    width: 100%;
+    max-height: none;
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .nh3d-top-score-report-summary {

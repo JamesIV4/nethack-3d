@@ -1595,10 +1595,6 @@ function formatTopScoreHp(score: TopScoreRecord): string {
   return `${hp}/${maxhp}`;
 }
 
-function formatTopScoreMode(score: TopScoreRecord): string {
-  return score.flagLabels.length > 0 ? score.flagLabels.join(", ") : "Normal";
-}
-
 function formatTopScoreRoleLabel(value: string | null | undefined): string {
   return resolveTopScoreDisplayLabel(value, topScoreRoleLabels);
 }
@@ -1808,18 +1804,8 @@ function compareTopScoresBySort(
   return left.rank - right.rank || right.sourceLine - left.sourceLine;
 }
 
-function formatTopScoreSnapshotStatus(score: TopScoreRecord): string {
-  return score.detail ? "Snapshot saved" : "Archive only";
-}
-
-function formatTopScoreSourceLabel(score: TopScoreRecord): string {
-  if (score.source === "nh3d-snapshot") {
-    return "NetHack 3D snapshot";
-  }
-  if (score.source === "xlogfile") {
-    return "xlogfile archive";
-  }
-  return "record archive";
+function formatTopScoreSnapshotStatus(score: TopScoreRecord): string | null {
+  return score.detail ? null : "Archive only";
 }
 
 function formatTopScoreResultSummary(score: TopScoreRecord): string {
@@ -1874,8 +1860,6 @@ function buildTopScoreOverviewRows(score: TopScoreRecord): Array<[string, string
       score.endtime || score.deathdate || score.detail?.capturedAtIso,
     ),
   );
-  pushTopScoreRow(rows, "Recorded from", formatTopScoreSourceLabel(score));
-  pushTopScoreRow(rows, "Snapshot", formatTopScoreSnapshotStatus(score));
   pushTopScoreRow(rows, "State at death", formatTopScoreText(score.whileHelpless));
   return rows;
 }
@@ -1937,32 +1921,6 @@ function buildTopScoreAttributeMetrics(score: TopScoreRecord): TopScoreMetric[] 
   ].filter((metric) => hasTopScoreDisplayValue(metric.value));
 }
 
-function buildTopScoreConditionLabels(score: TopScoreRecord): string[] {
-  const candidates = [
-    resolveTopScoreAttributeValue(score, "Hunger"),
-    resolveTopScoreAttributeValue(score, "Encumbrance"),
-  ];
-  const labels: string[] = [];
-  const seen = new Set<string>();
-  for (const candidate of candidates) {
-    const normalized = candidate.trim();
-    if (
-      !normalized ||
-      /^not hungry$/i.test(normalized) ||
-      /^unencumbered$/i.test(normalized)
-    ) {
-      continue;
-    }
-    const key = normalized.toLowerCase();
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    labels.push(normalized);
-  }
-  return labels;
-}
-
 function buildTopScoreChallengeGroups(score: TopScoreRecord): TopScoreChipGroup[] {
   return [
     {
@@ -1985,7 +1943,9 @@ function buildTopScoreChallengeGroups(score: TopScoreRecord): TopScoreChipGroup[
 
 function buildTopScorePreviewLabels(score: TopScoreRecord): string[] {
   const allLabels = [
-    ...(score.flagLabels.length > 0 ? score.flagLabels : ["Normal"]),
+    ...score.flagLabels.filter(
+      (label) => label.trim().toLowerCase() !== "bones disabled",
+    ),
     ...score.conductLabels,
     ...score.achievementLabels,
   ];
@@ -2117,6 +2077,11 @@ function buildTopScoreTimelineSummaryMetrics(score: TopScoreRecord): TopScoreMet
   ).size;
   const maxCharacterLevel = resolveTopScoreMaxCharacterLevel(score, events);
   const hiddenFindCount = telemetry.hiddenFindEvents.length;
+  const lootCount = telemetry.lootEvents.reduce(
+    (total, event) => total + Math.max(0, event.quantity),
+    0,
+  );
+  const spellsLearned = telemetry.spellLearnedEvents.length;
 
   return [
     {
@@ -2134,6 +2099,17 @@ function buildTopScoreTimelineSummaryMetrics(score: TopScoreRecord): TopScoreMet
       value: formatTopScoreInteger(hiddenFindCount),
       detail:
         hiddenFindCount === 1 ? "one secret revealed" : "secrets revealed",
+    },
+    {
+      label: "Loot collected",
+      value: formatTopScoreInteger(lootCount),
+      detail: lootCount === 1 ? "one item tracked" : "items tracked",
+    },
+    {
+      label: "Spells learned",
+      value: formatTopScoreInteger(spellsLearned),
+      detail:
+        spellsLearned === 1 ? "one spell discovered" : "spells discovered",
     },
     {
       label: "Traps sprung",
@@ -2814,45 +2790,6 @@ function groupTopScoreInventoryItems(
   return sections;
 }
 
-function buildTopScoreRunLedgerMetrics(score: TopScoreRecord): TopScoreMetric[] {
-  const telemetry = resolveTopScoreTelemetry(score);
-  const lootCount = telemetry.lootEvents.reduce(
-    (total, event) => total + Math.max(0, event.quantity),
-    0,
-  );
-  const hiddenFindCount = telemetry.hiddenFindEvents.length;
-  const spellsLearned = telemetry.spellLearnedEvents.length;
-  return [
-    {
-      label: "Loot collected",
-      value: formatTopScoreInteger(lootCount),
-      detail: lootCount === 1 ? "one item tracked" : "items tracked",
-    },
-    {
-      label: "Hidden finds",
-      value: formatTopScoreInteger(hiddenFindCount),
-      detail:
-        hiddenFindCount === 1
-          ? "one hidden feature found"
-          : "hidden features found",
-    },
-    {
-      label: "Traps stepped on",
-      value: formatTopScoreInteger(telemetry.trapEvents.length),
-      detail:
-        telemetry.trapEvents.length === 1
-          ? "one nasty surprise"
-          : "nasty surprises logged",
-    },
-    {
-      label: "Spells learned",
-      value: formatTopScoreInteger(spellsLearned),
-      detail:
-        spellsLearned === 1 ? "one spell discovered" : "spells discovered",
-    },
-  ];
-}
-
 function buildTopScoreKillBreakdownGroups(
   score: TopScoreRecord,
 ): TopScoreBreakdownGroup[] {
@@ -2933,6 +2870,34 @@ function buildTopScoreRawReportSections(
       emptyLabel: "No dungeon-overview report was archived for this run.",
     },
   ];
+}
+
+function renderTopScoreRawReportBlock(
+  section: TopScoreRawReportSection,
+): JSX.Element {
+  return (
+    <details
+      className="nh3d-top-score-report-block"
+      key={`top-score-report-${section.id}`}
+      open={Boolean(section.lines?.length)}
+    >
+      <summary className="nh3d-top-score-report-summary">
+        <span>{section.title}</span>
+        <span>
+          {section.lines?.length
+            ? `${formatTopScoreInteger(section.lines.length)} lines`
+            : "Not captured"}
+        </span>
+      </summary>
+      {section.lines?.length ? (
+        <pre className="nh3d-top-score-report-pre">
+          {section.lines.join("\n")}
+        </pre>
+      ) : (
+        <div className="nh3d-top-scores-empty">{section.emptyLabel}</div>
+      )}
+    </details>
+  );
 }
 
 function getLegacyCharacterStatValue(
@@ -8278,14 +8243,6 @@ export default function App(): JSX.Element {
       selectedTopScore ? buildTopScoreAttributeMetrics(selectedTopScore) : [],
     [selectedTopScore],
   );
-  const selectedTopScoreRunLedgerMetrics = useMemo(
-    () => (selectedTopScore ? buildTopScoreRunLedgerMetrics(selectedTopScore) : []),
-    [selectedTopScore],
-  );
-  const selectedTopScoreConditionLabels = useMemo(
-    () => (selectedTopScore ? buildTopScoreConditionLabels(selectedTopScore) : []),
-    [selectedTopScore],
-  );
   const selectedTopScoreChallengeGroups = useMemo(
     () => (selectedTopScore ? buildTopScoreChallengeGroups(selectedTopScore) : []),
     [selectedTopScore],
@@ -8301,6 +8258,20 @@ export default function App(): JSX.Element {
   const selectedTopScoreRawReportSections = useMemo(
     () => (selectedTopScore ? buildTopScoreRawReportSections(selectedTopScore) : []),
     [selectedTopScore],
+  );
+  const selectedTopScoreFinalAttributesReport = useMemo(
+    () =>
+      selectedTopScoreRawReportSections.find(
+        (section) => section.id === "attributes",
+      ) ?? null,
+    [selectedTopScoreRawReportSections],
+  );
+  const selectedTopScorePostmortemReportSections = useMemo(
+    () =>
+      selectedTopScoreRawReportSections.filter(
+        (section) => section.id !== "attributes",
+      ),
+    [selectedTopScoreRawReportSections],
   );
   const selectedTopScoreInventorySections = useMemo(
     () =>
@@ -8358,15 +8329,6 @@ export default function App(): JSX.Element {
       ]
     );
   }, [activeTopScoreTimelineClusterId, selectedTopScoreTimelineModel]);
-  const selectedTopScoreRawFieldRows = useMemo(
-    () =>
-      selectedTopScore
-        ? Object.entries(selectedTopScore.rawFields).sort(([a], [b]) =>
-            a.localeCompare(b),
-          )
-        : [],
-    [selectedTopScore],
-  );
   useEffect(() => {
     setSelectedTopScoreTimelineFilters(defaultTopScoreTimelineFilters);
     setActiveTopScoreTimelineClusterId(null);
@@ -18188,6 +18150,7 @@ export default function App(): JSX.Element {
                 {visibleTopScores.map((score) => {
                   const previewLabels = buildTopScorePreviewLabels(score);
                   const cardMetrics = buildTopScoreCardMetrics(score);
+                  const snapshotStatus = formatTopScoreSnapshotStatus(score);
                   return (
                     <article
                       className={`nh3d-top-score-card${
@@ -18215,15 +18178,13 @@ export default function App(): JSX.Element {
                             {formatTopScoreResultSummary(score)}
                           </div>
                         </div>
-                        <div className="nh3d-top-score-card-status">
-                          <span
-                            className={`nh3d-top-score-badge${
-                              score.detail ? " is-snapshot" : ""
-                            }`}
-                          >
-                            {formatTopScoreSnapshotStatus(score)}
-                          </span>
-                        </div>
+                        {snapshotStatus ? (
+                          <div className="nh3d-top-score-card-status">
+                            <span className="nh3d-top-score-badge">
+                              {snapshotStatus}
+                            </span>
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="nh3d-top-score-card-metrics">
@@ -18350,25 +18311,6 @@ export default function App(): JSX.Element {
                   <div className="nh3d-top-score-hero-summary">
                     {formatTopScoreResultSummary(selectedTopScore)}
                   </div>
-                </div>
-                <div className="nh3d-top-score-hero-badges">
-                  <span className="nh3d-top-score-badge is-snapshot">
-                    {formatTopScoreSnapshotStatus(selectedTopScore)}
-                  </span>
-                  <span className="nh3d-top-score-badge">
-                    {formatTopScoreSourceLabel(selectedTopScore)}
-                  </span>
-                  <span className="nh3d-top-score-badge">
-                    {formatTopScoreMode(selectedTopScore)}
-                  </span>
-                  {selectedTopScoreConditionLabels.map((label) => (
-                    <span
-                      className="nh3d-top-score-badge is-warning"
-                      key={`top-score-condition-${label}`}
-                    >
-                      {label}
-                    </span>
-                  ))}
                 </div>
               </div>
               <div className="nh3d-top-score-hero-stats">
@@ -18701,7 +18643,7 @@ export default function App(): JSX.Element {
                 )}
               </section>
               <div className="nh3d-character-grid nh3d-top-score-detail-grid">
-                <section className="nh3d-character-panel">
+                <section className="nh3d-character-panel nh3d-top-score-summary-panel">
                   <div className="nh3d-character-panel-title">Run Summary</div>
                   <div className="nh3d-character-field-list">
                     {selectedTopScoreOverviewRows.map(([label, value]) => (
@@ -18722,7 +18664,7 @@ export default function App(): JSX.Element {
                   </div>
                 </section>
 
-                <section className="nh3d-character-panel">
+                <section className="nh3d-character-panel nh3d-top-score-final-panel">
                   <div className="nh3d-character-panel-title">
                     Final Snapshot
                   </div>
@@ -18756,10 +18698,10 @@ export default function App(): JSX.Element {
                   )}
                 </section>
 
-                <section className="nh3d-character-panel">
+                <section className="nh3d-character-panel nh3d-top-score-core-panel">
                   <div className="nh3d-character-panel-title">Core Attributes</div>
                   {selectedTopScoreAttributeMetrics.length > 0 ? (
-                    <div className="nh3d-character-stat-grid">
+                    <div className="nh3d-character-stat-grid nh3d-top-score-core-stat-grid">
                       {selectedTopScoreAttributeMetrics.map((metric) => (
                         <div
                           className="nh3d-character-stat"
@@ -18783,7 +18725,7 @@ export default function App(): JSX.Element {
                   )}
                 </section>
 
-                <section className="nh3d-character-panel">
+                <section className="nh3d-character-panel nh3d-top-score-challenge-panel">
                   <div className="nh3d-character-panel-title">
                     Challenge Ledger
                   </div>
@@ -18815,38 +18757,6 @@ export default function App(): JSX.Element {
                       </div>
                     ))}
                   </div>
-                </section>
-
-                <section className="nh3d-character-panel">
-                  <div className="nh3d-character-panel-title">Run Ledger</div>
-                  {selectedTopScoreRunLedgerMetrics.length > 0 ? (
-                    <div className="nh3d-character-stats-grid">
-                      {selectedTopScoreRunLedgerMetrics.map((metric) => (
-                        <div
-                          className="nh3d-character-stat"
-                          key={`top-score-run-ledger-${metric.label}`}
-                        >
-                          <div className="nh3d-character-stat-label">
-                            {metric.label}
-                          </div>
-                          <div className="nh3d-character-stat-value">
-                            <span className="nh3d-character-stat-current">
-                              {metric.value}
-                            </span>
-                          </div>
-                          {metric.detail ? (
-                            <div className="nh3d-character-stat-detail">
-                              {metric.detail}
-                            </div>
-                          ) : null}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="nh3d-top-scores-empty">
-                      No extended run telemetry was captured for this run.
-                    </div>
-                  )}
                 </section>
 
                 <section className="nh3d-character-panel nh3d-top-score-panel-wide">
@@ -18986,82 +18896,39 @@ export default function App(): JSX.Element {
                 </section>
 
                 <section className="nh3d-character-panel nh3d-top-score-panel-wide">
-                  <div className="nh3d-character-panel-title">Tombstone</div>
-                  {selectedTopScore.detail?.tombstoneLines.length ? (
-                    <pre className="nh3d-top-score-tombstone">
-                      {selectedTopScore.detail.tombstoneLines.join("\n")}
-                    </pre>
-                  ) : (
-                    <div className="nh3d-top-scores-empty">
-                      No tombstone snapshot was archived for this run.
-                    </div>
-                  )}
-                </section>
-
-                <section className="nh3d-character-panel nh3d-top-score-panel-wide">
                   <div className="nh3d-character-panel-title">
                     Postmortem Archives
                   </div>
-                  <div className="nh3d-top-score-report-stack">
-                    {selectedTopScoreRawReportSections.map((section) => (
-                      <details
-                        className="nh3d-top-score-report-block"
-                        key={`top-score-report-${section.id}`}
-                        open={Boolean(section.lines?.length)}
-                      >
-                        <summary className="nh3d-top-score-report-summary">
-                          <span>{section.title}</span>
-                          <span>
-                            {section.lines?.length
-                              ? `${formatTopScoreInteger(section.lines.length)} lines`
-                              : "Not captured"}
-                          </span>
-                        </summary>
-                        {section.lines?.length ? (
-                          <pre className="nh3d-top-score-report-pre">
-                            {section.lines.join("\n")}
+                  <div className="nh3d-top-score-postmortem-archives">
+                    <div className="nh3d-top-score-postmortem-feature-row">
+                      <div className="nh3d-top-score-report-block nh3d-top-score-tombstone-block">
+                        <div className="nh3d-top-score-breakdown-title">
+                          Tombstone
+                        </div>
+                        {selectedTopScore.detail?.tombstoneLines.length ? (
+                          <pre className="nh3d-top-score-tombstone">
+                            {selectedTopScore.detail.tombstoneLines.join("\n")}
                           </pre>
                         ) : (
                           <div className="nh3d-top-scores-empty">
-                            {section.emptyLabel}
+                            No tombstone snapshot was archived for this run.
                           </div>
                         )}
-                      </details>
-                    ))}
+                      </div>
+                      {selectedTopScoreFinalAttributesReport
+                        ? renderTopScoreRawReportBlock(
+                            selectedTopScoreFinalAttributesReport,
+                          )
+                        : null}
+                    </div>
+                    <div className="nh3d-top-score-postmortem-report-grid">
+                      {selectedTopScorePostmortemReportSections.map((section) =>
+                        renderTopScoreRawReportBlock(section),
+                      )}
+                    </div>
                   </div>
                 </section>
 
-                <details className="nh3d-character-panel nh3d-top-score-panel-wide nh3d-top-score-technical-panel">
-                  <summary className="nh3d-top-score-technical-summary">
-                    <span>Technical Record</span>
-                    <span>
-                      {selectedTopScoreRawFieldRows.length.toLocaleString()} fields
-                    </span>
-                  </summary>
-                  {selectedTopScoreRawFieldRows.length > 0 ? (
-                    <div className="nh3d-character-field-list">
-                      {selectedTopScoreRawFieldRows.map(([label, value]) => (
-                        <div
-                          className="nh3d-character-field-row"
-                          key={`top-score-raw-${label}`}
-                        >
-                          <div className="nh3d-character-field-label">
-                            {label}
-                          </div>
-                          <div className="nh3d-character-field-value-group">
-                            <span className="nh3d-character-field-value">
-                              {value || "--"}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="nh3d-top-scores-empty">
-                      No raw score fields were available for this run.
-                    </div>
-                  )}
-                </details>
               </div>
             </div>
             <div className="nh3d-menu-actions">
