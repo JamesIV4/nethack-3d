@@ -72,31 +72,45 @@ export const nh3dSoundEffectDefinitions = [
     label: soundEffectStrings["walk-up-stairs"],
     messageLogKeywords: ["You climb up the stairs."],
   },
-  // {
-  //   key: "explosion",
-  //   label: "Explosion",
-  //   messageLogKeywords: [/\bexplod(?:e|es|ed|ing)\b/i],
-  // },
-  // {
-  //   key: "wand-casting",
-  //   label: "Wand casting",
-  //   messageLogKeywords: [/^\s*you (?:zap|wave)\b/i],
-  // },
-  // {
-  //   key: "wand-fizzle",
-  //   label: "Wand fizzle",
-  //   messageLogKeywords: ["nothing happens", /\bfizzle(?:s|d)?\b/i],
-  // },
-  // {
-  //   key: "thrown-weapons",
-  //   label: "Thrown weapons",
-  //   messageLogKeywords: [/^\s*you (?:throw|toss|hurl)\b/i],
-  // },
-  // {
-  //   key: "arrow-impact",
-  //   label: "Arrow impact",
-  //   messageLogKeywords: [/\barrow\b.*\b(?:hit|hits|miss|misses|strikes?)\b/i],
-  // },
+  {
+    key: "door-trap-explodes",
+    label: soundEffectStrings["door-trap-explodes"],
+    messageLogKeywords: [
+      "KABOOM!!  You see a door explode.",
+      "a distant explosion.",
+      "a nearby explosion.",
+    ],
+  },
+  {
+    key: "wand-glow-fade",
+    label: soundEffectStrings["wand-glow-fade"],
+    messageLogKeywords: ["glows and fades."],
+  },
+  {
+    key: "action-no-effect",
+    label: soundEffectStrings["action-no-effect"],
+    messageLogKeywords: ["nothing happens"],
+  },
+  {
+    key: "container-glass-shatter",
+    label: soundEffectStrings["container-glass-shatter"],
+    messageLogKeywords: ["a muffled shatter."],
+  },
+  {
+    key: "container-egg-crack",
+    label: soundEffectStrings["container-egg-crack"],
+    messageLogKeywords: ["a muffled cracking."],
+  },
+  {
+    key: "container-glass-crash",
+    label: soundEffectStrings["container-glass-crash"],
+    messageLogKeywords: ["a muffled crash."],
+  },
+  {
+    key: "container-item-splat",
+    label: soundEffectStrings["container-item-splat"],
+    messageLogKeywords: ["a muffled splat."],
+  },
   {
     key: "eating",
     label: soundEffectStrings.eating,
@@ -192,6 +206,703 @@ export const nh3dSoundEffectDefinitions = [
     messageLogKeywords: [
       /\byou feel (?:stronger|faster|more agile|wiser|tougher|powerful)\b/i,
     ],
+  },
+  // --- Traps -----------------------------------------------------------
+  {
+    key: "trap-arrow",
+    label: soundEffectStrings["trap-arrow"],
+    messageLogKeywords: ["An arrow shoots out at you!"],
+  },
+  {
+    key: "trap-dart",
+    label: soundEffectStrings["trap-dart"],
+    messageLogKeywords: ["A little dart shoots out at you!"],
+  },
+  {
+    key: "trap-bear",
+    label: soundEffectStrings["trap-bear"],
+    messageLogKeywords: [/\bbear trap closes on\b/i],
+  },
+  {
+    key: "trap-land-mine",
+    label: soundEffectStrings["trap-land-mine"],
+    messageLogKeywords: ["KAABLAMM!!!"],
+  },
+  {
+    key: "trap-rolling-boulder",
+    label: soundEffectStrings["trap-rolling-boulder"],
+    messageLogKeywords: ["trigger a rolling boulder trap!"],
+  },
+  {
+    key: "trap-sleeping-gas",
+    label: soundEffectStrings["trap-sleeping-gas"],
+    messageLogKeywords: ["A cloud of gas puts you to sleep!"],
+  },
+  {
+    key: "trap-rust",
+    label: soundEffectStrings["trap-rust"],
+    messageLogKeywords: ["are covered with rust!"],
+  },
+  {
+    key: "trap-spiked-pit",
+    label: soundEffectStrings["trap-spiked-pit"],
+    messageLogKeywords: ["Isn't that the pits?"],
+  },
+  {
+    key: "trap-squeaky-board",
+    label: soundEffectStrings["trap-squeaky-board"],
+    messageLogKeywords: [
+      "notice a crease in the linoleum.",
+      "notice a loose board below you.",
+    ],
+  },
+  {
+    key: "trap-magic-explosion",
+    label: soundEffectStrings["trap-magic-explosion"],
+    messageLogKeywords: ["caught in a magical explosion!"],
+  },
+  {
+    key: "trap-hole",
+    label: soundEffectStrings["trap-hole"],
+    messageLogKeywords: [
+      "A trap door opens up under you!",
+      "There's a gaping hole under you!",
+    ],
+  },
+  {
+    key: "trap-web",
+    label: soundEffectStrings["trap-web"],
+    messageLogKeywords: ["spider web!"],
+  },
+  {
+    key: "trap-statue-life",
+    label: soundEffectStrings["trap-statue-life"],
+    messageLogKeywords: ["comes to life", "suddenly seems more animated."],
+  },
+  // --- Combat / damage ---------------------------------------------------
+  {
+    key: "item-shatters",
+    label: soundEffectStrings["item-shatters"],
+    messageLogKeywords: [/\bshatters?(?: into a thousand pieces)?!/i],
+  },
+  {
+    key: "thrown-splat",
+    label: soundEffectStrings["thrown-splat"],
+    messageLogKeywords: ["Splat!"],
+  },
+  {
+    key: "thrown-cream-pie",
+    label: soundEffectStrings["thrown-cream-pie"],
+    messageLogKeywords: ["What a mess!"],
+  },
+  {
+    key: "combat-digested",
+    label: soundEffectStrings["combat-digested"],
+    messageLogKeywords: ["totally digests you!"],
+  },
+  {
+    key: "combat-regurgitated",
+    label: soundEffectStrings["combat-regurgitated"],
+    messageLogKeywords: ["You get regurgitated!"],
+  },
+  {
+    key: "combat-slimed",
+    label: soundEffectStrings["combat-slimed"],
+    messageLogKeywords: ["You've been slimed!"],
+  },
+  {
+    key: "combat-knocked-back",
+    label: soundEffectStrings["combat-knocked-back"],
+    messageLogKeywords: ["is knocked back!"],
+  },
+  {
+    key: "weapon-poison-fades",
+    label: soundEffectStrings["weapon-poison-fades"],
+    messageLogKeywords: ["no longer poisoned"],
+  },
+  // --- Status effects ------------------------------------------------------
+  {
+    key: "status-blinded-flash",
+    label: soundEffectStrings["status-blinded-flash"],
+    messageLogKeywords: ["are blinded by the flash!"],
+  },
+  {
+    key: "status-blinded-hit",
+    label: soundEffectStrings["status-blinded-hit"],
+    messageLogKeywords: ["blinds you!"],
+  },
+  {
+    key: "status-frozen",
+    label: soundEffectStrings["status-frozen"],
+    messageLogKeywords: ["are frozen in place!", "are motionlessly suspended."],
+  },
+  {
+    key: "status-petrify-progress",
+    label: soundEffectStrings["status-petrify-progress"],
+    messageLogKeywords: [
+      "Your limbs are stiffening.",
+      "Your limbs have turned to stone.",
+    ],
+  },
+  {
+    key: "status-choking",
+    label: soundEffectStrings["status-choking"],
+    messageLogKeywords: [
+      "find it hard to breathe.",
+      "gasping for air.",
+      "can no longer breathe.",
+      "You suffocate.",
+    ],
+  },
+  {
+    key: "status-sickness-worsens",
+    label: soundEffectStrings["status-sickness-worsens"],
+    messageLogKeywords: [
+      "illness feels worse.",
+      "illness is severe.",
+      "at Death's door.",
+    ],
+  },
+  {
+    key: "status-vomit",
+    label: soundEffectStrings["status-vomit"],
+    messageLogKeywords: ["You vomit"],
+  },
+  {
+    key: "status-poison-deadly",
+    label: soundEffectStrings["status-poison-deadly"],
+    messageLogKeywords: ["poison was deadly..."],
+  },
+  {
+    key: "status-poison-resist",
+    label: soundEffectStrings["status-poison-resist"],
+    messageLogKeywords: ["poison doesn't seem to affect"],
+  },
+  {
+    key: "status-poison-dishonorable",
+    label: soundEffectStrings["status-poison-dishonorable"],
+    messageLogKeywords: ["dishonorably use a poisoned weapon!"],
+  },
+  {
+    key: "status-feverish",
+    label: soundEffectStrings["status-feverish"],
+    messageLogKeywords: ["You feel feverish."],
+  },
+  // --- Death / danger ------------------------------------------------------
+  {
+    key: "death-drown",
+    label: soundEffectStrings["death-drown"],
+    messageLogKeywords: ["You drown.", "You're still drowning."],
+  },
+  {
+    key: "death-burning",
+    label: soundEffectStrings["death-burning"],
+    messageLogKeywords: ["You're still burning."],
+  },
+  {
+    key: "death-stone",
+    label: soundEffectStrings["death-stone"],
+    messageLogKeywords: ["You turn to stone..."],
+  },
+  {
+    key: "death-sink-surface",
+    label: soundEffectStrings["death-sink-surface"],
+    messageLogKeywords: ["sink below the surface and die."],
+  },
+  {
+    key: "death-disintegrate-self",
+    label: soundEffectStrings["death-disintegrate-self"],
+    messageLogKeywords: ["irradiate yourself with pure energy!"],
+  },
+  {
+    key: "danger-fall-asleep",
+    label: soundEffectStrings["danger-fall-asleep"],
+    messageLogKeywords: ["You suddenly fall asleep!"],
+  },
+  {
+    key: "death-generic",
+    label: soundEffectStrings["death-generic"],
+    messageLogKeywords: ["You die..."],
+  },
+  {
+    key: "death-illness",
+    label: soundEffectStrings["death-illness"],
+    messageLogKeywords: ["You die from your illness."],
+  },
+  // --- Prayer / divine -------------------------------------------------
+  {
+    key: "prayer-begin",
+    label: soundEffectStrings["prayer-begin"],
+    messageLogKeywords: ["begin praying to"],
+  },
+  {
+    key: "prayer-finish",
+    label: soundEffectStrings["prayer-finish"],
+    messageLogKeywords: ["You finish your prayer."],
+  },
+  {
+    key: "prayer-pleased",
+    label: soundEffectStrings["prayer-pleased"],
+    messageLogKeywords: ["Thou hast pleased me with thy progress,"],
+  },
+  {
+    key: "prayer-angered",
+    label: soundEffectStrings["prayer-angered"],
+    messageLogKeywords: ["Thou hast angered me."],
+  },
+  {
+    key: "prayer-lightning-strike",
+    label: soundEffectStrings["prayer-lightning-strike"],
+    messageLogKeywords: ["Suddenly, a bolt of lightning strikes you!"],
+  },
+  {
+    key: "prayer-disintegration-beam",
+    label: soundEffectStrings["prayer-disintegration-beam"],
+    messageLogKeywords: ["A wide-angle disintegration beam hits you!"],
+  },
+  {
+    key: "prayer-fry-crisp",
+    label: soundEffectStrings["prayer-fry-crisp"],
+    messageLogKeywords: ["fry to a crisp"],
+  },
+  {
+    key: "prayer-crown-lawful",
+    label: soundEffectStrings["prayer-crown-lawful"],
+    messageLogKeywords: ["The Hand of Elbereth!"],
+  },
+  {
+    key: "prayer-crown-neutral",
+    label: soundEffectStrings["prayer-crown-neutral"],
+    messageLogKeywords: ["Thou shalt be my Envoy of Balance!"],
+  },
+  {
+    key: "prayer-immortality",
+    label: soundEffectStrings["prayer-immortality"],
+    messageLogKeywords: ["the gift of Immortality!"],
+  },
+  {
+    key: "prayer-reject-sacrifice",
+    label: soundEffectStrings["prayer-reject-sacrifice"],
+    messageLogKeywords: ["rejects your sacrifice!"],
+  },
+  {
+    key: "prayer-accept-allegiance",
+    label: soundEffectStrings["prayer-accept-allegiance"],
+    messageLogKeywords: ["accepts your allegiance."],
+  },
+  {
+    key: "prayer-altar-glow",
+    label: soundEffectStrings["prayer-altar-glow"],
+    messageLogKeywords: ["altar glows"],
+  },
+  {
+    key: "prayer-sacrifice-consumed",
+    label: soundEffectStrings["prayer-sacrifice-consumed"],
+    messageLogKeywords: ["sacrifice is consumed in a"],
+  },
+  {
+    key: "prayer-sacrifice-betrayal",
+    label: soundEffectStrings["prayer-sacrifice-betrayal"],
+    messageLogKeywords: ["So this is how you repay loyalty?"],
+  },
+  {
+    key: "prayer-altar-desecrate",
+    label: soundEffectStrings["prayer-altar-desecrate"],
+    messageLogKeywords: ["How darest thou desecrate my altar!"],
+  },
+  {
+    key: "prayer-ascend-demigod",
+    label: soundEffectStrings["prayer-ascend-demigod"],
+    messageLogKeywords: ["ascend to the status of Demigod"],
+  },
+  {
+    key: "wizard-voice",
+    label: soundEffectStrings["wizard-voice"],
+    messageLogKeywords: ["A voice booms out..."],
+  },
+  // --- Magic items -------------------------------------------------------
+  {
+    key: "wand-explodes",
+    label: soundEffectStrings["wand-explodes"],
+    messageLogKeywords: ["suddenly explodes!"],
+  },
+  {
+    key: "wand-last-charge",
+    label: soundEffectStrings["wand-last-charge"],
+    messageLogKeywords: ["wrest one last charge from the worn-out wand."],
+  },
+  {
+    key: "scroll-punishment",
+    label: soundEffectStrings["scroll-punishment"],
+    messageLogKeywords: ["being punished for your misbehavior!"],
+  },
+  {
+    key: "scroll-fire",
+    label: soundEffectStrings["scroll-fire"],
+    messageLogKeywords: ["scroll erupts in a tower of flame!"],
+  },
+  {
+    key: "scroll-genocide-found",
+    label: soundEffectStrings["scroll-genocide-found"],
+    messageLogKeywords: ["found a scroll of genocide!"],
+  },
+  {
+    key: "scroll-stinking-cloud-found",
+    label: soundEffectStrings["scroll-stinking-cloud-found"],
+    messageLogKeywords: ["found a scroll of stinking cloud!"],
+  },
+  {
+    key: "scroll-amnesia",
+    label: soundEffectStrings["scroll-amnesia"],
+    messageLogKeywords: ["mind releases itself from mundane concerns."],
+  },
+  {
+    key: "scroll-create-monster",
+    label: soundEffectStrings["scroll-create-monster"],
+    messageLogKeywords: ["Lights appear all around you!"],
+  },
+  {
+    key: "scroll-magic-mapping",
+    label: soundEffectStrings["scroll-magic-mapping"],
+    messageLogKeywords: ["A map coalesces in your mind!"],
+  },
+  {
+    key: "scroll-confuse-mind",
+    label: soundEffectStrings["scroll-confuse-mind"],
+    messageLogKeywords: ["mind is filled with crazy lines!"],
+  },
+  {
+    key: "potion-gain-level",
+    label: soundEffectStrings["potion-gain-level"],
+    messageLogKeywords: ["rise up, through the"],
+  },
+  {
+    key: "potion-sickness",
+    label: soundEffectStrings["potion-sickness"],
+    messageLogKeywords: ["This stuff tastes like poison."],
+  },
+  {
+    key: "potion-gain-energy",
+    label: soundEffectStrings["potion-gain-energy"],
+    messageLogKeywords: ["Magical energies course through your body."],
+  },
+  {
+    key: "potion-blindness",
+    label: soundEffectStrings["potion-blindness"],
+    messageLogKeywords: ["A cloud of darkness falls upon you."],
+  },
+  {
+    key: "djinni-emerges",
+    label: soundEffectStrings["djinni-emerges"],
+    messageLogKeywords: ["In a cloud of smoke,"],
+  },
+  {
+    key: "djinni-grants-wish",
+    label: soundEffectStrings["djinni-grants-wish"],
+    messageLogKeywords: ["I am in your debt.  I will grant one wish!"],
+  },
+  {
+    key: "wish-prompt",
+    label: soundEffectStrings["wish-prompt"],
+    messageLogKeywords: ["may wish for an object."],
+  },
+  {
+    key: "amulet-strangle-on",
+    label: soundEffectStrings["amulet-strangle-on"],
+    messageLogKeywords: ["It constricts your throat!"],
+  },
+  {
+    key: "amulet-strangle-relief",
+    label: soundEffectStrings["amulet-strangle-relief"],
+    messageLogKeywords: ["can breathe more easily!"],
+  },
+  {
+    key: "mirror-no-reflection",
+    label: soundEffectStrings["mirror-no-reflection"],
+    messageLogKeywords: ["don't have a reflection."],
+  },
+  {
+    key: "mirror-self-freeze",
+    label: soundEffectStrings["mirror-self-freeze"],
+    messageLogKeywords: ["Yikes!  You've frozen yourself!"],
+  },
+  // --- Shop --------------------------------------------------------------
+  {
+    key: "shop-alarm",
+    label: soundEffectStrings["shop-alarm"],
+    messageLogKeywords: ["An alarm sounds!"],
+  },
+  {
+    key: "shop-kops-appear",
+    label: soundEffectStrings["shop-kops-appear"],
+    messageLogKeywords: ["Keystone Kops appear!"],
+  },
+  {
+    key: "shop-escape-no-pay",
+    label: soundEffectStrings["shop-escape-no-pay"],
+    messageLogKeywords: ["escaped the shop without paying!"],
+  },
+  {
+    key: "shop-keeper-attacks",
+    label: soundEffectStrings["shop-keeper-attacks"],
+    messageLogKeywords: ["leaps towards you!"],
+  },
+  {
+    key: "shop-thank-you",
+    label: soundEffectStrings["shop-thank-you"],
+    messageLogKeywords: ["Thank you for shopping in"],
+  },
+  {
+    key: "shop-debt-paid",
+    label: soundEffectStrings["shop-debt-paid"],
+    messageLogKeywords: ["debt is paid off."],
+  },
+  {
+    key: "shop-item-free",
+    label: soundEffectStrings["shop-item-free"],
+    messageLogKeywords: ["got that for free!"],
+  },
+  // --- Pets / steeds -------------------------------------------------------
+  {
+    key: "pet-leash-breaks",
+    label: soundEffectStrings["pet-leash-breaks"],
+    messageLogKeywords: [
+      "leash goes slack.",
+      "leash falls slack.",
+      "leash suddenly comes loose.",
+      "leash snaps loose!",
+    ],
+  },
+  {
+    key: "pet-leash-chokes",
+    label: soundEffectStrings["pet-leash-chokes"],
+    messageLogKeywords: ["leash chokes"],
+  },
+  {
+    key: "pet-dies-offscreen",
+    label: soundEffectStrings["pet-dies-offscreen"],
+    messageLogKeywords: ["have a sad feeling for a moment, then it passes."],
+  },
+  {
+    key: "steed-mount",
+    label: soundEffectStrings["steed-mount"],
+    messageLogKeywords: [/\byou mount\b/i],
+  },
+  {
+    key: "steed-thrown-off",
+    label: soundEffectStrings["steed-thrown-off"],
+    messageLogKeywords: ["are thrown off of"],
+  },
+  {
+    key: "monster-grows-up",
+    label: soundEffectStrings["monster-grows-up"],
+    messageLogKeywords: ["grows up into"],
+  },
+  // --- Environment / terrain -----------------------------------------------
+  {
+    key: "dig-ceiling-collapse",
+    label: soundEffectStrings["dig-ceiling-collapse"],
+    messageLogKeywords: ["Crash!  The ceiling collapses around you!"],
+  },
+  {
+    key: "dig-boulder-falls-in",
+    label: soundEffectStrings["dig-boulder-falls-in"],
+    messageLogKeywords: ["KADOOM!  The boulder falls in!"],
+  },
+  {
+    key: "dig-disturb-grave",
+    label: soundEffectStrings["dig-disturb-grave"],
+    messageLogKeywords: [
+      "disturb the honorable dead!",
+      "violated the sanctity of this grave!",
+    ],
+  },
+  {
+    key: "dig-vandal-arrest",
+    label: soundEffectStrings["dig-vandal-arrest"],
+    messageLogKeywords: ["You're under arrest!"],
+  },
+  {
+    key: "fountain-bubbles",
+    label: soundEffectStrings["fountain-bubbles"],
+    messageLogKeywords: ["fountain bubbles furiously"],
+  },
+  {
+    key: "fountain-dries-up",
+    label: soundEffectStrings["fountain-dries-up"],
+    messageLogKeywords: ["fountain dries up!"],
+  },
+  {
+    key: "fountain-overflows",
+    label: soundEffectStrings["fountain-overflows"],
+    messageLogKeywords: ["Water gushes forth from the overflowing fountain!"],
+  },
+  {
+    key: "fountain-disappears",
+    label: soundEffectStrings["fountain-disappears"],
+    messageLogKeywords: ["fountain disappears!"],
+  },
+  {
+    key: "fountain-gem-spotted",
+    label: soundEffectStrings["fountain-gem-spotted"],
+    messageLogKeywords: ["spot a gem in the sparkling waters!"],
+  },
+  {
+    key: "fountain-snakes",
+    label: soundEffectStrings["fountain-snakes"],
+    messageLogKeywords: ["An endless stream of"],
+  },
+  {
+    key: "fountain-demon-wish",
+    label: soundEffectStrings["fountain-demon-wish"],
+    messageLogKeywords: ["grants you a wish!"],
+  },
+  {
+    key: "fountain-excalibur-blessed",
+    label: soundEffectStrings["fountain-excalibur-blessed"],
+    messageLogKeywords: ["hand reaches up to bless the sword"],
+  },
+  {
+    key: "sink-pipes-break",
+    label: soundEffectStrings["sink-pipes-break"],
+    messageLogKeywords: ["pipes break!  Water spurts out!"],
+  },
+  {
+    key: "sink-find-ring",
+    label: soundEffectStrings["sink-find-ring"],
+    messageLogKeywords: ["find a ring in the sink!"],
+  },
+  {
+    key: "sink-sewage-vomit",
+    label: soundEffectStrings["sink-sewage-vomit"],
+    messageLogKeywords: ["tastes like sewage!"],
+  },
+  {
+    key: "throne-puff-of-logic",
+    label: soundEffectStrings["throne-puff-of-logic"],
+    messageLogKeywords: ["in a puff of logic.", "disintegrates, having spent its power."],
+  },
+  {
+    key: "throne-electric-shock",
+    label: soundEffectStrings["throne-electric-shock"],
+    messageLogKeywords: ["electric shock shoots through your body!"],
+  },
+  {
+    key: "throne-acid",
+    label: soundEffectStrings["throne-acid"],
+    messageLogKeywords: ["throne is covered in acid!"],
+  },
+  {
+    key: "throne-warp",
+    label: soundEffectStrings["throne-warp"],
+    messageLogKeywords: ["body and mind start to warp."],
+  },
+  {
+    key: "throne-insight",
+    label: soundEffectStrings["throne-insight"],
+    messageLogKeywords: ["are granted an insight!"],
+  },
+  {
+    key: "throne-terrible-experience",
+    label: soundEffectStrings["throne-terrible-experience"],
+    messageLogKeywords: ["Sitting on the throne was a terrible experience."],
+  },
+  {
+    key: "levitation-start",
+    label: soundEffectStrings["levitation-start"],
+    messageLogKeywords: ["start to float in the air!", "walking on air!"],
+  },
+  {
+    key: "web-tear-free",
+    label: soundEffectStrings["web-tear-free"],
+    messageLogKeywords: [/\b(?:tear|cut) through\b.*\bweb\b/i],
+  },
+  {
+    key: "boulder-crash-door",
+    label: soundEffectStrings["boulder-crash-door"],
+    messageLogKeywords: ["boulder crashes through a door."],
+  },
+  {
+    key: "invocation-vibration",
+    label: soundEffectStrings["invocation-vibration"],
+    messageLogKeywords: ["a strange vibration"],
+  },
+  // --- Identification / engraving ------------------------------------------
+  {
+    key: "engrave-wand-digging",
+    label: soundEffectStrings["engrave-wand-digging"],
+    messageLogKeywords: ["is a wand of digging!"],
+  },
+  {
+    key: "engrave-wand-fire",
+    label: soundEffectStrings["engrave-wand-fire"],
+    messageLogKeywords: ["is a wand of fire!"],
+  },
+  {
+    key: "engrave-wand-lightning",
+    label: soundEffectStrings["engrave-wand-lightning"],
+    messageLogKeywords: ["is a wand of lightning!"],
+  },
+  {
+    key: "engrave-flames-fly",
+    label: soundEffectStrings["engrave-flames-fly"],
+    messageLogKeywords: ["Flames fly from the wand."],
+  },
+  {
+    key: "engrave-lightning-arcs",
+    label: soundEffectStrings["engrave-lightning-arcs"],
+    messageLogKeywords: ["Lightning arcs from the wand."],
+  },
+  {
+    key: "engrave-disturb-undead",
+    label: soundEffectStrings["engrave-disturb-undead"],
+    messageLogKeywords: ["disturb the undead!"],
+  },
+  {
+    key: "engrave-message-dissolves",
+    label: soundEffectStrings["engrave-message-dissolves"],
+    messageLogKeywords: ["message dissolves..."],
+  },
+  {
+    key: "engrave-vanishes",
+    label: soundEffectStrings["engrave-vanishes"],
+    messageLogKeywords: [/\bengraving on the\b.*\bvanishes!/i],
+  },
+  {
+    key: "engrave-wipe-message",
+    label: soundEffectStrings["engrave-wipe-message"],
+    messageLogKeywords: ["wipe out the message here."],
+  },
+  {
+    key: "engrave-room-full",
+    label: soundEffectStrings["engrave-room-full"],
+    messageLogKeywords: ["run out of room to write."],
+  },
+  // --- Misc ----------------------------------------------------------------
+  {
+    key: "jump-fails",
+    label: soundEffectStrings["jump-fails"],
+    messageLogKeywords: ["Illegal move!", "Too far!"],
+  },
+  {
+    key: "jump-rip-bear-trap",
+    label: soundEffectStrings["jump-rip-bear-trap"],
+    messageLogKeywords: ["rip yourself free of the bear trap!  Ouch!"],
+  },
+  {
+    key: "jump-leap-pit",
+    label: soundEffectStrings["jump-leap-pit"],
+    messageLogKeywords: ["leap from the pit!"],
+  },
+  {
+    key: "teleport-attempt-spell",
+    label: soundEffectStrings["teleport-attempt-spell"],
+    messageLogKeywords: ["attempt a teleport spell."],
+  },
+  {
+    key: "teleport-spell-fails",
+    label: soundEffectStrings["teleport-spell-fails"],
+    messageLogKeywords: ["attempted teleport spell fails."],
   },
 ] as const satisfies ReadonlyArray<Nh3dSoundEffectDefinitionShape>;
 
