@@ -75,6 +75,7 @@ import type {
   RunTelemetryBreakdownEntry,
   RunTelemetryHiddenFindEvent,
   RunTelemetryLootEvent,
+  RunTelemetryPetKillEvent,
   RunTelemetrySnapshot,
   RunTelemetrySpellLearnedEvent,
   RunTelemetryTrapEvent,
@@ -11547,6 +11548,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
       spellLearnedEvents: Array.isArray(source.spellLearnedEvents)
         ? source.spellLearnedEvents.map((event) => ({ ...event }))
         : [],
+      petKillEvents: Array.isArray(source.petKillEvents)
+        ? source.petKillEvents.map((event) => ({ ...event }))
+        : [],
       weaponKills: Array.isArray(source.weaponKills)
         ? source.weaponKills.map((entry) => ({ ...entry }))
         : [],
@@ -11828,6 +11832,27 @@ class Nethack3DEngine implements Nethack3DEngineController {
       count: 1,
       detail: detail?.trim() || undefined,
     });
+  }
+
+  private addRunTelemetryPetKillEvent(label: string, detail?: string): void {
+    const normalizedLabel = String(label || "").trim();
+    if (!normalizedLabel) {
+      return;
+    }
+    const turn = this.resolveRunTelemetryTurn();
+    const location = this.resolveRunTelemetryLocation();
+    const event: RunTelemetryPetKillEvent = {
+      id: `pet-kill-${turn}-${this.runTelemetry.petKillEvents.length + 1}`,
+      turn,
+      label: normalizedLabel,
+      count: 1,
+      detail: String(detail || "").trim() || undefined,
+      location,
+    };
+    this.runTelemetry = {
+      ...this.runTelemetry,
+      petKillEvents: [...this.runTelemetry.petKillEvents, event],
+    };
   }
 
   private addRunTelemetryHiddenFindEvent(
@@ -13938,6 +13963,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
         this.runTelemetryPetKillCounts,
         "Pet ally",
         "kills witnessed by the player",
+      );
+      this.addRunTelemetryPetKillEvent(
+        "Pet ally",
+        "Kill witnessed by the player",
       );
     }
   }

@@ -5,6 +5,7 @@ import type {
   RunTelemetryBreakdownEntry,
   RunTelemetryHiddenFindEvent,
   RunTelemetryLootEvent,
+  RunTelemetryPetKillEvent,
   RunTelemetrySearchEvent,
   RunTelemetrySnapshot,
   RunTelemetrySpellLearnedEvent,
@@ -660,6 +661,40 @@ function sanitizeTelemetrySpellLearnedEvents(
     .sort((left, right) => left.turn - right.turn || left.spell.localeCompare(right.spell));
 }
 
+function sanitizeTelemetryPetKillEvents(
+  events: ReadonlyArray<RunTelemetryPetKillEvent> | undefined,
+): RunTelemetryPetKillEvent[] {
+  if (!Array.isArray(events)) {
+    return [];
+  }
+  return events
+    .map((event, index) => {
+      const turn = normalizeFiniteInteger(event?.turn);
+      const count = normalizeFiniteInteger(event?.count);
+      const label = normalizeText(event?.label);
+      if (turn === null || turn < 0 || count === null || count <= 0 || !label) {
+        return null;
+      }
+      const sanitized: RunTelemetryPetKillEvent = {
+        id: normalizeText(event?.id) || `pet-kill-${turn}-${index}`,
+        turn,
+        label,
+        count,
+      };
+      const detail = normalizeText(event?.detail);
+      const location = normalizeText(event?.location);
+      if (detail) {
+        sanitized.detail = detail;
+      }
+      if (location) {
+        sanitized.location = location;
+      }
+      return sanitized;
+    })
+    .filter((event): event is RunTelemetryPetKillEvent => event !== null)
+    .sort((left, right) => left.turn - right.turn || left.label.localeCompare(right.label));
+}
+
 function sanitizeRunTelemetrySnapshot(
   telemetry: RunTelemetrySnapshot | null | undefined,
 ): RunTelemetrySnapshot {
@@ -674,6 +709,7 @@ function sanitizeRunTelemetrySnapshot(
     spellLearnedEvents: sanitizeTelemetrySpellLearnedEvents(
       telemetry?.spellLearnedEvents,
     ),
+    petKillEvents: sanitizeTelemetryPetKillEvents(telemetry?.petKillEvents),
     weaponKills: sanitizeTelemetryBreakdownEntries(telemetry?.weaponKills),
     spellKills: sanitizeTelemetryBreakdownEntries(telemetry?.spellKills),
     petKills: sanitizeTelemetryBreakdownEntries(telemetry?.petKills),

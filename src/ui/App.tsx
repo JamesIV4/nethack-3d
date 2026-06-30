@@ -1452,6 +1452,25 @@ function resolveTopScoreLiveLocationLabel(stats: PlayerStatsSnapshot): string {
   return dungeon;
 }
 
+function resolveTopScoreLiveLocationKey(
+  stats: PlayerStatsSnapshot,
+  runtimeVersion: NethackRuntimeVersion,
+  locationLabel: string,
+): string {
+  const dungeonLevel =
+    typeof stats.dlevel === "number" && Number.isFinite(stats.dlevel)
+      ? Math.trunc(stats.dlevel)
+      : null;
+  if (runtimeVersion === "slashem" && dungeonLevel !== null) {
+    return `slashem-depth:${dungeonLevel}`;
+  }
+  const dungeon = String(stats.dungeon ?? "").trim().toLowerCase();
+  if (dungeon && dungeonLevel !== null) {
+    return `${dungeon}:${dungeonLevel}`;
+  }
+  return String(locationLabel ?? "").trim().toLowerCase();
+}
+
 function isTopScoreKillMessage(message: string): boolean {
   return /^you\s+(?:kill|destroy|defeat|dispatch|smite|slay|annihilate|murder|vaporize|disintegrate)\b/i.test(
     message,
@@ -1745,9 +1764,16 @@ function resolveTopScoreTurnsSortValue(score: TopScoreRecord): number {
 }
 
 function resolveTopScoreKillsSortValue(score: TopScoreRecord): number {
-  const timelineKills = resolveTopScoreTimelineEvents(score).filter(
-    (event) => event.kind === "kill",
-  ).length;
+  const timelineKills = resolveTopScoreTimelineEvents(score).reduce(
+    (total, event) =>
+      event.kind === "kill"
+        ? total + resolveTopScoreTimelineLineIncrement("kills", {
+            ...event,
+            filterId: "kills",
+          })
+        : total,
+    0,
+  );
   const telemetry = resolveTopScoreTelemetry(score);
   const breakdownKills = [
     ...telemetry.weaponKills,
@@ -2027,7 +2053,46 @@ function buildTopScoreTelemetryTimelineEvents(
     detail: event.detail,
     location: event.location,
   }));
-  return [...lootEvents, ...trapEvents, ...hiddenFindEvents, ...spellEvents];
+  const petKillEvents =
+    telemetry.petKillEvents.length > 0
+      ? telemetry.petKillEvents.map<TopScoreTimelineEvent>((event) => ({
+          id: `telemetry-pet-kill-${event.id}`,
+          turn: normalizeTopScoreTimelineTurn(event.turn),
+          kind: "kill",
+          label:
+            event.count === 1
+              ? "Pet defeated an enemy"
+              : `Pet defeated ${formatTopScoreInteger(event.count)} enemies`,
+          summary:
+            event.count === 1
+              ? `${event.label} defeated an enemy.`
+              : `${event.label} defeated ${formatTopScoreInteger(event.count)} enemies.`,
+          detail: event.detail,
+          amount: event.count,
+          location: event.location,
+        }))
+      : telemetry.petKills.map<TopScoreTimelineEvent>((entry, index) => ({
+          id: `telemetry-pet-kill-aggregate-${index}`,
+          turn: normalizeTopScoreTimelineTurn(score.turns ?? score.detail?.turns),
+          kind: "kill",
+          label:
+            entry.count === 1
+              ? "Pet defeated an enemy"
+              : `Pet defeated ${formatTopScoreInteger(entry.count)} enemies`,
+          summary:
+            entry.count === 1
+              ? `${entry.label} defeated an enemy.`
+              : `${entry.label} defeated ${formatTopScoreInteger(entry.count)} enemies.`,
+          detail: entry.detail,
+          amount: entry.count,
+        }));
+  return [
+    ...lootEvents,
+    ...trapEvents,
+    ...hiddenFindEvents,
+    ...spellEvents,
+    ...petKillEvents,
+  ];
 }
 
 function buildFallbackTopScoreTimeline(score: TopScoreRecord): TopScoreTimelineEvent[] {
@@ -2045,6 +2110,37 @@ function buildFallbackTopScoreTimeline(score: TopScoreRecord): TopScoreTimelineE
   ];
 }
 
+function dedupeSlashemLocationTimelineEvents(
+  events: TopScoreTimelineEvent[],
+  score: TopScoreRecord,
+): TopScoreTimelineEvent[] {
+  if (score.detail?.runtimeVersion !== "slashem" && score.version !== "slashem") {
+    return events;
+  }
+
+  const seenLocationKeys = new Set<string>();
+  return events.filter((event) => {
+    if (event.kind !== "location") {
+      return true;
+    }
+    const label = String(
+      event.location || event.summary || event.detail || event.label || "",
+    ).trim();
+    const depthMatch = label.match(/-?\d+\s*\.?$/);
+    const key = depthMatch
+      ? `slashem-depth:${Number.parseInt(depthMatch[0], 10)}`
+      : label.toLowerCase();
+    if (!key) {
+      return true;
+    }
+    if (seenLocationKeys.has(key)) {
+      return false;
+    }
+    seenLocationKeys.add(key);
+    return true;
+  });
+}
+
 function resolveTopScoreTimelineEvents(score: TopScoreRecord): TopScoreTimelineEvent[] {
   const savedTimeline = score.detail?.timeline ?? [];
   const telemetryTimeline = buildTopScoreTelemetryTimelineEvents(score);
@@ -2052,8 +2148,11 @@ function resolveTopScoreTimelineEvents(score: TopScoreRecord): TopScoreTimelineE
     (event) => event.kind !== "search",
   );
   return mergedTimeline.length > 0
-    ? mergedTimeline.sort(
-        (left, right) => left.turn - right.turn || left.label.localeCompare(right.label),
+    ? dedupeSlashemLocationTimelineEvents(
+        mergedTimeline.sort(
+          (left, right) => left.turn - right.turn || left.label.localeCompare(right.label),
+        ),
+        score,
       )
     : buildFallbackTopScoreTimeline(score);
 }
@@ -2064,7 +2163,16 @@ function buildTopScoreTimelineSummaryMetrics(score: TopScoreRecord): TopScoreMet
     return [];
   }
 
-  const killCount = events.filter((event) => event.kind === "kill").length;
+  const killCount = events.reduce(
+    (total, event) =>
+      event.kind === "kill"
+        ? total + resolveTopScoreTimelineLineIncrement("kills", {
+            ...event,
+            filterId: "kills",
+          })
+        : total,
+    0,
+  );
   const goldCollected = events.reduce((total, event) => {
     if (event.kind !== "gold") {
       return total;
@@ -2281,10 +2389,16 @@ function resolveTopScoreTimelineLineIncrement(
   event: TopScoreTimelineDisplayEvent,
 ): number {
   switch (filterId) {
-    case "kills":
     case "hazards":
     case "magic":
       return 1;
+    case "kills": {
+      const amount =
+        typeof event.amount === "number" && Number.isFinite(event.amount)
+          ? Math.trunc(event.amount)
+          : 0;
+      return amount > 0 ? amount : 1;
+    }
     case "gold":
     case "loot":
     case "secrets": {
@@ -8939,7 +9053,11 @@ export default function App(): JSX.Element {
         if (!currentLocation) {
           return;
         }
-        const locationKey = currentLocation.toLowerCase();
+        const locationKey = resolveTopScoreLiveLocationKey(
+          stats,
+          activeRuntimeVersion,
+          currentLocation,
+        );
         if (visitedTopScoreLocationsRef.current.has(locationKey)) {
           return;
         }
@@ -9002,7 +9120,7 @@ export default function App(): JSX.Element {
 
       previousTopScoreTimelineStatsRef.current = { ...stats };
     },
-    [appendTopScoreTimelineEvent],
+    [activeRuntimeVersion, appendTopScoreTimelineEvent],
   );
 
   const captureTopScoreTimelineFromMessages = useCallback(
