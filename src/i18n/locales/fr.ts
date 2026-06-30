@@ -1,4 +1,4 @@
-﻿export const fr = {
+export const fr = {
   meta: {
     locale: "fr-FR",
   },
@@ -112,7 +112,7 @@
       zoom_in: {
         label: "Zoom (maintenir)",
         description:
-          "Maintenez, puis utilisez le stick gauche ou droit vers le haut/bas pour zoomer ou dezoomer.",
+          "Maintenez, puis utilisez le stick gauche haut/bas pour zoomer et le stick droit pour faire pivoter la camera.",
       },
       recenter_camera: {
         label: "Recentrer la camera",
@@ -196,6 +196,15 @@
           normal: "Mode normal",
           explore: "Explorer",
           debug: "Assistant/Debug",
+        },
+      },
+      number_pad: {
+        label: "Touches de deplacement",
+        description:
+          "Choisissez si NetHack utilise le pave numerique (`number_pad:1`) ou les touches vi traditionnelles (`number_pad:0`) pour le deplacement.",
+        options: {
+          numeric: "Pave numerique",
+          vi: "Touches vi",
         },
       },
       autopickup: {
@@ -666,6 +675,11 @@
           description:
             "Fait tourner les touches de deplacement et les directions de glissement selon l'angle Y de la camera.",
         },
+        fpsWasdKeyboardMovementEnabled: {
+          label: "Activer le deplacement WASD au clavier en mode FPS",
+          description:
+            "Utilise W/A/S/D pour le deplacement a la premiere personne. Desactivez cette option pour que ces touches se comportent comme des commandes NetHack normales.",
+        },
         controllerFpsMoveRepeatMs: {
           label: "Repetition du mouvement FPS au stick gauche",
           description:
@@ -782,6 +796,39 @@
           label: "Journal de messages en direct",
           description: "Affiche le journal de messages defilant en jeu.",
         },
+        showPersistentMobileMessageLog: {
+          label: "Afficher le journal de messages persistant",
+          description:
+            "Garde le journal de messages mobile compact visible pendant le jeu. Le bouton Journal peut toujours ouvrir le grand journal.",
+        },
+        rumbleEnabled: {
+          label: "Activer les vibrations",
+          description:
+            "Utilise un bref retour haptique pour les degats infliges et subis sur les appareils mobiles compatibles.",
+        },
+        sectionMobileSafeZone: "Zones sures mobiles",
+        manualMobileBottomSafeZoneEnabled: {
+          label: "Remplacer les zones sures mobiles detectees",
+          description:
+            "Utilise des marges de zone sure manuelles lorsque les consoles Android portables signalent mal les zones sures.",
+        },
+        manualMobileBottomSafeZoneVerticalPx: {
+          label: "Zone sure inferieure verticale",
+          description:
+            "Zone sure inferieure manuelle pour la disposition mobile verticale.",
+        },
+        manualMobileBottomSafeZoneHorizontalPx: {
+          label: "Zone sure inferieure horizontale",
+          description:
+            "Zone sure inferieure manuelle pour la disposition mobile horizontale.",
+        },
+        manualMobileRightSafeZoneHorizontalPx: {
+          label: "Zone sure droite horizontale",
+          description:
+            "Zone sure droite manuelle pour la disposition mobile horizontale.",
+        },
+        manualMobileBottomSafeZonePreview: "Zone sure inferieure",
+        manualMobileRightSafeZonePreview: "Zone sure droite",
         liveMessageDisplayTimeMs: {
           label: "Duree d'affichage des messages en direct",
           description:
@@ -920,10 +967,10 @@
           description:
             "Deduit et met en cache les tuiles de murs de couloir sombres pour les runtimes NetHack 3.4.3/3.6.x anciens, y compris Slash'EM.",
         },
-        overrideNh37DarkCorridorWallTiles: {
-          label: "Remplacer les tuiles de murs sombres NetHack 3.7",
+        overrideNh5DarkCorridorWallTiles: {
+          label: "Remplacer les tuiles de murs sombres NetHack 5.0",
           description:
-            "Applique les reglages de remplacement des murs sombres aux tuiles de murs de couloir sombres de NetHack 3.7.",
+            "Applique les reglages de remplacement des murs sombres aux tuiles de murs de couloir sombres de NetHack 5.0.",
         },
         darkCorridorWallTileOverrideEnabled: {
           label: "Remplacer la tuile de mur sombre",
@@ -941,8 +988,9 @@
           description: "Parametres d'interface et d'affichage.",
         },
         mobile: {
-          label: "Tactile",
-          description: "Parametres des commandes tactiles pour le jeu mobile.",
+          label: "Mobile",
+          description:
+            "Parametres d'interface et de jeu specifiques au mobile.",
         },
         controls: {
           label: "Commandes",
@@ -1216,7 +1264,7 @@
           darkWallsDisabledByVulture:
             " Desactivee lorsque les tuiles Vulture sont utilisees.",
           enableDarkWallsFirst:
-            " Activez d'abord les murs de couloir sombres legacy ou les remplacements de murs sombres NetHack 3.7.",
+            " Activez d'abord les murs de couloir sombres legacy ou les remplacements de murs sombres NetHack 5.0.",
           enableFpsFirst: " Activez d'abord le mode a la premiere personne dans Affichage.",
         },
         darkWallControls: {
@@ -1250,7 +1298,7 @@
         builtInNamesLocked: "Les noms des jeux de tuiles integres ne peuvent pas etre modifies.",
         tileLayoutVersion: "Version de disposition des tuiles",
         layout367: "Disposition NetHack 3.6.7",
-        layout37: "Disposition NetHack 3.7",
+        layout5: "Disposition NetHack 5.0",
         tileLayoutDescription:
           "Choisissez la disposition d'indices de tuiles utilisee par cet atlas importe.",
         tileImage: "Image du jeu de tuiles",
@@ -1258,6 +1306,9 @@
         selectedFile: (fileName: string) => `Selected: ${fileName}`,
         currentFile: (fileName: string) => `Current: ${fileName}`,
         uploadedImage: "image importee",
+        weaponSpriteFlip: "Retourner le sprite de l'arme FPS",
+        weaponSpriteFlipDescription:
+          "Inverse horizontalement le sprite de l'arme tenue pour ce jeu de tuiles. Active par defaut.",
         backgroundRemovalDescription:
           "Configurez la suppression d'arriere-plan des panneaux pour ce jeu de tuiles, ou laissez les deux modes desactives pour conserver les fonds de l'atlas.",
         backgroundTileRemoval: "Suppression de la tuile de fond",
@@ -1290,6 +1341,11 @@
         selectAll: "Tout selectionner",
         deselectAll: "Tout deselectionner",
         page: (current: number, total: number) => `Page ${current} / ${total}`,
+        amount: "Amount",
+        amountDefault: "Default",
+        clearAmount: "Clear amount",
+        decreaseAmount: "Decrease amount by one",
+        increaseAmount: "Increase amount by one",
         pageHintMultiple:
           "Utilisez < et > pour changer de page. Appuyez sur ESC pour annuler",
         pageHintSingle: "Appuyez sur ESC pour annuler",
@@ -1374,6 +1430,33 @@
         close: "Fermer",
         wizardCommands: "Commandes assistant",
         wizard: "Assistant",
+        wizardCommandFallbackDescription:
+          "Execute cette commande de debogage reservee au mode wizard.",
+        wizardCommandDetails: {
+          levelchange: { name: "Changer le niveau", description: "Definit le niveau d'experience du heros." },
+          lightsources: { name: "Sources de lumiere", description: "Affiche les sources de lumiere mobiles." },
+          migratemons: { name: "Monstres migrateurs", description: "Affiche les monstres qui changent de niveau." },
+          panic: { name: "Test de panique", description: "Teste la panique et termine cette partie." },
+          polyself: { name: "Polymorphie", description: "Change la forme actuelle du heros." },
+          seenv: { name: "Vecteurs vus", description: "Affiche la carte de debogage des vecteurs vus." },
+          stats: { name: "Statistiques memoire", description: "Affiche les statistiques memoire d'execution." },
+          timeout: { name: "File des delais", description: "Affiche effets temporises et intrinseques." },
+          vanquished: { name: "Monstres vaincus", description: "Affiche le compte des monstres morts." },
+          vision: { name: "Tableau de vision", description: "Affiche le tableau de vision actuel." },
+          wizbury: { name: "Enterrer objets proches", description: "Enterre les objets au sol dans une zone 3x3." },
+          wizdetect: { name: "Detecter le cache", description: "Revele les choses cachees pres du heros." },
+          wizgenesis: { name: "Creer monstre", description: "Cree un monstre par nom ou classe." },
+          wizidentify: { name: "Identifier inventaire", description: "Identifie tous les objets de l'inventaire." },
+          wizintrinsic: { name: "Regler intrinseques", description: "Ajuste les intrinseques temporises choisis." },
+          wizlevelport: { name: "Teleport de niveau", description: "Teleporte vers un autre niveau ou branche." },
+          wizmakemap: { name: "Recreer le niveau", description: "Genere a nouveau le niveau actuel." },
+          wizmap: { name: "Cartographier", description: "Revele la carte du niveau et les pieges." },
+          wizrumorcheck: { name: "Verifier rumeurs", description: "Valide les fichiers de vraies et fausses rumeurs." },
+          wizsmell: { name: "Sentir monstre", description: "Sent un monstre selectionne." },
+          wizwhere: { name: "Niveaux speciaux", description: "Affiche l'emplacement des niveaux speciaux." },
+          wizwish: { name: "Souhait", description: "Cree objet, piege ou terrain." },
+          wmode: { name: "Modes des murs", description: "Affiche les donnees debug des murs." },
+        },
         repeat: "Repeter",
         character: "Personnage",
         inventory: "Inventaire",
@@ -1384,6 +1467,12 @@
       },
       positionPrompt: {
         closeLabel: "Fermer l'invite de position",
+        desktopHint:
+          "Utilisez les commandes de déplacement ou cliquez sur une case pour déplacer la sélection. Cliquez de nouveau sur la case sélectionnée ou appuyez sur Entrée pour confirmer.",
+        mobileHint:
+          "Utilisez les commandes de déplacement ou touchez une case pour déplacer la sélection. Touchez de nouveau la case sélectionnée ou appuyez sur Entrée pour confirmer.",
+        controllerHint:
+          "Utilisez les commandes de déplacement pour déplacer la sélection. Appuyez sur Entrée ou Confirmer pour confirmer.",
       },
       controllerSupport: {
         prompt: "Manette detectee. Activer la prise en charge de la manette ?",

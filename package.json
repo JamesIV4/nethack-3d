@@ -1,6 +1,6 @@
 {
   "name": "nethack3d",
-  "version": "1.2.7",
+  "version": "1.3.4",
   "main": "electron/main.cjs",
   "scripts": {
     "ensure:rollup-native": "node scripts/electron/ensure-rollup-native.mjs",
@@ -21,7 +21,7 @@
     "electron:dist:mac": "npm run build:electron && electron-builder --mac",
     "electron:pack:win": "npm run build:electron && electron-builder --win --x64 --dir",
     "electron:dist:win": "npm run build:electron && electron-builder --win nsis --x64",
-    "electron:dist:win:portable": "npm run build:electron && electron-builder --win portable --x64",
+    "electron:dist:win:portable": "node scripts/electron/dist-windows.mjs --portable-only",
     "electron:dist:linux:appimage": "node scripts/electron/dist-linux-appimage.mjs",
     "electron:dist:all": "node scripts/electron/dist-all.mjs",
     "electron:dist:all:parallel": "node scripts/electron/dist-all.mjs --parallel",
@@ -33,6 +33,8 @@
     "copy-wasm": "node scripts/wasm/copy-wasm.mjs",
     "startup:generate-rulesets": "node scripts/game/generate-startup-character-rulesets.mjs",
     "startup:check-rulesets": "node scripts/game/generate-startup-character-rulesets.mjs --check",
+    "tilesets:generate-ai-prompts": "node scripts/tilesets/generate-ai-tileset-prompts.mjs",
+    "tilesets:generate-ai-prompts:256-same-sheet": "node scripts/tilesets/generate-ai-tileset-prompts.mjs --columns 6 --rows 4 --tile-size 256 --out docs/nethack-367-ai-tileset-prompts-256-same-sheet.md",
     "start": "npm run dev",
     "start:preview": "vite preview",
     "preview": "vite preview",
@@ -49,6 +51,7 @@
     "npmRebuild": false,
     "nodeGypRebuild": false,
     "buildDependenciesFromSource": false,
+    "afterPack": "scripts/electron/after-pack.cjs",
     "directories": {
       "output": "release"
     },
@@ -61,7 +64,11 @@
       "!node_modules/@capacitor/core",
       "!node_modules/@capacitor/core/**",
       "!node_modules/@capacitor/android",
-      "!node_modules/@capacitor/android/**"
+      "!node_modules/@capacitor/android/**",
+      "!node_modules/@capacitor/*/android/build/**",
+      "!node_modules/@capacitor/*/android/.gradle/**",
+      "!node_modules/@capacitor/*/android/.cxx/**",
+      "!node_modules/@capacitor/*/ios/**"
     ],
     "linux": {
       "category": "Game",
@@ -151,7 +158,10 @@
     "zustand": "^5.0.8"
   },
   "dependencies": {
+    "@capacitor/haptics": "^8.0.2",
+    "lucide-react": "^1.16.0",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "web-haptics": "^0.0.6"
   }
 }

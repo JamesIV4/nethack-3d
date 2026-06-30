@@ -27,7 +27,7 @@ const GLYPH_CATALOG_BY_VERSION: Record<
     GLYPH_CATALOG_META: GLYPH_CATALOG_META_367,
     GLYPH_CATALOG_RANGES: GLYPH_CATALOG_RANGES_367,
   },
-  "3.7": {
+  "5.0": {
     GLYPH_CATALOG: GLYPH_CATALOG_367,
     GLYPH_CATALOG_META: GLYPH_CATALOG_META_367,
     GLYPH_CATALOG_RANGES: GLYPH_CATALOG_RANGES_367,
@@ -45,14 +45,14 @@ let activeGlyphCatalog: GlyphCatalogModule = GLYPH_CATALOG_BY_VERSION["3.6.7"];
 async function loadGlyphCatalogModule(
   version: NethackRuntimeVersion,
 ): Promise<GlyphCatalogModule> {
-  if (version === "3.7") {
-    const existing = GLYPH_CATALOG_BY_VERSION["3.7"];
+  if (version === "5.0") {
+    const existing = GLYPH_CATALOG_BY_VERSION["5.0"];
     if (existing.GLYPH_CATALOG !== GLYPH_CATALOG_367) {
       return existing;
     }
     const mod =
-      (await import("./glyph-catalog.37.generated")) as GlyphCatalogModule;
-    GLYPH_CATALOG_BY_VERSION["3.7"] = mod;
+      (await import("./glyph-catalog.5.generated")) as GlyphCatalogModule;
+    GLYPH_CATALOG_BY_VERSION["5.0"] = mod;
     return mod;
   }
 

@@ -9,7 +9,7 @@ export type Nh3dTilesetTileLayoutVersion =
   | "slashem"
   | "3.4.3"
   | "3.6.7"
-  | "3.7"
+  | "5.0"
   | "unknown";
 export type Nh3dTilesetBackgroundRemovalMode = "none" | "tile" | "solid";
 
@@ -40,7 +40,7 @@ const fallbackSolidChromaKeyColorHex = "#466d6c";
 const fallbackWeaponSpriteFlipX = true;
 export const nh3dTilesetAtlasTileColumns = 40;
 const builtinSlashEmTilesetPathPrefix = "assets/slashem/";
-const builtinNh37TilesetPathPrefix = "assets/3.7/";
+const builtinNh5TilesetPathPrefix = "assets/5.0/";
 const userTilesetPathPrefix = "user:";
 const vultureTilesetPathPrefix = "vulture:";
 const vultureTilesetLabel = "Vulture (isometric)";
@@ -58,9 +58,9 @@ const tilesetSolidChromaKeyPresetByLabel: Readonly<Record<string, string>> = {
   "Absurdly Evil": "#466d6c",
   DawnHack: "#466d6c",
   Nevanda: "#466d6c",
-  "Nevanda (3.7)": "#466d6c",
+  "Nevanda (5.0)": "#466d6c",
   "Vanilla NetHack TIles": "#476C6C",
-  "Vanilla NetHack Tiles (3.7)": "#466d6c",
+  "Vanilla NetHack Tiles (5.0)": "#466d6c",
   "Vanilla NetHack Tiles": "#476C6C",
   "NetHack Modern": "#000000",
 };
@@ -77,8 +77,8 @@ const tilesetBackgroundRemovalModePresetByPath: Readonly<
   Record<string, Nh3dTilesetBackgroundRemovalMode>
 > = {
   "assets/slashem/Absurd.png": "none",
-  "assets/3.7/Nevanda (3.7).png": "solid",
-  "assets/3.7/Vanilla NetHack Tiles (3.7).png": "solid",
+  "assets/5.0/Nevanda (5.0).png": "solid",
+  "assets/5.0/Vanilla NetHack Tiles (5.0).png": "solid",
   "assets/3.6/Nevanda.png": "solid",
   "assets/3.6/NetHack Modern.bmp": "solid",
   "assets/3.6/DawnHack.bmp": "tile",
@@ -99,8 +99,8 @@ function normalizeGeneratedTileLayoutVersion(
   if (tileLayoutVersion === "slashem") {
     return "slashem";
   }
-  if (tileLayoutVersion === "3.7") {
-    return "3.7";
+  if (tileLayoutVersion === "5.0") {
+    return "5.0";
   }
   if (tileLayoutVersion === "3.4.3") {
     return "3.4.3";
@@ -114,8 +114,8 @@ function normalizeUserTilesetTileLayoutVersion(
   if (tileLayoutVersion === "slashem") {
     return "slashem";
   }
-  if (tileLayoutVersion === "3.7") {
-    return "3.7";
+  if (tileLayoutVersion === "5.0") {
+    return "5.0";
   }
   if (tileLayoutVersion === "3.6.7") {
     return "3.6.7";
@@ -140,9 +140,9 @@ export function isNh3dTilesetLayoutCompatibleWithRuntime(
     return runtimeVersion === "slashem";
   }
   if (tileLayoutVersion === "3.6.7") {
-    return runtimeVersion === "3.6.7" || runtimeVersion === "3.7";
+    return runtimeVersion === "3.6.7" || runtimeVersion === "5.0";
   }
-  return runtimeVersion === "3.7";
+  return runtimeVersion === "5.0";
 }
 
 function isNh3dTilesetCompatibleWithRuntime(
@@ -170,10 +170,10 @@ function findLabelMatchedCompatibleTileset(
   );
 }
 
-function isBuiltinNh37Tileset(tileset: Nh3dTilesetEntry): boolean {
+function isBuiltinNh5Tileset(tileset: Nh3dTilesetEntry): boolean {
   return (
     tileset.source === "builtin" &&
-    String(tileset.path || "").startsWith(builtinNh37TilesetPathPrefix)
+    String(tileset.path || "").startsWith(builtinNh5TilesetPathPrefix)
   );
 }
 
@@ -498,7 +498,7 @@ export function resolveNh3dCompatibleTilesetPathForRuntime(
   return getDefaultNh3dTilesetPathForRuntime(runtimeVersion);
 }
 
-export function resolveNh3dFuseBaseTilesetPathForLegacyNh37Runtime(
+export function resolveNh3dFuseBaseTilesetPathForLegacyNh5Runtime(
   path: string | null | undefined,
 ): string | null {
   const selectedTileset = findNh3dTilesetByPath(path);
@@ -508,14 +508,14 @@ export function resolveNh3dFuseBaseTilesetPathForLegacyNh37Runtime(
   const selectedLookupLabel = normalizeTilesetPresetLookupLabel(
     selectedTileset.label,
   ).toLowerCase();
-  const labelMatchedNh37Tileset = tilesetCatalog.find(
+  const labelMatchedNh5Tileset = tilesetCatalog.find(
     (entry) =>
-      entry.tileLayoutVersion === "3.7" &&
+      entry.tileLayoutVersion === "5.0" &&
       normalizeTilesetPresetLookupLabel(entry.label).toLowerCase() ===
         selectedLookupLabel,
   );
-  if (labelMatchedNh37Tileset) {
-    return labelMatchedNh37Tileset.path;
+  if (labelMatchedNh5Tileset) {
+    return labelMatchedNh5Tileset.path;
   }
   return null;
 }
@@ -590,7 +590,7 @@ export function resolveDefaultNh3dTilesetBackgroundRemovalMode(
   ) {
     return "solid";
   }
-  if (isBuiltinNh37Tileset(tileset)) {
+  if (isBuiltinNh5Tileset(tileset)) {
     return "solid";
   }
   return fallbackBackgroundRemovalMode;

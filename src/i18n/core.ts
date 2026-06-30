@@ -6,6 +6,7 @@ import { fr } from "./locales/fr";
 import { ja } from "./locales/ja";
 import { ko } from "./locales/ko";
 import { ptBrOverrides } from "./locales/pt-br";
+import { ru } from "./locales/ru";
 import { zhCnOverrides } from "./locales/zh-cn";
 import { mergeTranslations } from "./locale-helpers";
 
@@ -18,6 +19,7 @@ export type SupportedLocale =
   | "ja"
   | "ko"
   | "pt-br"
+  | "ru"
   | "zh-cn";
 
 const dictionaries: Record<SupportedLocale, TranslationDictionary> = {
@@ -29,6 +31,7 @@ const dictionaries: Record<SupportedLocale, TranslationDictionary> = {
   ja: mergeTranslations(en, ja),
   ko: mergeTranslations(en, ko),
   "pt-br": mergeTranslations(en, ptBrOverrides),
+  ru,
   "zh-cn": mergeTranslations(en, zhCnOverrides),
 };
 
@@ -43,6 +46,7 @@ const localeLabels: Record<SupportedLocale, string> = {
   ja: "\u65e5\u672c\u8a9e",
   ko: "\ud55c\uad6d\uc5b4",
   "pt-br": "Portugu\u00eas (Brasil)",
+  ru: "\u0420\u0443\u0441\u0441\u043a\u0438\u0439",
   "zh-cn": "\u7b80\u4f53\u4e2d\u6587",
 };
 
@@ -79,6 +83,8 @@ const localeAliases: Record<string, SupportedLocale> = {
   pt: "pt-br",
   "pt-br": "pt-br",
   "pt-pt": "pt-br",
+  ru: "ru",
+  "ru-ru": "ru",
   zh: "zh-cn",
   "zh-cn": "zh-cn",
   "zh-hans": "zh-cn",

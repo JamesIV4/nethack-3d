@@ -1,11 +1,5 @@
 import type { NethackRuntimeVersion } from "./types";
 
-// Temporary kill-switch for 3.7 checkpoint autosave resume. This keeps
-// checkpoint-only autosaves out of the loadable-save UI and disables the
-// runtime paths that depend on browser-side checkpoint recovery support.
-const ENABLE_RUNTIME_37_CHECKPOINT_RECOVERY = false;
-const ENABLE_RUNTIME_SLASHEM_CHECKPOINT_RECOVERY = false;
-
 function readDefinedBoolean(value: unknown): boolean {
   if (typeof value === "boolean") {
     return value;
@@ -19,15 +13,12 @@ function readDefinedBoolean(value: unknown): boolean {
 export function hasRuntimeCheckpointRecoveryPrimitiveExport(
   runtimeVersion: NethackRuntimeVersion,
 ): boolean {
-  if (runtimeVersion === "3.7") {
+  if (runtimeVersion === "5.0") {
     return readDefinedBoolean(
-      import.meta.env.VITE_NH3D_WASM_37_HAS_RECOVER_SAVEFILE,
+      import.meta.env.VITE_NH3D_WASM_5_HAS_RECOVER_SAVEFILE,
     );
   }
   if (runtimeVersion === "slashem") {
-    if (!ENABLE_RUNTIME_SLASHEM_CHECKPOINT_RECOVERY) {
-      return false;
-    }
     return readDefinedBoolean(
       import.meta.env.VITE_NH3D_WASM_SLASHEM_HAS_RECOVER_SAVEFILE,
     );
@@ -43,18 +34,12 @@ export function hasRuntimeCheckpointRecoveryPrimitiveExport(
 export function supportsRuntimeCheckpointRecovery(
   runtimeVersion: NethackRuntimeVersion,
 ): boolean {
-  if (runtimeVersion === "3.7") {
-    if (!ENABLE_RUNTIME_37_CHECKPOINT_RECOVERY) {
-      return false;
-    }
+  if (runtimeVersion === "5.0") {
     return readDefinedBoolean(
-      import.meta.env.VITE_NH3D_WASM_37_HAS_CHECKPOINT_RESUME_BRIDGE,
+      import.meta.env.VITE_NH3D_WASM_5_HAS_CHECKPOINT_RESUME_BRIDGE,
     );
   }
   if (runtimeVersion === "slashem") {
-    if (!ENABLE_RUNTIME_SLASHEM_CHECKPOINT_RECOVERY) {
-      return false;
-    }
     return readDefinedBoolean(
       import.meta.env.VITE_NH3D_WASM_SLASHEM_HAS_CHECKPOINT_RESUME_BRIDGE,
     );

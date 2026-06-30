@@ -25,7 +25,7 @@ export const STATUS_FIELD_MAP_367 = {
     22: "BL_CONDITION"
 };
 
-export const STATUS_FIELD_MAP_37 = {
+export const STATUS_FIELD_MAP_5 = {
     0: "BL_TITLE",
     1: "BL_STR",
     2: "BL_DX",

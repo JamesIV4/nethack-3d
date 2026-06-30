@@ -1,4 +1,4 @@
-﻿import { mergeTranslations, type LocaleOverrides } from "../locale-helpers";
+import { mergeTranslations, type LocaleOverrides } from "../locale-helpers";
 import { en, type TranslationDictionary } from "./en";
 
 export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
@@ -110,7 +110,7 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
       zoom_in: {
         label: "ズーム（長押し）",
         description:
-          "押したまま左右どちらかのスティックを上下すると、ズームイン・ズームアウトします。",
+          "押しながら、左スティック上下でズームし、右スティックでカメラを回転します。",
       },
       recenter_camera: {
         label: "カメラ再中央寄せ",
@@ -189,6 +189,15 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
           normal: "通常",
           explore: "探索",
           debug: "Wizard / Debug",
+        },
+      },
+      number_pad: {
+        label: "移動キー",
+        description:
+          "NetHack の移動にテンキー (`number_pad:1`) を使うか、従来の vi キー (`number_pad:0`) を使うかを選びます。",
+        options: {
+          numeric: "テンキー",
+          vi: "vi キー",
         },
       },
       autopickup: {
@@ -613,6 +622,11 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
           description:
             "カメラの Y 軸角度に応じて移動キーとスワイプ方向を回転させます。",
         },
+        fpsWasdKeyboardMovementEnabled: {
+          label: "FPS \u30e2\u30fc\u30c9\u3067 WASD \u30ad\u30fc\u30dc\u30fc\u30c9\u79fb\u52d5\u3092\u6709\u52b9\u5316",
+          description:
+            "\u4e00\u4eba\u79f0\u8996\u70b9\u306e\u79fb\u52d5\u306b W/A/S/D \u3092\u4f7f\u3044\u307e\u3059\u3002\u7121\u52b9\u306b\u3059\u308b\u3068\u3001\u3053\u308c\u3089\u306e\u30ad\u30fc\u306f\u901a\u5e38\u306e NetHack \u30b3\u30de\u30f3\u30c9\u3068\u3057\u3066\u52d5\u4f5c\u3057\u307e\u3059\u3002",
+        },
         controllerFpsMoveRepeatMs: {
           label: "FPS 左スティック移動リピート",
           description:
@@ -728,6 +742,39 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
           label: "ライブメッセージログ",
           description: "スクロールするゲーム内メッセージログを表示します。",
         },
+        showPersistentMobileMessageLog: {
+          label: "\u56fa\u5b9a\u30e1\u30c3\u30bb\u30fc\u30b8\u30ed\u30b0\u3092\u8868\u793a",
+          description:
+            "\u30b2\u30fc\u30e0\u4e2d\u306f\u30b3\u30f3\u30d1\u30af\u30c8\u306a\u30e2\u30d0\u30a4\u30eb\u30e1\u30c3\u30bb\u30fc\u30b8\u30ed\u30b0\u3092\u8868\u793a\u3057\u305f\u307e\u307e\u306b\u3057\u307e\u3059\u3002\u30ed\u30b0\u30dc\u30bf\u30f3\u304b\u3089\u5927\u304d\u3044\u30ed\u30b0\u3092\u958b\u3051\u307e\u3059\u3002",
+        },
+        rumbleEnabled: {
+          label: "\u632f\u52d5\u3092\u6709\u52b9\u5316",
+          description:
+            "\u5bfe\u5fdc\u30e2\u30d0\u30a4\u30eb\u7aef\u672b\u3067\u3001\u4e0e\u3048\u305f\u30c0\u30e1\u30fc\u30b8\u3068\u53d7\u3051\u305f\u30c0\u30e1\u30fc\u30b8\u306b\u77ed\u3044\u30cf\u30d7\u30c6\u30a3\u30c3\u30af\u632f\u52d5\u3092\u4f7f\u7528\u3057\u307e\u3059\u3002",
+        },
+        sectionMobileSafeZone: "\u30e2\u30d0\u30a4\u30eb\u30bb\u30fc\u30d5\u30be\u30fc\u30f3",
+        manualMobileBottomSafeZoneEnabled: {
+          label: "\u691c\u51fa\u3055\u308c\u305f\u30e2\u30d0\u30a4\u30eb\u30bb\u30fc\u30d5\u30be\u30fc\u30f3\u3092\u4e0a\u66f8\u304d",
+          description:
+            "Android\u643a\u5e2f\u30b2\u30fc\u30e0\u6a5f\u304c\u30bb\u30fc\u30d5\u30a8\u30ea\u30a2\u3092\u6b63\u3057\u304f\u5831\u544a\u3057\u306a\u3044\u5834\u5408\u306b\u3001\u624b\u52d5\u306e\u30bb\u30fc\u30d5\u30be\u30fc\u30f3\u4f59\u767d\u3092\u4f7f\u7528\u3057\u307e\u3059\u3002",
+        },
+        manualMobileBottomSafeZoneVerticalPx: {
+          label: "\u7e26\u5411\u304d\u306e\u4e0b\u90e8\u30bb\u30fc\u30d5\u30be\u30fc\u30f3",
+          description:
+            "\u7e26\u5411\u304d\u30e2\u30d0\u30a4\u30eb\u30ec\u30a4\u30a2\u30a6\u30c8\u7528\u306e\u624b\u52d5\u4e0b\u90e8\u30bb\u30fc\u30d5\u30be\u30fc\u30f3\u3067\u3059\u3002",
+        },
+        manualMobileBottomSafeZoneHorizontalPx: {
+          label: "\u6a2a\u5411\u304d\u306e\u4e0b\u90e8\u30bb\u30fc\u30d5\u30be\u30fc\u30f3",
+          description:
+            "\u6a2a\u5411\u304d\u30e2\u30d0\u30a4\u30eb\u30ec\u30a4\u30a2\u30a6\u30c8\u7528\u306e\u624b\u52d5\u4e0b\u90e8\u30bb\u30fc\u30d5\u30be\u30fc\u30f3\u3067\u3059\u3002",
+        },
+        manualMobileRightSafeZoneHorizontalPx: {
+          label: "\u6a2a\u5411\u304d\u306e\u53f3\u5074\u30bb\u30fc\u30d5\u30be\u30fc\u30f3",
+          description:
+            "\u6a2a\u5411\u304d\u30e2\u30d0\u30a4\u30eb\u30ec\u30a4\u30a2\u30a6\u30c8\u7528\u306e\u624b\u52d5\u53f3\u5074\u30bb\u30fc\u30d5\u30be\u30fc\u30f3\u3067\u3059\u3002",
+        },
+        manualMobileBottomSafeZonePreview: "\u4e0b\u90e8\u30bb\u30fc\u30d5\u30be\u30fc\u30f3",
+        manualMobileRightSafeZonePreview: "\u53f3\u5074\u30bb\u30fc\u30d5\u30be\u30fc\u30f3",
         liveMessageDisplayTimeMs: {
           label: "ライブメッセージ表示時間",
           description:
@@ -836,10 +883,10 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
           description:
             "Slash'EM を含む旧世代の NetHack 3.4.3/3.6.x 系ランタイム向けに、暗い通路壁タイルを推測してキャッシュします。",
         },
-        overrideNh37DarkCorridorWallTiles: {
-          label: "NetHack 3.7 の暗い壁タイルを上書き",
+        overrideNh5DarkCorridorWallTiles: {
+          label: "NetHack 5.0 の暗い壁タイルを上書き",
           description:
-            "暗い壁の上書き設定を NetHack 3.7 の暗い通路壁タイルにも適用します。",
+            "暗い壁の上書き設定を NetHack 5.0 の暗い通路壁タイルにも適用します。",
         },
         darkCorridorWallTileOverrideEnabled: {
           label: "暗い壁タイルを上書き",
@@ -858,7 +905,8 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
         },
         mobile: {
           label: "モバイル",
-          description: "モバイル操作設定です。",
+          description:
+            "\u30e2\u30d0\u30a4\u30eb\u5411\u3051\u306e\u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30fc\u30b9\u3068\u30b2\u30fc\u30e0\u30d7\u30ec\u30a4\u8a2d\u5b9a\u3067\u3059\u3002",
         },
         controls: {
           label: "操作",
@@ -1130,7 +1178,7 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
           darkWallsDisabledByVulture:
             " Vulture タイルが有効な間は無効です。",
           enableDarkWallsFirst:
-            " 先に旧世代ランタイムの暗い通路壁、または NetHack 3.7 の暗い壁上書きを有効にしてください。",
+            " 先に旧世代ランタイムの暗い通路壁、または NetHack 5.0 の暗い壁上書きを有効にしてください。",
           enableFpsFirst: " 先に表示設定で一人称モードを有効にしてください。",
         },
         darkWallControls: {
@@ -1165,7 +1213,7 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
           "組み込みタイルセット名は変更できません。",
         tileLayoutVersion: "タイルレイアウト版",
         layout367: "NetHack 3.6.7 レイアウト",
-        layout37: "NetHack 3.7 レイアウト",
+        layout5: "NetHack 5.0 レイアウト",
         tileLayoutDescription:
           "このアップロード済みアトラスが使うタイルインデックスレイアウトを選択します。",
         tileImage: "タイルセット画像",
@@ -1287,6 +1335,33 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
         close: "閉じる",
         wizardCommands: "Wizard コマンド",
         wizard: "Wizard",
+        wizardCommandFallbackDescription:
+          "\u3053\u306e Wizard \u5c02\u7528\u30c7\u30d0\u30c3\u30b0\u30b3\u30de\u30f3\u30c9\u3092\u5b9f\u884c\u3057\u307e\u3059\u3002",
+        wizardCommandDetails: {
+          levelchange: { name: "\u30ec\u30d9\u30eb\u5909\u66f4", description: "\u4e3b\u4eba\u516c\u306e\u7d4c\u9a13\u30ec\u30d9\u30eb\u3092\u8a2d\u5b9a\u3057\u307e\u3059\u3002" },
+          lightsources: { name: "\u5149\u6e90", description: "\u79fb\u52d5\u3059\u308b\u5149\u6e90\u3092\u8868\u793a\u3057\u307e\u3059\u3002" },
+          migratemons: { name: "\u79fb\u52d5\u4e2d\u306e\u30e2\u30f3\u30b9\u30bf\u30fc", description: "\u30ec\u30d9\u30eb\u9593\u3092\u79fb\u52d5\u3059\u308b\u30e2\u30f3\u30b9\u30bf\u30fc\u3092\u8868\u793a\u3057\u307e\u3059\u3002" },
+          panic: { name: "\u30d1\u30cb\u30c3\u30af\u30c6\u30b9\u30c8", description: "\u30d1\u30cb\u30c3\u30af\u51e6\u7406\u3092\u8a66\u3057\u3001\u3053\u306e\u30b2\u30fc\u30e0\u3092\u7d42\u4e86\u3057\u307e\u3059\u3002" },
+          polyself: { name: "\u81ea\u5206\u3092\u5909\u8eab", description: "\u4e3b\u4eba\u516c\u306e\u73fe\u5728\u306e\u59ff\u3092\u5909\u3048\u307e\u3059\u3002" },
+          seenv: { name: "\u8996\u8a8d\u30d9\u30af\u30c8\u30eb", description: "\u8996\u8a8d\u30d9\u30af\u30c8\u30eb\u306e\u30c7\u30d0\u30c3\u30b0\u30de\u30c3\u30d7\u3092\u8868\u793a\u3057\u307e\u3059\u3002" },
+          stats: { name: "\u30e1\u30e2\u30ea\u7d71\u8a08", description: "\u5b9f\u884c\u6642\u306e\u30e1\u30e2\u30ea\u7d71\u8a08\u3092\u8868\u793a\u3057\u307e\u3059\u3002" },
+          timeout: { name: "\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8\u5217", description: "\u6642\u9650\u4ed8\u304d\u52b9\u679c\u3068\u5185\u5728\u80fd\u529b\u3092\u8868\u793a\u3057\u307e\u3059\u3002" },
+          vanquished: { name: "\u5012\u3057\u305f\u30e2\u30f3\u30b9\u30bf\u30fc", description: "\u6b7b\u3093\u3060\u30e2\u30f3\u30b9\u30bf\u30fc\u306e\u6570\u3092\u8868\u793a\u3057\u307e\u3059\u3002" },
+          vision: { name: "\u8996\u754c\u914d\u5217", description: "\u73fe\u5728\u306e\u8996\u754c\u914d\u5217\u3092\u8868\u793a\u3057\u307e\u3059\u3002" },
+          wizbury: { name: "\u8fd1\u304f\u306e\u7269\u3092\u57cb\u3081\u308b", description: "3x3 \u7bc4\u56f2\u306e\u5e8a\u306e\u7269\u3092\u57cb\u3081\u307e\u3059\u3002" },
+          wizdetect: { name: "\u96a0\u3055\u308c\u305f\u3082\u306e\u3092\u691c\u51fa", description: "\u4e3b\u4eba\u516c\u306e\u8fd1\u304f\u306e\u96a0\u3055\u308c\u305f\u3082\u306e\u3092\u660e\u3089\u304b\u306b\u3057\u307e\u3059\u3002" },
+          wizgenesis: { name: "\u30e2\u30f3\u30b9\u30bf\u30fc\u4f5c\u6210", description: "\u540d\u524d\u307e\u305f\u306f\u7a2e\u985e\u3067\u30e2\u30f3\u30b9\u30bf\u30fc\u3092\u4f5c\u6210\u3057\u307e\u3059\u3002" },
+          wizidentify: { name: "\u6301\u3061\u7269\u8b58\u5225", description: "\u6301\u3061\u7269\u306e\u5168\u30a2\u30a4\u30c6\u30e0\u3092\u8b58\u5225\u3057\u307e\u3059\u3002" },
+          wizintrinsic: { name: "\u5185\u5728\u80fd\u529b\u8a2d\u5b9a", description: "\u9078\u3093\u3060\u6642\u9650\u4ed8\u304d\u5185\u5728\u80fd\u529b\u3092\u8abf\u6574\u3057\u307e\u3059\u3002" },
+          wizlevelport: { name: "\u30ec\u30d9\u30eb\u30c6\u30ec\u30dd\u30fc\u30c8", description: "\u5225\u306e\u30ec\u30d9\u30eb\u3084\u5206\u5c90\u3078\u30c6\u30ec\u30dd\u30fc\u30c8\u3057\u307e\u3059\u3002" },
+          wizmakemap: { name: "\u30ec\u30d9\u30eb\u518d\u751f\u6210", description: "\u73fe\u5728\u306e\u30ec\u30d9\u30eb\u3092\u518d\u751f\u6210\u3057\u307e\u3059\u3002" },
+          wizmap: { name: "\u30ec\u30d9\u30eb\u30de\u30c3\u30d7", description: "\u30ec\u30d9\u30eb\u306e\u5730\u56f3\u3068\u7f60\u3092\u8868\u793a\u3057\u307e\u3059\u3002" },
+          wizrumorcheck: { name: "\u5642\u306e\u78ba\u8a8d", description: "\u771f\u3068\u507d\u306e\u5642\u30d5\u30a1\u30a4\u30eb\u3092\u691c\u8a3c\u3057\u307e\u3059\u3002" },
+          wizsmell: { name: "\u30e2\u30f3\u30b9\u30bf\u30fc\u3092\u55c5\u3050", description: "\u9078\u3093\u3060\u30e2\u30f3\u30b9\u30bf\u30fc\u3092\u55c5\u304e\u307e\u3059\u3002" },
+          wizwhere: { name: "\u7279\u6b8a\u30ec\u30d9\u30eb", description: "\u7279\u6b8a\u30ec\u30d9\u30eb\u306e\u914d\u7f6e\u3092\u8868\u793a\u3057\u307e\u3059\u3002" },
+          wizwish: { name: "\u9858\u3044", description: "\u30a2\u30a4\u30c6\u30e0\u3001\u7f60\u3001\u307e\u305f\u306f\u5730\u5f62\u3092\u4f5c\u6210\u3057\u307e\u3059\u3002" },
+          wmode: { name: "\u58c1\u30e2\u30fc\u30c9", description: "\u58c1\u30e2\u30fc\u30c9\u306e\u30c7\u30d0\u30c3\u30b0\u30c7\u30fc\u30bf\u3092\u8868\u793a\u3057\u307e\u3059\u3002" },
+        },
         repeat: "繰り返し",
         character: "キャラクター",
         inventory: "インベントリ",
@@ -1297,6 +1372,12 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
       },
       positionPrompt: {
         closeLabel: "位置指定を閉じる",
+        desktopHint:
+          "移動入力を使うかタイルをクリックして選択を移動します。選択中のタイルをもう一度クリックするか、Enterキーで確定します。",
+        mobileHint:
+          "移動入力を使うかタイルをタップして選択を移動します。選択中のタイルをもう一度タップするか、Enterキーで確定します。",
+        controllerHint:
+          "移動入力で選択を移動します。Enterキーまたは決定ボタンで確定します。",
       },
       controllerSupport: {
         prompt: "コントローラーを検出しました。コントローラー対応を有効にしますか？",

@@ -89,6 +89,11 @@ const localeChecks = [
     exportName: "ptBrOverrides",
   },
   {
+    locale: "ru",
+    file: path.join(repoRoot, "src", "i18n", "locales", "ru.ts"),
+    exportName: "ru",
+  },
+  {
     locale: "zh-cn",
     file: path.join(repoRoot, "src", "i18n", "locales", "zh-cn.ts"),
     exportName: "zhCnOverrides",

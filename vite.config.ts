@@ -116,26 +116,26 @@ const isElectronBuild = process.env.BUILD_TARGET === "electron";
 const enableCrossOriginIsolation =
   process.env.NH3D_ENABLE_CROSS_ORIGIN_ISOLATION === "true";
 const wasm367RuntimeBuildJsPath = resolvePublicAssetPath("nethack-367.js");
-const wasm37RuntimeBuildJsPath = resolvePublicAssetPath("nethack-37.js");
+const wasm5RuntimeBuildJsPath = resolvePublicAssetPath("nethack-5.js");
 const slashemRuntimeBuildJsPath = resolvePublicAssetPath("slashem.js");
 const wasm367CompatTag = "wasm-367-forked";
-const wasm37CompatTag = "wasm-37-forked";
+const wasm5CompatTag = "wasm-5-forked";
 const slashemCompatTag = "slashem-343-forked";
 const projectVersion = resolveProjectPackageVersion();
 const wasm367RuntimeBuildTag = buildRuntimeAssetTag([
   wasm367RuntimeBuildJsPath,
   resolvePublicAssetPath("nethack-367.wasm"),
 ]);
-const wasm37RuntimeBuildTag = buildRuntimeAssetTag([
-  wasm37RuntimeBuildJsPath,
-  resolvePublicAssetPath("nethack-37.wasm"),
+const wasm5RuntimeBuildTag = buildRuntimeAssetTag([
+  wasm5RuntimeBuildJsPath,
+  resolvePublicAssetPath("nethack-5.wasm"),
 ]);
 const slashemRuntimeBuildTag = buildRuntimeAssetTag([
   slashemRuntimeBuildJsPath,
   resolvePublicAssetPath("slashem.wasm"),
 ]);
 const wasm367PointerAbiTag = "nh367-pointer-v1";
-const wasm37PointerAbiTag = "nh37-pointer-v1";
+const wasm5PointerAbiTag = "nh5-pointer-v1";
 const slashemPointerAbiTag = "slashem-pointer-v1";
 const wasm367HasRecoverSavefile = buildFileContains(
   wasm367RuntimeBuildJsPath,
@@ -148,12 +148,12 @@ const wasm367HasCheckpointResumeBridge = buildFileContains(
   wasm367RuntimeBuildJsPath,
   'Module["_resume_checkpoint_save"]',
 );
-const wasm37HasRecoverSavefile = buildFileContains(
-  wasm37RuntimeBuildJsPath,
+const wasm5HasRecoverSavefile = buildFileContains(
+  wasm5RuntimeBuildJsPath,
   'Module["_recover_savefile"]',
 );
-const wasm37HasCheckpointResumeBridge = buildFileContains(
-  wasm37RuntimeBuildJsPath,
+const wasm5HasCheckpointResumeBridge = buildFileContains(
+  wasm5RuntimeBuildJsPath,
   'Module["_resume_checkpoint_save"]',
 );
 const slashemHasRecoverSavefile = buildFileContains(
@@ -234,17 +234,17 @@ export default defineConfig({
     ),
     "import.meta.env.VITE_NH3D_WASM_367_HAS_CHECKPOINT_RESUME_BRIDGE":
       JSON.stringify(wasm367HasCheckpointResumeBridge),
-    "import.meta.env.VITE_NH3D_WASM_37_COMPAT_TAG":
-      JSON.stringify(wasm37CompatTag),
-    "import.meta.env.VITE_NH3D_WASM_37_RUNTIME_BUILD_TAG":
-      JSON.stringify(wasm37RuntimeBuildTag),
-    "import.meta.env.VITE_NH3D_WASM_37_POINTER_ABI_TAG":
-      JSON.stringify(wasm37PointerAbiTag),
-    "import.meta.env.VITE_NH3D_WASM_37_HAS_RECOVER_SAVEFILE": JSON.stringify(
-      wasm37HasRecoverSavefile,
+    "import.meta.env.VITE_NH3D_WASM_5_COMPAT_TAG":
+      JSON.stringify(wasm5CompatTag),
+    "import.meta.env.VITE_NH3D_WASM_5_RUNTIME_BUILD_TAG":
+      JSON.stringify(wasm5RuntimeBuildTag),
+    "import.meta.env.VITE_NH3D_WASM_5_POINTER_ABI_TAG":
+      JSON.stringify(wasm5PointerAbiTag),
+    "import.meta.env.VITE_NH3D_WASM_5_HAS_RECOVER_SAVEFILE": JSON.stringify(
+      wasm5HasRecoverSavefile,
     ),
-    "import.meta.env.VITE_NH3D_WASM_37_HAS_CHECKPOINT_RESUME_BRIDGE":
-      JSON.stringify(wasm37HasCheckpointResumeBridge),
+    "import.meta.env.VITE_NH3D_WASM_5_HAS_CHECKPOINT_RESUME_BRIDGE":
+      JSON.stringify(wasm5HasCheckpointResumeBridge),
     "import.meta.env.VITE_NH3D_WASM_SLASHEM_COMPAT_TAG":
       JSON.stringify(slashemCompatTag),
     "import.meta.env.VITE_NH3D_WASM_SLASHEM_RUNTIME_BUILD_TAG":

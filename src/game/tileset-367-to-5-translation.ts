@@ -2,11 +2,11 @@ import type { NethackRuntimeVersion } from "../runtime/types";
 
 // Adapted from horlogeislux/tileto370 (MIT):
 // https://github.com/horlogeislux/tileto370
-// Original mapping logic converts 3.6.x tile order into 3.7 layout.
-// We use the inverse lookup direction needed at runtime: 3.7 tile index -> 3.6.7 tile index.
+// Original mapping logic converts 3.6.x tile order into 5.0 layout.
+// We use the inverse lookup direction needed at runtime: 5.0 tile index -> 3.6.7 tile index.
 
 const NH_TILES_PER_ROW = 40;
-const NH37_OUTPUT_ROWS = 58;
+const NH5_OUTPUT_ROWS = 58;
 const STATUE_TILE_ID_OFFSET = 1082;
 
 enum TileAlias {
@@ -69,7 +69,7 @@ function indexRange(start: number, stop: number): number[] {
   return indexes;
 }
 
-function buildNh367TileIndexByNh37TileIndex(): ReadonlyArray<number> {
+function buildNh367TileIndexByNh5TileIndex(): ReadonlyArray<number> {
   return [
     ...duplicateRange(0, 41),
     ...[TileAlias.DisplacerBeast, TileAlias.DisplacerBeast],
@@ -118,12 +118,19 @@ function buildNh367TileIndexByNh37TileIndex(): ReadonlyArray<number> {
     TileAlias.GoldDragonScaleMail,
     ...indexRange(477, 487),
     TileAlias.GoldDragonScales,
-    ...indexRange(487, 583),
+    // NetHack 5 inserts drain/shock resistance shields after the small shield.
+    ...indexRange(487, 526),
+    525,
+    525,
+    ...indexRange(526, 583),
     TileAlias.PerforatedAmulet,
     TileAlias.CubicalAmulet,
     ...indexRange(583, 777),
     TileAlias.CheckeredSpellbook,
-    ...indexRange(777, 871),
+    // NetHack 5 inserts the redwood/stasis wand after pine/wishing.
+    ...indexRange(777, 785),
+    TileAlias.GenericWand,
+    ...indexRange(785, 871),
     TileAlias.EngravingInRoom,
     871,
     872,
@@ -169,18 +176,18 @@ function buildNh367TileIndexByNh37TileIndex(): ReadonlyArray<number> {
     1425,
     ...duplicateRange(1426, 1475),
     1475,
-    ...Array.from({ length: 20 }, () => 1476),
+    ...Array.from({ length: 16 }, () => 1476),
   ];
 }
 
-const NH367_TILE_INDEX_BY_NH37_TILE_INDEX = buildNh367TileIndexByNh37TileIndex();
-const NH37_TILE_INDEX_BY_NH367_TILE_INDEX = new Map<number, number>();
+const NH367_TILE_INDEX_BY_NH5_TILE_INDEX = buildNh367TileIndexByNh5TileIndex();
+const NH5_TILE_INDEX_BY_NH367_TILE_INDEX = new Map<number, number>();
 for (
-  let nh37TileIndex = 0;
-  nh37TileIndex < NH367_TILE_INDEX_BY_NH37_TILE_INDEX.length;
-  nh37TileIndex += 1
+  let nh5TileIndex = 0;
+  nh5TileIndex < NH367_TILE_INDEX_BY_NH5_TILE_INDEX.length;
+  nh5TileIndex += 1
 ) {
-  const rawMappedTileIndex = NH367_TILE_INDEX_BY_NH37_TILE_INDEX[nh37TileIndex];
+  const rawMappedTileIndex = NH367_TILE_INDEX_BY_NH5_TILE_INDEX[nh5TileIndex];
   const normalizedMappedTileIndex =
     rawMappedTileIndex < 0
       ? Math.abs(rawMappedTileIndex)
@@ -188,34 +195,34 @@ for (
   if (!Number.isFinite(normalizedMappedTileIndex) || normalizedMappedTileIndex < 0) {
     continue;
   }
-  if (!NH37_TILE_INDEX_BY_NH367_TILE_INDEX.has(normalizedMappedTileIndex)) {
-    NH37_TILE_INDEX_BY_NH367_TILE_INDEX.set(
+  if (!NH5_TILE_INDEX_BY_NH367_TILE_INDEX.has(normalizedMappedTileIndex)) {
+    NH5_TILE_INDEX_BY_NH367_TILE_INDEX.set(
       normalizedMappedTileIndex,
-      nh37TileIndex,
+      nh5TileIndex,
     );
   }
 }
 
-export const nh37TilesPerRow = NH_TILES_PER_ROW;
-export const nh37OutputRows = NH37_OUTPUT_ROWS;
-export const nh37ExpectedTileCount =
-  NH_TILES_PER_ROW * NH37_OUTPUT_ROWS;
+export const nh5TilesPerRow = NH_TILES_PER_ROW;
+export const nh5OutputRows = NH5_OUTPUT_ROWS;
+export const nh5ExpectedTileCount =
+  NH_TILES_PER_ROW * NH5_OUTPUT_ROWS;
 
-export function shouldTranslateNh367TilesetForNh37Runtime(
+export function shouldTranslateNh367TilesetForNh5Runtime(
   runtimeVersion: NethackRuntimeVersion,
   atlasTileCount: number,
   tileLayoutVersion:
     | "slashem"
     | "3.4.3"
     | "3.6.7"
-    | "3.7"
+    | "5.0"
     | "unknown" = "unknown",
 ): boolean {
-  if (runtimeVersion !== "3.7") {
+  if (runtimeVersion !== "5.0") {
     return false;
   }
   if (
-    tileLayoutVersion === "3.7" ||
+    tileLayoutVersion === "5.0" ||
     tileLayoutVersion === "slashem" ||
     tileLayoutVersion === "3.4.3"
   ) {
@@ -224,11 +231,11 @@ export function shouldTranslateNh367TilesetForNh37Runtime(
   const normalizedAtlasTileCount = Math.max(0, Math.trunc(atlasTileCount));
   return (
     normalizedAtlasTileCount > 0 &&
-    normalizedAtlasTileCount < nh37ExpectedTileCount
+    normalizedAtlasTileCount < nh5ExpectedTileCount
   );
 }
 
-export function translateNh37TileIndexToNh367(
+export function translateNh5TileIndexToNh367(
   tileIndex: number,
 ): number {
   const normalizedTileIndex = Math.trunc(tileIndex);
@@ -236,7 +243,7 @@ export function translateNh37TileIndexToNh367(
     return normalizedTileIndex;
   }
   const mappedTileIndex =
-    NH367_TILE_INDEX_BY_NH37_TILE_INDEX[normalizedTileIndex];
+    NH367_TILE_INDEX_BY_NH5_TILE_INDEX[normalizedTileIndex];
   if (!Number.isFinite(mappedTileIndex)) {
     return normalizedTileIndex;
   }
@@ -245,7 +252,7 @@ export function translateNh37TileIndexToNh367(
     : Math.trunc(mappedTileIndex);
 }
 
-export function translateNh37TileIndexToNh367PreservingAliases(
+export function translateNh5TileIndexToNh367PreservingAliases(
   tileIndex: number,
 ): number {
   const normalizedTileIndex = Math.trunc(tileIndex);
@@ -253,14 +260,14 @@ export function translateNh37TileIndexToNh367PreservingAliases(
     return normalizedTileIndex;
   }
   const mappedTileIndex =
-    NH367_TILE_INDEX_BY_NH37_TILE_INDEX[normalizedTileIndex];
+    NH367_TILE_INDEX_BY_NH5_TILE_INDEX[normalizedTileIndex];
   if (!Number.isFinite(mappedTileIndex)) {
     return normalizedTileIndex;
   }
   return Math.trunc(mappedTileIndex);
 }
 
-export function translateNh367TileIndexToNh37(
+export function translateNh367TileIndexToNh5(
   tileIndex: number,
 ): number {
   const normalizedTileIndex = Math.trunc(tileIndex);
@@ -268,7 +275,7 @@ export function translateNh367TileIndexToNh37(
     return normalizedTileIndex;
   }
   const shiftedTileIndex =
-    NH37_TILE_INDEX_BY_NH367_TILE_INDEX.get(normalizedTileIndex);
+    NH5_TILE_INDEX_BY_NH367_TILE_INDEX.get(normalizedTileIndex);
   if (typeof shiftedTileIndex !== "number" || !Number.isFinite(shiftedTileIndex)) {
     return normalizedTileIndex;
   }

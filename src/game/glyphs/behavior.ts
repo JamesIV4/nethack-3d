@@ -249,7 +249,7 @@ const LEGACY_367_CMAP_PROFILE: CmapIndexProfile = {
   trapRanges: [[42, 64]],
 };
 
-const NH37_SPLIT_CMAP_PROFILE: CmapIndexProfile = {
+const NH5_SPLIT_CMAP_PROFILE: CmapIndexProfile = {
   wall: new Set<number>([17, 18, 44, 45]),
   doorOpen: new Set<number>([13, 14]),
   doorClosed: new Set<number>([15, 16]),
@@ -265,8 +265,8 @@ const NH37_SPLIT_CMAP_PROFILE: CmapIndexProfile = {
 };
 
 function getActiveCmapIndexProfile(): CmapIndexProfile {
-  return getActiveGlyphCatalogVersion() === "3.7"
-    ? NH37_SPLIT_CMAP_PROFILE
+  return getActiveGlyphCatalogVersion() === "5.0"
+    ? NH5_SPLIT_CMAP_PROFILE
     : LEGACY_367_CMAP_PROFILE;
 }
 
@@ -294,7 +294,7 @@ function isIndexInAnyInclusiveRange(
 }
 
 function semanticForCmapIndex(cmapIndex: number): CmapSemantic {
-  // Runtime symidx can differ between legacy 3.6.x and 3.7 split-cmap layouts.
+  // Runtime symidx can differ between legacy 3.6.x and 5.0 split-cmap layouts.
   const profile = getActiveCmapIndexProfile();
   if (cmapIndex === 0) return "dark_wall"; // stone/out-of-bounds
 

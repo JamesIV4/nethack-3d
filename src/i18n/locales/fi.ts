@@ -1,4 +1,4 @@
-﻿import { mergeTranslations, type LocaleOverrides } from "../locale-helpers";
+import { mergeTranslations, type LocaleOverrides } from "../locale-helpers";
 import { en, type TranslationDictionary } from "./en";
 
 export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
@@ -113,7 +113,7 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
       zoom_in: {
         label: "Zoomaa (pidä)",
         description:
-          "Pidä painettuna, ja käytä sitten vasenta tai oikeaa sauvaa ylös/alas zoomataksesi sisään tai ulos.",
+          "Pidä painettuna, zoomaa vasemman sauvan ylös/alas-liikkeellä ja kierrä kameraa oikealla sauvalla.",
       },
       recenter_camera: {
         label: "Keskitä kamera",
@@ -197,6 +197,15 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
           normal: "Normaali",
           explore: "Tutki",
           debug: "Velho/Debug",
+        },
+      },
+      number_pad: {
+        label: "Liikenappaimet",
+        description:
+          "Valitse, käyttääkö NetHack liikkumiseen numeronäppäimistöä (`number_pad:1`) vai perinteisiä vi-näppäimiä (`number_pad:0`).",
+        options: {
+          numeric: "Numeronäppäimistö",
+          vi: "vi-näppäimet",
         },
       },
       autopickup: {
@@ -658,6 +667,11 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
           description:
             "Kierrä liikenäppäimiä ja pyyhkäisysuuntia kameran Y-akselin kulman perusteella.",
         },
+        fpsWasdKeyboardMovementEnabled: {
+          label: "Ota WASD-n\u00e4pp\u00e4imist\u00f6liike k\u00e4ytt\u00f6\u00f6n FPS-tilassa",
+          description:
+            "K\u00e4yt\u00e4 W/A/S/D-n\u00e4pp\u00e4imi\u00e4 ensimm\u00e4isen persoonan liikkumiseen. Poista k\u00e4yt\u00f6st\u00e4, jotta n\u00e4m\u00e4 n\u00e4pp\u00e4imet toimivat tavallisina NetHack-komentoina.",
+        },
         controllerFpsMoveRepeatMs: {
           label: "FPS-vasemman sauvan liikkeen toisto",
           description:
@@ -774,6 +788,39 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
           label: "Live-viestiloki",
           description: "Näytä vierivä pelinsisäinen viestiloki.",
         },
+        showPersistentMobileMessageLog: {
+          label: "N\u00e4yt\u00e4 pysyv\u00e4 viestiloki",
+          description:
+            "Pid\u00e4 kompakti mobiiliviestiloki n\u00e4kyviss\u00e4 pelaamisen aikana. Loki-painike voi silti avata suuremman lokin.",
+        },
+        rumbleEnabled: {
+          label: "Ota varina kayttoon",
+          description:
+            "Kayta lyhytta haptista varinapalautetta annetusta ja saadusta vahingosta tuetuilla mobiililaitteilla.",
+        },
+        sectionMobileSafeZone: "Mobiilin turva-alueet",
+        manualMobileBottomSafeZoneEnabled: {
+          label: "Ohita tunnistetut mobiilin turva-alueet",
+          description:
+            "K\u00e4yt\u00e4 manuaalisia turva-alueen marginaaleja, kun Android-k\u00e4sikonsolit ilmoittavat turva-alueet v\u00e4\u00e4rin.",
+        },
+        manualMobileBottomSafeZoneVerticalPx: {
+          label: "Pystysuunnan alareunan turva-alue",
+          description:
+            "Manuaalinen alareunan turva-alue pystysuuntaiselle mobiiliasettelulle.",
+        },
+        manualMobileBottomSafeZoneHorizontalPx: {
+          label: "Vaakasuunnan alareunan turva-alue",
+          description:
+            "Manuaalinen alareunan turva-alue vaakasuuntaiselle mobiiliasettelulle.",
+        },
+        manualMobileRightSafeZoneHorizontalPx: {
+          label: "Vaakasuunnan oikean reunan turva-alue",
+          description:
+            "Manuaalinen oikean reunan turva-alue vaakasuuntaiselle mobiiliasettelulle.",
+        },
+        manualMobileBottomSafeZonePreview: "Alareunan turva-alue",
+        manualMobileRightSafeZonePreview: "Oikean reunan turva-alue",
         liveMessageDisplayTimeMs: {
           label: "Live-viestin näyttöaika",
           description:
@@ -884,10 +931,10 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
           description:
             "Päättele ja välimuistita tummien käytäväseinien ruudut vanhoille NetHack 3.4.3/3.6.x -ajoalustoille, mukaan lukien Slash'EM.",
         },
-        overrideNh37DarkCorridorWallTiles: {
-          label: "Ohita NetHack 3.7:n tummat seinäruudut",
+        overrideNh5DarkCorridorWallTiles: {
+          label: "Ohita NetHack 5.0:n tummat seinäruudut",
           description:
-            "Käytä tumman seinän ohitusasetuksia NetHack 3.7:n tummiin käytäväseinän ruutuihin.",
+            "Käytä tumman seinän ohitusasetuksia NetHack 5.0:n tummiin käytäväseinän ruutuihin.",
         },
         darkCorridorWallTileOverrideEnabled: {
           label: "Ohita tumma seinäruutu",
@@ -906,7 +953,8 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
         },
         mobile: {
           label: "Mobiili",
-          description: "Kosketusohjauksen asetukset mobiilipelaamiseen.",
+          description:
+            "Mobiilikohtaiset käyttöliittymän ja pelaamisen asetukset.",
         },
         controls: {
           label: "Ohjaimet",
@@ -1174,7 +1222,7 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
           darkWallsDisabledByVulture:
             " Pois käytöstä, kun Vulture-ruudut ovat aktiivisia.",
           enableDarkWallsFirst:
-            " Ota ensin käyttöön perinteiset tummat käytäväseinät tai NetHack 3.7:n tummien seinien ohitukset.",
+            " Ota ensin käyttöön perinteiset tummat käytäväseinät tai NetHack 5.0:n tummien seinien ohitukset.",
           enableFpsFirst: " Ota ensin käyttöön ensimmäisen persoonan tila Näyttö-osiossa.",
         },
         darkWallControls: {
@@ -1208,7 +1256,7 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
         builtInNamesLocked: "Sisäänrakennettujen ruutusettien nimiä ei voi muuttaa.",
         tileLayoutVersion: "Ruutuasettelun versio",
         layout367: "NetHack 3.6.7 -asettelu",
-        layout37: "NetHack 3.7 -asettelu",
+        layout5: "NetHack 5.0 -asettelu",
         tileLayoutDescription:
           "Valitse tämän ladatun atlaksen käyttämä ruutuindeksien asettelu.",
         tileImage: "Ruutusetin kuva",
@@ -1331,6 +1379,33 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
         close: "Sulje",
         wizardCommands: "Wizard-komennot",
         wizard: "Wizard-tila",
+        wizardCommandFallbackDescription:
+          "Suorita t\u00e4m\u00e4 vain wizard-tilan debug-komento.",
+        wizardCommandDetails: {
+          levelchange: { name: "Muuta tasoa", description: "Aseta sankarin kokemustaso." },
+          lightsources: { name: "Valonl\u00e4hteet", description: "N\u00e4yt\u00e4 liikkuvat valonl\u00e4hteet." },
+          migratemons: { name: "Vaeltavat hirvi\u00f6t", description: "N\u00e4yt\u00e4 tasojen v\u00e4lill\u00e4 liikkuvat hirvi\u00f6t." },
+          panic: { name: "Paniikkitesti", description: "Testaa paniikkik\u00e4sittely ja p\u00e4\u00e4t\u00e4 peli." },
+          polyself: { name: "Polymorfoi itse", description: "Vaihda sankarin nykyist\u00e4 muotoa." },
+          seenv: { name: "N\u00e4hdyt vektorit", description: "N\u00e4yt\u00e4 n\u00e4k\u00f6vektorien debug-kartta." },
+          stats: { name: "Muistitilastot", description: "N\u00e4yt\u00e4 ajonaikaiset muistitilastot." },
+          timeout: { name: "Aikakatkaisujono", description: "N\u00e4yt\u00e4 ajastetut vaikutukset ja intrinsics." },
+          vanquished: { name: "Kukistetut hirvi\u00f6t", description: "N\u00e4yt\u00e4 kuolleiden hirvi\u00f6iden m\u00e4\u00e4r\u00e4t." },
+          vision: { name: "N\u00e4k\u00f6taulukko", description: "N\u00e4yt\u00e4 nykyinen n\u00e4k\u00f6taulukko." },
+          wizbury: { name: "Hautaa l\u00e4hiesineet", description: "Hautaa lattiaesineet 3x3-alueella." },
+          wizdetect: { name: "Havaitse piilotetut", description: "Paljasta piilotetut asiat sankarin l\u00e4helt\u00e4." },
+          wizgenesis: { name: "Luo hirvi\u00f6", description: "Luo hirvi\u00f6 nimell\u00e4 tai luokalla." },
+          wizidentify: { name: "Tunnista tavarat", description: "Tunnista kaikki inventaarion esineet." },
+          wizintrinsic: { name: "Aseta intrinsics", description: "S\u00e4\u00e4d\u00e4 valittuja ajastettuja intrinsics-arvoja." },
+          wizlevelport: { name: "Tasoteleportti", description: "Teleporttaa toiselle tasolle tai haaraan." },
+          wizmakemap: { name: "Luo taso uudelleen", description: "Generoi nykyinen taso uudelleen." },
+          wizmap: { name: "Kartoita taso", description: "Paljasta tason kartta ja ansat." },
+          wizrumorcheck: { name: "Tarkista huhut", description: "Vahvista tosi- ja ep\u00e4tosihuhujen tiedostot." },
+          wizsmell: { name: "Haista hirvi\u00f6", description: "Haista valittu hirvi\u00f6." },
+          wizwhere: { name: "Erikoistasot", description: "N\u00e4yt\u00e4 erikoistasojen sijainnit." },
+          wizwish: { name: "Toive", description: "Luo esine, ansa tai maastoa." },
+          wmode: { name: "Sein\u00e4tilat", description: "N\u00e4yt\u00e4 sein\u00e4tilojen debug-tiedot." },
+        },
         repeat: "Toista",
         character: "Hahmo",
         inventory: "Tavarat",
@@ -1341,6 +1416,12 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
       },
       positionPrompt: {
         closeLabel: "Sulje sijaintikehote",
+        desktopHint:
+          "Käytä liikesyötettä tai napsauta ruutua siirtääksesi valintaa. Vahvista napsauttamalla valittua ruutua uudelleen tai painamalla Enteriä.",
+        mobileHint:
+          "Käytä liikesyötettä tai napauta ruutua siirtääksesi valintaa. Vahvista napauttamalla valittua ruutua uudelleen tai painamalla Enteriä.",
+        controllerHint:
+          "Käytä liikesyötettä siirtääksesi valintaa. Vahvista painamalla Enteriä tai Vahvista-painiketta.",
       },
       controllerSupport: {
         prompt: "Ohjain havaittu. Otetaanko ohjaintuki käyttöön?",

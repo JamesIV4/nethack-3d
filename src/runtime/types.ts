@@ -5,7 +5,7 @@ export type RuntimeEvent = {
 
 export type RuntimeEventHandler = (event: RuntimeEvent) => void;
 
-export type NethackRuntimeVersion = "3.6.7" | "3.7" | "slashem";
+export type NethackRuntimeVersion = "3.6.7" | "5.0" | "slashem";
 
 export interface RuntimeBridge {
   start(): Promise<void>;

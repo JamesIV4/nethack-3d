@@ -1,4 +1,4 @@
-﻿export const ko = {
+export const ko = {
   meta: {
     locale: "ko-KR",
   },
@@ -103,7 +103,7 @@
       zoom_in: {
         label: "확대/축소(홀드)",
         description:
-          "누른 상태에서 왼쪽 또는 오른쪽 스틱을 위/아래로 움직여 확대 또는 축소합니다.",
+          "누른 상태에서 왼쪽 스틱 위/아래로 줌하고, 오른쪽 스틱으로 카메라를 회전합니다.",
       },
       recenter_camera: {
         label: "카메라 중심 복귀",
@@ -187,6 +187,15 @@
           normal: "일반",
           explore: "탐험",
           debug: "위저드/디버그",
+        },
+      },
+      number_pad: {
+        label: "이동 키",
+        description:
+          "NetHack 이동에 숫자 키패드(`number_pad:1`)를 사용할지, 전통적인 vi 키(`number_pad:0`)를 사용할지 선택합니다.",
+        options: {
+          numeric: "숫자 키패드",
+          vi: "vi 키",
         },
       },
       autopickup: {
@@ -638,6 +647,11 @@
           description:
             "카메라 Y축 각도에 따라 이동 키와 스와이프 방향을 회전합니다.",
         },
+        fpsWasdKeyboardMovementEnabled: {
+          label: "1\uc778\uce6d \ubaa8\ub4dc\uc5d0\uc11c WASD \ud0a4\ubcf4\ub4dc \uc774\ub3d9 \uc0ac\uc6a9",
+          description:
+            "1\uc778\uce6d \uc774\ub3d9\uc5d0 W/A/S/D\ub97c \uc0ac\uc6a9\ud569\ub2c8\ub2e4. \ub044\uba74 \uc774 \ud0a4\ub4e4\uc774 \uc77c\ubc18 NetHack \uba85\ub839\ucc98\ub7fc \ub3d9\uc791\ud569\ub2c8\ub2e4.",
+        },
         controllerFpsMoveRepeatMs: {
           label: "1인칭 왼쪽 스틱 이동 반복",
           description:
@@ -753,6 +767,39 @@
           label: "실시간 메시지 로그",
           description: "스크롤되는 게임 내 메시지 로그를 표시합니다.",
         },
+        showPersistentMobileMessageLog: {
+          label: "\uc9c0\uc18d \uba54\uc2dc\uc9c0 \ub85c\uadf8 \ud45c\uc2dc",
+          description:
+            "\uac8c\uc784 \uc911 \ucef4\ud329\ud2b8 \ubaa8\ubc14\uc77c \uba54\uc2dc\uc9c0 \ub85c\uadf8\ub97c \uacc4\uc18d \ud45c\uc2dc\ud569\ub2c8\ub2e4. \ub85c\uadf8 \ubc84\ud2bc\uc73c\ub85c \ub354 \ud070 \ub85c\uadf8\ub97c \uc5f4 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
+        },
+        rumbleEnabled: {
+          label: "\uc9c4\ub3d9 \uc0ac\uc6a9",
+          description:
+            "\uc9c0\uc6d0\ub418\ub294 \ubaa8\ubc14\uc77c \uae30\uae30\uc5d0\uc11c \uac00\ud55c \ud53c\ud574\uc640 \ubc1b\uc740 \ud53c\ud574\uc5d0 \uc9e7\uc740 \ud584\ud2f1 \uc9c4\ub3d9 \ud53c\ub4dc\ubc31\uc744 \uc0ac\uc6a9\ud569\ub2c8\ub2e4.",
+        },
+        sectionMobileSafeZone: "\ubaa8\ubc14\uc77c \uc548\uc804 \uc601\uc5ed",
+        manualMobileBottomSafeZoneEnabled: {
+          label: "\uac10\uc9c0\ub41c \ubaa8\ubc14\uc77c \uc548\uc804 \uc601\uc5ed \uc7ac\uc815\uc758",
+          description:
+            "Android \ud734\ub300\uc6a9 \uae30\uae30\uac00 \uc548\uc804 \uc601\uc5ed\uc744 \uc798\ubabb \ubcf4\uace0\ud560 \ub54c \uc218\ub3d9 \uc548\uc804 \uc601\uc5ed \uc5ec\ubc31\uc744 \uc0ac\uc6a9\ud569\ub2c8\ub2e4.",
+        },
+        manualMobileBottomSafeZoneVerticalPx: {
+          label: "\uc138\ub85c \ubc29\ud5a5 \ud558\ub2e8 \uc548\uc804 \uc601\uc5ed",
+          description:
+            "\uc138\ub85c \ubaa8\ubc14\uc77c \ub808\uc774\uc544\uc6c3\uc5d0 \uc0ac\uc6a9\ud560 \uc218\ub3d9 \ud558\ub2e8 \uc548\uc804 \uc601\uc5ed\uc785\ub2c8\ub2e4.",
+        },
+        manualMobileBottomSafeZoneHorizontalPx: {
+          label: "\uac00\ub85c \ubc29\ud5a5 \ud558\ub2e8 \uc548\uc804 \uc601\uc5ed",
+          description:
+            "\uac00\ub85c \ubaa8\ubc14\uc77c \ub808\uc774\uc544\uc6c3\uc5d0 \uc0ac\uc6a9\ud560 \uc218\ub3d9 \ud558\ub2e8 \uc548\uc804 \uc601\uc5ed\uc785\ub2c8\ub2e4.",
+        },
+        manualMobileRightSafeZoneHorizontalPx: {
+          label: "\uac00\ub85c \ubc29\ud5a5 \uc624\ub978\ucabd \uc548\uc804 \uc601\uc5ed",
+          description:
+            "\uac00\ub85c \ubaa8\ubc14\uc77c \ub808\uc774\uc544\uc6c3\uc5d0 \uc0ac\uc6a9\ud560 \uc218\ub3d9 \uc624\ub978\ucabd \uc548\uc804 \uc601\uc5ed\uc785\ub2c8\ub2e4.",
+        },
+        manualMobileBottomSafeZonePreview: "\ud558\ub2e8 \uc548\uc804 \uc601\uc5ed",
+        manualMobileRightSafeZonePreview: "\uc624\ub978\ucabd \uc548\uc804 \uc601\uc5ed",
         liveMessageDisplayTimeMs: {
           label: "실시간 메시지 표시 시간",
           description:
@@ -887,10 +934,10 @@
           description:
             "Slash'EM을 포함한 레거시 NetHack 3.4.3/3.6.x 계열 런타임용 어두운 복도 벽 타일을 추론하고 캐시합니다.",
         },
-        overrideNh37DarkCorridorWallTiles: {
-          label: "NetHack 3.7 어두운 벽 타일 덮어쓰기",
+        overrideNh5DarkCorridorWallTiles: {
+          label: "NetHack 5.0 어두운 벽 타일 덮어쓰기",
           description:
-            "NetHack 3.7 어두운 복도 벽 타일에 어두운 벽 덮어쓰기 설정을 적용합니다.",
+            "NetHack 5.0 어두운 복도 벽 타일에 어두운 벽 덮어쓰기 설정을 적용합니다.",
         },
         darkCorridorWallTileOverrideEnabled: {
           label: "어두운 벽 타일 덮어쓰기",
@@ -909,7 +956,7 @@
         },
         mobile: {
           label: "모바일",
-          description: "모바일 플레이용 터치 조작 설정입니다.",
+          description: "\ubaa8\ubc14\uc77c\uc6a9 \uc778\ud130\ud398\uc774\uc2a4 \ubc0f \uac8c\uc784\ud50c\ub808\uc774 \uc124\uc815\uc785\ub2c8\ub2e4.",
         },
         controls: {
           label: "조작",
@@ -1175,7 +1222,7 @@
           darkWallsDisabledByVulture:
             " Vulture 타일이 활성화되어 있는 동안에는 비활성화됩니다.",
           enableDarkWallsFirst:
-            " 먼저 레거시 어두운 복도 벽 또는 NetHack 3.7 어두운 벽 덮어쓰기를 활성화하세요.",
+            " 먼저 레거시 어두운 복도 벽 또는 NetHack 5.0 어두운 벽 덮어쓰기를 활성화하세요.",
           enableFpsFirst: " 먼저 표시 설정에서 1인칭 모드를 활성화하세요.",
         },
         darkWallControls: {
@@ -1209,7 +1256,7 @@
         builtInNamesLocked: "내장 타일셋 이름은 변경할 수 없습니다.",
         tileLayoutVersion: "타일 레이아웃 버전",
         layout367: "NetHack 3.6.7 레이아웃",
-        layout37: "NetHack 3.7 레이아웃",
+        layout5: "NetHack 5.0 레이아웃",
         tileLayoutDescription:
           "이 업로드된 아틀라스가 사용하는 타일 인덱스 레이아웃을 선택합니다.",
         tileImage: "타일셋 이미지",
@@ -1217,6 +1264,9 @@
         selectedFile: (fileName: string) => `선택됨: ${fileName}`,
         currentFile: (fileName: string) => `현재 파일: ${fileName}`,
         uploadedImage: "업로드된 이미지",
+        weaponSpriteFlip: "FPS \ubb34\uae30 \uc2a4\ud504\ub77c\uc774\ud2b8 \ub4a4\uc9d1\uae30",
+        weaponSpriteFlipDescription:
+          "\uc774 \ud0c0\uc77c\uc14b\uc758 \uc7a5\ube44 \ubb34\uae30 \uc2a4\ud504\ub77c\uc774\ud2b8\ub97c \uc218\ud3c9\uc73c\ub85c \ub4a4\uc9d1\uc2b5\ub2c8\ub2e4. \uae30\ubcf8\uc801\uc73c\ub85c \ucf1c\uc838 \uc788\uc2b5\ub2c8\ub2e4.",
         backgroundRemovalDescription:
           "이 타일셋의 빌보드 배경 제거를 설정하거나, 두 모드를 모두 꺼서 아틀라스 배경을 유지할 수 있습니다.",
         backgroundTileRemoval: "배경 타일 제거",
@@ -1249,6 +1299,11 @@
         selectAll: "모두 선택",
         deselectAll: "모두 해제",
         page: (current: number, total: number) => `페이지 ${current} / ${total}`,
+        amount: "Amount",
+        amountDefault: "Default",
+        clearAmount: "Clear amount",
+        decreaseAmount: "Decrease amount by one",
+        increaseAmount: "Increase amount by one",
         pageHintMultiple: "< 와 > 로 페이지를 바꾸세요. 취소하려면 ESC를 누르세요",
         pageHintSingle: "취소하려면 ESC를 누르세요",
         choices: {
@@ -1332,6 +1387,33 @@
         close: "닫기",
         wizardCommands: "위저드 명령",
         wizard: "위저드",
+        wizardCommandFallbackDescription:
+          "\uc774 \uc704\uc800\ub4dc \uc804\uc6a9 \ub514\ubc84\uadf8 \uba85\ub839\uc744 \uc2e4\ud589\ud569\ub2c8\ub2e4.",
+        wizardCommandDetails: {
+          levelchange: { name: "\ub808\ubca8 \ubcc0\uacbd", description: "\uc601\uc6c5\uc758 \uacbd\ud5d8 \ub808\ubca8\uc744 \uc124\uc815\ud569\ub2c8\ub2e4." },
+          lightsources: { name: "\ube5b \uc6d0\ucc9c", description: "\uc774\ub3d9\ud558\ub294 \ube5b \uc6d0\ucc9c\uc744 \ud45c\uc2dc\ud569\ub2c8\ub2e4." },
+          migratemons: { name: "\uc774\ub3d9 \uc911\uc778 \ubaac\uc2a4\ud130", description: "\ub808\ubca8 \uc0ac\uc774\ub97c \uc774\ub3d9\ud558\ub294 \ubaac\uc2a4\ud130\ub97c \ud45c\uc2dc\ud569\ub2c8\ub2e4." },
+          panic: { name: "\ud328\ub2c9 \ud14c\uc2a4\ud2b8", description: "\ud328\ub2c9 \ucc98\ub9ac\ub97c \ud14c\uc2a4\ud2b8\ud558\uace0 \uc774 \uac8c\uc784\uc744 \ub05d\ub0c5\ub2c8\ub2e4." },
+          polyself: { name: "\uc790\uc2e0 \ud3f4\ub9ac\ubaa8\ud504", description: "\uc601\uc6c5\uc758 \ud604\uc7ac \ud615\ud0dc\ub97c \ubc14\uafb9\ub2c8\ub2e4." },
+          seenv: { name: "\ubcf8 \ubca1\ud130", description: "\ubcf8 \ubca1\ud130 \ub514\ubc84\uadf8 \uc9c0\ub3c4\ub97c \ud45c\uc2dc\ud569\ub2c8\ub2e4." },
+          stats: { name: "\uba54\ubaa8\ub9ac \ud1b5\uacc4", description: "\ub7f0\ud0c0\uc784 \uba54\ubaa8\ub9ac \ud1b5\uacc4\ub97c \ud45c\uc2dc\ud569\ub2c8\ub2e4." },
+          timeout: { name: "\ud0c0\uc784\uc544\uc6c3 \ud050", description: "\uc2dc\uac04\uc81c \ud6a8\uacfc\uc640 \ub0b4\uc7ac \ub2a5\ub825\uc744 \ud45c\uc2dc\ud569\ub2c8\ub2e4." },
+          vanquished: { name: "\ucc98\uce58\ud55c \ubaac\uc2a4\ud130", description: "\uc8fd\uc740 \ubaac\uc2a4\ud130 \uc218\ub97c \ud45c\uc2dc\ud569\ub2c8\ub2e4." },
+          vision: { name: "\uc2dc\uc57c \ubc30\uc5f4", description: "\ud604\uc7ac \uc2dc\uc57c \ubc30\uc5f4\uc744 \ud45c\uc2dc\ud569\ub2c8\ub2e4." },
+          wizbury: { name: "\uadfc\ucc98 \ubb3c\uac74 \ubb3b\uae30", description: "3x3 \uc601\uc5ed\uc758 \ubc14\ub2e5 \ubb3c\uac74\uc744 \ubb3b\uc2b5\ub2c8\ub2e4." },
+          wizdetect: { name: "\uc228\uaca8\uc9c4 \uac83 \uac10\uc9c0", description: "\uc601\uc6c5 \uadfc\ucc98\uc758 \uc228\uaca8\uc9c4 \uac83\uc744 \ub4dc\ub7ec\ub0c5\ub2c8\ub2e4." },
+          wizgenesis: { name: "\ubaac\uc2a4\ud130 \uc0dd\uc131", description: "\uc774\ub984\uc774\ub098 \ubd84\ub958\ub85c \ubaac\uc2a4\ud130\ub97c \ub9cc\ub4ed\ub2c8\ub2e4." },
+          wizidentify: { name: "\uc778\ubca4\ud1a0\ub9ac \uc2dd\ubcc4", description: "\uc778\ubca4\ud1a0\ub9ac\uc758 \ubaa8\ub4e0 \uc544\uc774\ud15c\uc744 \uc2dd\ubcc4\ud569\ub2c8\ub2e4." },
+          wizintrinsic: { name: "\ub0b4\uc7ac \ub2a5\ub825 \uc124\uc815", description: "\uc120\ud0dd\ud55c \uc2dc\uac04\uc81c \ub0b4\uc7ac \ub2a5\ub825\uc744 \uc870\uc815\ud569\ub2c8\ub2e4." },
+          wizlevelport: { name: "\ub808\ubca8 \ud154\ub808\ud3ec\ud2b8", description: "\ub2e4\ub978 \ub808\ubca8\uc774\ub098 \ubd84\uae30\ub85c \ud154\ub808\ud3ec\ud2b8\ud569\ub2c8\ub2e4." },
+          wizmakemap: { name: "\ub808\ubca8 \uc7ac\uc0dd\uc131", description: "\ud604\uc7ac \ub808\ubca8\uc744 \ub2e4\uc2dc \uc0dd\uc131\ud569\ub2c8\ub2e4." },
+          wizmap: { name: "\ub808\ubca8 \uc9c0\ub3c4", description: "\ub808\ubca8 \uc9c0\ub3c4\uc640 \ud568\uc815\uc744 \ub4dc\ub7ec\ub0c5\ub2c8\ub2e4." },
+          wizrumorcheck: { name: "\uc18c\ubb38 \uac80\uc0ac", description: "\ucc38/\uac70\uc9d3 \uc18c\ubb38 \ud30c\uc77c\uc744 \uac80\uc99d\ud569\ub2c8\ub2e4." },
+          wizsmell: { name: "\ubaac\uc2a4\ud130 \ub0c4\uc0c8 \ub9e1\uae30", description: "\uc120\ud0dd\ud55c \ubaac\uc2a4\ud130\uc758 \ub0c4\uc0c8\ub97c \ub9e1\uc2b5\ub2c8\ub2e4." },
+          wizwhere: { name: "\ud2b9\uc218 \ub808\ubca8", description: "\ud2b9\uc218 \ub808\ubca8\uc758 \ubc30\uce58\ub97c \ud45c\uc2dc\ud569\ub2c8\ub2e4." },
+          wizwish: { name: "\uc18c\uc6d0", description: "\uc544\uc774\ud15c, \ud568\uc815 \ub610\ub294 \uc9c0\ud615\uc744 \uc0dd\uc131\ud569\ub2c8\ub2e4." },
+          wmode: { name: "\ubcbd \ubaa8\ub4dc", description: "\ubcbd \ubaa8\ub4dc \ub514\ubc84\uadf8 \ub370\uc774\ud130\ub97c \ud45c\uc2dc\ud569\ub2c8\ub2e4." },
+        },
         repeat: "반복",
         character: "캐릭터",
         inventory: "인벤토리",
@@ -1342,6 +1424,12 @@
       },
       positionPrompt: {
         closeLabel: "위치 프롬프트 닫기",
+        desktopHint:
+          "이동 입력을 사용하거나 타일을 클릭해 선택을 이동하세요. 선택된 타일을 다시 클릭하거나 Enter를 눌러 확인하세요.",
+        mobileHint:
+          "이동 입력을 사용하거나 타일을 탭해 선택을 이동하세요. 선택된 타일을 다시 탭하거나 Enter를 눌러 확인하세요.",
+        controllerHint:
+          "이동 입력으로 선택을 이동하세요. Enter 또는 확인 버튼을 눌러 확인하세요.",
       },
       controllerSupport: {
         prompt: "컨트롤러가 감지되었습니다. 컨트롤러 지원을 사용할까요?",

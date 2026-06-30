@@ -1,4 +1,4 @@
-﻿import type { LocaleOverrides } from "../locale-helpers";
+import type { LocaleOverrides } from "../locale-helpers";
 import type { TranslationDictionary } from "./en";
 
 export const zhCnOverrides = {
@@ -52,7 +52,7 @@ export const zhCnOverrides = {
       cancel_or_context: { label: "取消 / 上下文", description: "打开上下文操作或取消当前对话框。" },
       action_menu: { label: "操作菜单", description: "打开控制器径向操作菜单。" },
       run_modifier: { label: "跑步修饰键", description: "按住后在移动前发送跑步前缀。" },
-      zoom_in: { label: "缩放（按住）", description: "按住后使用左或右摇杆上下缩放。" },
+      zoom_in: { label: "缩放（按住）", description: "按住后使用左摇杆上下缩放，并用右摇杆旋转镜头。" },
       recenter_camera: { label: "镜头居中", description: "将镜头返回到玩家中心。" },
       toggle_large_minimap: { label: "切换大型小地图", description: "切换超大尺寸小地图。" },
       pause_menu: { label: "暂停菜单", description: "打开或关闭暂停菜单。" },
@@ -117,6 +117,12 @@ export const zhCnOverrides = {
         description:
           "选择启动模式。巫师模式是 NetHack 调试模式（`playmode:debug`）。",
         options: { normal: "正常", explore: "探索", debug: "巫师/调试" },
+      },
+      number_pad: {
+        label: "移动按键",
+        description:
+          "选择 NetHack 移动使用数字小键盘（`number_pad:1`）还是传统 vi 键（`number_pad:0`）。",
+        options: { numeric: "数字小键盘", vi: "vi 键" },
       },
       autopickup: { label: "自动拾取", description: "自动拾取在拾取类型中选中的物品类别。" },
       pickup_types: {
@@ -413,6 +419,10 @@ export const zhCnOverrides = {
           label: "相对镜头的移动与滑动",
           description: "根据镜头 Y 轴角度旋转移动键和滑动方向。",
         },
+        fpsWasdKeyboardMovementEnabled: {
+          label: "\u5728\u7b2c\u4e00\u4eba\u79f0\u6a21\u5f0f\u542f\u7528 WASD \u952e\u76d8\u79fb\u52a8",
+          description: "\u4f7f\u7528 W/A/S/D \u8fdb\u884c\u7b2c\u4e00\u4eba\u79f0\u79fb\u52a8\u3002\u5173\u95ed\u540e\uff0c\u8fd9\u4e9b\u6309\u952e\u5c06\u50cf\u666e\u901a NetHack \u547d\u4ee4\u4e00\u6837\u5de5\u4f5c\u3002",
+        },
         controllerFpsMoveRepeatMs: {
           label: "第一人称左摇杆移动重复",
           description: "第一人称模式下左摇杆的移动重复延迟（越低越快）。",
@@ -519,6 +529,39 @@ export const zhCnOverrides = {
           label: "实时消息日志",
           description: "显示滚动的游戏内消息日志。",
         },
+        showPersistentMobileMessageLog: {
+          label: "\u663e\u793a\u5e38\u9a7b\u6d88\u606f\u65e5\u5fd7",
+          description:
+            "\u6e38\u620f\u65f6\u4fdd\u6301\u7d27\u51d1\u7684\u79fb\u52a8\u6d88\u606f\u65e5\u5fd7\u53ef\u89c1\u3002\u201c\u65e5\u5fd7\u201d\u6309\u94ae\u4ecd\u53ef\u6253\u5f00\u66f4\u5927\u7684\u65e5\u5fd7\u3002",
+        },
+        rumbleEnabled: {
+          label: "\u542f\u7528\u9707\u52a8",
+          description:
+            "\u5728\u652f\u6301\u7684\u79fb\u52a8\u8bbe\u5907\u4e0a\uff0c\u5bf9\u9020\u6210\u548c\u53d7\u5230\u7684\u4f24\u5bb3\u4f7f\u7528\u77ed\u4fc3\u7684\u89e6\u89c9\u9707\u52a8\u53cd\u9988\u3002",
+        },
+        sectionMobileSafeZone: "\u79fb\u52a8\u5b89\u5168\u533a",
+        manualMobileBottomSafeZoneEnabled: {
+          label: "\u8986\u76d6\u68c0\u6d4b\u5230\u7684\u79fb\u52a8\u5b89\u5168\u533a",
+          description:
+            "\u5f53 Android \u638c\u673a\u9519\u8bef\u62a5\u544a\u5b89\u5168\u533a\u65f6\uff0c\u4f7f\u7528\u624b\u52a8\u5b89\u5168\u533a\u7559\u767d\u3002",
+        },
+        manualMobileBottomSafeZoneVerticalPx: {
+          label: "\u7eb5\u5411\u5e95\u90e8\u5b89\u5168\u533a",
+          description:
+            "\u7528\u4e8e\u7eb5\u5411\u79fb\u52a8\u5e03\u5c40\u7684\u624b\u52a8\u5e95\u90e8\u5b89\u5168\u533a\u3002",
+        },
+        manualMobileBottomSafeZoneHorizontalPx: {
+          label: "\u6a2a\u5411\u5e95\u90e8\u5b89\u5168\u533a",
+          description:
+            "\u7528\u4e8e\u6a2a\u5411\u79fb\u52a8\u5e03\u5c40\u7684\u624b\u52a8\u5e95\u90e8\u5b89\u5168\u533a\u3002",
+        },
+        manualMobileRightSafeZoneHorizontalPx: {
+          label: "\u6a2a\u5411\u53f3\u4fa7\u5b89\u5168\u533a",
+          description:
+            "\u7528\u4e8e\u6a2a\u5411\u79fb\u52a8\u5e03\u5c40\u7684\u624b\u52a8\u53f3\u4fa7\u5b89\u5168\u533a\u3002",
+        },
+        manualMobileBottomSafeZonePreview: "\u5e95\u90e8\u5b89\u5168\u533a",
+        manualMobileRightSafeZonePreview: "\u53f3\u4fa7\u5b89\u5168\u533a",
         liveMessageDisplayTimeMs: {
           label: "实时消息显示时间",
           description: "浮动消息在淡出前保持完全可见的时间。",
@@ -638,9 +681,9 @@ export const zhCnOverrides = {
           label: "旧版黑暗走廊墙",
           description: "为旧版 NetHack 3.4.3/3.6.x 运行时（包括 Slash'EM）推断并缓存黑暗走廊墙瓦片。",
         },
-        overrideNh37DarkCorridorWallTiles: {
-          label: "覆盖 NetHack 3.7 黑暗墙瓦片",
-          description: "将黑暗墙覆盖设置应用到 NetHack 3.7 的黑暗走廊墙瓦片。",
+        overrideNh5DarkCorridorWallTiles: {
+          label: "覆盖 NetHack 5.0 黑暗墙瓦片",
+          description: "将黑暗墙覆盖设置应用到 NetHack 5.0 的黑暗走廊墙瓦片。",
         },
         darkCorridorWallTileOverrideEnabled: {
           label: "覆盖黑暗墙瓦片",
@@ -658,7 +701,7 @@ export const zhCnOverrides = {
         },
         mobile: {
           label: "移动端",
-          description: "移动端游戏的触摸控制设置。",
+          description: "\u79fb\u52a8\u7aef\u4e13\u7528\u7684\u754c\u9762\u548c\u6e38\u620f\u8bbe\u7f6e\u3002",
         },
         controls: {
           label: "控制",
@@ -907,7 +950,7 @@ export const zhCnOverrides = {
           darkWallsAlwaysEnabled: " 使用 Vulture 瓦片时始终启用。",
           darkWallsDisabledByVulture: " 使用 Vulture 瓦片时会被禁用。",
           enableDarkWallsFirst:
-            " 请先启用旧版黑暗走廊墙或 NetHack 3.7 黑暗墙覆盖。",
+            " 请先启用旧版黑暗走廊墙或 NetHack 5.0 黑暗墙覆盖。",
           enableFpsFirst: " 请先在显示中启用第一人称模式。",
         },
         darkWallControls: {
@@ -939,13 +982,16 @@ export const zhCnOverrides = {
         builtInNamesLocked: "内置瓦片集名称不能更改。",
         tileLayoutVersion: "瓦片布局版本",
         layout367: "NetHack 3.6.7 布局",
-        layout37: "NetHack 3.7 布局",
+        layout5: "NetHack 5.0 布局",
         tileLayoutDescription: "选择此上传图集使用的瓦片索引布局。",
         tileImage: "瓦片集图像",
         tileImageOptional: "瓦片集图像（可选替换）",
         selectedFile: (fileName: string) => `已选择：${fileName}`,
         currentFile: (fileName: string) => `当前：${fileName}`,
         uploadedImage: "已上传图像",
+        weaponSpriteFlip: "\u7ffb\u8f6c\u7b2c\u4e00\u4eba\u79f0\u6b66\u5668\u7cbe\u7075",
+        weaponSpriteFlipDescription:
+          "\u4e3a\u6b64\u74e6\u7247\u96c6\u6c34\u5e73\u7ffb\u8f6c\u624b\u6301\u6b66\u5668\u7cbe\u7075\u3002\u9ed8\u8ba4\u542f\u7528\u3002",
         backgroundRemovalDescription:
           "为此瓦片集配置广告牌背景移除，或关闭两种模式以保留图集背景。",
         backgroundTileRemoval: "背景瓦片移除",
@@ -975,6 +1021,11 @@ export const zhCnOverrides = {
         selectAll: "全选",
         deselectAll: "取消全选",
         page: (current: number, total: number) => `第 ${current} / ${total} 页`,
+        amount: "Amount",
+        amountDefault: "Default",
+        clearAmount: "Clear amount",
+        decreaseAmount: "Decrease amount by one",
+        increaseAmount: "Increase amount by one",
         pageHintMultiple: "使用 < 和 > 切换页面。按 ESC 取消",
         pageHintSingle: "按 ESC 取消",
         choices: {
@@ -1057,6 +1108,32 @@ export const zhCnOverrides = {
         close: "关闭",
         wizardCommands: "巫师命令",
         wizard: "巫师",
+        wizardCommandFallbackDescription: "\u8fd0\u884c\u6b64\u4ec5\u9650\u5deb\u5e08\u6a21\u5f0f\u7684\u8c03\u8bd5\u547d\u4ee4\u3002",
+        wizardCommandDetails: {
+          levelchange: { name: "\u66f4\u6539\u7b49\u7ea7", description: "\u8bbe\u7f6e\u82f1\u96c4\u7684\u7ecf\u9a8c\u7b49\u7ea7\u3002" },
+          lightsources: { name: "\u5149\u6e90", description: "\u663e\u793a\u79fb\u52a8\u5149\u6e90\u3002" },
+          migratemons: { name: "\u8fc1\u79fb\u602a\u7269", description: "\u663e\u793a\u5728\u697c\u5c42\u95f4\u79fb\u52a8\u7684\u602a\u7269\u3002" },
+          panic: { name: "\u5d29\u6e83\u6d4b\u8bd5", description: "\u6d4b\u8bd5 panic \u5904\u7406\u5e76\u7ed3\u675f\u672c\u5c40\u6e38\u620f\u3002" },
+          polyself: { name: "\u81ea\u6211\u53d8\u5f62", description: "\u6539\u53d8\u82f1\u96c4\u5f53\u524d\u5f62\u6001\u3002" },
+          seenv: { name: "\u5df2\u89c1\u5411\u91cf", description: "\u663e\u793a\u5df2\u89c1\u5411\u91cf\u8c03\u8bd5\u5730\u56fe\u3002" },
+          stats: { name: "\u5185\u5b58\u7edf\u8ba1", description: "\u663e\u793a\u8fd0\u884c\u65f6\u5185\u5b58\u7edf\u8ba1\u3002" },
+          timeout: { name: "\u8d85\u65f6\u961f\u5217", description: "\u663e\u793a\u9650\u65f6\u6548\u679c\u548c\u5185\u5728\u80fd\u529b\u3002" },
+          vanquished: { name: "\u5df2\u51fb\u8d25\u602a\u7269", description: "\u663e\u793a\u5df2\u6b7b\u602a\u7269\u6570\u91cf\u3002" },
+          vision: { name: "\u89c6\u91ce\u6570\u7ec4", description: "\u663e\u793a\u5f53\u524d\u89c6\u91ce\u6570\u7ec4\u3002" },
+          wizbury: { name: "\u57cb\u85cf\u9644\u8fd1\u7269\u54c1", description: "\u57cb\u85cf 3x3 \u533a\u57df\u5185\u7684\u5730\u9762\u7269\u54c1\u3002" },
+          wizdetect: { name: "\u4fa6\u6d4b\u9690\u85cf\u4e8b\u7269", description: "\u63ed\u793a\u82f1\u96c4\u9644\u8fd1\u7684\u9690\u85cf\u4e8b\u7269\u3002" },
+          wizgenesis: { name: "\u521b\u5efa\u602a\u7269", description: "\u6309\u540d\u79f0\u6216\u7c7b\u522b\u521b\u5efa\u602a\u7269\u3002" },
+          wizidentify: { name: "\u9274\u5b9a\u7269\u54c1\u680f", description: "\u9274\u5b9a\u7269\u54c1\u680f\u4e2d\u7684\u6240\u6709\u7269\u54c1\u3002" },
+          wizintrinsic: { name: "\u8bbe\u7f6e\u5185\u5728\u80fd\u529b", description: "\u8c03\u6574\u9009\u5b9a\u7684\u9650\u65f6\u5185\u5728\u80fd\u529b\u3002" },
+          wizlevelport: { name: "\u697c\u5c42\u4f20\u9001", description: "\u4f20\u9001\u5230\u5176\u4ed6\u697c\u5c42\u6216\u5206\u652f\u3002" },
+          wizmakemap: { name: "\u91cd\u5efa\u697c\u5c42", description: "\u91cd\u65b0\u751f\u6210\u5f53\u524d\u697c\u5c42\u3002" },
+          wizmap: { name: "\u663e\u793a\u697c\u5c42\u5730\u56fe", description: "\u63ed\u793a\u697c\u5c42\u5730\u56fe\u548c\u9677\u9631\u3002" },
+          wizrumorcheck: { name: "\u68c0\u67e5\u4f20\u95fb", description: "\u9a8c\u8bc1\u771f\u5047\u4f20\u95fb\u6587\u4ef6\u3002" },
+          wizsmell: { name: "\u95fb\u602a\u7269", description: "\u95fb\u4e00\u4e2a\u9009\u5b9a\u7684\u602a\u7269\u3002" },
+          wizwhere: { name: "\u7279\u6b8a\u697c\u5c42", description: "\u663e\u793a\u7279\u6b8a\u697c\u5c42\u7684\u4f4d\u7f6e\u3002" },
+          wizwish: { name: "\u8bb8\u613f", description: "\u521b\u5efa\u7269\u54c1\u3001\u9677\u9631\u6216\u5730\u5f62\u3002" },
+          wmode: { name: "\u5899\u6a21\u5f0f", description: "\u663e\u793a\u5899\u6a21\u5f0f\u8c03\u8bd5\u6570\u636e\u3002" },
+        },
         repeat: "重复",
         character: "角色",
         inventory: "物品栏",
@@ -1067,6 +1144,12 @@ export const zhCnOverrides = {
       },
       positionPrompt: {
         closeLabel: "关闭位置提示",
+        desktopHint:
+          "使用移动输入或点击一个格子来移动选择。再次点击选中的格子或按 Enter 确认。",
+        mobileHint:
+          "使用移动输入或轻点一个格子来移动选择。再次轻点选中的格子或按 Enter 确认。",
+        controllerHint:
+          "使用移动输入来移动选择。按 Enter 或确认键确认。",
       },
       controllerSupport: {
         prompt: "检测到控制器。要启用控制器支持吗？",

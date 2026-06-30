@@ -41,14 +41,16 @@ Launch it from your Home Screen for a web app fullscreen experience.
 
 ## Current Features
 
-- Play NetHack 3.6.7 in a 3D dungeon view while keeping core game rules and depth.
+- Play NetHack in a 3D dungeon view while keeping core game rules and depth.
+- Not a reimagining or rework, this is authentic NetHack in a 3D engine.
+- Choose between playing NetHack 5.0, NetHack 3.6.7, and Slash'Em, with separate save states for each.
 - Mix and match gameplay modes: classic top-down or first-person (FPS) modes with ASCII, tiles, or Vulture graphics.
 - Combat feedback effects: Monsters dynamically shatter into bloody pieces, different every time.
 - Full sound support. Monsters die with a satisfying crunch.
 - Customize sound to your liking and create your own sound packs directly in-game.
 - Play on the couch with full controller support. Radial wheel for actions, move confirmation for careful roguelike navigation.
 - Scalable minimap for level awareness, with viewport box and drag-to-center camera navigation.
-- Optional floating damage/heal numbers, status changes, XP, blood mist combat particles.
+- Optional floating damage/heal numbers, status changes, XP, blood mist, blood splatter, and more.
 - Camera panning and rotation.
 - Crisp ASCII monsters and items are supported in addition to tiles.
 - Built-in graphical tilesets: Vulture tiles, Absurdly Evil, DawnHack, NetHack Modern, Nevanda, RZTiles, and Vanilla NetHack Tiles.
@@ -85,9 +87,9 @@ Launch it from your Home Screen for a web app fullscreen experience.
 - `npm run electron:pack:mac` - Build an unpacked macOS app bundle to `release/` for local testing.
 - `npm run electron:dist:mac` - Build a macOS DMG to `release/` (pass `-- --universal` to produce a universal macOS build).
 - `npm run electron:dist:win` - Build and package a Windows NSIS `.exe` installer (x64) to `release/`.
-- `npm run electron:dist:win:portable` - Build and package a portable Windows `.exe` (x64) to `release/`.
+- `npm run electron:dist:win:portable` - Build and package portable Windows `.exe` files for x64 and legacy x86 to `release/`; the 32-bit artifact ends in `-legacy-x86.exe`.
 - `npm run electron:dist:linux:appimage` - Build and package a Linux AppImage (x64) to `release/` (uses WSL automatically on Windows, stages Linux runtime deps, and includes Linux icon assets).
-- `npm run electron:dist:all` - Build Electron assets once, then package Windows setup + portable and Linux AppImage back to back.
+- `npm run electron:dist:all` - Build Electron assets once, then package the Windows setup, x64 and legacy x86 portable executables, and Linux AppImage back to back.
 - `npm run electron:dist:all:parallel` - Same as above, but packages Windows and Linux at the same time after the shared Electron build.
 - `npm run android:add` - Create the native Android project with Capacitor (run once).
 - `npm run android:sync` - Build web assets and sync them into the Android project.
@@ -122,7 +124,7 @@ Launch it from your Home Screen for a web app fullscreen experience.
 
 ## Credits
 
-- NetHack 3.6.7 to 3.7 tile-order translation logic is adapted from [`horlogeislux/tileto370`](https://github.com/horlogeislux/tileto370) (MIT License).
+- NetHack 3.6.7 to 5.0 tile-order translation logic is adapted from [`horlogeislux/tileto370`](https://github.com/horlogeislux/tileto370) (MIT License).
 
 ## GitHub Pages Deploy
 

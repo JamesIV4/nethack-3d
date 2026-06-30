@@ -3,8 +3,17 @@ package com.nethack3d.app;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Build;
+import android.os.SystemClock;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
+import android.view.InputDevice;
+import android.view.InputEvent;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.plugin.WebView;
@@ -44,6 +53,16 @@ public class MainActivity extends BridgeActivity {
         "Game update data was corrupted and had to be cleared out. If this keeps happening, download the latest proper client update and try again.";
     private static final int NETWORK_CONNECT_TIMEOUT_MS = 30000;
     private static final int NETWORK_READ_TIMEOUT_MS = 30000;
+    private static final int NATIVE_GAMEPAD_AXIS_COUNT = 4;
+    private static final int NATIVE_GAMEPAD_BUTTON_COUNT = 17;
+    private static final long NATIVE_GAMEPAD_STALE_MS = 30000L;
+
+    private final Object nativeGamepadLock = new Object();
+    private final float[] nativeGamepadAxes = new float[NATIVE_GAMEPAD_AXIS_COUNT];
+    private final float[] nativeGamepadAnalogButtons = new float[NATIVE_GAMEPAD_BUTTON_COUNT];
+    private final float[] nativeGamepadDigitalButtons = new float[NATIVE_GAMEPAD_BUTTON_COUNT];
+    private long nativeGamepadTimestampMs = 0L;
+    private boolean nativeGamepadSeen = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +71,218 @@ public class MainActivity extends BridgeActivity {
 
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().addJavascriptInterface(new Nh3dAndroidBridge(), "nh3dAndroid");
+        }
+    }
+
+    @Override
+    public boolean dispatchGenericMotionEvent(MotionEvent event) {
+        if (
+            isGameControllerInput(event) &&
+            event.getActionMasked() == MotionEvent.ACTION_MOVE
+        ) {
+            updateNativeGamepadMotionState(event);
+        }
+        return super.dispatchGenericMotionEvent(event);
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (isGameControllerInput(event)) {
+            updateNativeGamepadButtonState(event);
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        clearNativeGamepadState();
+    }
+
+    private static boolean isGameControllerInput(InputEvent event) {
+        int source = event.getSource();
+        return (
+            (source & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
+            (source & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK ||
+            (source & InputDevice.SOURCE_DPAD) == InputDevice.SOURCE_DPAD
+        );
+    }
+
+    private static float clampUnitAxis(float value) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
+            return 0.0f;
+        }
+        if (value < -1.0f) {
+            return -1.0f;
+        }
+        if (value > 1.0f) {
+            return 1.0f;
+        }
+        return value;
+    }
+
+    private static float clampPositiveAxis(float value) {
+        return Math.max(0.0f, Math.min(1.0f, clampUnitAxis(value)));
+    }
+
+    private static float chooseLargerMagnitude(float first, float second) {
+        return Math.abs(second) > Math.abs(first) ? second : first;
+    }
+
+    private static float getCenteredAxis(MotionEvent event, int axis) {
+        float value = event.getAxisValue(axis);
+        float flat = 0.05f;
+        InputDevice device = event.getDevice();
+        if (device != null) {
+            InputDevice.MotionRange range = device.getMotionRange(axis, event.getSource());
+            if (range != null) {
+                flat = Math.max(flat, range.getFlat());
+            }
+        }
+        if (Math.abs(value) <= flat) {
+            return 0.0f;
+        }
+        return clampUnitAxis(value);
+    }
+
+    private static int mapAndroidKeyCodeToGamepadButtonIndex(int keyCode) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BUTTON_A:
+                return 0;
+            case KeyEvent.KEYCODE_BUTTON_B:
+                return 1;
+            case KeyEvent.KEYCODE_BUTTON_X:
+                return 2;
+            case KeyEvent.KEYCODE_BUTTON_Y:
+                return 3;
+            case KeyEvent.KEYCODE_BUTTON_L1:
+                return 4;
+            case KeyEvent.KEYCODE_BUTTON_R1:
+                return 5;
+            case KeyEvent.KEYCODE_BUTTON_L2:
+                return 6;
+            case KeyEvent.KEYCODE_BUTTON_R2:
+                return 7;
+            case KeyEvent.KEYCODE_BUTTON_SELECT:
+                return 8;
+            case KeyEvent.KEYCODE_BUTTON_START:
+                return 9;
+            case KeyEvent.KEYCODE_BUTTON_THUMBL:
+                return 10;
+            case KeyEvent.KEYCODE_BUTTON_THUMBR:
+                return 11;
+            case KeyEvent.KEYCODE_DPAD_UP:
+                return 12;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                return 13;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                return 14;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                return 15;
+            case KeyEvent.KEYCODE_BUTTON_MODE:
+                return 16;
+            default:
+                return -1;
+        }
+    }
+
+    private void updateNativeGamepadMotionState(MotionEvent event) {
+        float leftX = getCenteredAxis(event, MotionEvent.AXIS_X);
+        float leftY = getCenteredAxis(event, MotionEvent.AXIS_Y);
+        float rightX = chooseLargerMagnitude(
+            getCenteredAxis(event, MotionEvent.AXIS_Z),
+            getCenteredAxis(event, MotionEvent.AXIS_RX)
+        );
+        float rightY = chooseLargerMagnitude(
+            getCenteredAxis(event, MotionEvent.AXIS_RZ),
+            getCenteredAxis(event, MotionEvent.AXIS_RY)
+        );
+        float leftTrigger = Math.max(
+            clampPositiveAxis(event.getAxisValue(MotionEvent.AXIS_LTRIGGER)),
+            clampPositiveAxis(event.getAxisValue(MotionEvent.AXIS_BRAKE))
+        );
+        float rightTrigger = Math.max(
+            clampPositiveAxis(event.getAxisValue(MotionEvent.AXIS_RTRIGGER)),
+            clampPositiveAxis(event.getAxisValue(MotionEvent.AXIS_GAS))
+        );
+        float hatX = getCenteredAxis(event, MotionEvent.AXIS_HAT_X);
+        float hatY = getCenteredAxis(event, MotionEvent.AXIS_HAT_Y);
+
+        synchronized (nativeGamepadLock) {
+            nativeGamepadAxes[0] = leftX;
+            nativeGamepadAxes[1] = leftY;
+            nativeGamepadAxes[2] = rightX;
+            nativeGamepadAxes[3] = rightY;
+            nativeGamepadAnalogButtons[6] = leftTrigger;
+            nativeGamepadAnalogButtons[7] = rightTrigger;
+            nativeGamepadAnalogButtons[12] = hatY < -0.5f ? 1.0f : 0.0f;
+            nativeGamepadAnalogButtons[13] = hatY > 0.5f ? 1.0f : 0.0f;
+            nativeGamepadAnalogButtons[14] = hatX < -0.5f ? 1.0f : 0.0f;
+            nativeGamepadAnalogButtons[15] = hatX > 0.5f ? 1.0f : 0.0f;
+            nativeGamepadTimestampMs = event.getEventTime();
+            nativeGamepadSeen = true;
+        }
+    }
+
+    private void updateNativeGamepadButtonState(KeyEvent event) {
+        int buttonIndex = mapAndroidKeyCodeToGamepadButtonIndex(event.getKeyCode());
+        if (
+            buttonIndex < 0 ||
+            buttonIndex >= NATIVE_GAMEPAD_BUTTON_COUNT ||
+            (event.getAction() != KeyEvent.ACTION_DOWN && event.getAction() != KeyEvent.ACTION_UP)
+        ) {
+            return;
+        }
+
+        synchronized (nativeGamepadLock) {
+            nativeGamepadDigitalButtons[buttonIndex] =
+                event.getAction() == KeyEvent.ACTION_DOWN ? 1.0f : 0.0f;
+            nativeGamepadTimestampMs = event.getEventTime();
+            nativeGamepadSeen = true;
+        }
+    }
+
+    private void clearNativeGamepadState() {
+        synchronized (nativeGamepadLock) {
+            for (int index = 0; index < NATIVE_GAMEPAD_AXIS_COUNT; index++) {
+                nativeGamepadAxes[index] = 0.0f;
+            }
+            for (int index = 0; index < NATIVE_GAMEPAD_BUTTON_COUNT; index++) {
+                nativeGamepadAnalogButtons[index] = 0.0f;
+                nativeGamepadDigitalButtons[index] = 0.0f;
+            }
+            nativeGamepadTimestampMs = 0L;
+            nativeGamepadSeen = false;
+        }
+    }
+
+    private String buildNativeGamepadStateJson() {
+        try {
+            JSONObject response = new JSONObject();
+            JSONArray axes = new JSONArray();
+            JSONArray buttons = new JSONArray();
+            synchronized (nativeGamepadLock) {
+                boolean connected =
+                    nativeGamepadSeen &&
+                    nativeGamepadTimestampMs > 0L &&
+                    SystemClock.uptimeMillis() - nativeGamepadTimestampMs <= NATIVE_GAMEPAD_STALE_MS;
+                response.put("connected", connected);
+                response.put("timestamp", nativeGamepadTimestampMs);
+                for (int index = 0; index < NATIVE_GAMEPAD_AXIS_COUNT; index++) {
+                    axes.put(nativeGamepadAxes[index]);
+                }
+                for (int index = 0; index < NATIVE_GAMEPAD_BUTTON_COUNT; index++) {
+                    buttons.put(Math.max(
+                        nativeGamepadAnalogButtons[index],
+                        nativeGamepadDigitalButtons[index]
+                    ));
+                }
+            }
+            response.put("axes", axes);
+            response.put("buttons", buttons);
+            return response.toString();
+        } catch (JSONException exception) {
+            return "{\"connected\":false}";
         }
     }
 
@@ -516,6 +747,33 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    @SuppressWarnings("deprecation")
+    private Vibrator getDeviceVibrator() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            VibratorManager vibratorManager =
+                (VibratorManager) getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+            return vibratorManager != null ? vibratorManager.getDefaultVibrator() : null;
+        }
+        return (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void vibrateWithAmplitude(int durationMs, int amplitude) {
+        int clampedDurationMs = Math.max(1, Math.min(1000, durationMs));
+        int clampedAmplitude = Math.max(1, Math.min(255, amplitude));
+        Vibrator vibrator = getDeviceVibrator();
+        if (vibrator == null || !vibrator.hasVibrator()) {
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(
+                VibrationEffect.createOneShot(clampedDurationMs, clampedAmplitude)
+            );
+            return;
+        }
+        vibrator.vibrate(clampedDurationMs);
+    }
+
     private static JSONObject createApplyResult(
         boolean ok,
         boolean applied,
@@ -801,6 +1059,11 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
+        public String getGamepadStateJson() {
+            return buildNativeGamepadStateJson();
+        }
+
+        @JavascriptInterface
         public String getActiveGameUpdateInfo() {
             JSONObject activeUpdateInfo = readActiveUpdateInfo();
             String fallbackNotice = readAndClearUpdateFallbackNotice();
@@ -830,6 +1093,11 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface
         public String applyGameUpdate(String manifestUrl) {
             return applyGameUpdateInternal(manifestUrl).toString();
+        }
+
+        @JavascriptInterface
+        public void vibrate(int durationMs, int amplitude) {
+            vibrateWithAmplitude(durationMs, amplitude);
         }
     }
 }

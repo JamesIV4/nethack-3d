@@ -1,4 +1,4 @@
-﻿import type { LocaleOverrides } from "../locale-helpers";
+import type { LocaleOverrides } from "../locale-helpers";
 import type { TranslationDictionary } from "./en";
 
 export const esOverrides = {
@@ -105,7 +105,7 @@ export const esOverrides = {
             },
             zoom_in: {
                 label: "Zoom (mantener)",
-                description: "Mant\u00E9n presionado, luego usa el joystick izquierdo o derecho hacia arriba/abajo para acercar/alejar.",
+                description: "Mant\u00E9n presionado, luego usa el joystick izquierdo arriba/abajo para zoom y el joystick derecho para rotar la c\u00E1mara.",
             },
             recenter_camera: {
                 label: "C\u00E1mara reciente",
@@ -186,6 +186,14 @@ export const esOverrides = {
                     normal: "Normal",
                     explore: "Explorar",
                     debug: "Asistente/Depuraci\u00F3n",
+                },
+            },
+            number_pad: {
+                label: "Teclas de movimiento",
+                description: "Elige si el movimiento de NetHack usa el teclado num\u00E9rico (`number_pad:1`) o las teclas vi tradicionales (`number_pad:0`).",
+                options: {
+                    numeric: "Teclado num\u00E9rico",
+                    vi: "Teclas vi",
                 },
             },
             autopickup: {
@@ -611,6 +619,10 @@ export const esOverrides = {
                     label: "Movimientos y deslizamientos relativos a la c\u00E1mara",
                     description: "Gire las teclas de movimiento y deslice las direcciones seg\u00FAn el \u00E1ngulo del eje Y de la c\u00E1mara.",
                 },
+                fpsWasdKeyboardMovementEnabled: {
+                    label: "Activar movimiento WASD con teclado en modo FPS",
+                    description: "Usa W/A/S/D para moverte en primera persona. Desact\u00EDvalo para que esas teclas se comporten como comandos normales de NetHack.",
+                },
                 controllerFpsMoveRepeatMs: {
                     label: "Repetici\u00F3n de movimiento del joystick izquierdo FPS",
                     description: "Retraso de repetici\u00F3n de movimiento para el joystick izquierdo en modo FPS (m\u00E1s abajo es m\u00E1s r\u00E1pido).",
@@ -716,6 +728,33 @@ export const esOverrides = {
                     label: "Registro de mensajes en vivo",
                     description: "Muestra el registro de mensajes desplazable en el juego.",
                 },
+                showPersistentMobileMessageLog: {
+                    label: "Mostrar registro de mensajes persistente",
+                    description: "Mantiene visible el registro de mensajes m\u00F3vil compacto durante la partida. El bot\u00F3n Registro a\u00FAn puede abrir el registro m\u00E1s grande.",
+                },
+                rumbleEnabled: {
+                    label: "Activar vibracion",
+                    description: "Usa vibracion haptica breve para el dano infligido y recibido en dispositivos moviles compatibles.",
+                },
+                sectionMobileSafeZone: "Zonas seguras m\u00F3viles",
+                manualMobileBottomSafeZoneEnabled: {
+                    label: "Anular las zonas seguras m\u00F3viles detectadas",
+                    description: "Use m\u00E1rgenes de zona segura manuales cuando las consolas Android port\u00E1tiles informen mal las \u00E1reas seguras.",
+                },
+                manualMobileBottomSafeZoneVerticalPx: {
+                    label: "Zona segura inferior vertical",
+                    description: "Zona segura inferior manual para el dise\u00F1o m\u00F3vil vertical.",
+                },
+                manualMobileBottomSafeZoneHorizontalPx: {
+                    label: "Zona segura inferior horizontal",
+                    description: "Zona segura inferior manual para el dise\u00F1o m\u00F3vil horizontal.",
+                },
+                manualMobileRightSafeZoneHorizontalPx: {
+                    label: "Zona segura derecha horizontal",
+                    description: "Zona segura derecha manual para el dise\u00F1o m\u00F3vil horizontal.",
+                },
+                manualMobileBottomSafeZonePreview: "Zona segura inferior",
+                manualMobileRightSafeZonePreview: "Zona segura derecha",
                 liveMessageDisplayTimeMs: {
                     label: "Tiempo de visualizaci\u00F3n de mensajes en vivo",
                     description: "Hora en que un mensaje flotante permanece completamente visible antes de desaparecer.",
@@ -835,9 +874,9 @@ export const esOverrides = {
                     label: "Paredes oscuras de pasillo heredadas",
                     description: "Inferir y almacenar en cach\u00E9 los mosaicos de paredes de pasillos oscuros para runtimes heredados de NetHack 3.4.3/3.6.x, incluido Slash'EM.",
                 },
-                overrideNh37DarkCorridorWallTiles: {
-                    label: "Anular los mosaicos de pared oscuros de NetHack 3.7",
-                    description: "Aplique configuraciones de anulaci\u00F3n de paredes oscuras a los mosaicos de paredes de pasillos oscuros de NetHack 3.7.",
+                overrideNh5DarkCorridorWallTiles: {
+                    label: "Anular los mosaicos de pared oscuros de NetHack 5.0",
+                    description: "Aplique configuraciones de anulaci\u00F3n de paredes oscuras a los mosaicos de paredes de pasillos oscuros de NetHack 5.0.",
                 },
                 darkCorridorWallTileOverrideEnabled: {
                     label: "Anular el azulejo de pared oscuro",
@@ -855,7 +894,7 @@ export const esOverrides = {
                 },
                 mobile: {
                     label: "M\u00F3vil",
-                    description: "Configuraci\u00F3n de control t\u00E1ctil para juegos m\u00F3viles.",
+                    description: "Configuraci\u00F3n de interfaz y juego espec\u00EDfica para m\u00F3viles.",
                 },
                 controls: {
                     label: "Controles",
@@ -1092,7 +1131,7 @@ export const esOverrides = {
                 hints: {
                     darkWallsAlwaysEnabled: "Siempre habilitado mientras los mosaicos de Vulture est\u00E1n activos.",
                     darkWallsDisabledByVulture: "Deshabilitado mientras los mosaicos de Vulture est\u00E1n activos.",
-                    enableDarkWallsFirst: "Habilite primero las paredes oscuras de pasillo heredadas o las anulaciones de paredes oscuras de NetHack 3.7.",
+                    enableDarkWallsFirst: "Habilite primero las paredes oscuras de pasillo heredadas o las anulaciones de paredes oscuras de NetHack 5.0.",
                     enableFpsFirst: "Habilite el modo en primera persona en Pantalla primero.",
                 },
                 darkWallControls: {
@@ -1123,13 +1162,15 @@ export const esOverrides = {
                 builtInNamesLocked: "Los nombres de los conjuntos de mosaicos integrados no se pueden cambiar.",
                 tileLayoutVersion: "Versi\u00F3n de dise\u00F1o de mosaico",
                 layout367: "Dise\u00F1o de NetHack 3.6.7",
-                layout37: "Dise\u00F1o de NetHack 3.7",
+                layout5: "Dise\u00F1o de NetHack 5.0",
                 tileLayoutDescription: "Elija el dise\u00F1o del \u00EDndice de mosaicos utilizado por este atlas cargado.",
                 tileImage: "Imagen del conjunto de mosaicos",
                 tileImageOptional: "Imagen de mosaico (reemplazo opcional)",
                 selectedFile: (fileName: string) => `Seleccionado:${fileName}`,
                 currentFile: (fileName: string) => `Actual:${fileName}`,
                 uploadedImage: "imagen cargada",
+                weaponSpriteFlip: "Voltear sprite del arma en FPS",
+                weaponSpriteFlipDescription: "Voltea horizontalmente el sprite del arma equipada para este conjunto de mosaicos. Activado de forma predeterminada.",
                 backgroundRemovalDescription: "Configure la eliminaci\u00F3n del fondo de cartelera para este conjunto de mosaicos o deje ambos modos desactivados para mantener intactos los fondos del atlas.",
                 backgroundTileRemoval: "Eliminaci\u00F3n de mosaicos de fondo",
                 backgroundTileRemovalDescription: "Utilice un mosaico de atlas seleccionado para eliminar el fondo de la cartelera.",
@@ -1157,6 +1198,11 @@ export const esOverrides = {
                 selectAll: "Seleccionar todo",
                 deselectAll: "Deseleccionar todo",
                 page: (current: number, total: number) => `P\u00E1gina${current} / ${total}`,
+                amount: "Amount",
+                amountDefault: "Default",
+                clearAmount: "Clear amount",
+                decreaseAmount: "Decrease amount by one",
+                increaseAmount: "Increase amount by one",
                 pageHintMultiple: "Utilice < y > para cambiar de p\u00E1gina. Presione ESC para cancelar",
                 pageHintSingle: "Presione ESC para cancelar",
                 choices: {
@@ -1237,6 +1283,32 @@ export const esOverrides = {
                 close: "Cerrar",
                 wizardCommands: "Comandos del asistente",
                 wizard: "Mago",
+                wizardCommandFallbackDescription: "Ejecuta este comando de depuraci\u00F3n exclusivo del modo wizard.",
+                wizardCommandDetails: {
+                    levelchange: { name: "Cambiar nivel", description: "Define el nivel de experiencia del h\u00E9roe." },
+                    lightsources: { name: "Fuentes de luz", description: "Muestra las fuentes de luz m\u00F3viles." },
+                    migratemons: { name: "Monstruos migrantes", description: "Muestra monstruos que se mueven entre niveles." },
+                    panic: { name: "Prueba de p\u00E1nico", description: "Prueba el manejo de p\u00E1nico y termina esta partida." },
+                    polyself: { name: "Polimorfarse", description: "Cambia la forma actual del h\u00E9roe." },
+                    seenv: { name: "Vectores vistos", description: "Muestra el mapa de depuraci\u00F3n de visi\u00F3n." },
+                    stats: { name: "Estad\u00EDsticas de memoria", description: "Muestra estad\u00EDsticas de memoria en ejecuci\u00F3n." },
+                    timeout: { name: "Cola de tiempos", description: "Muestra efectos temporales e intr\u00EDnsecos." },
+                    vanquished: { name: "Monstruos vencidos", description: "Muestra recuentos de monstruos muertos." },
+                    vision: { name: "Matriz de visi\u00F3n", description: "Muestra la matriz de visi\u00F3n actual." },
+                    wizbury: { name: "Enterrar objetos cercanos", description: "Entierra objetos del suelo en un \u00E1rea de 3x3." },
+                    wizdetect: { name: "Detectar ocultos", description: "Revela cosas ocultas cerca del h\u00E9roe." },
+                    wizgenesis: { name: "Crear monstruo", description: "Crea un monstruo por nombre o clase." },
+                    wizidentify: { name: "Identificar inventario", description: "Identifica todos los objetos del inventario." },
+                    wizintrinsic: { name: "Ajustar intr\u00EDnsecos", description: "Ajusta intr\u00EDnsecos temporales seleccionados." },
+                    wizlevelport: { name: "Teletransporte de nivel", description: "Teletransporta a otro nivel o rama." },
+                    wizmakemap: { name: "Recrear nivel", description: "Genera de nuevo el nivel actual." },
+                    wizmap: { name: "Mapear nivel", description: "Revela el mapa del nivel y trampas." },
+                    wizrumorcheck: { name: "Comprobar rumores", description: "Valida archivos de rumores verdaderos y falsos." },
+                    wizsmell: { name: "Oler monstruo", description: "Huele un monstruo seleccionado." },
+                    wizwhere: { name: "Niveles especiales", description: "Muestra d\u00F3nde est\u00E1n los niveles especiales." },
+                    wizwish: { name: "Deseo", description: "Crea un objeto, trampa o terreno." },
+                    wmode: { name: "Modos de muro", description: "Muestra datos de depuraci\u00F3n de muros." },
+                },
                 repeat: "Repetir",
                 character: "Personaje",
                 inventory: "Inventario",
@@ -1247,6 +1319,12 @@ export const esOverrides = {
             },
             positionPrompt: {
                 closeLabel: "Mensaje de posici\u00F3n cerrada",
+                desktopHint:
+                  "Usa la entrada de movimiento o haz clic en una casilla para mover la selección. Haz clic otra vez en la casilla seleccionada o pulsa Enter para confirmar.",
+                mobileHint:
+                  "Usa la entrada de movimiento o toca una casilla para mover la selección. Toca otra vez la casilla seleccionada o pulsa Enter para confirmar.",
+                controllerHint:
+                  "Usa la entrada de movimiento para mover la selección. Pulsa Enter o Confirmar para confirmar.",
             },
             controllerSupport: {
                 prompt: "Controlador detectado. \u00BFHabilitar la compatibilidad con el controlador?",

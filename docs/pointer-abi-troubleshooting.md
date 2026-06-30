@@ -1,8 +1,8 @@
 # NetHack WASM Pointer ABI Troubleshooting
 
-This document explains the current first-class pointer path for `3.6.7`, `3.7`, and `slashem`, what can break across WASM updates, and how to fix it quickly.
+This document explains the current first-class pointer path for `3.6.7`, `5.0`, and `slashem`, what can break across WASM updates, and how to fix it quickly.
 
-## Current First-Class Path (3.6.7 + 3.7 + Slash'EM)
+## Current First-Class Path (3.6.7 + 5.0 + Slash'EM)
 
 The runtime resolves extended commands from the WASM-exported extcmd table.
 
@@ -22,21 +22,21 @@ Runtime-driven:
 
 Hard-coded ABI profile (current design):
 - extcmd ABI layout defaults:
-  - `3.6.7` / `3.7`: `stride=24`, `textPtrOffset=4`, `flagsOffset=16`, `exportedPointerMode=direct_or_slot`
+  - `3.6.7` / `5.0`: `stride=24`, `textPtrOffset=4`, `flagsOffset=16`, `exportedPointerMode=direct_or_slot`
   - `slashem`: `stride=16`, `textPtrOffset=0`, `flagsOffset=12`, `exportedPointerMode=direct_or_slot`
 - Callback arg shape defaults:
   - `3.6.7`: `shim_add_menu: [8]`, `shim_print_glyph: [4, 5, 7]`.
   - `slashem`: `shim_add_menu: [8]`, `shim_print_glyph: [4, 6]`.
-  - `3.7`: `shim_add_menu: [9]` (`vipi00iisi`), `shim_print_glyph: [5, 7]` (`vi11pp`, tracked build appends `monsterId` and `attackingTargetId`).
+  - `5.0`: `shim_add_menu: [9]` (`vipi00iisi`), `shim_print_glyph: [5, 7]` (`vi11pp`, tracked build appends `monsterId` and `attackingTargetId`).
 - Callback mode defaults:
   - `3.6.7`: `shim_nh_poskey.coordArgType=i32`.
-  - `3.7`: `shim_nh_poskey.coordArgType=i16` (`coordxy` widened from 8-bit-era assumptions to `int16_t` in 3.7).
+  - `5.0`: `shim_nh_poskey.coordArgType=i16` (`coordxy` widened from 8-bit-era assumptions to `int16_t` in 5.0).
   - `3.6.7`: `shim_add_menu.identifierMode=pointer_slot`.
-  - `3.7`: `shim_add_menu.identifierMode=value`, `menuTextArgIndex=7`, `itemFlagsArgIndex=8`.
+  - `5.0`: `shim_add_menu.identifierMode=value`, `menuTextArgIndex=7`, `itemFlagsArgIndex=8`.
 - `menu_item` ABI defaults:
   - `3.6.7`: `stride=8`, `countOffset=4`.
-  - `3.7`: `stride=16`, `countOffset=8`, `itemFlagsOffset=12`.
-    (`anything` in 3.7 includes `int64/uint64`, widening `struct mi` on wasm32.)
+  - `5.0`: `stride=16`, `countOffset=8`, `itemFlagsOffset=12`.
+    (`anything` in 5.0 includes `int64/uint64`, widening `struct mi` on wasm32.)
 
 So this is not hard-coded command data, but it is a hard-coded ABI profile.
 
@@ -88,7 +88,7 @@ Fix:
 - Update `callbackArgCounts` / `callbackModes` defaults in `buildDefaultRuntimePointerContract()`.
 - For `3.6.7` fork, `shim_print_glyph` may be 5 args or 7 args on tracked builds.
 - For `slashem`, `shim_print_glyph` is 4 args, or 6 args on tracked builds.
-- For `3.7`, `shim_add_menu` expects 9 args and `shim_print_glyph` may be 5 args or 7 args on tracked builds.
+- For `5.0`, `shim_add_menu` expects 9 args and `shim_print_glyph` may be 5 args or 7 args on tracked builds.
 
 ### Symptom: Menus/select actions break
 Likely cause:

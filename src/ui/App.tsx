@@ -56,6 +56,12 @@ import {
 import { registerDebugHelpers } from "../app";
 import { createEngineUiAdapter } from "../state/engineUiAdapter";
 import { defaultPlayerStats, useGameStore } from "../state/gameStore";
+import {
+  Nh3dIcon,
+  Nh3dIconArrowDown,
+  Nh3dIconArrowUp,
+} from "./icons";
+import { MobileDismissButton } from "./MobileDismissButton";
 import type { NethackRuntimeVersion } from "../runtime/types";
 import {
   appendRequiredStartupInitOptionTokens,
@@ -97,9 +103,9 @@ import {
   type Nh3dTilesetTileLayoutVersion,
 } from "../game/tilesets";
 import {
-  shouldTranslateNh367TilesetForNh37Runtime,
-  translateNh37TileIndexToNh367,
-} from "../game/tileset-367-to-37-translation";
+  shouldTranslateNh367TilesetForNh5Runtime,
+  translateNh5TileIndexToNh367,
+} from "../game/tileset-367-to-5-translation";
 import {
   deleteStoredUserTileset,
   listStoredUserTilesets,
@@ -245,8 +251,8 @@ function resolveTilesetLayoutShortLabel(
       return "Slash'EM";
     case "3.4.3":
       return "3.4.3";
-    case "3.7":
-      return "3.7";
+    case "5.0":
+      return "5.0";
     case "3.6.7":
       return "3.6.7";
     default:
@@ -262,8 +268,8 @@ function resolveTilesetLayoutDisplayLabel(
       return "Slash'EM layout";
     case "3.4.3":
       return "NetHack 3.4.3 layout";
-    case "3.7":
-      return t.dialogs.tilesetManager.layout37;
+    case "5.0":
+      return t.dialogs.tilesetManager.layout5;
     case "3.6.7":
       return t.dialogs.tilesetManager.layout367;
     default:
@@ -275,8 +281,8 @@ function resolveRuntimeVersionDisplayLabel(
   runtimeVersion: NethackRuntimeVersion,
 ): string {
   switch (runtimeVersion) {
-    case "3.7":
-      return "NetHack 3.7";
+    case "5.0":
+      return "NetHack 5.0";
     case "slashem":
       return "Slash'EM";
     case "3.6.7":
@@ -507,7 +513,7 @@ const playerConditionStatusDefinitions367: ReadonlyArray<{
   { mask: 0x00001000, label: t.statusEffects.riding, severity: "good" },
 ];
 
-const playerConditionStatusDefinitions37: ReadonlyArray<{
+const playerConditionStatusDefinitions5: ReadonlyArray<{
   mask: number;
   label: string;
   severity: StatusSeverity;
@@ -679,8 +685,8 @@ function resolveConditionStatusDefinitions(
   label: string;
   severity: StatusSeverity;
 }> {
-  return runtimeVersion === "3.7"
-    ? playerConditionStatusDefinitions37
+  return runtimeVersion === "5.0"
+    ? playerConditionStatusDefinitions5
     : runtimeVersion === "slashem"
       ? playerConditionStatusDefinitionsSlashEm
       : playerConditionStatusDefinitions367;
@@ -710,7 +716,7 @@ function resolveConditionStatusLinePatterns(
   runtimeVersion: NethackRuntimeVersion,
   mask: number,
 ): readonly RegExp[] {
-  if (runtimeVersion === "3.7") {
+  if (runtimeVersion === "5.0") {
     switch (mask >>> 0) {
       case 0x00000001:
         return [/\bbare[- ]handed\b/i];
@@ -3238,6 +3244,22 @@ function parseQuestionChoices(question: string, choices: string): string[] {
   return merged;
 }
 
+function isSymbolLookupTextQuestion(
+  questionText: string,
+  choices: string,
+): boolean {
+  if (String(choices || "").trim().length > 0) {
+    return false;
+  }
+  const normalizedQuestion = String(questionText || "")
+    .trim()
+    .toLowerCase();
+  return (
+    normalizedQuestion === "what do you look for?" ||
+    normalizedQuestion === "what do you look for"
+  );
+}
+
 function getQuestionBracketChoiceSpec(question: string): string {
   const bracketMatch = String(question || "").match(/\[([^\]]+)\]/);
   return typeof bracketMatch?.[1] === "string"
@@ -3252,7 +3274,7 @@ function isAdjustLetterQuestionPrompt(questionText: string): boolean {
 function isLegacyQuestionChoiceRuntime(
   runtimeVersion: NethackRuntimeVersion,
 ): boolean {
-  return runtimeVersion !== "3.7";
+  return runtimeVersion !== "5.0";
 }
 
 function orderQuestionChoicesForDisplay(
@@ -4534,11 +4556,11 @@ function resolvePreviewAtlasTileIdForRuntime(
   }
   try {
     if (
-      !shouldTranslateNh367TilesetForNh37Runtime(runtimeVersion, atlasTileCount)
+      !shouldTranslateNh367TilesetForNh5Runtime(runtimeVersion, atlasTileCount)
     ) {
       return normalizedTileId;
     }
-    return translateNh37TileIndexToNh367(normalizedTileId);
+    return translateNh5TileIndexToNh367(normalizedTileId);
   } catch {
     return normalizedTileId;
   }
@@ -4567,7 +4589,7 @@ function createDefaultStartupCharacterPreferences(
 function createDefaultStartupCharacterPreferencesByRuntime(): StartupCharacterPreferencesByRuntime {
   return {
     "3.6.7": createDefaultStartupCharacterPreferences("3.6.7"),
-    "3.7": createDefaultStartupCharacterPreferences("3.7"),
+    "5.0": createDefaultStartupCharacterPreferences("5.0"),
     slashem: createDefaultStartupCharacterPreferences("slashem"),
   };
 }
@@ -4610,6 +4632,10 @@ type ControllerActionWheelEntry = MobileActionEntry & {
   clipPath: string;
   labelXPercent: number;
   labelYPercent: number;
+};
+type WizardCommandCopy = {
+  name: string;
+  description: string;
 };
 type MobileActionSheetMode = "quick" | "extended";
 type InventoryContextAction = {
@@ -4690,7 +4716,10 @@ type ClientOptionSlider = {
     | "fpsLookSensitivityY"
     | "bloodStrength"
     | "liveMessageDisplayTimeMs"
-    | "liveMessageFadeOutTimeMs";
+    | "liveMessageFadeOutTimeMs"
+    | "manualMobileBottomSafeZoneVerticalPx"
+    | "manualMobileBottomSafeZoneHorizontalPx"
+    | "manualMobileRightSafeZoneHorizontalPx";
   label: string;
   description: string;
   type: "slider";
@@ -4745,12 +4774,17 @@ type ClientOptionsTab = {
   description: string;
   groupKey: string;
 };
+type ManualSafeZonePreview = {
+  side: "bottom" | "right";
+  sizePx: number;
+};
 
 type ClientOptionToggleKey =
   | "fpsMode"
   | "lightingEnabled"
   | "fpsFlattenEntityBillboards"
   | "fpsHeldWeaponVisible"
+  | "fpsWasdKeyboardMovementEnabled"
   | "showItemsUnderPlayerInOverheadTilesMode"
   | "controllerEnabled"
   | "invertLookYAxis"
@@ -4771,11 +4805,14 @@ type ClientOptionToggleKey =
   | "monsterShatter"
   | "monsterShatterBloodBorders"
   | "liveMessageLog"
+  | "showPersistentMobileMessageLog"
+  | "rumbleEnabled"
+  | "manualMobileBottomSafeZoneEnabled"
   | "showVersionNotificationsOnLaunch"
   | "soundEnabled"
   | "blockAmbientOcclusion"
   | "darkCorridorWalls367"
-  | "overrideNh37DarkCorridorWallTiles"
+  | "overrideNh5DarkCorridorWallTiles"
   | "darkCorridorWallTileOverrideEnabled"
   | "darkCorridorWallSolidColorOverrideEnabled";
 
@@ -6126,6 +6163,13 @@ const clientOptionsConfig: ClientOption[] = [
     type: "boolean",
   },
   {
+    key: "fpsWasdKeyboardMovementEnabled",
+    label: t.clientOptions.config.fpsWasdKeyboardMovementEnabled.label,
+    description:
+      t.clientOptions.config.fpsWasdKeyboardMovementEnabled.description,
+    type: "boolean",
+  },
+  {
     key: "controllerFpsMoveRepeatMs",
     label: t.clientOptions.config.controllerFpsMoveRepeatMs.label,
     description: t.clientOptions.config.controllerFpsMoveRepeatMs.description,
@@ -6428,6 +6472,71 @@ const clientOptionsConfig: ClientOption[] = [
     ],
   },
   {
+    key: "group-mobile",
+    label: t.clientOptions.config.groupMobileControls,
+    type: "group",
+  },
+  {
+    key: "section-mobile-messages",
+    label: t.clientOptions.config.sectionDisplayMessages,
+    type: "section",
+  },
+  {
+    key: "showPersistentMobileMessageLog",
+    label: t.clientOptions.config.showPersistentMobileMessageLog.label,
+    description:
+      t.clientOptions.config.showPersistentMobileMessageLog.description,
+    type: "boolean",
+  },
+  {
+    key: "rumbleEnabled",
+    label: t.clientOptions.config.rumbleEnabled.label,
+    description: t.clientOptions.config.rumbleEnabled.description,
+    type: "boolean",
+  },
+  {
+    key: "section-mobile-safe-zone",
+    label: t.clientOptions.config.sectionMobileSafeZone,
+    type: "section",
+  },
+  {
+    key: "manualMobileBottomSafeZoneEnabled",
+    label: t.clientOptions.config.manualMobileBottomSafeZoneEnabled.label,
+    description:
+      t.clientOptions.config.manualMobileBottomSafeZoneEnabled.description,
+    type: "boolean",
+  },
+  {
+    key: "manualMobileBottomSafeZoneVerticalPx",
+    label: t.clientOptions.config.manualMobileBottomSafeZoneVerticalPx.label,
+    description:
+      t.clientOptions.config.manualMobileBottomSafeZoneVerticalPx.description,
+    type: "slider",
+    min: 0,
+    max: 100,
+    step: 1,
+  },
+  {
+    key: "manualMobileBottomSafeZoneHorizontalPx",
+    label: t.clientOptions.config.manualMobileBottomSafeZoneHorizontalPx.label,
+    description:
+      t.clientOptions.config.manualMobileBottomSafeZoneHorizontalPx.description,
+    type: "slider",
+    min: 0,
+    max: 100,
+    step: 1,
+  },
+  {
+    key: "manualMobileRightSafeZoneHorizontalPx",
+    label: t.clientOptions.config.manualMobileRightSafeZoneHorizontalPx.label,
+    description:
+      t.clientOptions.config.manualMobileRightSafeZoneHorizontalPx.description,
+    type: "slider",
+    min: 0,
+    max: 100,
+    step: 1,
+  },
+  {
     key: "group-sound",
     label: t.clientOptions.config.groupSound,
     type: "group",
@@ -6490,8 +6599,8 @@ const clientOptionsConfig: ClientOption[] = [
     label: t.clientOptions.config.bloodStrength.label,
     description: t.clientOptions.config.bloodStrength.description,
     type: "slider",
-    min: 0.5,
-    max: 4,
+    min: 1,
+    max: 2.5,
     step: 0.05,
   },
   {
@@ -6560,10 +6669,10 @@ const clientOptionsConfig: ClientOption[] = [
     type: "boolean",
   },
   {
-    key: "overrideNh37DarkCorridorWallTiles",
-    label: t.clientOptions.config.overrideNh37DarkCorridorWallTiles.label,
+    key: "overrideNh5DarkCorridorWallTiles",
+    label: t.clientOptions.config.overrideNh5DarkCorridorWallTiles.label,
     description:
-      t.clientOptions.config.overrideNh37DarkCorridorWallTiles.description,
+      t.clientOptions.config.overrideNh5DarkCorridorWallTiles.description,
     type: "boolean",
   },
   {
@@ -6598,6 +6707,12 @@ const clientOptionsTabs: ClientOptionsTab[] = [
     label: t.clientOptions.tabs.controls.label,
     description: t.clientOptions.tabs.controls.description,
     groupKey: "group-controls",
+  },
+  {
+    id: "mobile",
+    label: t.clientOptions.tabs.mobile.label,
+    description: t.clientOptions.tabs.mobile.description,
+    groupKey: "group-mobile",
   },
   {
     id: "sound",
@@ -6654,7 +6769,7 @@ const clampInventoryContextMenuPosition = (
     ) + 4;
   const safeRight =
     parseCssPixelValue(
-      rootStyle.getPropertyValue("--nh3d-modal-safe-right-inset"),
+      rootStyle.getPropertyValue("--nh3d-action-context-safe-right-inset"),
       8,
     ) + 4;
   const safeTop =
@@ -6700,7 +6815,7 @@ const resolveInventoryContextMenuPosition = (
     ) + 4;
   const safeRight =
     parseCssPixelValue(
-      rootStyle.getPropertyValue("--nh3d-modal-safe-right-inset"),
+      rootStyle.getPropertyValue("--nh3d-action-context-safe-right-inset"),
       8,
     ) + 4;
   const safeTop =
@@ -6812,7 +6927,7 @@ const clampTileContextMenuPosition = (
     ) + 4;
   const safeRight =
     parseCssPixelValue(
-      rootStyle.getPropertyValue("--nh3d-modal-safe-right-inset"),
+      rootStyle.getPropertyValue("--nh3d-action-context-safe-right-inset"),
       8,
     ) + 4;
   const safeTop =
@@ -7172,6 +7287,21 @@ const fallbackWizardExtendedCommandNames = Array.from(
   wizardExtendedCommandNameSet,
 ).sort((left, right) => left.localeCompare(right));
 
+function getWizardCommandCopy(command: string): WizardCommandCopy {
+  const normalized = String(command || "").trim().toLowerCase();
+  const copy =
+    t.dialogs.mobileActions.wizardCommandDetails[
+      normalized as keyof typeof t.dialogs.mobileActions.wizardCommandDetails
+    ];
+  if (copy) {
+    return copy;
+  }
+  return {
+    name: command,
+    description: t.dialogs.mobileActions.wizardCommandFallbackDescription,
+  };
+}
+
 function isWizardExtendedCommandName(commandName: string): boolean {
   const normalized = String(commandName || "")
     .trim()
@@ -7438,6 +7568,7 @@ type SaveGameRecord = {
   name: string;
   displayName: string;
   displayPlayMode: "normal" | "explore" | "debug" | null;
+  initOptions?: string[];
   category: "manual" | "autosave";
   isResumable: boolean;
   timestamp: Date;
@@ -7453,6 +7584,7 @@ type SaveGameRecord = {
 type SavePresentationMetadataEntry = {
   characterName: string;
   playMode: "normal" | "explore" | "debug" | null;
+  initOptions?: string[];
   updatedAt: string;
 };
 
@@ -7496,6 +7628,7 @@ function readSavePresentationMetadataByKey(): Record<
       normalized[rawKey] = {
         characterName,
         playMode,
+        initOptions: sanitizeStartupInitOptionTokens(candidate.initOptions),
         updatedAt:
           typeof candidate.updatedAt === "string" && candidate.updatedAt.trim()
             ? candidate.updatedAt
@@ -7541,6 +7674,23 @@ function resolveStartupPlayModeForSavePresentation(
   return "normal";
 }
 
+function resolveSaveResumeInitOptionTokens(
+  rawInitOptions: unknown,
+  runtimeVersion: NethackRuntimeVersion,
+): string[] {
+  const tokens = sanitizeStartupInitOptionTokens(
+    rawInitOptions,
+    runtimeVersion,
+  );
+  const hasNumberPadToken = tokens.some((token) =>
+    String(token || "")
+      .trim()
+      .toLowerCase()
+      .startsWith("number_pad:"),
+  );
+  return hasNumberPadToken ? tokens : [...tokens, "number_pad:1"];
+}
+
 function persistSavePresentationMetadataForCharacter(
   runtimeName: string,
   characterName: string,
@@ -7558,12 +7708,14 @@ function persistSavePresentationMetadataForCharacter(
     runtimeVersion,
     initOptions,
   );
+  const sanitizedInitOptions = sanitizeStartupInitOptionTokens(initOptions);
   const updatedAt = new Date().toISOString();
   const categories: Array<"manual" | "autosave"> = ["manual", "autosave"];
   for (const category of categories) {
     metadataByKey[`${category}:${normalizedRuntimeName}`] = {
       characterName: normalizedCharacterName,
       playMode,
+      initOptions: sanitizedInitOptions,
       updatedAt,
     };
   }
@@ -7759,6 +7911,14 @@ async function fetchSavedGames(
                   presentationMetadata.characterName,
                 )
               : resolveSaveDisplayName(name, category);
+          const initOptions =
+            presentationMetadata &&
+            Array.isArray(presentationMetadata.initOptions)
+              ? resolveSaveResumeInitOptionTokens(
+                  presentationMetadata.initOptions,
+                  runtimeVersion,
+                )
+              : resolveSaveResumeInitOptionTokens([], runtimeVersion);
           const existing = saves.get(logicalKey);
           if (existing) {
             existing.files.push({
@@ -7785,6 +7945,7 @@ async function fetchSavedGames(
             name,
             displayName,
             displayPlayMode,
+            initOptions,
             category,
             // A lone "<lock>.0" file at 4 bytes is just NetHack's pid lock,
             // not a recoverable checkpoint autosave.
@@ -7988,10 +8149,10 @@ export default function App(): JSX.Element {
     () => savedGames.filter((save) => save.isResumable),
     [savedGames],
   );
-  // Checkpoint-only autosaves become actionable only when the current wasm-367
-  // build exposes a full browser-side checkpoint resume bridge. The low-level
-  // recover_savefile() export alone is not enough because libnhmain still
-  // reaches unixunix.c/getlock() first in current builds.
+  // Checkpoint-only autosaves become actionable only when the selected wasm
+  // build exposes the browser-side checkpoint resume bridge. The low-level
+  // recover_savefile() export alone is not enough because libnhmain can still
+  // reach unixunix.c/getlock() before the web host can prepare recovery.
   const savedGameSections = useMemo(
     () =>
       [
@@ -8544,6 +8705,9 @@ export default function App(): JSX.Element {
   );
   const [clientOptionsDraft, setClientOptionsDraft] =
     useState<Nh3dClientOptions>(() => initialClientOptions);
+  const [manualSafeZonePreview, setManualSafeZonePreview] =
+    useState<ManualSafeZonePreview | null>(null);
+  const manualSafeZonePreviewTimerRef = useRef<number | null>(null);
   const [hasHydratedUserTilesets, setHasHydratedUserTilesets] = useState(false);
   const [isClientOptionsVisible, setIsClientOptionsVisible] = useState(false);
   const [activeClientOptionsTab, setActiveClientOptionsTab] =
@@ -8720,6 +8884,9 @@ export default function App(): JSX.Element {
   const positionRequest = useGameStore((state) => state.positionRequest);
   const positionInputActive = useGameStore(
     (state) => state.positionInputActive,
+  );
+  const positionInputOrigin = useGameStore(
+    (state) => state.positionInputOrigin,
   );
   const connectionState = useGameStore((state) => state.connectionState);
   const extendedCommands = useGameStore((state) => state.extendedCommands);
@@ -9039,6 +9206,8 @@ export default function App(): JSX.Element {
       entries: [],
       index: 0,
     });
+  const questionTextInputRef = useRef<HTMLInputElement | null>(null);
+  const [questionTextInputValue, setQuestionTextInputValue] = useState("");
   useEffect(() => {
     setMessageInfoMenuHistory({
       entries: [],
@@ -9287,6 +9456,45 @@ export default function App(): JSX.Element {
     clientOptions.liveMessageLogFontScale,
     clientOptions.desktopMessageLogWindowScale,
     clientOptions.minimapScale,
+  ]);
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+    const root = document.documentElement;
+    root.classList.toggle(
+      "nh3d-manual-mobile-bottom-safe-zone",
+      clientOptions.manualMobileBottomSafeZoneEnabled,
+    );
+    root.style.setProperty(
+      "--nh3d-manual-mobile-bottom-safe-zone-vertical",
+      `${Math.round(clientOptions.manualMobileBottomSafeZoneVerticalPx)}px`,
+    );
+    root.style.setProperty(
+      "--nh3d-manual-mobile-bottom-safe-zone-horizontal",
+      `${Math.round(clientOptions.manualMobileBottomSafeZoneHorizontalPx)}px`,
+    );
+    root.style.setProperty(
+      "--nh3d-manual-mobile-right-safe-zone-horizontal",
+      `${Math.round(clientOptions.manualMobileRightSafeZoneHorizontalPx)}px`,
+    );
+    return () => {
+      root.classList.remove("nh3d-manual-mobile-bottom-safe-zone");
+      root.style.removeProperty(
+        "--nh3d-manual-mobile-bottom-safe-zone-vertical",
+      );
+      root.style.removeProperty(
+        "--nh3d-manual-mobile-bottom-safe-zone-horizontal",
+      );
+      root.style.removeProperty(
+        "--nh3d-manual-mobile-right-safe-zone-horizontal",
+      );
+    };
+  }, [
+    clientOptions.manualMobileBottomSafeZoneEnabled,
+    clientOptions.manualMobileBottomSafeZoneVerticalPx,
+    clientOptions.manualMobileBottomSafeZoneHorizontalPx,
+    clientOptions.manualMobileRightSafeZoneHorizontalPx,
   ]);
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -11738,6 +11946,17 @@ export default function App(): JSX.Element {
   const asciiLogoVisible = startupLogoVisible || gameOverDialogShowsTombstone;
   const mobileTouchUiVisible =
     isMobileGameRunning && !gameOverDialogShowsTombstone;
+  const farLookPositionInputActive =
+    positionInputActive && positionInputOrigin !== "travel";
+  const positionInputInstruction = farLookPositionInputActive
+    ? clientOptions.controllerEnabled && !mobileTouchUiVisible
+      ? t.dialogs.positionPrompt.controllerHint
+      : mobileTouchUiVisible
+        ? t.dialogs.positionPrompt.mobileHint
+        : t.dialogs.positionPrompt.desktopHint
+    : null;
+  const positionDialogVisible =
+    Boolean(positionRequest) || Boolean(positionInputInstruction);
   const hideAllUiForDeferredGameOver =
     reopenNewGamePromptOnInteraction && !newGamePrompt.visible;
   const latestGameMessage =
@@ -12416,6 +12635,11 @@ export default function App(): JSX.Element {
     visibleQuestionChoices,
     activeRuntimeVersion,
   );
+  const shouldRenderQuestionTextInput =
+    Boolean(question) &&
+    (question?.menuItems.length ?? 0) === 0 &&
+    orderedQuestionChoices.length === 0 &&
+    isSymbolLookupTextQuestion(question?.text ?? "", question?.choices ?? "");
   const isYesNoQuestionChoices = isYesNoChoicePrompt(visibleQuestionChoices);
   const isAdjustLetterQuestion = isAdjustLetterQuestionPrompt(
     question?.text ?? "",
@@ -12453,6 +12677,15 @@ export default function App(): JSX.Element {
     ((question?.menuItems.length ?? 0) === 0 ||
       showLegacyInventoryQuestionCancelButton);
   const displayedQuestionText = capitalizeFirstLetter(question?.text ?? "");
+  const displayedQuestionPendingCount =
+    typeof question?.pendingSelectionCount === "number" &&
+    Number.isFinite(question.pendingSelectionCount) &&
+    question.pendingSelectionCount > 0
+      ? Math.trunc(question.pendingSelectionCount)
+      : null;
+  const showQuestionAmountControls = Boolean(
+    question?.supportsSelectionCount,
+  );
   const questionMenuPageIndex = question?.menuPageIndex ?? 0;
   const questionMenuPageCount = Math.max(1, question?.menuPageCount ?? 1);
   const enhanceMenuData = useMemo(
@@ -12527,6 +12760,28 @@ export default function App(): JSX.Element {
   const inventoryCloseInstructionText = inventoryContextActionsEnabled
     ? t.dialogs.inventory.closeHintWithContext
     : t.dialogs.inventory.closeHint;
+  const submitQuestionTextInput = useCallback((): void => {
+    const answer = questionTextInputValue.charAt(0);
+    if (!answer) {
+      controller?.cancelActivePrompt();
+      return;
+    }
+    controller?.chooseQuestionChoice(answer);
+    setQuestionTextInputValue("");
+  }, [controller, questionTextInputValue]);
+
+  useEffect(() => {
+    if (!shouldRenderQuestionTextInput) {
+      setQuestionTextInputValue("");
+      return;
+    }
+    setQuestionTextInputValue("");
+    if (typeof window !== "undefined") {
+      window.setTimeout(() => {
+        questionTextInputRef.current?.focus();
+      }, 0);
+    }
+  }, [question?.text, shouldRenderQuestionTextInput]);
 
   useLayoutEffect(() => {
     if (typeof document === "undefined") {
@@ -13388,30 +13643,6 @@ export default function App(): JSX.Element {
     [],
   );
 
-  const resolveEditableFieldVerticalNavigationDirection = useCallback(
-    (key: string, code?: string): "up" | "down" | null => {
-      if (key === "ArrowUp") {
-        return "up";
-      }
-      if (key === "ArrowDown") {
-        return "down";
-      }
-      switch (code) {
-        case "Numpad8":
-        case "Numpad7":
-        case "Numpad9":
-          return "up";
-        case "Numpad2":
-        case "Numpad1":
-        case "Numpad3":
-          return "down";
-        default:
-          return null;
-      }
-    },
-    [],
-  );
-
   const applyDialogDirectionalNavigation = useCallback(
     (
       direction: "up" | "down" | "left" | "right",
@@ -13584,6 +13815,8 @@ export default function App(): JSX.Element {
           );
           return;
         }
+        // Let focused selects keep native keyboard ownership for changing values.
+        return;
       }
       const targetInput = target instanceof HTMLInputElement ? target : null;
       const targetInputType = String(targetInput?.type || "").toLowerCase();
@@ -13624,23 +13857,8 @@ export default function App(): JSX.Element {
           target.tagName === "TEXTAREA" ||
           target.isContentEditable)
       ) {
-        const editableVerticalDirection =
-          resolveEditableFieldVerticalNavigationDirection(
-            event.key,
-            event.code,
-          );
-        if (!editableVerticalDirection) {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        applyDialogDirectionalNavigation(
-          editableVerticalDirection,
-          event.currentTarget,
-          {
-            stepFocusedSliderOnHorizontal: false,
-          },
-        );
+        // Do not hijack keyboard input from editable fields during startup
+        // character creation; keep typing, selection, and caret movement native.
         return;
       }
 
@@ -13691,7 +13909,6 @@ export default function App(): JSX.Element {
     },
     [
       applyDialogDirectionalNavigation,
-      resolveEditableFieldVerticalNavigationDirection,
       resolveStartupMenuNavigationDirection,
     ],
   );
@@ -13816,6 +14033,8 @@ export default function App(): JSX.Element {
           );
           return;
         }
+        // Let focused selects keep native keyboard ownership for changing values.
+        return;
       }
 
       const targetInput = target instanceof HTMLInputElement ? target : null;
@@ -13853,23 +14072,8 @@ export default function App(): JSX.Element {
           target.tagName === "TEXTAREA" ||
           target.isContentEditable)
       ) {
-        const editableVerticalDirection =
-          resolveEditableFieldVerticalNavigationDirection(
-            event.key,
-            event.code,
-          );
-        if (!editableVerticalDirection) {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        applyDialogDirectionalNavigation(
-          editableVerticalDirection,
-          event.currentTarget,
-          {
-            stepFocusedSliderOnHorizontal: false,
-          },
-        );
+        // Do not hijack keyboard input from editable fields in options forms;
+        // keep typing, selection, and caret movement native.
         return;
       }
 
@@ -13920,7 +14124,6 @@ export default function App(): JSX.Element {
     },
     [
       applyDialogDirectionalNavigation,
-      resolveEditableFieldVerticalNavigationDirection,
       resolveStartupMenuNavigationDirection,
     ],
   );
@@ -14049,8 +14252,8 @@ export default function App(): JSX.Element {
           ? "slashem"
           : tilesetEntry.tileLayoutVersion === "3.4.3"
             ? "3.4.3"
-            : tilesetEntry.tileLayoutVersion === "3.7"
-              ? "3.7"
+            : tilesetEntry.tileLayoutVersion === "5.0"
+              ? "5.0"
               : "3.6.7",
     );
     if (tilesetPath !== currentEditPath) {
@@ -14424,6 +14627,35 @@ export default function App(): JSX.Element {
     }));
   };
 
+  const showManualSafeZonePreview = useCallback(
+    (side: ManualSafeZonePreview["side"], rawSizePx: number): void => {
+      const sizePx = Math.max(0, Math.min(100, Math.round(rawSizePx)));
+      setManualSafeZonePreview({ side, sizePx });
+      if (typeof window === "undefined") {
+        return;
+      }
+      if (manualSafeZonePreviewTimerRef.current !== null) {
+        window.clearTimeout(manualSafeZonePreviewTimerRef.current);
+      }
+      manualSafeZonePreviewTimerRef.current = window.setTimeout(() => {
+        setManualSafeZonePreview(null);
+        manualSafeZonePreviewTimerRef.current = null;
+      }, 1200);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (
+        typeof window !== "undefined" &&
+        manualSafeZonePreviewTimerRef.current !== null
+      ) {
+        window.clearTimeout(manualSafeZonePreviewTimerRef.current);
+      }
+    };
+  }, []);
+
   const closeControllerRemapDialog = useCallback((): void => {
     setControllerRemapListening(null);
     setIsControllerRemapVisible(false);
@@ -14704,7 +14936,7 @@ export default function App(): JSX.Element {
     } else if (key === "gamma") {
       clamped = Math.max(0.5, Math.min(2.5, rawValue));
     } else if (key === "bloodStrength") {
-      clamped = Math.max(0.5, Math.min(4, rawValue));
+      clamped = Math.max(1, Math.min(2.5, rawValue));
     } else if (key === "minimapScale") {
       clamped = Math.max(0.6, Math.min(2.2, rawValue));
     } else if (key === "liveMessageDisplayTimeMs") {
@@ -14717,13 +14949,22 @@ export default function App(): JSX.Element {
       clamped = Math.max(0.33, Math.min(1.5, rawValue));
     } else if (key === "controllerFpsMoveRepeatMs") {
       clamped = Math.max(80, Math.min(900, rawValue));
+    } else if (
+      key === "manualMobileBottomSafeZoneVerticalPx" ||
+      key === "manualMobileBottomSafeZoneHorizontalPx" ||
+      key === "manualMobileRightSafeZoneHorizontalPx"
+    ) {
+      clamped = Math.max(0, Math.min(100, rawValue));
     } else {
       clamped = Math.max(120, Math.min(4000, rawValue));
     }
     if (
       key === "controllerFpsMoveRepeatMs" ||
       key === "liveMessageDisplayTimeMs" ||
-      key === "liveMessageFadeOutTimeMs"
+      key === "liveMessageFadeOutTimeMs" ||
+      key === "manualMobileBottomSafeZoneVerticalPx" ||
+      key === "manualMobileBottomSafeZoneHorizontalPx" ||
+      key === "manualMobileRightSafeZoneHorizontalPx"
     ) {
       updateClientOptionDraft(key, Math.round(clamped));
       return;
@@ -15046,13 +15287,13 @@ export default function App(): JSX.Element {
   useEffect(() => {
     if (
       !clientOptionsDraft.darkCorridorWalls367 &&
-      !clientOptionsDraft.overrideNh37DarkCorridorWallTiles
+      !clientOptionsDraft.overrideNh5DarkCorridorWallTiles
     ) {
       setIsDarkWallTilePickerVisible(false);
     }
   }, [
     clientOptionsDraft.darkCorridorWalls367,
-    clientOptionsDraft.overrideNh37DarkCorridorWallTiles,
+    clientOptionsDraft.overrideNh5DarkCorridorWallTiles,
   ]);
 
   useEffect(() => {
@@ -15123,14 +15364,11 @@ export default function App(): JSX.Element {
     label = "Close",
   ): JSX.Element | null =>
     isMobileViewport ? (
-      <button
-        aria-label={label}
+      <MobileDismissButton
         className="nh3d-mobile-dialog-close"
+        label={label}
         onClick={onClick}
-        type="button"
-      >
-        {"\u00D7"}
-      </button>
+      />
     ) : null;
 
   const focusInventoryItemByAccelerator = useCallback(
@@ -17142,6 +17380,25 @@ export default function App(): JSX.Element {
     );
   };
 
+  const gameMessageLog = clientOptions.liveMessageLog ? (
+    <div
+      className="nh3d-message-log-scroll"
+      data-nh3d-overflow-glow
+      data-nh3d-overflow-glow-host="parent"
+      id="game-log"
+    >
+      {mobileTouchUiVisible && isMobileLogVisible
+        ? renderMobileDialogCloseButton(
+            () => setIsMobileLogVisible(false),
+            t.dialogs.mobileActions.closeMessageLog,
+          )
+        : null}
+      {gameMessages.map((message, index) => (
+        <div key={`${index}-${message}`}>{message}</div>
+      ))}
+    </div>
+  ) : null;
+
   return (
     <>
       <div className="nh3d-canvas-root" ref={canvasRootRef} />
@@ -17516,12 +17773,12 @@ export default function App(): JSX.Element {
             <button
               className="nh3d-choice-button nh3d-character-setup-choice-button"
               onClick={() => {
-                setRuntimeVersion("3.7");
+                setRuntimeVersion("5.0");
                 setStartupFlowStep("choose");
               }}
               type="button"
             >
-              NetHack 3.7
+              NetHack 5.0
             </button>
             <button
               className="nh3d-choice-button nh3d-character-setup-choice-button"
@@ -17744,6 +18001,7 @@ export default function App(): JSX.Element {
                                 : "normal",
                               runtimeVersion,
                               name: save.name,
+                              initOptions: save.initOptions,
                               resumeCategory: save.category,
                             });
                           }}
@@ -19057,24 +19315,16 @@ export default function App(): JSX.Element {
       {!isMobileViewport && isDesktopGameRunning ? (
         <div className="top-left-ui with-stats">
           <div id="game-status">{statusText}</div>
-          {clientOptions.liveMessageLog ? (
-            <div className="nh3d-overflow-glow-frame">
-              <div
-                data-nh3d-overflow-glow
-                data-nh3d-overflow-glow-host="parent"
-                id="game-log"
-              >
-                {gameMessages.map((message, index) => (
-                  <div key={`${index}-${message}`}>{message}</div>
-                ))}
-              </div>
-            </div>
+          {gameMessageLog ? (
+            <div className="nh3d-overflow-glow-frame">{gameMessageLog}</div>
           ) : null}
         </div>
-      ) : mobileTouchUiVisible && clientOptions.liveMessageLog ? (
+      ) : mobileTouchUiVisible &&
+        gameMessageLog &&
+        (isMobileLogVisible || clientOptions.showPersistentMobileMessageLog) ? (
         <div
           className={`nh3d-mobile-log nh3d-overflow-glow-frame${
-            isMobileLogVisible ? "" : " nh3d-mobile-log-hidden"
+            isMobileLogVisible ? "" : " nh3d-mobile-log-collapsed"
           }`}
           style={
             {
@@ -19082,20 +19332,7 @@ export default function App(): JSX.Element {
             } as React.CSSProperties
           }
         >
-          <div
-            className="nh3d-mobile-log-scroll"
-            data-nh3d-overflow-glow
-            data-nh3d-overflow-glow-host="parent"
-            id="game-log"
-          >
-            {renderMobileDialogCloseButton(
-              () => setIsMobileLogVisible(false),
-              t.dialogs.mobileActions.closeMessageLog,
-            )}
-            {gameMessages.map((message, index) => (
-              <div key={`${index}-${message}`}>{message}</div>
-            ))}
-          </div>
+          {gameMessageLog}
         </div>
       ) : null}
 
@@ -19451,8 +19688,8 @@ export default function App(): JSX.Element {
                       option.key === "inventoryTileOnlyMotion";
                     const isDarkCorridorWallsOption =
                       option.key === "darkCorridorWalls367";
-                    const isNh37DarkWallOverrideOption =
-                      option.key === "overrideNh37DarkCorridorWallTiles";
+                    const isNh5DarkWallOverrideOption =
+                      option.key === "overrideNh5DarkCorridorWallTiles";
                     const isDarkWallTileOverrideOption =
                       option.key === "darkCorridorWallTileOverrideEnabled";
                     const isDarkWallSolidColorOverrideOption =
@@ -19464,7 +19701,7 @@ export default function App(): JSX.Element {
                     const darkCorridorOptionSuppressedByVulture =
                       isVultureTilesetSelected &&
                       (isDarkCorridorWallsOption ||
-                        isNh37DarkWallOverrideOption ||
+                        isNh5DarkWallOverrideOption ||
                         isDarkWallOverrideOption);
                     const darkCorridorWallsForcedOnByVulture =
                       isVultureTilesetSelected && isDarkCorridorWallsOption;
@@ -19474,7 +19711,7 @@ export default function App(): JSX.Element {
                     const darkWallOverrideDisabledByDarkCorridorWalls =
                       isDarkWallOverrideOption &&
                       !clientOptionsDraft.darkCorridorWalls367 &&
-                      !clientOptionsDraft.overrideNh37DarkCorridorWallTiles;
+                      !clientOptionsDraft.overrideNh5DarkCorridorWallTiles;
                     const enabled = darkCorridorWallsForcedOnByVulture
                       ? true
                       : Boolean(clientOptionsDraft[option.key]);
@@ -19856,6 +20093,14 @@ export default function App(): JSX.Element {
                   }
                   if (option.type === "slider") {
                     const sliderValue = clientOptionsDraft[option.key];
+                    const isManualBottomSafeZoneSlider =
+                      option.key === "manualMobileBottomSafeZoneVerticalPx" ||
+                      option.key === "manualMobileBottomSafeZoneHorizontalPx";
+                    const isManualRightSafeZoneSlider =
+                      option.key === "manualMobileRightSafeZoneHorizontalPx";
+                    const isManualSafeZoneSlider =
+                      isManualBottomSafeZoneSlider ||
+                      isManualRightSafeZoneSlider;
                     const sliderDisabledByFpsMode =
                       (option.key === "controllerFpsMoveRepeatMs" ||
                         option.key === "fpsFov" ||
@@ -19869,17 +20114,23 @@ export default function App(): JSX.Element {
                       option.key === "bloodStrength" &&
                       !clientOptionsDraft.bloodMist &&
                       !clientOptionsDraft.bloodGround;
+                    const sliderDisabledByManualSafeZone =
+                      isManualSafeZoneSlider &&
+                      !clientOptionsDraft.manualMobileBottomSafeZoneEnabled;
                     const sliderDisabled =
                       sliderDisabledByFpsMode ||
                       sliderDisabledByController ||
-                      sliderDisabledByBlood;
+                      sliderDisabledByBlood ||
+                      sliderDisabledByManualSafeZone;
                     const sliderLabel =
                       option.key === "bloodStrength"
                         ? `${sliderValue.toFixed(2)}x`
                         : option.key === "gamma"
                         ? `${sliderValue.toFixed(2)}x`
-                        : option.key === "fpsFov"
+                      : option.key === "fpsFov"
                           ? `${Math.round(sliderValue)}\u00b0`
+                          : isManualSafeZoneSlider
+                            ? `${Math.round(sliderValue)}px`
                           : option.key === "fpsLookSensitivityX" ||
                               option.key === "fpsLookSensitivityY"
                             ? `${sliderValue.toFixed(2)}x`
@@ -19914,18 +20165,47 @@ export default function App(): JSX.Element {
                             disabled={sliderDisabled}
                             max={option.max}
                             min={option.min}
-                            onInput={(event) =>
-                              updateClientSliderDraft(
-                                option.key,
-                                Number(event.currentTarget.value),
-                              )
-                            }
-                            onChange={(event) =>
-                              updateClientSliderDraft(
-                                option.key,
-                                Number(event.currentTarget.value),
-                              )
-                            }
+                            onBlur={() => {
+                              if (isManualSafeZoneSlider) {
+                                setManualSafeZonePreview(null);
+                              }
+                            }}
+                            onFocus={() => {
+                              if (isManualBottomSafeZoneSlider) {
+                                showManualSafeZonePreview("bottom", sliderValue);
+                              } else if (isManualRightSafeZoneSlider) {
+                                showManualSafeZonePreview("right", sliderValue);
+                              }
+                            }}
+                            onInput={(event) => {
+                              const nextValue = Number(
+                                event.currentTarget.value,
+                              );
+                              updateClientSliderDraft(option.key, nextValue);
+                              if (isManualBottomSafeZoneSlider) {
+                                showManualSafeZonePreview("bottom", nextValue);
+                              } else if (isManualRightSafeZoneSlider) {
+                                showManualSafeZonePreview("right", nextValue);
+                              }
+                            }}
+                            onChange={(event) => {
+                              const nextValue = Number(
+                                event.currentTarget.value,
+                              );
+                              updateClientSliderDraft(option.key, nextValue);
+                              if (isManualBottomSafeZoneSlider) {
+                                showManualSafeZonePreview("bottom", nextValue);
+                              } else if (isManualRightSafeZoneSlider) {
+                                showManualSafeZonePreview("right", nextValue);
+                              }
+                            }}
+                            onPointerDown={() => {
+                              if (isManualBottomSafeZoneSlider) {
+                                showManualSafeZonePreview("bottom", sliderValue);
+                              } else if (isManualRightSafeZoneSlider) {
+                                showManualSafeZonePreview("right", sliderValue);
+                              }
+                            }}
                             step={option.step}
                             type="range"
                             value={sliderValue}
@@ -20256,8 +20536,8 @@ export default function App(): JSX.Element {
                         setTilesetManagerTileLayoutVersion(
                           event.target.value === "slashem"
                             ? "slashem"
-                            : event.target.value === "3.7"
-                              ? "3.7"
+                            : event.target.value === "5.0"
+                              ? "5.0"
                               : event.target.value === "3.4.3"
                                 ? "3.4.3"
                                 : "3.6.7",
@@ -20270,8 +20550,8 @@ export default function App(): JSX.Element {
                       <option value="3.6.7">
                         {t.dialogs.tilesetManager.layout367}
                       </option>
-                      <option value="3.7">
-                        {t.dialogs.tilesetManager.layout37}
+                      <option value="5.0">
+                        {t.dialogs.tilesetManager.layout5}
                       </option>
                     </select>
                     <div className="nh3d-option-description">
@@ -20821,7 +21101,59 @@ export default function App(): JSX.Element {
               () => controller?.cancelActivePrompt(),
               t.dialogs.question.cancelPrompt,
             )}
-            <div className="nh3d-question-text">{displayedQuestionText}</div>
+            <div
+              className={`nh3d-question-text${
+                showQuestionAmountControls
+                  ? " nh3d-question-text-has-amount"
+                  : ""
+              }`}
+            >
+              <span className="nh3d-question-title-label">
+                {displayedQuestionText}
+              </span>
+              {showQuestionAmountControls ? (
+                <div className="nh3d-question-amount-controls">
+                  <button
+                    aria-label={t.dialogs.question.decreaseAmount}
+                    className="nh3d-question-amount-button"
+                    disabled={displayedQuestionPendingCount === null}
+                    onClick={() => controller?.stepQuestionSelectionCount(-1)}
+                    title={t.dialogs.question.decreaseAmount}
+                    type="button"
+                  >
+                    <Nh3dIcon icon={Nh3dIconArrowDown} size={13} />
+                  </button>
+                  <input
+                    aria-label={t.dialogs.question.amount}
+                    className="nh3d-question-amount-input"
+                    inputMode="numeric"
+                    max={999999}
+                    min={1}
+                    onChange={(event) => {
+                      const nextValue = Number(event.currentTarget.value);
+                      controller?.setQuestionSelectionCount(
+                        Number.isFinite(nextValue) ? nextValue : null,
+                      );
+                    }}
+                    onFocus={(event) => event.currentTarget.select()}
+                    onKeyDown={(event) => {
+                      event.stopPropagation();
+                    }}
+                    type="number"
+                    value={displayedQuestionPendingCount ?? 1}
+                  />
+                  <button
+                    aria-label={t.dialogs.question.increaseAmount}
+                    className="nh3d-question-amount-button"
+                    onClick={() => controller?.stepQuestionSelectionCount(1)}
+                    title={t.dialogs.question.increaseAmount}
+                    type="button"
+                  >
+                    <Nh3dIcon icon={Nh3dIconArrowUp} size={13} />
+                  </button>
+                </div>
+              ) : null}
+            </div>
             {shouldRenderQuestionMenuItems ? (
               question.isPickupDialog ? (
                 <>
@@ -20850,6 +21182,9 @@ export default function App(): JSX.Element {
                       tileIndex,
                     );
                     const fallbackGlyph = resolveMenuItemFallbackGlyph(item);
+                    const selectionInput = getMenuSelectionInput(item);
+                    const selectedCount =
+                      question.selectedCounts?.[selectionInput] ?? null;
                     return (
                       <div
                         className={`nh3d-pickup-item${
@@ -20860,20 +21195,16 @@ export default function App(): JSX.Element {
                             : ""
                         }${
                           question.activeMenuSelectionInput ===
-                          getMenuSelectionInput(item)
+                          selectionInput
                             ? " nh3d-pickup-item-active"
                             : ""
                         }`}
                         key={`pickup-${item.accelerator}-${index}`}
                         onClick={() =>
-                          controller?.togglePickupChoice(
-                            getMenuSelectionInput(item),
-                          )
+                          controller?.togglePickupChoice(selectionInput)
                         }
                         onFocus={() =>
-                          controller?.syncQuestionSelectionFocus(
-                            getMenuSelectionInput(item),
-                          )
+                          controller?.syncQuestionSelectionFocus(selectionInput)
                         }
                         onKeyDown={(event) => {
                           if (
@@ -20883,9 +21214,7 @@ export default function App(): JSX.Element {
                           ) {
                             event.preventDefault();
                             event.stopPropagation();
-                            controller?.togglePickupChoice(
-                              getMenuSelectionInput(item),
-                            );
+                            controller?.togglePickupChoice(selectionInput);
                           }
                         }}
                         role="checkbox"
@@ -20926,6 +21255,13 @@ export default function App(): JSX.Element {
                           </span>
                         </span>
                         <span className="nh3d-pickup-text">{item.text}</span>
+                        {typeof selectedCount === "number" &&
+                        Number.isFinite(selectedCount) &&
+                        selectedCount > 0 ? (
+                          <span className="nh3d-pickup-count">
+                            {`x${selectedCount}`}
+                          </span>
+                        ) : null}
                       </div>
                     );
                   })}
@@ -21191,6 +21527,55 @@ export default function App(): JSX.Element {
                   ) : null}
                 </>
               )
+            ) : shouldRenderQuestionTextInput ? (
+              <>
+                <input
+                  aria-label={
+                    displayedQuestionText || t.dialogs.textInput.placeholder
+                  }
+                  autoCapitalize="none"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoFocus
+                  className="nh3d-text-input nh3d-question-text-input"
+                  inputMode="text"
+                  maxLength={1}
+                  onChange={(event) =>
+                    setQuestionTextInputValue(event.target.value)
+                  }
+                  onKeyDown={(event) => {
+                    event.stopPropagation();
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      submitQuestionTextInput();
+                    } else if (event.key === "Escape") {
+                      event.preventDefault();
+                      controller?.cancelActivePrompt();
+                    }
+                  }}
+                  placeholder={t.dialogs.textInput.placeholder}
+                  ref={questionTextInputRef}
+                  spellCheck={false}
+                  type="text"
+                  value={questionTextInputValue}
+                />
+                <div className="nh3d-menu-actions">
+                  <button
+                    className="nh3d-menu-action-button nh3d-menu-action-confirm"
+                    onClick={submitQuestionTextInput}
+                    type="button"
+                  >
+                    {t.dialogs.textInput.ok}
+                  </button>
+                  <button
+                    className="nh3d-menu-action-button nh3d-menu-action-cancel"
+                    onClick={() => controller?.cancelActivePrompt()}
+                    type="button"
+                  >
+                    {commonStrings.cancel}
+                  </button>
+                </div>
+              </>
             ) : (
               <>
                 <div className="nh3d-overflow-glow-frame">
@@ -23143,19 +23528,39 @@ export default function App(): JSX.Element {
               className="nh3d-mobile-actions-sections nh3d-wizard-commands-sections"
               data-nh3d-overflow-glow
               data-nh3d-overflow-glow-host="parent"
+              onTouchMove={(event) => {
+                event.stopPropagation();
+              }}
+              onWheel={(event) => {
+                event.stopPropagation();
+              }}
             >
               <div className="nh3d-mobile-actions-section">
-                <div className="nh3d-mobile-actions-grid is-extended">
-                  {wizardExtendedCommandNames.map((command) => (
-                    <button
-                      className="nh3d-mobile-actions-button"
-                      key={`wizard-${command}`}
-                      onClick={() => runWizardExtendedCommand(command)}
-                      type="button"
-                    >
-                      {command}
-                    </button>
-                  ))}
+                <div className="nh3d-wizard-commands-list">
+                  {wizardExtendedCommandNames.map((command) => {
+                    const commandCopy = getWizardCommandCopy(command);
+                    const rawExtendedCommand = `#${command}`;
+                    return (
+                      <button
+                        aria-label={`${commandCopy.name} (${rawExtendedCommand}): ${commandCopy.description}`}
+                        className="nh3d-wizard-command-button"
+                        key={`wizard-${command}`}
+                        onClick={() => runWizardExtendedCommand(command)}
+                        type="button"
+                      >
+                        <span className="nh3d-wizard-command-name">
+                          {commandCopy.name}
+                          <span className="nh3d-wizard-command-raw">
+                            {" "}
+                            ({rawExtendedCommand})
+                          </span>
+                        </span>
+                        <span className="nh3d-wizard-command-description">
+                          {commandCopy.description}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -23187,6 +23592,24 @@ export default function App(): JSX.Element {
         >
           {t.dialogs.mobileActions.repeat}
         </button>
+      ) : null}
+
+      {manualSafeZonePreview ? (
+        <div
+          aria-hidden="true"
+          className={`nh3d-mobile-safe-zone-preview is-${manualSafeZonePreview.side}`}
+          style={
+            {
+              "--nh3d-mobile-safe-zone-preview-size": `${manualSafeZonePreview.sizePx}px`,
+            } as CSSProperties
+          }
+        >
+          <span>
+            {manualSafeZonePreview.side === "right"
+              ? t.clientOptions.config.manualMobileRightSafeZonePreview
+              : t.clientOptions.config.manualMobileBottomSafeZonePreview}
+          </span>
+        </div>
       ) : null}
 
       {isDesktopGameRunning && !clientOptions.controllerEnabled ? (
@@ -23253,7 +23676,10 @@ export default function App(): JSX.Element {
             {t.dialogs.mobileActions.inventory}
           </button>
           <button
-            className="nh3d-mobile-bottom-button"
+            aria-expanded={isMobileLogVisible}
+            className={`nh3d-mobile-bottom-button${
+              isMobileLogVisible ? " is-active" : ""
+            }`}
             disabled={!clientOptions.liveMessageLog}
             onClick={() => {
               controller?.dismissFpsCrosshairContextMenu();
@@ -23295,6 +23721,7 @@ export default function App(): JSX.Element {
             {t.dialogs.mobileActions.search}
           </button>
           <button
+            aria-label={`${t.dialogs.mobileActions.menu} / ${t.dialogs.mobileActions.actions}`}
             className={`nh3d-mobile-bottom-button${
               isMobileActionSheetVisible ? " is-active" : ""
             }`}
@@ -23312,13 +23739,20 @@ export default function App(): JSX.Element {
             }}
             type="button"
           >
+            {t.dialogs.mobileActions.menu} /
+            <br />
             {t.dialogs.mobileActions.actions}
           </button>
         </div>
       ) : null}
 
       <div
-        className={`${positionRequest ? "is-visible" : ""} nh3d-overflow-glow-frame`.trim()}
+        className={[
+          positionDialogVisible ? "is-visible" : "",
+          "nh3d-overflow-glow-frame",
+        ]
+          .filter(Boolean)
+          .join(" ")}
         id="position-dialog"
       >
         <div
@@ -23326,20 +23760,26 @@ export default function App(): JSX.Element {
           data-nh3d-overflow-glow
           data-nh3d-overflow-glow-host="parent"
         >
-          {isMobileViewport && positionRequest ? (
-            <button
-              aria-label={t.dialogs.positionPrompt.closeLabel}
+          {isMobileViewport && positionDialogVisible ? (
+            <MobileDismissButton
               className="nh3d-position-dialog-close"
+              label={t.dialogs.positionPrompt.closeLabel}
               onClick={() => {
                 controller?.cancelActivePrompt();
                 setPositionRequest(null);
               }}
-              type="button"
-            >
-              {"\u00D7"}
-            </button>
+            />
           ) : null}
-          {positionRequest}
+          {positionRequest ? (
+            <div className="nh3d-position-dialog-request">
+              {positionRequest}
+            </div>
+          ) : null}
+          {positionInputInstruction ? (
+            <div className="nh3d-position-dialog-hint">
+              {positionInputInstruction}
+            </div>
+          ) : null}
         </div>
       </div>
 

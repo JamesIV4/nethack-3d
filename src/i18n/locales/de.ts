@@ -1,4 +1,4 @@
-﻿import { mergeTranslations, type LocaleOverrides } from "../locale-helpers";
+import { mergeTranslations, type LocaleOverrides } from "../locale-helpers";
 import { en, type TranslationDictionary } from "./en";
 
 export const deOverrides: LocaleOverrides<TranslationDictionary> = {
@@ -112,7 +112,7 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
       zoom_in: {
         label: "Zoom (halten)",
         description:
-          "Gedr\u00fcckt halten und dann linken oder rechten Stick hoch/runter zum Rein- oder Rauszoomen verwenden.",
+          "Gedr\u00fcckt halten, dann mit dem linken Stick hoch/runter zoomen und mit dem rechten Stick die Kamera drehen.",
       },
       recenter_camera: {
         label: "Kamera zentrieren",
@@ -195,6 +195,15 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
           normal: "Normal",
           explore: "Erkunden",
           debug: "Zauberer/Debug",
+        },
+      },
+      number_pad: {
+        label: "Bewegungstasten",
+        description:
+          "W\u00e4hle, ob NetHack die numerische Tastatur (`number_pad:1`) oder klassische vi-Tasten (`number_pad:0`) f\u00fcr Bewegung verwendet.",
+        options: {
+          numeric: "Numerischer Block",
+          vi: "vi-Tasten",
         },
       },
       autopickup: {
@@ -662,6 +671,11 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
           description:
             "Dreht Bewegungstasten und Wischrichtungen entsprechend dem Y-Achsen-Winkel der Kamera.",
         },
+        fpsWasdKeyboardMovementEnabled: {
+          label: "WASD-Tastaturbewegung im FPS-Modus aktivieren",
+          description:
+            "Verwendet W/A/S/D f\u00fcr Bewegung in der Ego-Perspektive. Deaktivieren, damit diese Tasten wie normale NetHack-Befehle funktionieren.",
+        },
         controllerFpsMoveRepeatMs: {
           label: "FPS-Bewegungswiederholung linker Stick",
           description:
@@ -779,6 +793,39 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
           label: "Live-Nachrichtenprotokoll",
           description: "Zeigt das scrollende Nachrichtenprotokoll im Spiel an.",
         },
+        showPersistentMobileMessageLog: {
+          label: "Persistentes Nachrichtenprotokoll anzeigen",
+          description:
+            "H\u00e4lt das kompakte mobile Nachrichtenprotokoll w\u00e4hrend des Spiels sichtbar. Die Log-Schaltfl\u00e4che kann weiterhin das gr\u00f6\u00dfere Protokoll \u00f6ffnen.",
+        },
+        rumbleEnabled: {
+          label: "Rumble aktivieren",
+          description:
+            "Verwendet kurzes haptisches Vibrationsfeedback fuer verursachten und erlittenen Schaden auf unterstuetzten Mobilgeraeten.",
+        },
+        sectionMobileSafeZone: "Mobile Sicherheitszonen",
+        manualMobileBottomSafeZoneEnabled: {
+          label: "Erkannte mobile Sicherheitszonen \u00fcberschreiben",
+          description:
+            "Verwendet manuelle Sicherheitszonen-Abst\u00e4nde, wenn Android-Handhelds sichere Bereiche falsch melden.",
+        },
+        manualMobileBottomSafeZoneVerticalPx: {
+          label: "Untere Sicherheitszone im Hochformat",
+          description:
+            "Manuelle untere Sicherheitszone f\u00fcr das mobile Hochformat.",
+        },
+        manualMobileBottomSafeZoneHorizontalPx: {
+          label: "Untere Sicherheitszone im Querformat",
+          description:
+            "Manuelle untere Sicherheitszone f\u00fcr das mobile Querformat.",
+        },
+        manualMobileRightSafeZoneHorizontalPx: {
+          label: "Rechte Sicherheitszone im Querformat",
+          description:
+            "Manuelle rechte Sicherheitszone f\u00fcr das mobile Querformat.",
+        },
+        manualMobileBottomSafeZonePreview: "Untere Sicherheitszone",
+        manualMobileRightSafeZonePreview: "Rechte Sicherheitszone",
         liveMessageDisplayTimeMs: {
           label: "Anzeigedauer f\u00fcr Live-Nachrichten",
           description:
@@ -893,10 +940,10 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
           description:
             "Leitet Kacheln f\u00fcr dunkle Korridorw\u00e4nde ab und speichert sie f\u00fcr \u00e4ltere NetHack-3.4.3-/3.6.x-Laufzeiten, einschlie\u00dflich Slash'EM.",
         },
-        overrideNh37DarkCorridorWallTiles: {
-          label: "Dunkle Wandkacheln in NetHack 3.7 \u00fcberschreiben",
+        overrideNh5DarkCorridorWallTiles: {
+          label: "Dunkle Wandkacheln in NetHack 5.0 \u00fcberschreiben",
           description:
-            "Wendet Einstellungen f\u00fcr dunkle W\u00e4nde auf dunkle Korridorwand-Kacheln in NetHack 3.7 an.",
+            "Wendet Einstellungen f\u00fcr dunkle W\u00e4nde auf dunkle Korridorwand-Kacheln in NetHack 5.0 an.",
         },
         darkCorridorWallTileOverrideEnabled: {
           label: "Dunkle Wandkachel \u00fcberschreiben",
@@ -916,7 +963,8 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
         },
         mobile: {
           label: "Mobil",
-          description: "Touch-Steuerung f\u00fcr mobiles Spielen.",
+          description:
+            "Mobile-spezifische Einstellungen f\u00fcr Oberfl\u00e4che und Spielablauf.",
         },
         controls: {
           label: "Steuerung",
@@ -1207,7 +1255,7 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
           darkWallsDisabledByVulture:
             " Deaktiviert, solange Vulture-Tiles aktiv sind.",
           enableDarkWallsFirst:
-            " Aktiviere zuerst dunkle Korridorw\u00e4nde f\u00fcr Legacy-Runtimes oder dunkle Wand-\u00dcberschreibungen in NetHack 3.7.",
+            " Aktiviere zuerst dunkle Korridorw\u00e4nde f\u00fcr Legacy-Runtimes oder dunkle Wand-\u00dcberschreibungen in NetHack 5.0.",
           enableFpsFirst:
             " Aktiviere zuerst den Ego-Modus unter Anzeige.",
         },
@@ -1244,7 +1292,7 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
           "Namen integrierter Tilesets k\u00f6nnen nicht ge\u00e4ndert werden.",
         tileLayoutVersion: "Tile-Layout-Version",
         layout367: "NetHack-3.6.7-Layout",
-        layout37: "NetHack-3.7-Layout",
+        layout5: "NetHack-5.0-Layout",
         tileLayoutDescription:
           "W\u00e4hle das Tile-Index-Layout, das dieser hochgeladene Atlas verwendet.",
         tileImage: "Tileset-Bild",
@@ -1369,6 +1417,33 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
         close: "Schlie\u00dfen",
         wizardCommands: "Zauberer-Befehle",
         wizard: "Zauberer",
+        wizardCommandFallbackDescription:
+          "F\u00fchrt diesen reinen Wizard-Debugbefehl aus.",
+        wizardCommandDetails: {
+          levelchange: { name: "Stufe \u00e4ndern", description: "Setzt die Erfahrungsstufe des Helden." },
+          lightsources: { name: "Lichtquellen", description: "Zeigt bewegliche Lichtquellen." },
+          migratemons: { name: "Wandernde Monster", description: "Zeigt Monster, die zwischen Ebenen wechseln." },
+          panic: { name: "Panic-Test", description: "Testet Panic-Behandlung und beendet dieses Spiel." },
+          polyself: { name: "Selbst polymorphen", description: "Ver\u00e4ndert die aktuelle Gestalt des Helden." },
+          seenv: { name: "Sichtvektoren", description: "Zeigt die Debug-Karte der Sichtvektoren." },
+          stats: { name: "Speicherstatistik", description: "Zeigt Laufzeit-Speicherstatistiken." },
+          timeout: { name: "Timeout-Warteschlange", description: "Zeigt zeitgesteuerte Effekte und Intrinsics." },
+          vanquished: { name: "Besiegte Monster", description: "Zeigt Z\u00e4hlungen get\u00f6teter Monster." },
+          vision: { name: "Sicht-Array", description: "Zeigt das aktuelle Sicht-Array." },
+          wizbury: { name: "Objekte vergraben", description: "Vergr\u00e4bt Bodenobjekte in einem 3x3-Bereich." },
+          wizdetect: { name: "Verborgenes finden", description: "Enth\u00fcllt verborgene Dinge nahe dem Helden." },
+          wizgenesis: { name: "Monster erzeugen", description: "Erzeugt ein Monster nach Name oder Klasse." },
+          wizidentify: { name: "Inventar identifizieren", description: "Identifiziert alle Gegenst\u00e4nde im Inventar." },
+          wizintrinsic: { name: "Intrinsics setzen", description: "Passt ausgew\u00e4hlte zeitgesteuerte Intrinsics an." },
+          wizlevelport: { name: "Ebenen-Teleport", description: "Teleportiert auf eine andere Ebene oder in einen Zweig." },
+          wizmakemap: { name: "Ebene neu erstellen", description: "Generiert die aktuelle Ebene erneut." },
+          wizmap: { name: "Ebene kartieren", description: "Enth\u00fcllt Ebenenkarte und Fallen." },
+          wizrumorcheck: { name: "Ger\u00fcchte pr\u00fcfen", description: "Validiert wahre und falsche Ger\u00fcchtedateien." },
+          wizsmell: { name: "Monster riechen", description: "Riecht ein ausgew\u00e4hltes Monster." },
+          wizwhere: { name: "Spezialebenen", description: "Zeigt die Platzierung aller Spezialebenen." },
+          wizwish: { name: "Wunsch", description: "Erzeugt Gegenstand, Falle oder Terrain." },
+          wmode: { name: "Wandmodi", description: "Zeigt Debug-Daten zu Wandmodi." },
+        },
         repeat: "Wiederholen",
         character: "Charakter",
         inventory: "Inventar",
@@ -1379,6 +1454,12 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
       },
       positionPrompt: {
         closeLabel: "Positionsabfrage schlie\u00dfen",
+        desktopHint:
+          "Verwende Bewegungseingaben oder klicke auf ein Feld, um die Auswahl zu verschieben. Klicke erneut auf das ausgewählte Feld oder drücke Enter zum Bestätigen.",
+        mobileHint:
+          "Verwende Bewegungseingaben oder tippe auf ein Feld, um die Auswahl zu verschieben. Tippe erneut auf das ausgewählte Feld oder drücke Enter zum Bestätigen.",
+        controllerHint:
+          "Verwende Bewegungseingaben, um die Auswahl zu verschieben. Drücke Enter oder Bestätigen zum Bestätigen.",
       },
       controllerSupport: {
         prompt:

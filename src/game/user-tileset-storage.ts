@@ -14,7 +14,7 @@ export type StoredUserTilesetTileLayoutVersion =
   | "slashem"
   | "3.4.3"
   | "3.6.7"
-  | "3.7";
+  | "5.0";
 
 type SaveUserTilesetInput = {
   id?: string;
@@ -35,8 +35,8 @@ function normalizeStoredTileLayoutVersion(
   if (rawValue === "slashem") {
     return "slashem";
   }
-  if (rawValue === "3.7") {
-    return "3.7";
+  if (rawValue === "5.0") {
+    return "5.0";
   }
   if (rawValue === "3.4.3") {
     return "3.4.3";

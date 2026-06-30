@@ -15,8 +15,8 @@ const ROLE_SOURCE_TARGETS = [
     sourcePath: resolve(PROJECT_ROOT, "imported/role-sources/3.6.7/role.c"),
   },
   {
-    version: "3.7",
-    sourcePath: resolve(PROJECT_ROOT, "imported/role-sources/3.7/role.c"),
+    version: "5.0",
+    sourcePath: resolve(PROJECT_ROOT, "imported/role-sources/5.0/role.c"),
   },
   {
     version: "slashem",

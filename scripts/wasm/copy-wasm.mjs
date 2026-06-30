@@ -25,14 +25,14 @@ const targets = [
     publicWasmDest: resolve(PROJECT_ROOT, "public/nethack-367.wasm"),
   },
   {
-    id: "wasm-37",
-    label: "NetHack 3.7",
-    // Keep wasm-37 pinned to the forked WSL monorepo build output.
-    sourceBuildDir: resolveRequiredBuildDir("wasm-37"),
+    id: "wasm-5",
+    label: "NetHack 5.0",
+    // Keep wasm-5 pinned to the forked WSL monorepo build output.
+    sourceBuildDir: resolveRequiredBuildDir("wasm-5"),
     sourceJsFileName: "nethack.js",
     sourceWasmFileName: "nethack.wasm",
-    publicJsDest: resolve(PROJECT_ROOT, "public/nethack-37.js"),
-    publicWasmDest: resolve(PROJECT_ROOT, "public/nethack-37.wasm"),
+    publicJsDest: resolve(PROJECT_ROOT, "public/nethack-5.js"),
+    publicWasmDest: resolve(PROJECT_ROOT, "public/nethack-5.wasm"),
   },
   {
     id: "slashem",

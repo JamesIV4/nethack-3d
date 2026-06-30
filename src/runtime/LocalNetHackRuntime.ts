@@ -18,7 +18,7 @@ import {
   isRecoverableCheckpointLevelZeroByteLength,
   supportsRuntimeRootPersistence,
 } from "./save-storage";
-import { STATUS_FIELD_MAP_367, STATUS_FIELD_MAP_37 } from "./status-map";
+import { STATUS_FIELD_MAP_367, STATUS_FIELD_MAP_5 } from "./status-map";
 
 const process =
   typeof globalThis !== "undefined" && globalThis.process
@@ -101,9 +101,10 @@ class LocalNetHackRuntime {
 
     this.inputBroker = new RuntimeInputBroker();
     this.farLookMode = "none"; // none | armed | active
-    this.farLookOrigin = null; // null | "direct" | "look_menu" | "floor_target_menu" | "legacy_cursor_prompt"
+    this.farLookOrigin = null; // null | "direct" | "look_menu" | "floor_target_menu" | "legacy_cursor_prompt" | "travel"
     this.pendingLookMenuFarLookArm = false;
     this.pendingLegacySlashEmCursorPromptFarLook = false;
+    this.pendingTravelPositionInputArm = false;
     this.pendingTextResponses = [];
     this.pendingStdinByteQueue = [];
     this.didAutoQueueRawRecoverChoice = false;
@@ -128,8 +129,8 @@ class LocalNetHackRuntime {
     this.pendingContextualLookMapRouteSelection = false;
     this.contextualLookInfoAutoFlowStage = "none";
     this.contextualLookInfoAutoFlowUntilMs = 0;
-    this.runtime37TileContextAutoPickFirstUntilMs = 0;
-    this.runtime37TileContextAutoPickFirstWindowMs = 2000;
+    this.runtime5TileContextAutoPickFirstUntilMs = 0;
+    this.runtime5TileContextAutoPickFirstWindowMs = 2000;
     this.pendingPostActionPlayerTileRefreshReason = null;
     this.pendingPostActionPlayerTileRefreshTarget = null;
     this.pendingPostActionPlayerTileRefreshSnapshot = null;
@@ -174,7 +175,7 @@ class LocalNetHackRuntime {
   }
 
   normalizeRuntimeVersion(value) {
-    return value === "3.7" || value === "slashem" ? value : "3.6.7";
+    return value === "5.0" || value === "slashem" ? value : "3.6.7";
   }
 
   getDefaultRuntimeWindowGlobals(runtimeVersion = this.runtimeVersion) {
@@ -250,8 +251,8 @@ class LocalNetHackRuntime {
   }
 
   getRuntimeModuleAssetPath(runtimeVersion = this.runtimeVersion) {
-    if (runtimeVersion === "3.7") {
-      return "nethack-37.js";
+    if (runtimeVersion === "5.0") {
+      return "nethack-5.js";
     }
     if (runtimeVersion === "slashem") {
       return "slashem.js";
@@ -260,8 +261,8 @@ class LocalNetHackRuntime {
   }
 
   getRuntimeWasmAssetPath(runtimeVersion = this.runtimeVersion) {
-    if (runtimeVersion === "3.7") {
-      return "nethack-37.wasm";
+    if (runtimeVersion === "5.0") {
+      return "nethack-5.wasm";
     }
     if (runtimeVersion === "slashem") {
       return "slashem.wasm";
@@ -271,8 +272,8 @@ class LocalNetHackRuntime {
 
   readRuntimeBuildTag(runtimeVersion = this.runtimeVersion) {
     const rawValue =
-      runtimeVersion === "3.7"
-        ? import.meta.env.VITE_NH3D_WASM_37_RUNTIME_BUILD_TAG
+      runtimeVersion === "5.0"
+        ? import.meta.env.VITE_NH3D_WASM_5_RUNTIME_BUILD_TAG
         : runtimeVersion === "slashem"
           ? import.meta.env.VITE_NH3D_WASM_SLASHEM_RUNTIME_BUILD_TAG
         : import.meta.env.VITE_NH3D_WASM_367_RUNTIME_BUILD_TAG;
@@ -327,14 +328,14 @@ class LocalNetHackRuntime {
 
   readConfiguredPointerAbiTag(runtimeVersion = this.runtimeVersion) {
     const fallback =
-      runtimeVersion === "3.7"
-        ? "nh37-pointer-v1"
+      runtimeVersion === "5.0"
+        ? "nh5-pointer-v1"
         : runtimeVersion === "slashem"
           ? "slashem-pointer-v1"
           : "nh367-pointer-v1";
     const rawValue =
-      runtimeVersion === "3.7"
-        ? import.meta.env.VITE_NH3D_WASM_37_POINTER_ABI_TAG
+      runtimeVersion === "5.0"
+        ? import.meta.env.VITE_NH3D_WASM_5_POINTER_ABI_TAG
         : runtimeVersion === "slashem"
           ? import.meta.env.VITE_NH3D_WASM_SLASHEM_POINTER_ABI_TAG
         : import.meta.env.VITE_NH3D_WASM_367_POINTER_ABI_TAG;
@@ -370,10 +371,10 @@ class LocalNetHackRuntime {
   }
 
   buildDefaultRuntimePointerContract(runtimeVersion = this.runtimeVersion) {
-    const is37 = runtimeVersion === "3.7";
+    const is5 = runtimeVersion === "5.0";
     const isSlashEm = runtimeVersion === "slashem";
-    const addMenuArgCounts = is37 ? [9] : [8];
-    const printGlyphArgCounts = is37 ? [5, 7] : isSlashEm ? [4, 6] : [4, 5, 7];
+    const addMenuArgCounts = is5 ? [9] : [8];
+    const printGlyphArgCounts = is5 ? [5, 7] : isSlashEm ? [4, 6] : [4, 5, 7];
     return {
       abiTag: this.readConfiguredPointerAbiTag(runtimeVersion),
       callbackArgCounts: {
@@ -388,7 +389,7 @@ class LocalNetHackRuntime {
         // Slash'EM emits [win, x, y, glyph] (4 args) and the tracked build
         // extends that to [win, x, y, glyph, monsterId, attackingTargetId]
         // (6 args), because this shim signature has no background glyph arg.
-        // 3.7 emits [win, x, y, glyphinfo_ptr, bkglyphinfo_ptr] (5 args),
+        // 5.0 emits [win, x, y, glyphinfo_ptr, bkglyphinfo_ptr] (5 args),
         // and the tracked build extends that to [win, x, y, glyphinfo_ptr,
         // bkglyphinfo_ptr, monsterId, attackingTargetId] (7 args), where
         // monsterId is >0 for tracked monsters and 0 for the player tile.
@@ -428,7 +429,7 @@ class LocalNetHackRuntime {
             required: true,
           },
         ],
-        ...(is37
+        ...(is5
           ? {
               shim_add_menu: [
                 {
@@ -473,7 +474,7 @@ class LocalNetHackRuntime {
       callbackModes: {
         shim_nh_poskey: {
           pointerArgsAreDirect: true,
-          coordArgType: is37 ? "i16" : "i32",
+          coordArgType: is5 ? "i16" : "i32",
         },
         shim_getlin: {
           pointerArgsAreDirect: true,
@@ -483,15 +484,15 @@ class LocalNetHackRuntime {
           menuListMode: "pointer_to_pointer",
         },
         shim_add_menu: {
-          identifierMode: is37 ? "value" : "pointer_slot",
-          menuTextArgIndex: is37 ? 7 : 6,
-          itemFlagsArgIndex: is37 ? 8 : 7,
-          glyphArgMode: is37 ? "glyphinfo_ptr" : "glyph_value",
+          identifierMode: is5 ? "value" : "pointer_slot",
+          menuTextArgIndex: is5 ? 7 : 6,
+          itemFlagsArgIndex: is5 ? 8 : 7,
+          glyphArgMode: is5 ? "glyphinfo_ptr" : "glyph_value",
         },
         shim_print_glyph: {
-          glyphArgMode: is37 ? "glyphinfo_ptr" : "glyph_value",
-          trackedEntityArgIndex: is37 ? 5 : isSlashEm ? 4 : 5,
-          attackingTargetArgIndex: is37 ? 6 : isSlashEm ? 5 : 6,
+          glyphArgMode: is5 ? "glyphinfo_ptr" : "glyph_value",
+          trackedEntityArgIndex: is5 ? 5 : isSlashEm ? 4 : 5,
+          attackingTargetArgIndex: is5 ? 6 : isSlashEm ? 5 : 6,
         },
       },
       extcmd: {
@@ -505,15 +506,15 @@ class LocalNetHackRuntime {
         requiredNames: isSlashEm ? ["2weapon", "pray"] : ["#", "pray"],
       },
       menuItem: {
-        // NetHack 3.7's `anything` union includes int64/uint64 members, so
+        // NetHack 5.0's `anything` union includes int64/uint64 members, so
         // `struct mi` (menu_item) is widened versus 3.6.x on wasm32.
-        // Layout used by select_menu() output in wasm-37:
+        // Layout used by select_menu() output in wasm-5:
         //   item @ +0, count @ +8, itemflags @ +12, sizeof(menu_item) == 16.
-        stride: is37 ? 16 : 8,
-        countOffset: is37 ? 8 : 4,
-        itemFlagsOffset: is37 ? 12 : null,
+        stride: is5 ? 16 : 8,
+        countOffset: is5 ? 8 : 4,
+        itemFlagsOffset: is5 ? 12 : null,
       },
-      glyphInfo: is37
+      glyphInfo: is5
         ? {
             minBytes: 36,
             glyphOffset: 0,
@@ -976,8 +977,8 @@ class LocalNetHackRuntime {
   }
 
   getRuntimeStatusFieldMap() {
-    return this.runtimeVersion === "3.7"
-      ? STATUS_FIELD_MAP_37
+    return this.runtimeVersion === "5.0"
+      ? STATUS_FIELD_MAP_5
       : STATUS_FIELD_MAP_367;
   }
 
@@ -1071,11 +1072,11 @@ class LocalNetHackRuntime {
     // Default (older runtimes): [win, x, y, glyph]
     const [win, x, y, a, b] = args;
 
-    if (this.runtimeVersion !== "3.7") {
+    if (this.runtimeVersion !== "5.0") {
       return { win, x, y, glyph: a, mgflags: 0, extra: b };
     }
 
-    // 3.7: callback often comes as [win, x, y, packed, extra]
+    // 5.0: callback often comes as [win, x, y, packed, extra]
     // packed: hi16 = flags, lo16 = glyph
     let glyph = a;
     let mgflags = 0;
@@ -1945,6 +1946,7 @@ class LocalNetHackRuntime {
     this.farLookOrigin = null;
     this.pendingLookMenuFarLookArm = false;
     this.pendingLegacySlashEmCursorPromptFarLook = false;
+    this.pendingTravelPositionInputArm = false;
     this.contextualGlanceProbeMouseDeadlineMs = 0;
     this.contextualGlanceAutoCancelPositionUntilMs = 0;
     this.contextualLookInfoProbeMouseDeadlineMs = 0;
@@ -2311,8 +2313,9 @@ class LocalNetHackRuntime {
 
     const selectedMenuItem = this.resolveMenuItemFromSelectionInput(input);
     if (selectedMenuItem) {
+      const selectionCount = this.decodeMenuSelectionCount(input);
       const selectionEntry =
-        this.createSelectionEntryFromMenuItem(selectedMenuItem);
+        this.createSelectionEntryFromMenuItem(selectedMenuItem, selectionCount);
       if (!selectionEntry) {
         return;
       }
@@ -2320,19 +2323,35 @@ class LocalNetHackRuntime {
 
       if (this.isInMultiPickup) {
         if (this.menuSelections.has(selectionKey)) {
-          this.menuSelections.delete(selectionKey);
-          console.log(
-            `Deselected item: ${selectionEntry.menuChar} (${selectionEntry.text}). Current selections:`,
-            Array.from(this.menuSelections.values()).map(
-              (item) => `${item.menuChar}:${item.text}`,
-            ),
-          );
+          if (Number.isFinite(selectionCount) && Number(selectionCount) > 0) {
+            this.menuSelections.set(selectionKey, selectionEntry);
+            console.log(
+              `Updated selected item count: ${selectionEntry.menuChar} (${selectionEntry.text}) x${selectionEntry.count}. Current selections:`,
+              Array.from(this.menuSelections.values()).map(
+                (item) =>
+                  `${item.menuChar}:${item.text}${
+                    Number.isFinite(item.count) ? ` x${item.count}` : ""
+                  }`,
+              ),
+            );
+          } else {
+            this.menuSelections.delete(selectionKey);
+            console.log(
+              `Deselected item: ${selectionEntry.menuChar} (${selectionEntry.text}). Current selections:`,
+              Array.from(this.menuSelections.values()).map(
+                (item) => `${item.menuChar}:${item.text}`,
+              ),
+            );
+          }
         } else {
           this.menuSelections.set(selectionKey, selectionEntry);
           console.log(
             `Selected item: ${selectionEntry.menuChar} (${selectionEntry.text}). Current selections:`,
             Array.from(this.menuSelections.values()).map(
-              (item) => `${item.menuChar}:${item.text}`,
+              (item) =>
+                `${item.menuChar}:${item.text}${
+                  Number.isFinite(item.count) ? ` x${item.count}` : ""
+                }`,
             ),
           );
         }
@@ -2684,11 +2703,11 @@ class LocalNetHackRuntime {
       return contractType;
     }
 
-    // NetHack 3.6.7 exposes nh_poskey(int*, int*, int*), while 3.7 uses
+    // NetHack 3.6.7 exposes nh_poskey(int*, int*, int*), while 5.0 uses
     // nh_poskey(coordxy*, coordxy*, int*) with coordxy=int16_t. Never infer
     // the write width from pointer spacing because stack layout varies by
     // build/platform and can turn a safe write into stack corruption.
-    return this.runtimeVersion === "3.7" ? "i16" : "i32";
+    return this.runtimeVersion === "5.0" ? "i16" : "i32";
   }
 
   writePoskeyTargetValue(targetPtr, value, label, storeType = "i32") {
@@ -2750,9 +2769,9 @@ class LocalNetHackRuntime {
     console.log(
       `Delivered mouse input to nh_poskey: (${mouseX}, ${mouseY}) mod=${mouseMod} (xPtr=${xTargetPtr}, yPtr=${yTargetPtr}, modPtr=${modTargetPtr}, coordType=${coordStoreType})`,
     );
-    if (this.runtimeVersion === "3.7" && mouseMod > 0) {
-      this.runtime37TileContextAutoPickFirstUntilMs =
-        Date.now() + this.runtime37TileContextAutoPickFirstWindowMs;
+    if (this.runtimeVersion === "5.0" && mouseMod > 0) {
+      this.runtime5TileContextAutoPickFirstUntilMs =
+        Date.now() + this.runtime5TileContextAutoPickFirstWindowMs;
     }
     return true;
   }
@@ -2764,16 +2783,16 @@ class LocalNetHackRuntime {
     return input;
   }
 
-  shouldAutoPickFirstRuntime37TileContextAction(menuQuestion, menuItems) {
-    if (this.runtimeVersion !== "3.7") {
+  shouldAutoPickFirstRuntime5TileContextAction(menuQuestion, menuItems) {
+    if (this.runtimeVersion !== "5.0") {
       return false;
     }
     if (this.hasPendingInventoryContextSelection()) {
       return false;
     }
     if (
-      !Number.isFinite(this.runtime37TileContextAutoPickFirstUntilMs) ||
-      Date.now() > this.runtime37TileContextAutoPickFirstUntilMs
+      !Number.isFinite(this.runtime5TileContextAutoPickFirstUntilMs) ||
+      Date.now() > this.runtime5TileContextAutoPickFirstUntilMs
     ) {
       return false;
     }
@@ -2789,6 +2808,85 @@ class LocalNetHackRuntime {
 
     const selectableItems = menuItems.filter((item) => item && !item.isCategory);
     return selectableItems.length > 0;
+  }
+
+  doesMenuItemTextContain(menuItem, text) {
+    if (!menuItem || typeof text !== "string" || text.length === 0) {
+      return false;
+    }
+    const itemText =
+      typeof menuItem.text === "string" ? menuItem.text.toLowerCase() : "";
+    return itemText.includes(text.toLowerCase());
+  }
+
+  resolveRuntime5TileContextSpecialAutoPickMenuItem(selectableItems) {
+    const autoPickRules = [
+      {
+        requiredTexts: ["Talk to ", "Swap places with "],
+        preferredText: "Swap places with ",
+      },
+    ];
+
+    for (const rule of autoPickRules) {
+      const hasRequiredItems = rule.requiredTexts.every((text) =>
+        selectableItems.some((item) => this.doesMenuItemTextContain(item, text)),
+      );
+      if (!hasRequiredItems) {
+        continue;
+      }
+
+      const preferredItem = selectableItems.find((item) =>
+        this.doesMenuItemTextContain(item, rule.preferredText),
+      );
+      if (preferredItem) {
+        return preferredItem;
+      }
+    }
+
+    return null;
+  }
+
+  shouldShowRuntime5TileContextQuestion(selectableItems) {
+    const modalRequiredTexts = ["Examine trap"];
+    return modalRequiredTexts.some((text) =>
+      selectableItems.some((item) => this.doesMenuItemTextContain(item, text)),
+    );
+  }
+
+  resolveRuntime5TileContextAutoPickMenuItem(menuQuestion, menuItems) {
+    if (
+      !this.shouldAutoPickFirstRuntime5TileContextAction(
+        menuQuestion,
+        menuItems,
+      )
+    ) {
+      return null;
+    }
+
+    const selectableItems = menuItems.filter((item) => item && !item.isCategory);
+    if (this.shouldShowRuntime5TileContextQuestion(selectableItems)) {
+      return null;
+    }
+
+    const specialPick =
+      this.resolveRuntime5TileContextSpecialAutoPickMenuItem(selectableItems);
+    return specialPick || selectableItems[0] || null;
+  }
+
+  tryAutoPickRuntime5TileContextMenuItem(menuQuestion, menuItems) {
+    const autoPickItem = this.resolveRuntime5TileContextAutoPickMenuItem(
+      menuQuestion,
+      menuItems,
+    );
+    if (!autoPickItem) {
+      return false;
+    }
+
+    this.runtime5TileContextAutoPickFirstUntilMs = 0;
+    return this.tryAutoSelectMenuItem(
+      autoPickItem,
+      "runtime 5.0 tile context menu auto-pick",
+    );
   }
 
   getPostActionPlayerTileRefreshReasonForMenuItem(menuItem) {
@@ -3609,7 +3707,7 @@ class LocalNetHackRuntime {
     const resolvedMapHelper =
       mapHelper ||
       (resolvedHelpers
-        ? this.runtimeVersion === "3.7"
+        ? this.runtimeVersion === "5.0"
           ? typeof resolvedHelpers.mapGlyphInfoHelper === "function"
             ? resolvedHelpers.mapGlyphInfoHelper
             : null
@@ -3971,6 +4069,7 @@ class LocalNetHackRuntime {
     if (!pending || typeof pending.resolve !== "function") {
       return;
     }
+    this.armFarLookForExtendedCommandIndex(commandIndex);
     pending.resolve(Number.isInteger(commandIndex) ? commandIndex : -1);
   }
 
@@ -4275,14 +4374,14 @@ class LocalNetHackRuntime {
     if (exact) {
       const shouldPreservePendingAction =
         preserveActionRoute &&
-        this.runtimeVersion === "3.7" &&
+        this.runtimeVersion === "5.0" &&
         typeof pending.actionId === "string" &&
         pending.actionId.trim().length > 0;
       if (!shouldPreservePendingAction) {
         this.clearPendingInventoryContextSelection("consumed exact match");
       } else {
         console.log(
-          "Preserving pending inventory context selection after exact item match for 3.7 action routing",
+          "Preserving pending inventory context selection after exact item match for 5.0 action routing",
         );
       }
       return {
@@ -4301,7 +4400,7 @@ class LocalNetHackRuntime {
     if (caseInsensitive) {
       const shouldPreservePendingAction =
         preserveActionRoute &&
-        this.runtimeVersion === "3.7" &&
+        this.runtimeVersion === "5.0" &&
         typeof pending.actionId === "string" &&
         pending.actionId.trim().length > 0;
       if (!shouldPreservePendingAction) {
@@ -4310,7 +4409,7 @@ class LocalNetHackRuntime {
         );
       } else {
         console.log(
-          "Preserving pending inventory context selection after case-insensitive item match for 3.7 action routing",
+          "Preserving pending inventory context selection after case-insensitive item match for 5.0 action routing",
         );
       }
       return {
@@ -4878,7 +4977,7 @@ class LocalNetHackRuntime {
 
     const normalizedGlyphFlags = this.normalizeNonNegativeInteger(glyphFlags);
     if (normalizedGlyphFlags !== null) {
-      // NetHack 3.7 mapglyph flags: MG_UNEXPLORED=0x0800, MG_NOTHING=0x0400.
+      // NetHack 5.0 mapglyph flags: MG_UNEXPLORED=0x0800, MG_NOTHING=0x0400.
       if ((normalizedGlyphFlags & 0x0800) !== 0) {
         return true;
       }
@@ -5129,7 +5228,7 @@ class LocalNetHackRuntime {
         ? helpers.topItemTileIndexUnderPlayer
         : null;
     const mapHelper = helpers
-      ? this.runtimeVersion === "3.7"
+      ? this.runtimeVersion === "5.0"
         ? typeof helpers.mapGlyphInfoHelper === "function"
           ? canQueryWasmHelpers
             ? helpers.mapGlyphInfoHelper
@@ -5381,7 +5480,7 @@ class LocalNetHackRuntime {
         ? helpers.glyphAtHelper
         : null;
     const mapHelper = helpers
-      ? this.runtimeVersion === "3.7"
+      ? this.runtimeVersion === "5.0"
         ? typeof helpers.mapGlyphInfoHelper === "function"
           ? canQueryWasmHelpers
             ? helpers.mapGlyphInfoHelper
@@ -5721,6 +5820,75 @@ class LocalNetHackRuntime {
     return this.farLookMode === "armed" || this.farLookMode === "active";
   }
 
+  isTravelDestinationPrompt(text) {
+    const normalized =
+      typeof text === "string" ? text.trim().toLowerCase() : "";
+    return normalized === "where do you want to travel to?";
+  }
+
+  armPendingTravelPositionInput(text) {
+    if (!this.isTravelDestinationPrompt(text)) {
+      return;
+    }
+    this.pendingTravelPositionInputArm = true;
+    console.log("Arming travel position input mode from travel prompt");
+    this.activateTravelPositionInputMode("travel prompt");
+  }
+
+  activateTravelPositionInputMode(reason = "unknown") {
+    if (this.farLookMode === "active" && this.farLookOrigin === "travel") {
+      return;
+    }
+    console.log(`Activating travel position input mode (${reason})`);
+    this.farLookMode = "active";
+    this.farLookOrigin = "travel";
+    this.pendingTravelPositionInputArm = false;
+    this.pendingLookMenuFarLookArm = false;
+    this.setPositionInputActive(true);
+    if (!this.positionCursor) {
+      this.emitPositionCursor(
+        null,
+        this.playerPosition.x,
+        this.playerPosition.y,
+        "travel_position_start",
+      );
+    }
+  }
+
+  isTravelPositionOrigin() {
+    return this.farLookOrigin === "travel";
+  }
+
+  isTravelPositionSelectionInput(input) {
+    const normalized = this.normalizeInputKey(input);
+    return (
+      normalized === "Enter" ||
+      normalized === "\r" ||
+      normalized === "\n" ||
+      normalized === "." ||
+      normalized === "," ||
+      normalized === ";" ||
+      normalized === ":"
+    );
+  }
+
+  isTravelPositionRequestInput(input) {
+    const normalized = this.normalizeInputKey(input);
+    if (typeof normalized !== "string" || normalized.length === 0) {
+      return false;
+    }
+    if (this.isFarLookExitInput(normalized)) {
+      return true;
+    }
+    if (this.isDirectionalMovementInput(normalized)) {
+      return true;
+    }
+    if (this.isTravelPositionSelectionInput(normalized)) {
+      return true;
+    }
+    return normalized.length === 1 && normalized.charCodeAt(0) >= 32;
+  }
+
   isDirectionalMovementInput(input) {
     if (typeof input !== "string" || input.length === 0) {
       return false;
@@ -5876,6 +6044,12 @@ class LocalNetHackRuntime {
     if (typeof normalized !== "string" || normalized.length === 0) {
       return false;
     }
+    if (
+      this.isTravelPositionOrigin() &&
+      this.isTravelPositionRequestInput(normalized)
+    ) {
+      return true;
+    }
     if (this.isFarLookContinuationInput(normalized)) {
       return true;
     }
@@ -5888,6 +6062,19 @@ class LocalNetHackRuntime {
   isFarLookContinuationInput(input) {
     const normalized = this.normalizeInputKey(input);
     if (typeof normalized !== "string" || normalized.length === 0) {
+      return false;
+    }
+    if (
+      this.isTravelPositionOrigin() &&
+      this.isTravelPositionRequestInput(normalized) &&
+      !this.isTravelPositionSelectionInput(normalized)
+    ) {
+      return true;
+    }
+    if (
+      this.isTravelPositionOrigin() &&
+      this.isTravelPositionSelectionInput(normalized)
+    ) {
       return false;
     }
     if (this.isDirectionalMovementInput(normalized)) {
@@ -6440,7 +6627,7 @@ class LocalNetHackRuntime {
       };
     }
 
-    // NetHack 3.7 routes reports like Ctrl+O dungeon overview through WIN_INVEN
+    // NetHack 5.0 routes reports like Ctrl+O dungeon overview through WIN_INVEN
     // even though none of the rows are actually selectable. Preserve category
     // headers for those informational panels instead of treating them as
     // inventory snapshots.
@@ -7285,7 +7472,7 @@ class LocalNetHackRuntime {
         normalized.includes(
           "there are files from a game in progress under your name",
         ) ||
-        // NetHack 3.7's SELF_RECOVER prompt is shorter:
+        // NetHack 5.0's SELF_RECOVER prompt is shorter:
         // "Old game in progress. Destroy [y], Recover [r], or Cancel [n]?"
         normalized.includes("old game in progress")) &&
       normalized.includes("recover")
@@ -7742,13 +7929,13 @@ class LocalNetHackRuntime {
     this.logAutosaveCheckpointArtifactsBeforeStartup();
     this.ensureAutosaveResumeHasRecoverableCheckpoint();
 
-    if (this.runtimeVersion === "3.7") {
-      // NetHack 3.7's SELF_RECOVER path is wired through getlock().
+    if (this.runtimeVersion === "5.0") {
+      // NetHack 5.0's SELF_RECOVER path is wired through getlock().
       // Calling resume_checkpoint_save() directly before startup has proven
       // unstable in this build (function signature mismatch + partial side
       // effects), so defer to getlock() and auto-answer "r".
       console.log(
-        "Deferring checkpoint autosave resume to getlock() prompt flow for runtime 3.7",
+        "Deferring checkpoint autosave resume to getlock() prompt flow for runtime 5.0",
       );
       return;
     }
@@ -7919,11 +8106,11 @@ class LocalNetHackRuntime {
     const normalizedActionId = String(actionId || "")
       .trim()
       .toLowerCase();
-    if (!normalizedActionId || this.runtimeVersion !== "3.7") {
+    if (!normalizedActionId || this.runtimeVersion !== "5.0") {
       return null;
     }
 
-    // NetHack 3.7 `src/iactions.c` enum item_action_actions values.
+    // NetHack 5.0 `src/iactions.c` enum item_action_actions values.
     const actionIdentifierMap = {
       unwield: 1, // IA_UNWIELD
       apply: 2, // IA_APPLY_OBJ
@@ -8549,12 +8736,28 @@ class LocalNetHackRuntime {
     if (!this.isMenuSelectionInput(input)) {
       return null;
     }
-    const raw = input.slice(this.menuSelectionInputPrefix.length).trim();
+    const raw = input
+      .slice(this.menuSelectionInputPrefix.length)
+      .trim()
+      .split(":")[0];
     if (!/^-?\d+$/.test(raw)) {
       return null;
     }
     const parsed = Number(raw);
     return Number.isInteger(parsed) ? parsed : null;
+  }
+
+  decodeMenuSelectionCount(input) {
+    if (!this.isMenuSelectionInput(input)) {
+      return undefined;
+    }
+    const raw = input.slice(this.menuSelectionInputPrefix.length).trim();
+    const parts = raw.split(":");
+    if (parts.length < 2 || !/^\d+$/.test(parts[1])) {
+      return undefined;
+    }
+    const parsed = Number.parseInt(parts[1], 10);
+    return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : undefined;
   }
 
   getMenuSelectionKey(item) {
@@ -8748,6 +8951,27 @@ class LocalNetHackRuntime {
     }
 
     return -1;
+  }
+
+  resolveExtendedCommandNameByIndex(commandIndex) {
+    if (!Number.isInteger(commandIndex) || commandIndex < 0) {
+      return null;
+    }
+    const entry = this.getExtendedCommandEntries().find(
+      (candidate) => candidate && candidate.index === commandIndex,
+    );
+    return entry && typeof entry.name === "string" ? entry.name : null;
+  }
+
+  armFarLookForExtendedCommandIndex(commandIndex) {
+    const commandName = this.resolveExtendedCommandNameByIndex(commandIndex);
+    if (commandName !== "glance") {
+      return;
+    }
+    console.log("Arming far-look mode for #glance extended command");
+    this.farLookMode = "armed";
+    this.farLookOrigin = "direct";
+    this.pendingLookMenuFarLookArm = false;
   }
 
   resolveMetaBoundExtendedCommandName(metaKey) {
@@ -9300,6 +9524,7 @@ class LocalNetHackRuntime {
     if (!root) {
       return {
         capturedAtMs: Date.now(),
+        configuredNethackOptions: this.lastConfiguredNethackOptions,
         runtimeVersion: this.runtimeVersion,
         nethackGlobal: null,
       };
@@ -9315,6 +9540,7 @@ class LocalNetHackRuntime {
 
     return {
       capturedAtMs: Date.now(),
+      configuredNethackOptions: this.lastConfiguredNethackOptions,
       runtimeVersion: this.runtimeVersion,
       objectTileIndexByObjectId,
       nethackGlobal: {
@@ -10133,6 +10359,29 @@ class LocalNetHackRuntime {
                 mod.FS?.__nh3dSlashEmLockLinkFallbackPatched,
               ),
             });
+
+            // Inject sysconf to enable wizard mode after IDBFS is synced
+            // Defer this to postRun to ensure FS is fully initialized
+            const injectSysconfLater = () => {
+              try {
+                const sysconfPath = "/sysconf";
+                const lines = [
+                  "# NetHack configuration for WASM",
+                  "WIZARDS=wizard",
+                  "CHECK_PLNAME=1",
+                  "EXPLORERS=*",
+                ];
+                const sysconfContent = lines.join("\n") + "\n";
+                if (mod.FS && typeof mod.FS.writeFile === "function") {
+                  mod.FS.writeFile(sysconfPath, sysconfContent);
+                  console.log("✅ Injected sysconf with WIZARDS=wizard and CHECK_PLNAME=1");
+                }
+              } catch (err) {
+                console.warn("⚠️ Failed to inject sysconf:", err);
+              }
+            };
+            // Store for injection in postRun callback (after full initialization)
+            (mod as any).__nh3dInjectSysconfCallback = injectSysconfLater;
 
             // Setup IndexedDB file system for persisting saves
             const IDBFS =
@@ -11033,6 +11282,14 @@ class LocalNetHackRuntime {
               rootEntries: listDirectoryEntries(mod, "/"),
               saveEntries: listDirectoryEntries(mod, "/save"),
             });
+            // Inject sysconf after WASM is fully initialized
+            if (typeof (mod as any).__nh3dInjectSysconfCallback === "function") {
+              try {
+                (mod as any).__nh3dInjectSysconfCallback();
+              } catch (err) {
+                console.warn("⚠️ sysconf injection callback failed:", err);
+              }
+            }
           },
         ],
       });
@@ -11395,6 +11652,10 @@ class LocalNetHackRuntime {
       this.contextualGlanceAutoCancelPositionUntilMs = 0;
     }
 
+    if (this.farLookMode === "none" && this.pendingTravelPositionInputArm) {
+      this.activateTravelPositionInputMode("nh_poskey fallback");
+    }
+
     if (this.farLookMode === "armed") {
       this.farLookMode = "active";
       this.setPositionInputActive(true);
@@ -11544,6 +11805,7 @@ class LocalNetHackRuntime {
         console.log(
           `Resolved extended command "${extCommandText}" to index ${extCommandIndex}`,
         );
+        this.armFarLookForExtendedCommandIndex(extCommandIndex);
         return extCommandIndex;
 
       case "shim_init_nhwindows":
@@ -11727,24 +11989,12 @@ class LocalNetHackRuntime {
           }
 
           if (
-            this.shouldAutoPickFirstRuntime37TileContextAction(
+            this.tryAutoPickRuntime5TileContextMenuItem(
               menuQuestion,
               this.currentMenuItems,
             )
           ) {
-            const firstSelectableItem =
-              this.currentMenuItems.find((item) => item && !item.isCategory) ||
-              null;
-            this.runtime37TileContextAutoPickFirstUntilMs = 0;
-            if (
-              firstSelectableItem &&
-              this.tryAutoSelectMenuItem(
-                firstSelectableItem,
-                "runtime 3.7 tile context menu auto-first-option",
-              )
-            ) {
-              return 0;
-            }
+            return 0;
           }
 
           this.lastEndedInventoryMenuKind = "inventory";
@@ -11959,12 +12209,12 @@ class LocalNetHackRuntime {
         const addMenuMode = pointerContract?.callbackModes?.shim_add_menu || {};
         const menuTextArgIndex = Number.isInteger(addMenuMode.menuTextArgIndex)
           ? addMenuMode.menuTextArgIndex
-          : this.runtimeVersion === "3.7"
+          : this.runtimeVersion === "5.0"
             ? 7
             : 6;
         const itemFlagsArgIndex = Number.isInteger(addMenuMode.itemFlagsArgIndex)
           ? addMenuMode.itemFlagsArgIndex
-          : this.runtimeVersion === "3.7"
+          : this.runtimeVersion === "5.0"
             ? 8
             : 7;
         const identifierMode =
@@ -11979,6 +12229,7 @@ class LocalNetHackRuntime {
         const menuGlyph = args[1];
         const identifier = args[2];
         const rawAccelerator = args[3];
+        const rawGroupAccelerator = args[4];
         const accelerator =
           typeof rawAccelerator === "string" &&
           this.isLegacyMenuAcceleratorRuntime()
@@ -11986,6 +12237,15 @@ class LocalNetHackRuntime {
             : Number.isFinite(Number(rawAccelerator))
               ? Math.trunc(Number(rawAccelerator))
               : rawAccelerator;
+        const groupAccelerator =
+          typeof rawGroupAccelerator === "string" &&
+          this.isLegacyMenuAcceleratorRuntime()
+            ? rawGroupAccelerator
+            : Number.isFinite(Number(rawGroupAccelerator))
+              ? Math.trunc(Number(rawGroupAccelerator))
+              : rawGroupAccelerator;
+        const printableGroupAccelerator =
+          this.getPrintableAcceleratorCharacter(groupAccelerator);
         const menuAttr = Number(args[5]);
         const menuText = String((args[menuTextArgIndex] ?? "") || "");
         const menuItemFlags = Number(args[itemFlagsArgIndex] ?? 0);
@@ -12038,7 +12298,7 @@ class LocalNetHackRuntime {
           resolvedMenuGlyph = finalGlyph;
 
           const helpers = globalThis.nethackGlobal?.helpers;
-          const mapHelper = this.runtimeVersion === "3.7"
+          const mapHelper = this.runtimeVersion === "5.0"
             ? helpers?.mapGlyphInfoHelper
             : helpers?.mapglyphHelper;
           const tileIndexForGlyphHelper =
@@ -12172,6 +12432,8 @@ class LocalNetHackRuntime {
             text: menuText,
             accelerator: menuChar,
             originalAccelerator: accelerator, // Store the original accelerator code
+            groupAccelerator: printableGroupAccelerator,
+            originalGroupAccelerator: groupAccelerator,
             identifier: identifierValue, // NetHack menu identifier used by shim_select_menu
             window: menuWinid,
             glyph: resolvedMenuGlyph,
@@ -12193,6 +12455,7 @@ class LocalNetHackRuntime {
             type: "menu_item",
             text: menuText,
             accelerator: menuChar,
+            groupAccelerator: printableGroupAccelerator,
             window: menuWinid,
             glyph: resolvedMenuGlyph,
             glyphChar: glyphChar, // Include glyph character in client message
@@ -12373,7 +12636,7 @@ class LocalNetHackRuntime {
 
           const helpers = (globalThis as any).nethackGlobal?.helpers;
           const mapHelper =
-            this.runtimeVersion === "3.7"
+            this.runtimeVersion === "5.0"
               ? helpers?.mapGlyphInfoHelper
               : helpers?.mapglyphHelper;
           let decodedGlyphFlags = null;
@@ -12381,7 +12644,7 @@ class LocalNetHackRuntime {
 
           if (mapHelper) {
             try {
-              // IMPORTANT: for 3.7 we now pass the decoded glyph (not the pointer)
+              // IMPORTANT: for 5.0 we now pass the decoded glyph (not the pointer)
               const glyphInfo = mapHelper(
                 printGlyph,
                 x,
@@ -12458,7 +12721,7 @@ class LocalNetHackRuntime {
           this.gameMap.set(key, {
             x,
             y,
-            glyph: printGlyph, // decoded glyph for 3.7
+            glyph: printGlyph, // decoded glyph for 5.0
             glyphFlags: decodedGlyphFlags,
             char: decodedChar,
             color: decodedColor,
@@ -12479,7 +12742,7 @@ class LocalNetHackRuntime {
               type: "map_glyph",
               x,
               y,
-              glyph: printGlyph, // decoded glyph for 3.7
+              glyph: printGlyph, // decoded glyph for 5.0
               char: decodedChar,
               color: decodedColor,
               tileIndex: decodedTileIndex,
@@ -12584,13 +12847,14 @@ class LocalNetHackRuntime {
         }
         if (normalizedRawText) {
           this.rememberPromptContextMessage(normalizedRawText, "raw_print");
+          this.armPendingTravelPositionInput(normalizedRawText);
           this.armPendingPostActionPlayerTileRefreshForAutopickupRawPrint(
             normalizedRawText,
           );
         }
         if (
           normalizedRawText &&
-          this.runtimeVersion === "3.7" &&
+          this.runtimeVersion === "5.0" &&
           this.isAutosaveResumeRequested() &&
           !this.didAutoQueueRawRecoverChoice
         ) {
@@ -13305,7 +13569,7 @@ class LocalNetHackRuntime {
         return 0;
 
       case "shim_delay_output":
-        if (this.runtimeVersion === "3.7") {
+        if (this.runtimeVersion === "5.0") {
           const nowMs = Date.now();
           const latestTurn = this.readLatestStatusInteger("BL_TIME");
           const posX = Number.isFinite(this.playerPosition?.x)
@@ -13351,7 +13615,7 @@ class LocalNetHackRuntime {
             samePosition && (sameMovementStep || sameTurn);
           if (duplicateTravelDelayAtSameTile || oneTurnDriftSamePosition) {
             console.log(
-              `Skipping duplicate 3.7 travel delay at (${posX}, ${posY}) turn ${latestTurn} (lastTurn=${this.lastAppliedDelayOutputTurn}, movementSerial=${movementSerial}, lastMovementSerial=${this.lastAppliedDelayOutputMovementSerial})`,
+              `Skipping duplicate 5.0 travel delay at (${posX}, ${posY}) turn ${latestTurn} (lastTurn=${this.lastAppliedDelayOutputTurn}, movementSerial=${movementSerial}, lastMovementSerial=${this.lastAppliedDelayOutputMovementSerial})`,
             );
             return 0;
           }

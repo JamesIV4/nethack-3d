@@ -173,6 +173,9 @@ export type QuestionDialogState = {
   menuItems: NethackMenuItem[];
   isPickupDialog: boolean;
   selectedAccelerators: string[];
+  selectedCounts?: Record<string, number>;
+  supportsSelectionCount?: boolean;
+  pendingSelectionCount?: number | null;
   allPickupSelected?: boolean;
   activePickupSelectionInput?: string | null;
   activeMenuSelectionInput?: string | null;
@@ -273,6 +276,7 @@ export type Nh3dClientOptions = {
   fpsFov: number;
   fpsLookSensitivityX: number;
   fpsLookSensitivityY: number;
+  fpsWasdKeyboardMovementEnabled: boolean;
   lightingEnabled: boolean;
   fpsFlattenEntityBillboards: boolean;
   showItemsUnderPlayerInOverheadTilesMode: boolean;
@@ -305,6 +309,12 @@ export type Nh3dClientOptions = {
   monsterShatter: boolean;
   monsterShatterBloodBorders: boolean;
   liveMessageLog: boolean;
+  showPersistentMobileMessageLog: boolean;
+  rumbleEnabled: boolean;
+  manualMobileBottomSafeZoneEnabled: boolean;
+  manualMobileBottomSafeZoneVerticalPx: number;
+  manualMobileBottomSafeZoneHorizontalPx: number;
+  manualMobileRightSafeZoneHorizontalPx: number;
   liveMessageDisplayTimeMs: number;
   liveMessageFadeOutTimeMs: number;
   showVersionNotificationsOnLaunch: boolean;
@@ -314,7 +324,7 @@ export type Nh3dClientOptions = {
   soundEnabled: boolean;
   blockAmbientOcclusion: boolean;
   darkCorridorWalls367: boolean;
-  overrideNh37DarkCorridorWallTiles: boolean;
+  overrideNh5DarkCorridorWallTiles: boolean;
   darkCorridorWallTileOverrideEnabled: boolean;
   darkCorridorWallTileOverrideEnabledByTileset: DarkCorridorWallTileOverrideEnabledByTileset;
   darkCorridorWallTileOverrideTileId: number;
@@ -417,6 +427,7 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
   fpsFov: isMobilePortrait.matches ? 95 : 62,
   fpsLookSensitivityX: isMobile.matches ? 1.5 : 1,
   fpsLookSensitivityY: isMobile.matches ? 1.5 : 1,
+  fpsWasdKeyboardMovementEnabled: true,
   lightingEnabled: true,
   fpsFlattenEntityBillboards: true,
   showItemsUnderPlayerInOverheadTilesMode: true,
@@ -451,6 +462,12 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
   monsterShatter: true,
   monsterShatterBloodBorders: true,
   liveMessageLog: true,
+  showPersistentMobileMessageLog: false,
+  rumbleEnabled: true,
+  manualMobileBottomSafeZoneEnabled: false,
+  manualMobileBottomSafeZoneVerticalPx: 0,
+  manualMobileBottomSafeZoneHorizontalPx: 0,
+  manualMobileRightSafeZoneHorizontalPx: 0,
   liveMessageDisplayTimeMs: 3000,
   liveMessageFadeOutTimeMs: 520,
   showVersionNotificationsOnLaunch: true,
@@ -460,7 +477,7 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
   soundEnabled: true,
   blockAmbientOcclusion: true,
   darkCorridorWalls367: true,
-  overrideNh37DarkCorridorWallTiles: true,
+  overrideNh5DarkCorridorWallTiles: true,
   darkCorridorWallTileOverrideEnabled: false,
   darkCorridorWallTileOverrideEnabledByTileset: {},
   darkCorridorWallTileOverrideTileId: 850,
@@ -818,6 +835,30 @@ export function normalizeNh3dClientOptions(
   const liveMessageFadeOutTimeMs = Math.round(
     Math.max(120, Math.min(4000, rawLiveMessageFadeOutTimeMs)),
   );
+  const rawManualMobileBottomSafeZoneVerticalPx =
+    typeof overrides?.manualMobileBottomSafeZoneVerticalPx === "number" &&
+    Number.isFinite(overrides.manualMobileBottomSafeZoneVerticalPx)
+      ? overrides.manualMobileBottomSafeZoneVerticalPx
+      : defaultNh3dClientOptions.manualMobileBottomSafeZoneVerticalPx;
+  const manualMobileBottomSafeZoneVerticalPx = Math.round(
+    Math.max(0, Math.min(100, rawManualMobileBottomSafeZoneVerticalPx)),
+  );
+  const rawManualMobileBottomSafeZoneHorizontalPx =
+    typeof overrides?.manualMobileBottomSafeZoneHorizontalPx === "number" &&
+    Number.isFinite(overrides.manualMobileBottomSafeZoneHorizontalPx)
+      ? overrides.manualMobileBottomSafeZoneHorizontalPx
+      : defaultNh3dClientOptions.manualMobileBottomSafeZoneHorizontalPx;
+  const manualMobileBottomSafeZoneHorizontalPx = Math.round(
+    Math.max(0, Math.min(100, rawManualMobileBottomSafeZoneHorizontalPx)),
+  );
+  const rawManualMobileRightSafeZoneHorizontalPx =
+    typeof overrides?.manualMobileRightSafeZoneHorizontalPx === "number" &&
+    Number.isFinite(overrides.manualMobileRightSafeZoneHorizontalPx)
+      ? overrides.manualMobileRightSafeZoneHorizontalPx
+      : defaultNh3dClientOptions.manualMobileRightSafeZoneHorizontalPx;
+  const manualMobileRightSafeZoneHorizontalPx = Math.round(
+    Math.max(0, Math.min(100, rawManualMobileRightSafeZoneHorizontalPx)),
+  );
   const rawMinimapScale =
     typeof overrides?.minimapScale === "number" &&
     Number.isFinite(overrides.minimapScale)
@@ -832,7 +873,7 @@ export function normalizeNh3dClientOptions(
       ? overrides.bloodStrength
       : defaultNh3dClientOptions.bloodStrength;
   const bloodStrength = Number(
-    Math.max(0.5, Math.min(4, rawBloodStrength)).toFixed(2),
+    Math.max(1, Math.min(2.5, rawBloodStrength)).toFixed(2),
   );
   const bloodColorLightHex = normalizeBloodColorHex(
     overrides?.bloodColorLightHex,
@@ -1066,6 +1107,10 @@ export function normalizeNh3dClientOptions(
     fpsFov,
     fpsLookSensitivityX,
     fpsLookSensitivityY,
+    fpsWasdKeyboardMovementEnabled:
+      typeof overrides?.fpsWasdKeyboardMovementEnabled === "boolean"
+        ? overrides.fpsWasdKeyboardMovementEnabled
+        : defaultNh3dClientOptions.fpsWasdKeyboardMovementEnabled,
     lightingEnabled:
       typeof overrides?.lightingEnabled === "boolean"
         ? overrides.lightingEnabled
@@ -1173,6 +1218,21 @@ export function normalizeNh3dClientOptions(
       typeof overrides?.liveMessageLog === "boolean"
         ? overrides.liveMessageLog
         : defaultNh3dClientOptions.liveMessageLog,
+    showPersistentMobileMessageLog:
+      typeof overrides?.showPersistentMobileMessageLog === "boolean"
+        ? overrides.showPersistentMobileMessageLog
+        : defaultNh3dClientOptions.showPersistentMobileMessageLog,
+    rumbleEnabled:
+      typeof overrides?.rumbleEnabled === "boolean"
+        ? overrides.rumbleEnabled
+        : defaultNh3dClientOptions.rumbleEnabled,
+    manualMobileBottomSafeZoneEnabled:
+      typeof overrides?.manualMobileBottomSafeZoneEnabled === "boolean"
+        ? overrides.manualMobileBottomSafeZoneEnabled
+        : defaultNh3dClientOptions.manualMobileBottomSafeZoneEnabled,
+    manualMobileBottomSafeZoneVerticalPx,
+    manualMobileBottomSafeZoneHorizontalPx,
+    manualMobileRightSafeZoneHorizontalPx,
     liveMessageDisplayTimeMs,
     liveMessageFadeOutTimeMs,
     showVersionNotificationsOnLaunch:
@@ -1194,10 +1254,10 @@ export function normalizeNh3dClientOptions(
       typeof overrides?.darkCorridorWalls367 === "boolean"
         ? overrides.darkCorridorWalls367
         : defaultNh3dClientOptions.darkCorridorWalls367,
-    overrideNh37DarkCorridorWallTiles:
-      typeof overrides?.overrideNh37DarkCorridorWallTiles === "boolean"
-        ? overrides.overrideNh37DarkCorridorWallTiles
-        : defaultNh3dClientOptions.overrideNh37DarkCorridorWallTiles,
+    overrideNh5DarkCorridorWallTiles:
+      typeof overrides?.overrideNh5DarkCorridorWallTiles === "boolean"
+        ? overrides.overrideNh5DarkCorridorWallTiles
+        : defaultNh3dClientOptions.overrideNh5DarkCorridorWallTiles,
     darkCorridorWallTileOverrideEnabled,
     darkCorridorWallTileOverrideEnabledByTileset,
     darkCorridorWallTileOverrideTileId,
@@ -1258,7 +1318,7 @@ export interface Nethack3DEngineUIAdapter {
   setTextInput(state: TextInputRequestState | null): void;
   setExtendedCommands(commands: string[]): void;
   setPositionRequest(text: string | null): void;
-  setPositionInputActive(active: boolean): void;
+  setPositionInputActive(active: boolean, origin?: string | null): void;
   setFpsCrosshairContext(state: FpsCrosshairContextState | null): void;
   setRepeatActionVisible(visible: boolean): void;
   setNewGamePrompt(state: NewGamePromptState): void;
@@ -1271,6 +1331,9 @@ export interface Nethack3DEngineController {
   chooseDirection(directionKey: string): void;
   confirmActiveDirectionQuestion(): void;
   chooseQuestionChoice(choice: string): void;
+  setQuestionSelectionCount(count: number | null): void;
+  stepQuestionSelectionCount(delta: number): void;
+  clearQuestionSelectionCount(): void;
   syncQuestionSelectionFocus(selectionInput: string): void;
   syncQuestionActionFocus(
     action: "select-all" | "confirm" | "cancel",

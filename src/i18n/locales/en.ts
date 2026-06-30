@@ -1,4 +1,4 @@
-﻿export const en = {
+export const en = {
   meta: {
     locale: "en-US",
   },
@@ -103,7 +103,7 @@
       zoom_in: {
         label: "Zoom (Hold)",
         description:
-          "Hold, then use left or right stick up/down to zoom in/out.",
+          "Hold, then use left stick up/down to zoom and right stick to rotate the camera.",
       },
       recenter_camera: {
         label: "Recenter Camera",
@@ -187,6 +187,15 @@
           normal: "Normal",
           explore: "Explore",
           debug: "Wizard/Debug",
+        },
+      },
+      number_pad: {
+        label: "Movement Keys",
+        description:
+          "Choose whether NetHack movement uses the numeric keypad (`number_pad:1`) or traditional vi keys (`number_pad:0`).",
+        options: {
+          numeric: "Numeric keypad",
+          vi: "vi keys",
         },
       },
       autopickup: {
@@ -638,6 +647,11 @@
           description:
             "Rotate movement keys and swipe directions based on the camera Y-axis angle.",
         },
+        fpsWasdKeyboardMovementEnabled: {
+          label: "Enable WASD keyboard movement in FPS mode",
+          description:
+            "Use W/A/S/D for first-person movement. Disable to let those keys behave like normal NetHack commands.",
+        },
         controllerFpsMoveRepeatMs: {
           label: "FPS left-stick move repeat",
           description:
@@ -753,6 +767,39 @@
           label: "Live message log",
           description: "Display the scrolling in-game message log.",
         },
+        showPersistentMobileMessageLog: {
+          label: "Show persistent message log",
+          description:
+            "Keep the compact mobile message log visible during gameplay. The Log button can still open the larger log.",
+        },
+        rumbleEnabled: {
+          label: "Enable rumble",
+          description:
+            "Use short haptic vibration feedback for damage dealt and damage taken on supported mobile devices.",
+        },
+        sectionMobileSafeZone: "Mobile safe zones",
+        manualMobileBottomSafeZoneEnabled: {
+          label: "Override detected mobile safe zones",
+          description:
+            "Use manual safe-zone insets when Android handhelds report safe areas incorrectly.",
+        },
+        manualMobileBottomSafeZoneVerticalPx: {
+          label: "Vertical orientation bottom safe zone",
+          description:
+            "Manual bottom safe zone for portrait or vertical mobile layout.",
+        },
+        manualMobileBottomSafeZoneHorizontalPx: {
+          label: "Horizontal orientation bottom safe zone",
+          description:
+            "Manual bottom safe zone for landscape or horizontal mobile layout.",
+        },
+        manualMobileRightSafeZoneHorizontalPx: {
+          label: "Horizontal orientation right safe zone",
+          description:
+            "Manual right-side safe zone for landscape mobile layout.",
+        },
+        manualMobileBottomSafeZonePreview: "Bottom safe zone",
+        manualMobileRightSafeZonePreview: "Right safe zone",
         liveMessageDisplayTimeMs: {
           label: "Live message display time",
           description:
@@ -887,10 +934,10 @@
           description:
             "Infer and cache dark corridor wall tiles for legacy NetHack 3.4.3/3.6.x-style runtimes, including Slash'EM.",
         },
-        overrideNh37DarkCorridorWallTiles: {
-          label: "Override NetHack 3.7 dark wall tiles",
+        overrideNh5DarkCorridorWallTiles: {
+          label: "Override NetHack 5.0 dark wall tiles",
           description:
-            "Apply dark wall override settings to NetHack 3.7 dark corridor wall tiles.",
+            "Apply dark wall override settings to NetHack 5.0 dark corridor wall tiles.",
         },
         darkCorridorWallTileOverrideEnabled: {
           label: "Override dark wall tile",
@@ -909,7 +956,7 @@
         },
         mobile: {
           label: "Mobile",
-          description: "Touch control settings for mobile gameplay.",
+          description: "Mobile-specific interface and gameplay settings.",
         },
         controls: {
           label: "Controls",
@@ -1173,7 +1220,7 @@
           darkWallsDisabledByVulture:
             " Disabled while Vulture tiles are active.",
           enableDarkWallsFirst:
-            " Enable legacy dark corridor walls or NetHack 3.7 dark wall overrides first.",
+            " Enable legacy dark corridor walls or NetHack 5.0 dark wall overrides first.",
           enableFpsFirst: " Enable First-person mode in Display first.",
         },
         darkWallControls: {
@@ -1207,7 +1254,7 @@
         builtInNamesLocked: "Built-in tile set names cannot be changed.",
         tileLayoutVersion: "Tile Layout Version",
         layout367: "NetHack 3.6.7 layout",
-        layout37: "NetHack 3.7 layout",
+        layout5: "NetHack 5.0 layout",
         tileLayoutDescription:
           "Choose the tile index layout used by this uploaded atlas.",
         tileImage: "Tileset Image",
@@ -1249,6 +1296,11 @@
         cancelPrompt: "Cancel prompt",
         selectAll: "Select All",
         deselectAll: "Deselect All",
+        amount: "Amount",
+        amountDefault: "Default",
+        clearAmount: "Clear amount",
+        decreaseAmount: "Decrease amount by one",
+        increaseAmount: "Increase amount by one",
         page: (current: number, total: number) => `Page ${current} / ${total}`,
         pageHintMultiple: "Use < and > to change pages. Press ESC to cancel",
         pageHintSingle: "Press ESC to cancel",
@@ -1333,6 +1385,101 @@
         close: "Close",
         wizardCommands: "Wizard Commands",
         wizard: "Wizard",
+        wizardCommandFallbackDescription: "Run this wizard-only debug command.",
+        wizardCommandDetails: {
+          levelchange: {
+            name: "Level change",
+            description: "Set the hero's experience level.",
+          },
+          lightsources: {
+            name: "Light sources",
+            description: "Show mobile light sources.",
+          },
+          migratemons: {
+            name: "Migrating monsters",
+            description: "Show monsters moving between levels.",
+          },
+          panic: {
+            name: "Panic test",
+            description: "Test panic handling and end this game.",
+          },
+          polyself: {
+            name: "Polymorph self",
+            description: "Change the hero's current form.",
+          },
+          seenv: {
+            name: "Seen vectors",
+            description: "Show the seen-vector debug map.",
+          },
+          stats: {
+            name: "Memory statistics",
+            description: "Show runtime memory statistics.",
+          },
+          timeout: {
+            name: "Timeout queue",
+            description: "Show timed effects and intrinsics.",
+          },
+          vanquished: {
+            name: "Vanquished monsters",
+            description: "Show dead monster counts.",
+          },
+          vision: {
+            name: "Vision array",
+            description: "Show the current vision array.",
+          },
+          wizbury: {
+            name: "Bury nearby objects",
+            description: "Bury ground objects in a 3x3 area.",
+          },
+          wizdetect: {
+            name: "Detect hidden things",
+            description: "Reveal hidden things near the hero.",
+          },
+          wizgenesis: {
+            name: "Create monster",
+            description: "Create a monster by name or class.",
+          },
+          wizidentify: {
+            name: "Identify inventory",
+            description: "Identify every item in inventory.",
+          },
+          wizintrinsic: {
+            name: "Set intrinsics",
+            description: "Adjust selected timed intrinsics.",
+          },
+          wizlevelport: {
+            name: "Level teleport",
+            description: "Teleport to another level or branch.",
+          },
+          wizmakemap: {
+            name: "Recreate level",
+            description: "Generate the current level again.",
+          },
+          wizmap: {
+            name: "Map level",
+            description: "Reveal the level map and traps.",
+          },
+          wizrumorcheck: {
+            name: "Check rumors",
+            description: "Validate true and false rumor files.",
+          },
+          wizsmell: {
+            name: "Smell monster",
+            description: "Smell a selected monster.",
+          },
+          wizwhere: {
+            name: "Special levels",
+            description: "Show where special levels are placed.",
+          },
+          wizwish: {
+            name: "Wish",
+            description: "Create an item, trap, or terrain.",
+          },
+          wmode: {
+            name: "Wall modes",
+            description: "Show wall-mode debug data.",
+          },
+        },
         repeat: "Repeat",
         character: "Character",
         inventory: "Inventory",
@@ -1343,6 +1490,12 @@
       },
       positionPrompt: {
         closeLabel: "Close position prompt",
+        desktopHint:
+          "Use movement input or click a tile to move the selection. Click the selected tile again or press Enter to confirm.",
+        mobileHint:
+          "Use movement input or tap a tile to move the selection. Tap the selected tile again or press Enter to confirm.",
+        controllerHint:
+          "Use movement input to move the selection. Press Enter or Confirm to confirm.",
       },
       controllerSupport: {
         prompt: "Controller detected. Enable controller support?",

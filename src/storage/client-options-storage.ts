@@ -44,7 +44,7 @@ type StartupCharacterPreferencesStoredRecord = {
 };
 
 const startupCharacterPreferenceRuntimeVersions: readonly NethackRuntimeVersion[] =
-  ["3.6.7", "3.7", "slashem"];
+  ["3.6.7", "5.0", "slashem"];
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);

@@ -28,7 +28,7 @@ export interface GlyphCatalogEntry {
   special?: number;
   tileIndex: number;
 
-  // NetHack 3.7+ fields from `map_glyphinfo`
+  // NetHack 5.0+ fields from `map_glyphinfo`
   ttychar?: number;
   framecolor?: number;
   glyphflags?: number;

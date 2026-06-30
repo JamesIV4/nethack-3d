@@ -6,7 +6,7 @@ import { getAllTiles } from "./tile-parser.mjs";
 
 export const GLYPH_CATALOG_VERSIONS = /** @type {const} */ ([
   "3.6.7",
-  "3.7",
+  "5.0",
   "slashem",
 ]);
 
@@ -18,10 +18,10 @@ const CATALOG_TARGETS = [
     generatedCatalogPath: "src/game/glyphs/glyph-catalog.367.generated.ts",
   },
   {
-    version: "3.7",
-    publicJsPath: "public/nethack-37.js",
-    publicWasmPath: "public/nethack-37.wasm",
-    generatedCatalogPath: "src/game/glyphs/glyph-catalog.37.generated.ts",
+    version: "5.0",
+    publicJsPath: "public/nethack-5.js",
+    publicWasmPath: "public/nethack-5.wasm",
+    generatedCatalogPath: "src/game/glyphs/glyph-catalog.5.generated.ts",
   },
   {
     version: "slashem",
@@ -133,7 +133,7 @@ function codePointToDebugChar(value) {
 }
 
 function resolveGlyphAsciiChar(info, version) {
-  if (version === "3.7") {
+  if (version === "5.0") {
     return (
       codePointToDebugChar(info?.ttychar) ?? codePointToDebugChar(info?.ch)
     );
@@ -169,7 +169,7 @@ function createRuntimeCallback() {
 
 /**
  * @param {string} projectRoot
- * @param {{ version: "3.6.7" | "3.7" | "slashem"; publicJsPath: string; publicWasmPath: string }} target
+ * @param {{ version: "3.6.7" | "5.0" | "slashem"; publicJsPath: string; publicWasmPath: string }} target
  */
 async function bootCatalogRuntime(projectRoot, target) {
   const jsPath = path.join(projectRoot, target.publicJsPath);
@@ -217,7 +217,7 @@ async function bootCatalogRuntime(projectRoot, target) {
 
   const helpers = globalThis.nethackGlobal?.helpers;
   const hasRequiredHelpers =
-    target.version === "3.7"
+    target.version === "5.0"
       ? typeof helpers?.mapGlyphInfoHelper === "function"
       : typeof helpers?.mapglyphHelper === "function" &&
         typeof helpers?.tileIndexForGlyph === "function";
@@ -293,7 +293,7 @@ function glyphKindForGlyph(ranges, glyph) {
  *   mapglyphHelper?: (glyph: number, x: number, y: number, mgflags: number) => any,
  *   mapGlyphInfoHelper?: (glyph: number, x: number, y: number, mgflags: number) => any
  * }} helpers
- * @param {"3.6.7" | "3.7" | "slashem"} version
+ * @param {"3.6.7" | "5.0" | "slashem"} version
  * @param {GlyphRange[]} ranges
  * @param {number} maxGlyph
  */
@@ -312,7 +312,7 @@ function buildGlyphEntries(
 
   for (let glyph = 0; glyph < maxGlyph; glyph++) {
     const info =
-      version === "3.7"
+      version === "5.0"
         ? helpers.mapGlyphInfoHelper?.(glyph, 0, 0, MG_FLAG_NORMAL)
         : helpers.mapglyphHelper?.(glyph, 0, 0, 0);
 
@@ -329,7 +329,7 @@ function buildGlyphEntries(
       tileIndex: tileIndex,
     };
 
-    if (version === "3.7") {
+    if (version === "5.0") {
       entry.ttychar = normalizeNumber(info?.ttychar);
       entry.framecolor = normalizeNumber(info?.framecolor);
       entry.glyphflags = normalizeNumber(info?.glyphflags);
@@ -447,8 +447,8 @@ function resolvePublicJsPath(projectRoot, target) {
 }
 
 function normalizeCatalogVersion(version) {
-  if (version === "3.7") {
-    return "3.7";
+  if (version === "5.0") {
+    return "5.0";
   }
   if (version === "slashem") {
     return "slashem";

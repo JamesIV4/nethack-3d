@@ -9,6 +9,19 @@ if (typeof packageJson.version === "string") {
   app.setVersion(packageJson.version);
 }
 
+function configureLinuxChromiumRuntime() {
+  if (process.platform !== "linux") {
+    return;
+  }
+
+  app.commandLine.appendSwitch("ozone-platform-hint", "auto");
+  app.commandLine.appendSwitch("disable-dev-shm-usage");
+  app.commandLine.appendSwitch("no-sandbox");
+  app.commandLine.appendSwitch("disable-gpu-sandbox");
+}
+
+configureLinuxChromiumRuntime();
+
 const devServerUrl = process.env.VITE_DEV_SERVER_URL;
 const quitIpcChannel = "nh3d:quit-app";
 const appRenderedIpcChannel = "nh3d:app-rendered";
@@ -1149,12 +1162,6 @@ function resolveWindowMode() {
     return "borderless";
   }
   return "fullscreen";
-}
-
-if (process.platform === "linux") {
-  app.commandLine.appendSwitch("ozone-platform-hint", "auto");
-  app.commandLine.appendSwitch("no-sandbox");
-  app.commandLine.appendSwitch("disable-gpu-sandbox");
 }
 
 function showMainWindowIfReady(mainWindow, state) {

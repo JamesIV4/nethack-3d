@@ -1,4 +1,4 @@
-﻿import type { LocaleOverrides } from "../locale-helpers";
+import type { LocaleOverrides } from "../locale-helpers";
 import type { TranslationDictionary } from "./en";
 
 export const ptBrOverrides = {
@@ -110,7 +110,7 @@ export const ptBrOverrides = {
       zoom_in: {
         label: "Zoom (segurar)",
         description:
-          "Segure e use o analógico esquerdo ou direito para cima/baixo para aproximar ou afastar.",
+          "Segure, use o analógico esquerdo para cima/baixo para zoom e o analógico direito para girar a câmera.",
       },
       recenter_camera: {
         label: "Recentralizar câmera",
@@ -194,6 +194,15 @@ export const ptBrOverrides = {
           normal: "Normal",
           explore: "Exploração",
           debug: "Assistente/Depuração",
+        },
+      },
+      number_pad: {
+        label: "Teclas de movimento",
+        description:
+          "Escolha se o movimento do NetHack usa o teclado numérico (`number_pad:1`) ou as teclas vi tradicionais (`number_pad:0`).",
+        options: {
+          numeric: "Teclado numérico",
+          vi: "Teclas vi",
         },
       },
       autopickup: {
@@ -659,6 +668,11 @@ export const ptBrOverrides = {
           description:
             "Gira teclas de movimento e direções de gesto com base no ângulo do eixo Y da câmera.",
         },
+        fpsWasdKeyboardMovementEnabled: {
+          label: "Ativar movimento WASD pelo teclado no modo FPS",
+          description:
+            "Use W/A/S/D para movimento em primeira pessoa. Desative para que essas teclas se comportem como comandos normais do NetHack.",
+        },
         controllerFpsMoveRepeatMs: {
           label: "Repetição de movimento FPS no analógico esquerdo",
           description:
@@ -775,6 +789,39 @@ export const ptBrOverrides = {
           label: "Registro de mensagens ao vivo",
           description: "Exibe o registro de mensagens rolável dentro do jogo.",
         },
+        showPersistentMobileMessageLog: {
+          label: "Mostrar registro de mensagens persistente",
+          description:
+            "Mantem o registro compacto de mensagens no mobile visivel durante o jogo. O botao Registro ainda pode abrir o registro maior.",
+        },
+        rumbleEnabled: {
+          label: "Ativar vibracao",
+          description:
+            "Usa vibracao haptica curta para dano causado e dano recebido em dispositivos moveis compativeis.",
+        },
+        sectionMobileSafeZone: "Areas seguras mobile",
+        manualMobileBottomSafeZoneEnabled: {
+          label: "Substituir areas seguras mobile detectadas",
+          description:
+            "Use margens de area segura manuais quando portateis Android informarem areas seguras incorretamente.",
+        },
+        manualMobileBottomSafeZoneVerticalPx: {
+          label: "Area segura inferior vertical",
+          description:
+            "Area segura inferior manual para o layout mobile vertical.",
+        },
+        manualMobileBottomSafeZoneHorizontalPx: {
+          label: "Area segura inferior horizontal",
+          description:
+            "Area segura inferior manual para o layout mobile horizontal.",
+        },
+        manualMobileRightSafeZoneHorizontalPx: {
+          label: "Area segura direita horizontal",
+          description:
+            "Area segura direita manual para o layout mobile horizontal.",
+        },
+        manualMobileBottomSafeZonePreview: "Area segura inferior",
+        manualMobileRightSafeZonePreview: "Area segura direita",
         liveMessageDisplayTimeMs: {
           label: "Tempo de exibição das mensagens ao vivo",
           description:
@@ -912,10 +959,10 @@ export const ptBrOverrides = {
           description:
             "Infere e armazena em cache tiles de paredes de corredor escuro para runtimes legados do NetHack 3.4.3/3.6.x, incluindo Slash'EM.",
         },
-        overrideNh37DarkCorridorWallTiles: {
-          label: "Substituir tiles de paredes escuras do NetHack 3.7",
+        overrideNh5DarkCorridorWallTiles: {
+          label: "Substituir tiles de paredes escuras do NetHack 5.0",
           description:
-            "Aplica configurações de substituição de paredes escuras aos tiles de corredor escuro do NetHack 3.7.",
+            "Aplica configurações de substituição de paredes escuras aos tiles de corredor escuro do NetHack 5.0.",
         },
         darkCorridorWallTileOverrideEnabled: {
           label: "Substituir tile de parede escura",
@@ -935,7 +982,8 @@ export const ptBrOverrides = {
         },
         mobile: {
           label: "Celular",
-          description: "Configurações de toque para jogar no celular.",
+          description:
+            "Configuracoes de interface e jogabilidade especificas para celular.",
         },
         controls: {
           label: "Controles",
@@ -1211,7 +1259,7 @@ export const ptBrOverrides = {
           darkWallsDisabledByVulture:
             " Desativado enquanto os tiles de Vulture estiverem ativos.",
           enableDarkWallsFirst:
-            " Ative primeiro as paredes escuras de corredor legadas ou as substituições de paredes escuras do NetHack 3.7.",
+            " Ative primeiro as paredes escuras de corredor legadas ou as substituições de paredes escuras do NetHack 5.0.",
           enableFpsFirst:
             " Ative primeiro o modo em primeira pessoa em Exibição.",
         },
@@ -1247,7 +1295,7 @@ export const ptBrOverrides = {
           "Os nomes dos tilesets internos não podem ser alterados.",
         tileLayoutVersion: "Versão do layout dos tiles",
         layout367: "Layout do NetHack 3.6.7",
-        layout37: "Layout do NetHack 3.7",
+        layout5: "Layout do NetHack 5.0",
         tileLayoutDescription:
           "Escolha o layout de índices de tile usado por este atlas enviado.",
         tileImage: "Imagem do tileset",
@@ -1255,6 +1303,9 @@ export const ptBrOverrides = {
         selectedFile: (fileName: string) => `Selecionado: ${fileName}`,
         currentFile: (fileName: string) => `Atual: ${fileName}`,
         uploadedImage: "imagem enviada",
+        weaponSpriteFlip: "Inverter sprite da arma em FPS",
+        weaponSpriteFlipDescription:
+          "Inverte horizontalmente o sprite da arma empunhada para este tileset. Ativado por padr\u00e3o.",
         backgroundRemovalDescription:
           "Configure a remoção de fundo dos billboards para este tileset, ou deixe os dois modos desativados para manter os fundos do atlas intactos.",
         backgroundTileRemoval: "Remoção por tile de fundo",
@@ -1288,6 +1339,11 @@ export const ptBrOverrides = {
         deselectAll: "Desmarcar tudo",
         page: (current: number, total: number) =>
           `Página ${current} / ${total}`,
+        amount: "Amount",
+        amountDefault: "Default",
+        clearAmount: "Clear amount",
+        decreaseAmount: "Decrease amount by one",
+        increaseAmount: "Increase amount by one",
         pageHintMultiple:
           "Use < e > para trocar de página. Pressione ESC para cancelar",
         pageHintSingle: "Pressione ESC para cancelar",
@@ -1373,6 +1429,33 @@ export const ptBrOverrides = {
         close: "Fechar",
         wizardCommands: "Comandos de assistente",
         wizard: "Assistente",
+        wizardCommandFallbackDescription:
+          "Executa este comando de depuracao exclusivo do modo wizard.",
+        wizardCommandDetails: {
+          levelchange: { name: "Alterar nivel", description: "Define o nivel de experiencia do heroi." },
+          lightsources: { name: "Fontes de luz", description: "Mostra fontes de luz moveis." },
+          migratemons: { name: "Monstros migrantes", description: "Mostra monstros movendo entre niveis." },
+          panic: { name: "Teste de panico", description: "Testa o panico e encerra esta partida." },
+          polyself: { name: "Polimorfar-se", description: "Muda a forma atual do heroi." },
+          seenv: { name: "Vetores vistos", description: "Mostra o mapa de depuracao de visao." },
+          stats: { name: "Estatisticas de memoria", description: "Mostra estatisticas de memoria em execucao." },
+          timeout: { name: "Fila de tempos", description: "Mostra efeitos temporizados e intrinsecos." },
+          vanquished: { name: "Monstros derrotados", description: "Mostra contagens de monstros mortos." },
+          vision: { name: "Matriz de visao", description: "Mostra a matriz de visao atual." },
+          wizbury: { name: "Enterrar objetos proximos", description: "Enterra objetos do chao em uma area 3x3." },
+          wizdetect: { name: "Detectar ocultos", description: "Revela coisas ocultas perto do heroi." },
+          wizgenesis: { name: "Criar monstro", description: "Cria um monstro por nome ou classe." },
+          wizidentify: { name: "Identificar inventario", description: "Identifica todos os itens no inventario." },
+          wizintrinsic: { name: "Definir intrinsecos", description: "Ajusta intrinsecos temporizados escolhidos." },
+          wizlevelport: { name: "Teleporte de nivel", description: "Teleporta para outro nivel ou ramo." },
+          wizmakemap: { name: "Recriar nivel", description: "Gera novamente o nivel atual." },
+          wizmap: { name: "Mapear nivel", description: "Revela o mapa do nivel e armadilhas." },
+          wizrumorcheck: { name: "Verificar rumores", description: "Valida arquivos de rumores verdadeiros e falsos." },
+          wizsmell: { name: "Cheirar monstro", description: "Cheira um monstro selecionado." },
+          wizwhere: { name: "Niveis especiais", description: "Mostra onde os niveis especiais ficam." },
+          wizwish: { name: "Desejo", description: "Cria item, armadilha ou terreno." },
+          wmode: { name: "Modos de parede", description: "Mostra dados de depuracao das paredes." },
+        },
         repeat: "Repetir",
         character: "Personagem",
         inventory: "Inventário",
@@ -1383,6 +1466,12 @@ export const ptBrOverrides = {
       },
       positionPrompt: {
         closeLabel: "Fechar prompt de posição",
+        desktopHint:
+          "Use o comando de movimento ou clique em um quadrado para mover a seleção. Clique novamente no quadrado selecionado ou pressione Enter para confirmar.",
+        mobileHint:
+          "Use o comando de movimento ou toque em um quadrado para mover a seleção. Toque novamente no quadrado selecionado ou pressione Enter para confirmar.",
+        controllerHint:
+          "Use o comando de movimento para mover a seleção. Pressione Enter ou Confirmar para confirmar.",
       },
       controllerSupport: {
         prompt: "Controle detectado. Ativar suporte a controle?",
