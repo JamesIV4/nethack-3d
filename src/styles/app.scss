@@ -5960,8 +5960,7 @@ canvas {
 }
 
 .nh3d-top-score-timeline-intro,
-.nh3d-top-score-timeline-hint,
-.nh3d-top-score-timeline-axis-caption {
+.nh3d-top-score-timeline-hint {
   color: var(--nh3d-ui-text-muted);
   font-size: nh3d-scale-font(13px);
   line-height: 1.4;
@@ -6042,7 +6041,7 @@ canvas {
   border: 1px solid rgba(121, 171, 213, 0.2);
   border-radius: 8px;
   background: rgba(8, 18, 29, 0.82);
-  padding-bottom: 6px;
+  padding: 0 10px 8px;
 }
 
 .nh3d-top-score-timeline-canvas {
@@ -6168,7 +6167,10 @@ canvas {
 }
 
 .nh3d-top-score-timeline-axis-caption {
-  text-align: right;
+  fill: rgba(191, 217, 239, 0.72);
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: nh3d-scale-font(11px);
+  font-weight: 700;
 }
 
 .nh3d-top-score-timeline-focus {

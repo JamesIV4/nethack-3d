@@ -10,6 +10,7 @@ import type {
   RunTelemetrySpellLearnedEvent,
   RunTelemetryTrapEvent,
 } from "../game/ui-types";
+import { supportsRuntimeTopScores } from "./runtime-capabilities";
 import { resolveRuntimeSaveDbNames } from "./save-storage";
 import type { NethackRuntimeVersion } from "./types";
 
@@ -232,6 +233,36 @@ function formatUnixSeconds(value: unknown): string {
   return date.toISOString();
 }
 
+function formatLocalYyyyMmDdFromMs(value: unknown): string {
+  const ms = normalizeFiniteInteger(value);
+  if (ms === null) {
+    return "";
+  }
+  const date = new Date(ms);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function normalizeScoreDateKey(value: unknown): string {
+  const normalized = normalizeText(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    return normalized;
+  }
+  if (/^\d{8}$/.test(normalized)) {
+    return formatYyyymmdd(normalized);
+  }
+  const parsed = Date.parse(normalized);
+  if (!Number.isFinite(parsed)) {
+    return "";
+  }
+  return formatLocalYyyyMmDdFromMs(parsed);
+}
+
 function buildScoreKey(
   name: unknown,
   points: unknown,
@@ -301,6 +332,19 @@ function buildNameTurnScoreKeyCandidates(
   }
   return normalizeScoreNameAliases(name).map((normalizedName) =>
     [normalizedName, String(normalizedTurns)].join("|"),
+  );
+}
+
+function buildNameDateScoreKeyCandidates(
+  name: unknown,
+  date: unknown,
+): string[] {
+  const normalizedDate = normalizeScoreDateKey(date);
+  if (!normalizedDate) {
+    return [];
+  }
+  return normalizeScoreNameAliases(name).map((normalizedName) =>
+    [normalizedName, normalizedDate].join("|"),
   );
 }
 
@@ -727,7 +771,7 @@ export async function saveTopScoreDetailSnapshot(input: {
   telemetry?: RunTelemetrySnapshot | null;
   postmortemReports?: GameOverPostmortemReports | null;
 }): Promise<string> {
-  if (input.runtimeVersion !== "3.6.7") {
+  if (!supportsRuntimeTopScores(input.runtimeVersion)) {
     return "";
   }
 
@@ -1242,6 +1286,7 @@ function attachDetailsToScores(
   details: TopScoreDetailSnapshot[],
 ): TopScoreRecord[] {
   const detailsByNameTurnKey = new Map<string, TopScoreDetailSnapshot[]>();
+  const detailsByNameDateKey = new Map<string, TopScoreDetailSnapshot[]>();
   const detailsByScoreKey = new Map<string, TopScoreDetailSnapshot[]>();
   const detailsByFallbackKey = new Map<string, TopScoreDetailSnapshot[]>();
   const pushDetail = (
@@ -1263,6 +1308,18 @@ function attachDetailsToScores(
       detail.turns ?? detail.playerStats.time,
     )) {
       pushDetail(detailsByNameTurnKey, key, detail);
+    }
+    const detailDateKeys = new Set<string>([
+      formatLocalYyyyMmDdFromMs(detail.capturedAtMs),
+      normalizeScoreDateKey(detail.capturedAtIso),
+    ]);
+    for (const dateKey of detailDateKeys) {
+      for (const key of buildNameDateScoreKeyCandidates(
+        detail.playerName || detail.playerStats.name,
+        dateKey,
+      )) {
+        pushDetail(detailsByNameDateKey, key, detail);
+      }
     }
     pushDetail(detailsByScoreKey, detail.scoreKey, detail);
     pushDetail(detailsByFallbackKey, detail.fallbackScoreKey, detail);
@@ -1293,6 +1350,16 @@ function attachDetailsToScores(
     const endTimeMs = scorePreciseEndTimeMs(score);
     return endTimeMs === null ? null : Math.abs(detail.capturedAtMs - endTimeMs);
   };
+  const detailPointDistance = (
+    detail: TopScoreDetailSnapshot,
+    score: TopScoreRecord,
+  ): number | null => {
+    const points = normalizeFiniteInteger(detail.points ?? detail.playerStats.score);
+    if (points === null) {
+      return null;
+    }
+    return Math.abs(points - score.points);
+  };
   const chooseBestDetail = (
     candidates: TopScoreDetailSnapshot[],
     score: TopScoreRecord,
@@ -1318,6 +1385,13 @@ function attachDetailsToScores(
       if (aDistance !== null && bDistance !== null) {
         if (aDistance !== bDistance) {
           return aDistance - bDistance;
+        }
+      }
+      const aPointDistance = detailPointDistance(a, score);
+      const bPointDistance = detailPointDistance(b, score);
+      if (aPointDistance !== null && bPointDistance !== null) {
+        if (aPointDistance !== bPointDistance) {
+          return aPointDistance - bPointDistance;
         }
       }
       return b.capturedAtMs - a.capturedAtMs;
@@ -1355,6 +1429,19 @@ function attachDetailsToScores(
         return detail;
       }
     }
+
+    if (score.source === "record" && score.turns === null && !score.endtime) {
+      const nameDateKeys = buildNameDateScoreKeyCandidates(
+        score.name,
+        score.deathdate,
+      );
+      for (const key of nameDateKeys) {
+        const detail = chooseBestDetail(detailsByNameDateKey.get(key) ?? [], score);
+        if (detail) {
+          return detail;
+        }
+      }
+    }
     return undefined;
   };
 
@@ -1367,7 +1454,7 @@ function attachDetailsToScores(
 export async function fetchTopScores(
   runtimeVersion: NethackRuntimeVersion,
 ): Promise<TopScoreRecord[]> {
-  if (runtimeVersion !== "3.6.7") {
+  if (!supportsRuntimeTopScores(runtimeVersion)) {
     return [];
   }
   const details = await loadTopScoreDetailSnapshots(runtimeVersion);

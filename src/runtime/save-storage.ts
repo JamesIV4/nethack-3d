@@ -124,7 +124,11 @@ export function getRuntimeRootPersistenceDbName(
 export function supportsRuntimeRootPersistence(
   runtimeVersion: NethackRuntimeVersion,
 ): boolean {
-  return runtimeVersion === "3.6.7";
+  return (
+    runtimeVersion === "3.6.7" ||
+    runtimeVersion === "5.0" ||
+    runtimeVersion === "slashem"
+  );
 }
 
 export function getRuntimeRootPersistenceDbNames(

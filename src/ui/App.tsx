@@ -71,7 +71,10 @@ import {
   type StartupInitOptionValue,
   type StartupInitOptionValues,
 } from "../runtime/startup-init-options";
-import { supportsRuntimeCheckpointRecovery } from "../runtime/runtime-capabilities";
+import {
+  supportsRuntimeCheckpointRecovery,
+  supportsRuntimeTopScores,
+} from "../runtime/runtime-capabilities";
 import {
   resolveRuntimeSaveDbNames,
   getStoredFileByteLength,
@@ -9063,7 +9066,10 @@ export default function App(): JSX.Element {
   }, [activeRuntimeVersion, characterCreationConfig, resetTopScoreTimelineTracking]);
 
   useEffect(() => {
-    if (activeRuntimeVersion !== "3.6.7" || !characterCreationConfig) {
+    if (
+      !supportsRuntimeTopScores(activeRuntimeVersion) ||
+      !characterCreationConfig
+    ) {
       return;
     }
     captureTopScoreTimelineFromPlayerStats(playerStats);
@@ -9075,7 +9081,10 @@ export default function App(): JSX.Element {
   ]);
 
   useEffect(() => {
-    if (activeRuntimeVersion !== "3.6.7" || !characterCreationConfig) {
+    if (
+      !supportsRuntimeTopScores(activeRuntimeVersion) ||
+      !characterCreationConfig
+    ) {
       return;
     }
     captureTopScoreTimelineFromMessages(
@@ -9093,7 +9102,7 @@ export default function App(): JSX.Element {
 
   useEffect(() => {
     if (
-      activeRuntimeVersion !== "3.6.7" ||
+      !supportsRuntimeTopScores(activeRuntimeVersion) ||
       !gameOver.active ||
       !gameOver.promptReady
     ) {
@@ -17821,7 +17830,7 @@ export default function App(): JSX.Element {
             >
               {t.dialogs.startup.loadGame}
             </button>
-            {runtimeVersion === "3.6.7" ? (
+            {supportsRuntimeTopScores(runtimeVersion) ? (
               <button
                 className="nh3d-choice-button nh3d-character-setup-choice-button"
                 onClick={openTopScoresDialog}
@@ -18500,6 +18509,18 @@ export default function App(): JSX.Element {
                               </Fragment>
                             );
                           })}
+                          <text
+                            className="nh3d-top-score-timeline-axis-caption"
+                            textAnchor="end"
+                            x={selectedTopScoreTimelineModel.width - 10}
+                            y={
+                              selectedTopScoreTimelineModel.height -
+                              selectedTopScoreTimelineModel.bottomPadding +
+                              44
+                            }
+                          >
+                            Turns
+                          </text>
                           {selectedTopScoreTimelineModel.clusters
                             .filter((cluster) => !cluster.isLineAnchored)
                             .map((cluster) => (
@@ -18568,9 +18589,6 @@ export default function App(): JSX.Element {
                         </div>
                       </div>
                     </div>
-                    <div className="nh3d-top-score-timeline-axis-caption">
-                      Turns
-                    </div>
                     {activeTopScoreTimelineCluster ? (
                       <div className="nh3d-top-score-timeline-focus">
                         <div className="nh3d-top-score-timeline-focus-header">
@@ -18584,11 +18602,11 @@ export default function App(): JSX.Element {
                               )}
                             </div>
                           </div>
-                          <div className="nh3d-top-score-timeline-focus-count">
-                            {activeTopScoreTimelineCluster.events.length === 1
-                              ? "1 moment"
-                              : `${formatTopScoreInteger(activeTopScoreTimelineCluster.events.length)} moments`}
-                          </div>
+                          {activeTopScoreTimelineCluster.events.length > 1 ? (
+                            <div className="nh3d-top-score-timeline-focus-count">
+                              {`${formatTopScoreInteger(activeTopScoreTimelineCluster.events.length)} moments`}
+                            </div>
+                          ) : null}
                         </div>
                         <div className="nh3d-top-score-timeline-focus-list">
                           {activeTopScoreTimelineCluster.events.map((event, index) => {
