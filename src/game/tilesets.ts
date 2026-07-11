@@ -399,11 +399,12 @@ export function getNh3dCompatibleTilesetCatalog(
 export const nh3dTilesetCatalog: ReadonlyArray<Nh3dTilesetEntry> =
   builtinTilesets;
 
-const preferredDefaultTilesetPath = "assets/3.6/Nevanda 3.6.png";
+const preferredDefaultTilesetPath = "assets/3.6/Nevanda.png";
 const preferredDefaultTilesetLabel = "Nevanda";
 const preferredDefaultTilesetPathByRuntime: Readonly<
   Partial<Record<NethackRuntimeVersion, string>>
 > = {
+  "3.6.7": preferredDefaultTilesetPath,
   slashem: "assets/slashem/Absurd.png",
   "5.0": builtinPixelHackTilesetPath,
 };
@@ -489,6 +490,19 @@ export function resolveNh3dCompatibleTilesetPathForRuntime(
   const selectedTileset = findNh3dTilesetByPath(path);
   if (!selectedTileset) {
     return getDefaultNh3dTilesetPathForRuntime(runtimeVersion);
+  }
+  // A user still on the app-wide default tileset has not deliberately picked
+  // one, so honor the runtime's own default rather than keeping the generic
+  // default just because it happens to be layout-compatible. This is what makes
+  // e.g. PixelHack the default for a fresh NetHack 5.0 player instead of the
+  // cross-compatible 3.6 Nevanda default. Runtimes whose default already is the
+  // app-wide default (3.6.7) are unaffected.
+  if (selectedTileset.path === defaultNh3dTilesetPath) {
+    const runtimeDefaultPath =
+      getDefaultNh3dTilesetPathForRuntime(runtimeVersion);
+    if (runtimeDefaultPath && runtimeDefaultPath !== selectedTileset.path) {
+      return runtimeDefaultPath;
+    }
   }
   if (isNh3dTilesetCompatibleWithRuntime(selectedTileset, runtimeVersion)) {
     return selectedTileset.path;
