@@ -1,6 +1,6 @@
 {
   "name": "nethack3d",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "main": "electron/main.cjs",
   "scripts": {
     "ensure:rollup-native": "node scripts/electron/ensure-rollup-native.mjs",
