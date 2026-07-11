@@ -405,6 +405,7 @@ const preferredDefaultTilesetPathByRuntime: Readonly<
   Partial<Record<NethackRuntimeVersion, string>>
 > = {
   slashem: "assets/slashem/Absurd.png",
+  "5.0": builtinPixelHackTilesetPath,
 };
 export const defaultNh3dTilesetPath: string =
   builtinTilesets.find((entry) => entry.path === preferredDefaultTilesetPath)
