@@ -1208,9 +1208,11 @@ class LocalNetHackRuntime {
   }
 
   getRuntimeCheckpointStorageDir(mod = this.nethackModule) {
-    if (supportsRuntimeRootPersistence(this.runtimeVersion)) {
-      return "/";
-    }
+    // Checkpoint/level shards always live on the dedicated /save IDBFS mount,
+    // even when runtime root persistence is enabled for other top-level game
+    // data (record/xlogfile/bones). Root persistence proved unreliable for the
+    // continuously-rewritten checkpoint shards, so keep them on the
+    // battle-tested syncfs path where autosaves originally worked.
     const cwd =
       typeof mod?.FS?.cwd === "function"
         ? String(mod.FS.cwd() || "/")
@@ -1507,118 +1509,6 @@ class LocalNetHackRuntime {
     throw new Error(
       `Autosave "${playerName}" does not have a recoverable checkpoint file yet.`,
     );
-  }
-
-  migrateLegacySaveCheckpointShardsToRootForAutosaveResume() {
-    if (
-      !supportsRuntimeRootPersistence(this.runtimeVersion) ||
-      !this.isAutosaveResumeRequested()
-    ) {
-      return 0;
-    }
-
-    const mod = this.nethackModule;
-    if (!mod?.FS) {
-      return 0;
-    }
-
-    const lockBaseNames = this.getStartupCheckpointLockBaseNameCandidates();
-    if (lockBaseNames.length <= 0) {
-      return 0;
-    }
-
-    const hasRecoverableRootCheckpoint = lockBaseNames.some((lockBaseName) =>
-      isRecoverableCheckpointLevelZeroByteLength(
-        this.getCheckpointLevelZeroArtifactSizeBytes(mod, "/", lockBaseName),
-      ),
-    );
-    if (hasRecoverableRootCheckpoint) {
-      return 0;
-    }
-
-    const cwd =
-      typeof mod.FS.cwd === "function" ? String(mod.FS.cwd() || "/") : "/";
-    const legacySaveDir = getRuntimeSaveMountDir(this.runtimeVersion, cwd);
-    try {
-      if (!mod.FS.analyzePath(legacySaveDir)?.exists) {
-        return 0;
-      }
-    } catch {
-      return 0;
-    }
-
-    let entries = [];
-    try {
-      entries = mod.FS.readdir(legacySaveDir);
-    } catch (error) {
-      console.warn(
-        `Failed to enumerate ${legacySaveDir} for legacy checkpoint migration:`,
-        error,
-      );
-      return 0;
-    }
-
-    let copiedCount = 0;
-    for (const lockBaseName of lockBaseNames) {
-      const escapedLockBaseName = lockBaseName.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        "\\$&",
-      );
-      const checkpointShardPattern = new RegExp(
-        `^${escapedLockBaseName}\\.\\d+$`,
-      );
-      const shardNames = entries
-        .map((entry) => String(entry || ""))
-        .filter((entry) => checkpointShardPattern.test(entry))
-        .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
-
-      for (const shardName of shardNames) {
-        const sourcePath = this.joinRuntimeFsPath(legacySaveDir, shardName);
-        const targetPath = this.joinRuntimeFsPath("/", shardName);
-        try {
-          const stat =
-            typeof mod.FS.stat === "function" ? mod.FS.stat(sourcePath) : null;
-          if (stat && !mod.FS.isFile(stat.mode)) {
-            continue;
-          }
-          const contents = mod.FS.readFile(sourcePath);
-          mod.FS.writeFile(targetPath, contents);
-          if (stat && typeof stat.mode === "number" && typeof mod.FS.chmod === "function") {
-            mod.FS.chmod(targetPath, stat.mode);
-          }
-          if (stat?.mtime instanceof Date && typeof mod.FS.utime === "function") {
-            mod.FS.utime(targetPath, stat.mtime, stat.mtime);
-          }
-          copiedCount += 1;
-        } catch (error) {
-          console.warn(
-            `Failed to copy legacy checkpoint shard ${sourcePath} to ${targetPath}:`,
-            error,
-          );
-        }
-      }
-    }
-
-    if (copiedCount > 0) {
-      console.log(
-        `Copied ${copiedCount} legacy /save checkpoint shard(s) to root for autosave resume.`,
-      );
-      if (typeof mod.__nh3dFlushRootPersistence === "function") {
-        mod.__nh3dFlushRootPersistence(
-          "legacy-save-checkpoint-migration",
-          (error) => {
-            if (error) {
-              console.warn(
-                "Failed to persist migrated legacy checkpoint shards:",
-                error,
-              );
-            }
-          },
-        );
-      }
-    }
-
-    return copiedCount;
   }
 
   removeStaleRecoverableSaveArtifactsBeforeAutosaveResume(mod, saveDir) {
@@ -7925,7 +7815,6 @@ class LocalNetHackRuntime {
       return;
     }
 
-    this.migrateLegacySaveCheckpointShardsToRootForAutosaveResume();
     this.logAutosaveCheckpointArtifactsBeforeStartup();
     this.ensureAutosaveResumeHasRecoverableCheckpoint();
 
@@ -10407,9 +10296,9 @@ class LocalNetHackRuntime {
               const normalizedSaveDir =
                 saveDir.replace(/\/+$/, "") ||
                 getRuntimeSaveMountDir(runtimeVersion);
-              const checkpointStorageDir = rootPersistenceEnabled
-                ? "/"
-                : normalizedSaveDir;
+              // Checkpoint shards always live on the /save mount, independent
+              // of root persistence (which persists other top-level game data).
+              const checkpointStorageDir = normalizedSaveDir;
               const normalizeRuntimeFsPath = (rawPath) => {
                 if (typeof rawPath !== "string" || !rawPath.trim()) {
                   return "";
@@ -10487,7 +10376,10 @@ class LocalNetHackRuntime {
                   /^\/[^/]+$/.test(normalizedPath) &&
                     normalizedFilename &&
                     !isRootPersistenceStaticFilename(normalizedFilename) &&
-                    !isRootPersistenceLockFilename(normalizedFilename),
+                    !isRootPersistenceLockFilename(normalizedFilename) &&
+                    // Checkpoint/level shards are owned by the /save mount, not
+                    // root persistence, even though they sit at the FS root.
+                    !checkpointLevelFilePattern.test(normalizedFilename),
                 );
               };
               const normalizeRootPersistenceKey = (key) => {
@@ -10623,7 +10515,10 @@ class LocalNetHackRuntime {
                           const filename = basenameForRuntimePath(key);
                           if (
                             isRootPersistenceStaticFilename(filename) ||
-                            isRootPersistenceLockFilename(filename)
+                            isRootPersistenceLockFilename(filename) ||
+                            // Checkpoint/level shards belong to the /save mount;
+                            // never rehydrate them from the root-persistence DB.
+                            checkpointLevelFilePattern.test(filename)
                           ) {
                             continue;
                           }
@@ -10886,11 +10781,12 @@ class LocalNetHackRuntime {
               }
 
               let scheduleCheckpointSync = () => {};
-              if (checkpointStartupOptionEnabled && !rootPersistenceEnabled) {
+              if (checkpointStartupOptionEnabled) {
                 // NetHack checkpointing writes level snapshots as
                 // "<lockname>.<level>" in the current working directory.
-                // Older runtimes need those files moved into the save mount.
-                // Root-persistent runtimes keep NetHack's original paths.
+                // Route those into the /save mount so they persist through the
+                // IDBFS syncfs path. This runs even when root persistence is on,
+                // since root persistence only owns other top-level game data.
                 const remapCheckpointLevelPath = (rawPath) => {
                   if (typeof rawPath !== "string" || !rawPath) {
                     return rawPath;
@@ -11113,11 +11009,12 @@ class LocalNetHackRuntime {
                     const streamWasRootPersistenceWrite =
                       Boolean(stream?.__nh3dRootPersistenceWritable) &&
                       !isRootPersistenceOperationActive();
-                    const shouldSyncCheckpoint = rootPersistenceEnabled
-                      ? streamWasRootPersistenceWrite &&
-                        /^\/[^/]+\.\d+$/.test(normalizedStreamPath)
-                      : normalizedStreamPath.startsWith(`${normalizedSaveDir}/`) &&
-                        /\/[^/]+\.\d+$/.test(normalizedStreamPath);
+                    // Checkpoint shards are remapped onto the /save mount (even
+                    // under root persistence), so sync them through syncfs
+                    // whenever a "<lock>.<level>" file under /save is closed.
+                    const shouldSyncCheckpoint =
+                      normalizedStreamPath.startsWith(`${normalizedSaveDir}/`) &&
+                      /\/[^/]+\.\d+$/.test(normalizedStreamPath);
                     const shouldFlushRoot =
                       rootPersistenceEnabled &&
                       streamWasRootPersistenceWrite &&
