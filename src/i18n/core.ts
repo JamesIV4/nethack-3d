@@ -31,7 +31,7 @@ const dictionaries: Record<SupportedLocale, TranslationDictionary> = {
   ja: mergeTranslations(en, ja),
   ko: mergeTranslations(en, ko),
   "pt-br": mergeTranslations(en, ptBrOverrides),
-  ru,
+  ru: mergeTranslations(en, ru),
   "zh-cn": mergeTranslations(en, zhCnOverrides),
 };
 

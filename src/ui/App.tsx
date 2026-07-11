@@ -8599,33 +8599,50 @@ export default function App(): JSX.Element {
       runtimeVersion: runtimeVersionForLaunch,
       initOptions: normalizedInitOptions,
     });
+    let resumeExistingSave: SaveGameRecord | null = null;
     if (config.mode === "random" || config.mode === "create") {
       try {
         const saves = await fetchSavedGames(runtimeVersionForLaunch);
         const configName = effectiveCharacterName;
         const matchingSaves = saves.filter((s) => s.name === configName);
         if (matchingSaves.length > 0) {
-          const confirmed = await requestConfirmation({
+          const choice = await requestConfirmationChoice({
             title: t.saves.overwriteTitle,
             message: t.saves.overwriteMessage(configName),
             confirmLabel: "Overwrite",
             cancelLabel: commonStrings.cancel,
             confirmClassName: "nh3d-menu-action-cancel",
+            extraLabel: t.saves.loadExisting,
           });
-          if (!confirmed) {
+          if (choice === "cancel") {
             return;
           }
-          await Promise.all(matchingSaves.map((save) => deleteSavedGame(save)));
+          if (choice === "extra") {
+            // Load the detected save instead of starting a new character.
+            // Prefer the most recent resumable match.
+            resumeExistingSave =
+              matchingSaves
+                .filter((save) => save.isResumable)
+                .sort(
+                  (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
+                )[0] ?? matchingSaves[0];
+          } else {
+            await Promise.all(
+              matchingSaves.map((save) => deleteSavedGame(save)),
+            );
+          }
         }
       } catch (e) {
         console.warn("Failed to check for existing saves:", e);
       }
-      persistSavePresentationMetadataForCharacter(
-        effectiveCharacterName,
-        requestedCharacterName,
-        runtimeVersionForLaunch,
-        normalizedInitOptions,
-      );
+      if (!resumeExistingSave) {
+        persistSavePresentationMetadataForCharacter(
+          effectiveCharacterName,
+          requestedCharacterName,
+          runtimeVersionForLaunch,
+          normalizedInitOptions,
+        );
+      }
     }
     const currentTilesetPath = String(clientOptions.tilesetPath || "").trim();
     const compatibleTilesetPath = resolveNh3dCompatibleTilesetPathForRuntime(
@@ -8645,6 +8662,17 @@ export default function App(): JSX.Element {
           tilesetPath: compatibleTilesetPath,
         }),
       );
+    }
+    if (resumeExistingSave) {
+      setCharacterCreationConfig({
+        mode: "resume",
+        playMode: clientOptions.fpsMode ? "fps" : "normal",
+        runtimeVersion: runtimeVersionForLaunch,
+        name: resumeExistingSave.name,
+        initOptions: resumeExistingSave.initOptions,
+        resumeCategory: resumeExistingSave.category,
+      });
+      return;
     }
     setCharacterCreationConfig({
       ...config,
@@ -8906,6 +8934,7 @@ export default function App(): JSX.Element {
   const {
     dialog: globalConfirmationDialog,
     requestConfirmation,
+    requestConfirmationChoice,
     resolveConfirmation,
   } = useConfirmationDialog();
   const startupControllerPreviousActionActiveRef = useRef<
@@ -23873,8 +23902,9 @@ export default function App(): JSX.Element {
       <ConfirmationModal
         dialog={globalConfirmationDialog}
         dialogId="nh3d-global-confirmation-dialog"
-        onCancel={() => resolveConfirmation(false)}
-        onConfirm={() => resolveConfirmation(true)}
+        onCancel={() => resolveConfirmation("cancel")}
+        onConfirm={() => resolveConfirmation("confirm")}
+        onExtra={() => resolveConfirmation("extra")}
       />
     </>
   );

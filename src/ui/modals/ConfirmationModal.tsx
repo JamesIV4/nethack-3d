@@ -6,6 +6,7 @@ type ConfirmationModalProps = {
   dialog: ConfirmationDialogState | null;
   onConfirm: () => void;
   onCancel: () => void;
+  onExtra?: () => void;
 };
 
 export default function ConfirmationModal({
@@ -13,6 +14,7 @@ export default function ConfirmationModal({
   dialog,
   onConfirm,
   onCancel,
+  onExtra,
 }: ConfirmationModalProps): JSX.Element | null {
   return (
     <AnimatedDialog
@@ -34,6 +36,15 @@ export default function ConfirmationModal({
             >
               {dialog.confirmLabel}
             </button>
+            {dialog.extraLabel ? (
+              <button
+                className={`nh3d-menu-action-button ${dialog.extraClassName}`}
+                onClick={onExtra}
+                type="button"
+              >
+                {dialog.extraLabel}
+              </button>
+            ) : null}
             <button
               className="nh3d-menu-action-button"
               onClick={onCancel}
