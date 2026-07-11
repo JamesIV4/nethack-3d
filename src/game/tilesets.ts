@@ -626,3 +626,12 @@ export function isNh3dTilesetCombinedBackgroundRemovalForced(
   return String(findNh3dTilesetByPath(path)?.path || "").trim() ===
     builtinPixelHackTilesetPath;
 }
+
+// PixelHack uses flat, indexed colors, so the reference-tile removal pass must
+// match colors exactly (no tolerance/feathering) to avoid eroding sprite edges.
+export function isNh3dTilesetExactBackgroundRemovalForced(
+  path: string | null | undefined,
+): boolean {
+  return String(findNh3dTilesetByPath(path)?.path || "").trim() ===
+    builtinPixelHackTilesetPath;
+}
