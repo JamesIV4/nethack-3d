@@ -105,6 +105,7 @@ import {
 import {
   findNh3dTilesetByPath,
   inferNh3dTilesetTileSizeFromAtlasWidthForPath,
+  isNh3dTilesetCombinedBackgroundRemovalForced,
   resolveDefaultNh3dTilesetWeaponSpriteFlipX,
   resolveNh3dFuseBaseTilesetPathForLegacyNh5Runtime,
   resolveNh3dTilesetAssetUrl,
@@ -18645,6 +18646,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
       tileCount,
       tilesPerRow,
     );
+    if (
+      isNh3dTilesetCombinedBackgroundRemovalForced(
+        this.clientOptions.tilesetPath,
+      )
+    ) {
+      this.applySolidColorChromaKey(context, tileSize);
+    }
   }
 
   private getTilesetBackgroundTilePixels(

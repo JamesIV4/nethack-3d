@@ -92,6 +92,7 @@ import {
   getNh3dTilesetAtlasTileColumns,
   getNh3dCompatibleTilesetCatalog,
   inferNh3dTilesetTileSizeFromAtlasWidthForPath,
+  isNh3dTilesetCombinedBackgroundRemovalForced,
   isNh3dTilesetPathAvailable,
   isNh3dTilesetBackgroundRemovalModeForcedOff,
   getNh3dUserTilesetPath,
@@ -4477,6 +4478,7 @@ function createIsolatedAtlasTilePreviewDataUrl(
   backgroundRemoval?: {
     enabled: boolean;
     mode: TilesetBackgroundRemovalMode;
+    applySolidChromaKeyAfterTile: boolean;
     solidChromaKeyColorHex: string;
     backgroundTilePixels: Uint8ClampedArray | null;
   },
@@ -4528,7 +4530,7 @@ function createIsolatedAtlasTilePreviewDataUrl(
       tileSourceSize,
     );
     const data = imageData.data;
-    if (backgroundRemoval.mode === "solid") {
+    const applySolidChromaKey = (): void => {
       const match = String(backgroundRemoval.solidChromaKeyColorHex || "")
         .trim()
         .match(/^#?([0-9a-fA-F]{6})$/);
@@ -4547,6 +4549,9 @@ function createIsolatedAtlasTilePreviewDataUrl(
           }
         }
       }
+    };
+    if (backgroundRemoval.mode === "solid") {
+      applySolidChromaKey();
     } else if (backgroundRemoval.backgroundTilePixels) {
       const alphaSoftMin = 12;
       const alphaSoftMax = 40;
@@ -4571,6 +4576,9 @@ function createIsolatedAtlasTilePreviewDataUrl(
           data[i + 1] = 0;
           data[i + 2] = 0;
         }
+      }
+      if (backgroundRemoval.applySolidChromaKeyAfterTile) {
+        applySolidChromaKey();
       }
     }
     context.putImageData(imageData, 0, 0);
@@ -10738,6 +10746,9 @@ export default function App(): JSX.Element {
     rawTilesetPath: string | null | undefined,
   ): number => {
     const tilesetPath = String(rawTilesetPath || "").trim();
+    if (isNh3dTilesetCombinedBackgroundRemovalForced(tilesetPath)) {
+      return resolveDefaultNh3dTilesetBackgroundTileId(tilesetPath);
+    }
     const mappedTileId = tilesetPath
       ? clientOptionsDraft.tilesetBackgroundTileIdByTileset[tilesetPath]
       : undefined;
@@ -10750,6 +10761,9 @@ export default function App(): JSX.Element {
     rawTilesetPath: string | null | undefined,
   ): TilesetBackgroundRemovalMode => {
     const tilesetPath = String(rawTilesetPath || "").trim();
+    if (isNh3dTilesetCombinedBackgroundRemovalForced(tilesetPath)) {
+      return "tile";
+    }
     if (isNh3dTilesetBackgroundRemovalModeForcedOff(tilesetPath)) {
       return "none";
     }
@@ -10769,6 +10783,11 @@ export default function App(): JSX.Element {
     rawTilesetPath: string | null | undefined,
   ): string => {
     const tilesetPath = String(rawTilesetPath || "").trim();
+    if (isNh3dTilesetCombinedBackgroundRemovalForced(tilesetPath)) {
+      return normalizeSolidChromaKeyHex(
+        resolveDefaultNh3dTilesetSolidChromaKeyColorHex(tilesetPath),
+      );
+    }
     const mappedColorHex = tilesetPath
       ? clientOptionsDraft.tilesetSolidChromaKeyColorHexByTileset[tilesetPath]
       : undefined;
@@ -10830,6 +10849,10 @@ export default function App(): JSX.Element {
         selectedTilesetManagerEditPath,
         tilesetCatalog,
       ],
+    );
+  const tilesetManagerBackgroundRemovalSettingsLocked =
+    isNh3dTilesetCombinedBackgroundRemovalForced(
+      selectedTilesetManagerEditPath,
     );
   const tilesetManagerSolidChromaKeyColorHex = useMemo(
     () =>
@@ -10939,6 +10962,10 @@ export default function App(): JSX.Element {
     const tilePreviewBackgroundRemoval = {
       enabled: clientOptions.tilesetBackgroundRemovalMode !== "none",
       mode: clientOptions.tilesetBackgroundRemovalMode,
+      applySolidChromaKeyAfterTile:
+        isNh3dTilesetCombinedBackgroundRemovalForced(
+          clientOptions.tilesetPath,
+        ),
       solidChromaKeyColorHex: clientOptions.tilesetSolidChromaKeyColorHex,
       backgroundTilePixels:
         clientOptions.tilesetBackgroundRemovalMode === "tile"
@@ -10970,6 +10997,7 @@ export default function App(): JSX.Element {
     clientOptions.tilesetBackgroundRemovalMode,
     clientOptions.tilesetBackgroundTileId,
     clientOptions.tilesetSolidChromaKeyColorHex,
+    clientOptions.tilesetPath,
     clientOptions.uiTileBackgroundRemoval,
     tileAtlasImage,
     tileAtlasState.columns,
@@ -15273,6 +15301,9 @@ export default function App(): JSX.Element {
     setClientOptionsDraft((previous) => {
       const selectedTilesetPath = String(previous.tilesetPath || "").trim();
       const tilesetPath = String(rawTilesetPath || selectedTilesetPath).trim();
+      if (isNh3dTilesetCombinedBackgroundRemovalForced(tilesetPath)) {
+        return previous;
+      }
       const nextByTileset = {
         ...previous.tilesetBackgroundTileIdByTileset,
       };
@@ -15299,7 +15330,10 @@ export default function App(): JSX.Element {
     setClientOptionsDraft((previous) => {
       const selectedTilesetPath = String(previous.tilesetPath || "").trim();
       const tilesetPath = String(rawTilesetPath || selectedTilesetPath).trim();
-      if (isNh3dTilesetBackgroundRemovalModeForcedOff(tilesetPath)) {
+      if (
+        isNh3dTilesetBackgroundRemovalModeForcedOff(tilesetPath) ||
+        isNh3dTilesetCombinedBackgroundRemovalForced(tilesetPath)
+      ) {
         return previous;
       }
       const nextByTileset = {
@@ -15327,6 +15361,9 @@ export default function App(): JSX.Element {
     setClientOptionsDraft((previous) => {
       const selectedTilesetPath = String(previous.tilesetPath || "").trim();
       const tilesetPath = String(rawTilesetPath || selectedTilesetPath).trim();
+      if (isNh3dTilesetCombinedBackgroundRemovalForced(tilesetPath)) {
+        return previous;
+      }
       const nextByTileset = {
         ...previous.tilesetSolidChromaKeyColorHexByTileset,
       };
@@ -20655,7 +20692,8 @@ export default function App(): JSX.Element {
                               : " is-disabled"
                           }`}
                           disabled={
-                            tilesetManagerBackgroundRemovalMode !== "tile"
+                            tilesetManagerBackgroundRemovalMode !== "tile" ||
+                            tilesetManagerBackgroundRemovalSettingsLocked
                           }
                           onClick={() =>
                             setIsTilesetBackgroundTilePickerVisible(true)
@@ -20688,7 +20726,7 @@ export default function App(): JSX.Element {
                         }`}
                         disabled={isNh3dTilesetBackgroundRemovalModeForcedOff(
                           selectedTilesetManagerEditPath,
-                        )}
+                        ) || tilesetManagerBackgroundRemovalSettingsLocked}
                         onClick={() =>
                           updateTilesetBackgroundRemovalModeDraft(
                             tilesetManagerBackgroundRemovalMode === "tile"
@@ -20705,7 +20743,8 @@ export default function App(): JSX.Element {
                     </div>
                     <div
                       className={`nh3d-option-row nh3d-option-row-inline-toggle nh3d-option-row-has-secondary-controls${
-                        tilesetManagerBackgroundRemovalMode === "solid"
+                        tilesetManagerBackgroundRemovalMode === "solid" ||
+                        tilesetManagerBackgroundRemovalSettingsLocked
                           ? ""
                           : " nh3d-option-row-mode-inactive"
                       }`}
@@ -20721,12 +20760,14 @@ export default function App(): JSX.Element {
                       <div className="nh3d-option-toggle-controls nh3d-option-secondary-controls">
                         <button
                           className={`nh3d-option-tile-picker-button${
-                            tilesetManagerBackgroundRemovalMode === "solid"
+                            tilesetManagerBackgroundRemovalMode === "solid" ||
+                            tilesetManagerBackgroundRemovalSettingsLocked
                               ? ""
                               : " is-disabled"
                           }`}
                           disabled={
-                            tilesetManagerBackgroundRemovalMode !== "solid"
+                            tilesetManagerBackgroundRemovalMode !== "solid" ||
+                            tilesetManagerBackgroundRemovalSettingsLocked
                           }
                           onClick={() =>
                             setIsTilesetSolidColorPickerVisible(true)
@@ -20764,16 +20805,18 @@ export default function App(): JSX.Element {
                       </div>
                       <button
                         aria-checked={
-                          tilesetManagerBackgroundRemovalMode === "solid"
+                          tilesetManagerBackgroundRemovalMode === "solid" ||
+                          tilesetManagerBackgroundRemovalSettingsLocked
                         }
                         className={`nh3d-option-switch nh3d-option-inline-switch${
-                          tilesetManagerBackgroundRemovalMode === "solid"
+                          tilesetManagerBackgroundRemovalMode === "solid" ||
+                          tilesetManagerBackgroundRemovalSettingsLocked
                             ? " is-on"
                             : ""
                         }`}
                         disabled={isNh3dTilesetBackgroundRemovalModeForcedOff(
                           selectedTilesetManagerEditPath,
-                        )}
+                        ) || tilesetManagerBackgroundRemovalSettingsLocked}
                         onClick={() =>
                           updateTilesetBackgroundRemovalModeDraft(
                             tilesetManagerBackgroundRemovalMode === "solid"

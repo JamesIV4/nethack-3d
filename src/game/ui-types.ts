@@ -1,6 +1,7 @@
 import type { NethackRuntimeVersion } from "../runtime/types";
 import {
   defaultNh3dTilesetPath,
+  isNh3dTilesetCombinedBackgroundRemovalForced,
   isNh3dTilesetPathAvailable,
   isNh3dTilesetBackgroundRemovalModeForcedOff,
   resolveDefaultNh3dTilesetBackgroundTileId,
@@ -1081,13 +1082,18 @@ export function normalizeNh3dClientOptions(
         ? overrides.darkCorridorWallSolidColorGridDarknessPercent
         : defaultNh3dClientOptions.darkCorridorWallSolidColorGridDarknessPercent,
     );
+  const forceCombinedTilesetBackgroundRemoval =
+    isNh3dTilesetCombinedBackgroundRemovalForced(tilesetPath);
   const tilesetBackgroundTileId =
+    !forceCombinedTilesetBackgroundRemoval &&
     typeof selectedTilesetBackgroundTileId === "number" &&
     Number.isFinite(selectedTilesetBackgroundTileId)
       ? Math.max(0, Math.trunc(selectedTilesetBackgroundTileId))
       : resolveDefaultNh3dTilesetBackgroundTileId(tilesetPath);
   const tilesetBackgroundRemovalMode =
-    isNh3dTilesetBackgroundRemovalModeForcedOff(tilesetPath)
+    forceCombinedTilesetBackgroundRemoval
+      ? "tile"
+      : isNh3dTilesetBackgroundRemovalModeForcedOff(tilesetPath)
       ? "none"
       : normalizeTilesetBackgroundRemovalMode(
           selectedTilesetBackgroundRemovalMode,
@@ -1096,7 +1102,9 @@ export function normalizeNh3dClientOptions(
   const defaultSolidChromaKeyForTileset =
     resolveDefaultNh3dTilesetSolidChromaKeyColorHex(tilesetPath);
   const tilesetSolidChromaKeyColorHex = normalizeTilesetSolidChromaKeyColorHex(
-    selectedTilesetSolidChromaKeyColorHex,
+    forceCombinedTilesetBackgroundRemoval
+      ? defaultSolidChromaKeyForTileset
+      : selectedTilesetSolidChromaKeyColorHex,
     defaultSolidChromaKeyForTileset,
   );
   const fpsHeldWeaponVisible =

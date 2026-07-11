@@ -41,6 +41,7 @@ const fallbackWeaponSpriteFlipX = true;
 export const nh3dTilesetAtlasTileColumns = 40;
 const builtinSlashEmTilesetPathPrefix = "assets/slashem/";
 const builtinNh5TilesetPathPrefix = "assets/5.0/";
+const builtinPixelHackTilesetPath = "assets/5.0/PixelHack.png";
 const userTilesetPathPrefix = "user:";
 const vultureTilesetPathPrefix = "vulture:";
 const vultureTilesetLabel = "Vulture (isometric)";
@@ -50,6 +51,7 @@ const tilesetBackgroundTilePresetByLabel: Readonly<Record<string, number>> = {
   "Absurdly Evil": 869,
   DawnHack: 869,
   Nevanda: 1476,
+  PixelHack: 2304,
   "Vanilla NetHack TIles": 1476,
   "Vanilla NetHack Tiles": 1476,
   "NetHack Modern": 850,
@@ -59,6 +61,7 @@ const tilesetSolidChromaKeyPresetByLabel: Readonly<Record<string, string>> = {
   DawnHack: "#466d6c",
   Nevanda: "#466d6c",
   "Nevanda (5.0)": "#466d6c",
+  PixelHack: "#83aba2",
   "Vanilla NetHack TIles": "#476C6C",
   "Vanilla NetHack Tiles (5.0)": "#466d6c",
   "Vanilla NetHack Tiles": "#476C6C",
@@ -77,6 +80,7 @@ const tilesetBackgroundRemovalModePresetByPath: Readonly<
   Record<string, Nh3dTilesetBackgroundRemovalMode>
 > = {
   "assets/slashem/Absurd.png": "none",
+  [builtinPixelHackTilesetPath]: "tile",
   "assets/5.0/Nevanda (5.0).png": "solid",
   "assets/5.0/Vanilla NetHack Tiles (5.0).png": "solid",
   "assets/3.6/Nevanda.png": "solid",
@@ -614,4 +618,11 @@ export function isNh3dTilesetBackgroundRemovalModeForcedOff(
   path: string | null | undefined,
 ): boolean {
   return resolveDefaultNh3dTilesetBackgroundRemovalMode(path) === "none";
+}
+
+export function isNh3dTilesetCombinedBackgroundRemovalForced(
+  path: string | null | undefined,
+): boolean {
+  return String(findNh3dTilesetByPath(path)?.path || "").trim() ===
+    builtinPixelHackTilesetPath;
 }
