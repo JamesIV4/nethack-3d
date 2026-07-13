@@ -92,6 +92,33 @@ export function getRuntimeSaveMountDir(
     : `${normalizedRoot}/${saveLeaf}`;
 }
 
+/**
+ * Directory that holds checkpoint/autosave level shards for a runtime.
+ *
+ * Always the dedicated /save IDBFS mount — even for runtimes that enable root
+ * persistence — so autosaves round-trip through the proven syncfs path instead
+ * of the root-persistence layer (which only owns other top-level game data such
+ * as record/xlogfile/bones). This decoupling is the fix for autosaves breaking
+ * when 5.0/SlashEm gained root persistence, so keep checkpoints here for every
+ * runtime.
+ */
+export function getRuntimeCheckpointMountDir(
+  runtimeVersion: NethackRuntimeVersion,
+  cwd = "/",
+): string {
+  return getRuntimeSaveMountDir(runtimeVersion, cwd);
+}
+
+/**
+ * True when a bare filename is a NetHack checkpoint/level shard ("<lock>.<n>").
+ * These belong to the /save mount and must be excluded from root persistence.
+ */
+export function isCheckpointLevelFilename(
+  filename: string | null | undefined,
+): boolean {
+  return /^[^/\\]+\.\d+$/.test(String(filename ?? ""));
+}
+
 export function getRuntimeSaveDbName(
   runtimeVersion: NethackRuntimeVersion,
   cwd = "/",

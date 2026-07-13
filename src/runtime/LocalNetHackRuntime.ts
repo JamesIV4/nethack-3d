@@ -12,9 +12,11 @@ import {
   supportsRuntimeCheckpointRecovery,
 } from "./runtime-capabilities";
 import {
+  getRuntimeCheckpointMountDir,
   getRuntimeRootPersistenceDbName,
   getRuntimeSaveDbName,
   getRuntimeSaveMountDir,
+  isCheckpointLevelFilename,
   isRecoverableCheckpointLevelZeroByteLength,
   supportsRuntimeRootPersistence,
 } from "./save-storage";
@@ -1217,7 +1219,7 @@ class LocalNetHackRuntime {
       typeof mod?.FS?.cwd === "function"
         ? String(mod.FS.cwd() || "/")
         : String(this.nethackModule?.FS?.cwd?.() || "/");
-    return getRuntimeSaveMountDir(this.runtimeVersion, cwd);
+    return getRuntimeCheckpointMountDir(this.runtimeVersion, cwd);
   }
 
   removeCheckpointShardsByLockBaseName(mod, saveDir, lockBaseName, reason) {
@@ -10291,7 +10293,6 @@ class LocalNetHackRuntime {
                 IDBFS.DB_STORE_NAME || "FILE_DATA";
               const rootPersistenceDbVersion =
                 Number(IDBFS.DB_VERSION) > 0 ? Number(IDBFS.DB_VERSION) : 21;
-              const checkpointLevelFilePattern = /^[^/\\]+\.\d+$/;
               const normalizedCwd = cwd.replace(/\/+$/, "") || "/";
               const normalizedSaveDir =
                 saveDir.replace(/\/+$/, "") ||
@@ -10379,7 +10380,7 @@ class LocalNetHackRuntime {
                     !isRootPersistenceLockFilename(normalizedFilename) &&
                     // Checkpoint/level shards are owned by the /save mount, not
                     // root persistence, even though they sit at the FS root.
-                    !checkpointLevelFilePattern.test(normalizedFilename),
+                    !isCheckpointLevelFilename(normalizedFilename),
                 );
               };
               const normalizeRootPersistenceKey = (key) => {
@@ -10518,7 +10519,7 @@ class LocalNetHackRuntime {
                             isRootPersistenceLockFilename(filename) ||
                             // Checkpoint/level shards belong to the /save mount;
                             // never rehydrate them from the root-persistence DB.
-                            checkpointLevelFilePattern.test(filename)
+                            isCheckpointLevelFilename(filename)
                           ) {
                             continue;
                           }
@@ -10805,7 +10806,7 @@ class LocalNetHackRuntime {
                     lastSlashIndex >= 0
                       ? withoutDotPrefix.slice(lastSlashIndex + 1)
                       : withoutDotPrefix;
-                  if (!checkpointLevelFilePattern.test(baseName)) {
+                  if (!isCheckpointLevelFilename(baseName)) {
                     return rawPath;
                   }
 

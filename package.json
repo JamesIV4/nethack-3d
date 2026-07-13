@@ -39,7 +39,8 @@
     "start:preview": "vite preview",
     "preview": "vite preview",
     "preview:isolated": "cross-env NH3D_ENABLE_CROSS_ORIGIN_ISOLATION=true vite preview",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -154,6 +155,7 @@
     "three": "^0.178.0",
     "typescript": "^5.8.3",
     "vite": "^5.4.10",
+    "vitest": "^4.1.10",
     "wait-on": "^9.0.4",
     "zustand": "^5.0.8"
   },
