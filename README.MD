@@ -53,7 +53,7 @@ Launch it from your Home Screen for a web app fullscreen experience.
 - Optional floating damage/heal numbers, status changes, XP, blood mist, blood splatter, and more.
 - Camera panning and rotation.
 - Crisp ASCII monsters and items are supported in addition to tiles.
-- Built-in graphical tilesets: Vulture tiles, Absurdly Evil, DawnHack, NetHack Modern, Nevanda, RZTiles, and Vanilla NetHack Tiles.
+- Built-in graphical tilesets: Vulture tiles, Absurdly Evil, DawnHack, NetHack Modern, Nevanda, PixelHack, RZTiles, and Vanilla NetHack Tiles.
 - Upload and manage your own custom tilesets directly in-game.
 - Tileset background removal tools built-in.
 - Dynamic lighting around the player.

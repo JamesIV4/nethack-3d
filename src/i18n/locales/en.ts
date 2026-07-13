@@ -1251,6 +1251,7 @@ export const en = {
       overwriteTitle: "Overwrite Saved Game?",
       overwriteMessage: (name: string) =>
         `A saved game named "${name}" already exists. Do you want to overwrite it with a new character?`,
+      loadExisting: "Load Existing Save",
       errorLoading: "Error loading saves",
       loading: "Loading saves...",
       noneFound: "No saved games found.",

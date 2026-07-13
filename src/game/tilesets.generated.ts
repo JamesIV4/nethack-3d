@@ -67,6 +67,12 @@ export const GENERATED_TILESET_MANIFEST: ReadonlyArray<GeneratedTilesetManifestE
     "tileLayoutVersion": "5.0"
   },
   {
+    "label": "PixelHack",
+    "path": "assets/5.0/PixelHack.png",
+    "tileSize": 32,
+    "tileLayoutVersion": "5.0"
+  },
+  {
     "label": "Vanilla NetHack Tiles",
     "path": "assets/5.0/Vanilla NetHack Tiles.png",
     "tileSize": 16,

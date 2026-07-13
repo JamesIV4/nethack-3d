@@ -104,6 +104,8 @@ import {
 import {
   findNh3dTilesetByPath,
   inferNh3dTilesetTileSizeFromAtlasWidthForPath,
+  isNh3dTilesetCombinedBackgroundRemovalForced,
+  isNh3dTilesetExactBackgroundRemovalForced,
   resolveDefaultNh3dTilesetWeaponSpriteFlipX,
   resolveNh3dFuseBaseTilesetPathForLegacyNh5Runtime,
   resolveNh3dTilesetAssetUrl,
@@ -18561,6 +18563,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
       tileCount,
       tilesPerRow,
     );
+    if (
+      isNh3dTilesetCombinedBackgroundRemovalForced(
+        this.clientOptions.tilesetPath,
+      )
+    ) {
+      this.applySolidColorChromaKey(context, tileSize);
+    }
   }
 
   private getTilesetBackgroundTilePixels(
@@ -18642,6 +18651,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
     // Pixels with max(R/G/B delta) >= this are treated as full foreground (keep full alpha).
     // Values between min/max are linearly feathered for smoother edges.
     const alphaSoftMax = 40;
+    // Some tilesets (e.g. PixelHack) require exact-color removal: only pixels
+    // that exactly match the reference background tile are cleared, with no
+    // tolerance or feathering that would erode flat, indexed-color sprites.
+    const exactRemoval = isNh3dTilesetExactBackgroundRemovalForced(
+      this.clientOptions.tilesetPath,
+    );
 
     for (let i = 0; i < data.length; i += 4) {
       const sourceAlpha = data[i + 3];
@@ -18653,11 +18668,15 @@ class Nethack3DEngine implements Nethack3DEngineController {
       const deltaG = Math.abs(data[i + 1] - backgroundPixels[i + 1]);
       const deltaB = Math.abs(data[i + 2] - backgroundPixels[i + 2]);
       const delta = Math.max(deltaR, deltaG, deltaB);
-      const visibility = THREE.MathUtils.clamp(
-        (delta - alphaSoftMin) / (alphaSoftMax - alphaSoftMin),
-        0,
-        1,
-      );
+      const visibility = exactRemoval
+        ? delta === 0
+          ? 0
+          : 1
+        : THREE.MathUtils.clamp(
+            (delta - alphaSoftMin) / (alphaSoftMax - alphaSoftMin),
+            0,
+            1,
+          );
       const nextAlpha = Math.round(sourceAlpha * visibility);
       data[i + 3] = nextAlpha;
       if (nextAlpha === 0) {

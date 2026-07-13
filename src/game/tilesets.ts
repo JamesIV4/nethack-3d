@@ -41,6 +41,7 @@ const fallbackWeaponSpriteFlipX = true;
 export const nh3dTilesetAtlasTileColumns = 40;
 const builtinSlashEmTilesetPathPrefix = "assets/slashem/";
 const builtinNh5TilesetPathPrefix = "assets/5.0/";
+const builtinPixelHackTilesetPath = "assets/5.0/PixelHack.png";
 const userTilesetPathPrefix = "user:";
 const vultureTilesetPathPrefix = "vulture:";
 const vultureTilesetLabel = "Vulture (isometric)";
@@ -50,6 +51,7 @@ const tilesetBackgroundTilePresetByLabel: Readonly<Record<string, number>> = {
   "Absurdly Evil": 869,
   DawnHack: 869,
   Nevanda: 1476,
+  PixelHack: 2304,
   "Vanilla NetHack TIles": 1476,
   "Vanilla NetHack Tiles": 1476,
   "NetHack Modern": 850,
@@ -59,6 +61,7 @@ const tilesetSolidChromaKeyPresetByLabel: Readonly<Record<string, string>> = {
   DawnHack: "#466d6c",
   Nevanda: "#466d6c",
   "Nevanda (5.0)": "#466d6c",
+  PixelHack: "#83aba2",
   "Vanilla NetHack TIles": "#476C6C",
   "Vanilla NetHack Tiles (5.0)": "#466d6c",
   "Vanilla NetHack Tiles": "#476C6C",
@@ -77,6 +80,7 @@ const tilesetBackgroundRemovalModePresetByPath: Readonly<
   Record<string, Nh3dTilesetBackgroundRemovalMode>
 > = {
   "assets/slashem/Absurd.png": "none",
+  [builtinPixelHackTilesetPath]: "tile",
   "assets/5.0/Nevanda (5.0).png": "solid",
   "assets/5.0/Vanilla NetHack Tiles (5.0).png": "solid",
   "assets/3.6/Nevanda.png": "solid",
@@ -395,12 +399,14 @@ export function getNh3dCompatibleTilesetCatalog(
 export const nh3dTilesetCatalog: ReadonlyArray<Nh3dTilesetEntry> =
   builtinTilesets;
 
-const preferredDefaultTilesetPath = "assets/3.6/Nevanda 3.6.png";
+const preferredDefaultTilesetPath = "assets/3.6/Nevanda.png";
 const preferredDefaultTilesetLabel = "Nevanda";
 const preferredDefaultTilesetPathByRuntime: Readonly<
   Partial<Record<NethackRuntimeVersion, string>>
 > = {
+  "3.6.7": preferredDefaultTilesetPath,
   slashem: "assets/slashem/Absurd.png",
+  "5.0": builtinPixelHackTilesetPath,
 };
 export const defaultNh3dTilesetPath: string =
   builtinTilesets.find((entry) => entry.path === preferredDefaultTilesetPath)
@@ -484,6 +490,19 @@ export function resolveNh3dCompatibleTilesetPathForRuntime(
   const selectedTileset = findNh3dTilesetByPath(path);
   if (!selectedTileset) {
     return getDefaultNh3dTilesetPathForRuntime(runtimeVersion);
+  }
+  // A user still on the app-wide default tileset has not deliberately picked
+  // one, so honor the runtime's own default rather than keeping the generic
+  // default just because it happens to be layout-compatible. This is what makes
+  // e.g. PixelHack the default for a fresh NetHack 5.0 player instead of the
+  // cross-compatible 3.6 Nevanda default. Runtimes whose default already is the
+  // app-wide default (3.6.7) are unaffected.
+  if (selectedTileset.path === defaultNh3dTilesetPath) {
+    const runtimeDefaultPath =
+      getDefaultNh3dTilesetPathForRuntime(runtimeVersion);
+    if (runtimeDefaultPath && runtimeDefaultPath !== selectedTileset.path) {
+      return runtimeDefaultPath;
+    }
   }
   if (isNh3dTilesetCompatibleWithRuntime(selectedTileset, runtimeVersion)) {
     return selectedTileset.path;
@@ -614,4 +633,20 @@ export function isNh3dTilesetBackgroundRemovalModeForcedOff(
   path: string | null | undefined,
 ): boolean {
   return resolveDefaultNh3dTilesetBackgroundRemovalMode(path) === "none";
+}
+
+export function isNh3dTilesetCombinedBackgroundRemovalForced(
+  path: string | null | undefined,
+): boolean {
+  return String(findNh3dTilesetByPath(path)?.path || "").trim() ===
+    builtinPixelHackTilesetPath;
+}
+
+// PixelHack uses flat, indexed colors, so the reference-tile removal pass must
+// match colors exactly (no tolerance/feathering) to avoid eroding sprite edges.
+export function isNh3dTilesetExactBackgroundRemovalForced(
+  path: string | null | undefined,
+): boolean {
+  return String(findNh3dTilesetByPath(path)?.path || "").trim() ===
+    builtinPixelHackTilesetPath;
 }

@@ -2166,8 +2166,8 @@ export default function SoundPackSettings({
       <ConfirmationModal
         dialog={localConfirmationDialog}
         dialogId="nh3d-soundpack-confirmation-dialog"
-        onCancel={() => resolveLocalConfirmation(false)}
-        onConfirm={() => resolveLocalConfirmation(true)}
+        onCancel={() => resolveLocalConfirmation("cancel")}
+        onConfirm={() => resolveLocalConfirmation("confirm")}
       />
     </div>
   );
