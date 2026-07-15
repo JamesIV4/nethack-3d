@@ -7212,6 +7212,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.refreshTilesFromStateCache();
     }
     if (tilesetModeChanged) {
+      if (normalized.tilesetMode !== "tiles") {
+        // ASCII cells represent each runtime update directly. Remove any
+        // detached glyphs that were already travelling before the mode swap.
+        this.clearEntityMoveTransitions();
+      }
       this.clearMenuTilePreviewCache();
       this.refreshTilesFromStateCache();
     }
@@ -13498,6 +13503,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return false;
   }
 
+  private shouldAnimateGlyphMoveTransitions(): boolean {
+    // Both top-down and FPS ASCII modes should apply glyph updates directly,
+    // matching the immediate movement of a traditional terminal display.
+    return this.clientOptions.tilesetMode === "tiles";
+  }
+
   private shouldAllowTrackedPlayerAppearance(): boolean {
     return !this.isFpsMode() || this.shouldAnimatePlayerBillboardsInFps();
   }
@@ -13628,7 +13639,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.runtimeTrackedPlayerEntitySeen = true;
     }
     const shouldAnimateTrackedEntity =
-      eventMonsterId !== 0 || this.shouldAllowTrackedPlayerAppearance();
+      this.shouldAnimateGlyphMoveTransitions() &&
+      (eventMonsterId !== 0 || this.shouldAllowTrackedPlayerAppearance());
     const previousMonsterId = this.runtimeMonsterIdByTileKey.get(key) ?? null;
     const isRuntimeClear = Boolean(tile.isRuntimeUndiscoveredClear);
 
@@ -28854,7 +28866,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
     toKey: string,
     destinationTile: any,
   ): void {
-    if (monsterId === 0 && this.isFpsMode()) {
+    if (
+      !this.shouldAnimateGlyphMoveTransitions() ||
+      (monsterId === 0 && this.isFpsMode())
+    ) {
       return;
     }
     const hadStandingBillboardSource = this.monsterBillboards.has(fromKey);
@@ -28905,7 +28920,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     toY: number,
     durationMs: number,
   ): void {
-    if (this.isFpsMode()) {
+    if (this.isFpsMode() || !this.shouldAnimateGlyphMoveTransitions()) {
       return;
     }
     this.beginOrRetargetEntityMoveTransition(
@@ -28929,7 +28944,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     toY: number,
     durationMs: number,
   ): boolean {
-    if (this.isFpsMode()) {
+    if (this.isFpsMode() || !this.shouldAnimateGlyphMoveTransitions()) {
       return false;
     }
     const sourceKey = `${fromX},${fromY}`;
@@ -28992,6 +29007,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private startConfirmedBoulderPushTransition(
     data: Record<string, unknown>,
   ): void {
+    if (!this.shouldAnimateGlyphMoveTransitions()) {
+      return;
+    }
     const rawFromX = Number(data.fromX);
     const rawFromY = Number(data.fromY);
     const rawToX = Number(data.toX);
