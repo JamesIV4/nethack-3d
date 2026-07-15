@@ -764,6 +764,7 @@ export const fr = {
             "Schéma de couleurs utilisé pour le rendu des glyphes ASCII. Classique applique les couleurs natives de NetHack avec un fond sombre et une mise en évidence inversée des familiers. NetHack 3D utilise le rendu d'origine non modifié.",
           options: {
             nethack3d: "NetHack 3D",
+            terminal: "Terminal",
             classic: "Classique",
           },
         },

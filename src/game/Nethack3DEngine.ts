@@ -38,7 +38,7 @@ import {
   isSinkCmapGlyph,
   isVerticalDoorCmapGlyph,
 } from "./glyphs/behavior";
-import { getNetHackColorHex } from "./glyphs/colors";
+import { resolveAsciiGlyphPresentation } from "./ascii-color-mode";
 import { resolveSlashEmCommandInputBinding } from "./slashem-command-capabilities";
 import {
   buildTerminalCellTextureKey,
@@ -55,6 +55,7 @@ import {
   splitNetHackOptionsString,
   TERMINAL_BACKGROUND_HEX,
   TERMINAL_DEFAULT_FG_HEX,
+  TERMINAL_MG_FLAGS,
   type TerminalCellPresentation,
   type TerminalRenderOptionStates,
 } from "./terminal/terminal-display";
@@ -313,6 +314,7 @@ type RuntimeMonsterBillboardAppearance = {
   sourceGlyph: number | null;
   materialKind: TileMaterialKind | null;
   isWall: boolean;
+  showPetHeart: boolean;
 };
 
 type RuntimeMonsterLastSeenState = {
@@ -1202,6 +1204,11 @@ const NH3D_INTERNAL_VULTURE_PROJECTION_TEXTURE_MODE: VultureProjectionTextureMod
   "prebaked"; // prebaked or runtime
 const NH3D_VULTURE_PREBAKED_PROJECTION_MANIFEST_RELATIVE_PATH =
   "prebaked/projection-manifest.json";
+// Lucide's Heart icon path. Keeping the original vector path here lets canvas
+// billboard textures render the same icon used by the React UI package.
+const NH3D_LUCIDE_HEART_PATH =
+  "M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5";
+const NH3D_PET_HEART_COLOR = "#ff244f";
 
 function createControllerBooleanActionMap(
   initialValue: boolean,
@@ -3348,6 +3355,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.characterCreationConfig.initOptions,
     );
     this.clientOptions = normalizeNh3dClientOptions(options.clientOptions);
+    this.refreshTerminalRenderOptionStates();
     const explicitFpsMode = options.clientOptions?.fpsMode;
     const initialFpsMode =
       typeof explicitFpsMode === "boolean"
@@ -7261,6 +7269,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const fpsHeldWeaponSpriteFlipXChanged =
       previous.fpsHeldWeaponSpriteFlipX !== normalized.fpsHeldWeaponSpriteFlipX;
     const tilesetModeChanged = previous.tilesetMode !== normalized.tilesetMode;
+    const animatedMovementChanged =
+      previous.animatedMovement !== normalized.animatedMovement;
     const asciiColorModeChanged =
       previous.asciiColorMode !== normalized.asciiColorMode;
     const tilesetPathChanged = previous.tilesetPath !== normalized.tilesetPath;
@@ -7354,9 +7364,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.refreshTilesFromStateCache();
     }
     if (tilesetModeChanged) {
-      if (normalized.tilesetMode !== "tiles") {
-        // ASCII cells represent each runtime update directly. Remove any
-        // detached glyphs that were already travelling before the mode swap.
+      if (normalized.tilesetMode === "terminal") {
+        // True terminal cells always apply runtime updates immediately.
         this.clearEntityMoveTransitions();
       }
       this.clearMenuTilePreviewCache();
@@ -7372,6 +7381,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
         this.leaveTerminalDisplayMode();
       }
       this.refreshTilesFromStateCache();
+    }
+    if (animatedMovementChanged && !normalized.animatedMovement) {
+      this.clearEntityMoveTransitions();
     }
     if (asciiColorModeChanged && !tilesetModeChanged) {
       this.invalidateTilesetDependentCaches();
@@ -11632,9 +11644,14 @@ class Nethack3DEngine implements Nethack3DEngineController {
       });
     }
     const terminalOptionStatesChanged = this.refreshTerminalRenderOptionStates();
-    if (terminalOptionStatesChanged && this.isTerminalDisplayMode()) {
+    if (
+      terminalOptionStatesChanged &&
+      (this.isTerminalDisplayMode() ||
+        (this.clientOptions.tilesetMode === "ascii" &&
+          this.clientOptions.asciiColorMode !== "nethack-3d"))
+    ) {
       // hilite_pet / hilite_pile / use_inverse / symset resolved differently
-      // than assumed; re-render the terminal grid with the new rules.
+      // than assumed; re-render any view using the terminal presentation rules.
       this.refreshTilesFromStateCache();
     }
     if (typeof window !== "undefined") {
@@ -13781,9 +13798,29 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private shouldAnimateGlyphMoveTransitions(): boolean {
-    // Both top-down and FPS ASCII modes should apply glyph updates directly,
-    // matching the immediate movement of a traditional terminal display.
-    return this.clientOptions.tilesetMode === "tiles";
+    return (
+      this.clientOptions.animatedMovement &&
+      this.clientOptions.tilesetMode !== "terminal"
+    );
+  }
+
+  private shouldShowPetHighlightHeart(
+    behavior: TileBehaviorResult,
+    runtimeGlyphFlags: unknown,
+  ): boolean {
+    if (!this.terminalRenderOptionStates.hilitePet) {
+      return false;
+    }
+    if (
+      behavior.effective.kind === "pet" ||
+      behavior.effective.kind === "ridden"
+    ) {
+      return true;
+    }
+    return (
+      typeof runtimeGlyphFlags === "number" &&
+      (Math.trunc(runtimeGlyphFlags) & TERMINAL_MG_FLAGS.pet) !== 0
+    );
   }
 
   private shouldAllowTrackedPlayerAppearance(): boolean {
@@ -13866,6 +13903,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
           : null,
       materialKind: behavior.materialKind,
       isWall: behavior.isWall,
+      showPetHeart: this.shouldShowPetHighlightHeart(
+        behavior,
+        tile?.glyphFlags,
+      ),
     };
   }
 
@@ -19185,12 +19226,69 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
 
+    if (
+      this.drawConnectedBoxDrawingGlyph(
+        context,
+        size,
+        size,
+        trimmed,
+        textColor,
+      )
+    ) {
+      return;
+    }
+
     const fontSize = Math.floor(size * 0.6);
     context.font = `bold ${fontSize}px monospace`;
     context.textAlign = "center";
     context.textBaseline = "middle";
     context.fillStyle = textColor;
     context.fillText(trimmed, size / 2, size / 2);
+  }
+
+  private drawConnectedBoxDrawingGlyph(
+    context: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    displayChar: string,
+    colorHex: string,
+  ): boolean {
+    const connections = getTerminalBoxDrawingConnections(displayChar);
+    if (!connections) {
+      return false;
+    }
+
+    // Font glyphs carry side bearings, so adjacent IBM/DEC wall characters
+    // never quite meet. Draw their arms as solid, integer-aligned rectangles
+    // that reach the texture edges instead.
+    const strokeWidth = resolveTerminalWallStrokeWidth(width);
+    const verticalStrokeStart = Math.floor((width - strokeWidth) / 2);
+    const verticalStrokeEnd = verticalStrokeStart + strokeWidth;
+    const horizontalStrokeStart = Math.floor((height - strokeWidth) / 2);
+    const horizontalStrokeEnd = horizontalStrokeStart + strokeWidth;
+    context.fillStyle = colorHex;
+
+    if (connections.left || connections.right) {
+      const startX = connections.left ? 0 : verticalStrokeStart;
+      const endX = connections.right ? width : verticalStrokeEnd;
+      context.fillRect(
+        startX,
+        horizontalStrokeStart,
+        endX - startX,
+        strokeWidth,
+      );
+    }
+    if (connections.up || connections.down) {
+      const startY = connections.up ? 0 : horizontalStrokeStart;
+      const endY = connections.down ? height : horizontalStrokeEnd;
+      context.fillRect(
+        verticalStrokeStart,
+        startY,
+        strokeWidth,
+        endY - startY,
+      );
+    }
+    return true;
   }
 
   private startGlyphDamageFlash(key: string): void {
@@ -24989,6 +25087,57 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return texture;
   }
 
+  private createPetHighlightedBillboardTexture(
+    baseTexture: THREE.CanvasTexture,
+  ): THREE.CanvasTexture {
+    const sourceInfo = this.resolveMonsterBillboardTextureSource(baseTexture);
+    if (!sourceInfo || typeof Path2D === "undefined") {
+      return baseTexture;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = sourceInfo.width;
+    canvas.height = sourceInfo.height;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return baseTexture;
+    }
+
+    context.drawImage(sourceInfo.source, 0, 0, canvas.width, canvas.height);
+    const iconSize = Math.max(
+      8,
+      Math.min(canvas.width, canvas.height) * 0.34,
+    );
+    const inset = Math.max(1, Math.min(canvas.width, canvas.height) * 0.035);
+    const iconScale = iconSize / 24;
+    const heartPath = new Path2D(NH3D_LUCIDE_HEART_PATH);
+    context.save();
+    context.translate(inset, inset);
+    context.scale(iconScale, iconScale);
+    context.lineJoin = "round";
+    context.lineCap = "round";
+    context.shadowColor = "rgba(0, 0, 0, 0.95)";
+    context.shadowBlur = 1.8;
+    context.shadowOffsetX = 0.8;
+    context.shadowOffsetY = 1.1;
+    context.fillStyle = NH3D_PET_HEART_COLOR;
+    context.strokeStyle = "rgba(0, 0, 0, 0.94)";
+    context.lineWidth = 2.6;
+    context.stroke(heartPath);
+    context.fill(heartPath);
+    context.restore();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    texture.anisotropy = this.resolveTextureAnisotropyLevel();
+    texture.magFilter = baseTexture.magFilter;
+    texture.minFilter = baseTexture.minFilter;
+    texture.generateMipmaps = false;
+    texture.colorSpace = baseTexture.colorSpace;
+    baseTexture.dispose();
+    return texture;
+  }
+
   private ensureEntityBlobShadowTexture(): THREE.CanvasTexture {
     if (this.entityBlobShadowTexture) {
       return this.entityBlobShadowTexture;
@@ -26344,6 +26493,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       appearance.isWall,
       appearance.sourceGlyph,
       appearance.materialKind,
+      appearance.showPetHeart,
     );
     return this.detachMonsterBillboard(tempKey);
   }
@@ -26541,6 +26691,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     isWall: boolean = false,
     sourceGlyph: number | null = null,
     materialKind: TileMaterialKind | null = null,
+    showPetHeart: boolean = false,
   ): void {
     const normalizedSourceGlyph =
       typeof sourceGlyph === "number" && Number.isFinite(sourceGlyph)
@@ -26562,9 +26713,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const sourceGlyphKey =
       normalizedSourceGlyph === null ? "none" : String(normalizedSourceGlyph);
     const materialKindKey = normalizedMaterialKind ?? "none";
+    const petHeartKey = showPetHeart ? "pet-heart" : "plain";
     const textureKey = useTiles
       ? `tile-billboard:${tileIndex}|sg:${sourceGlyphKey}|mk:${materialKindKey}|bg:${backgroundRemovalTextureKey}`
       : `${this.getMonsterBillboardQualityKey()}|${glyphChar}|${textColor}`;
+    const decoratedTextureKey = `${textureKey}|${petHeartKey}`;
 
     const spriteKey = key;
     let sprite = this.monsterBillboards.get(spriteKey);
@@ -26583,15 +26736,22 @@ class Nethack3DEngine implements Nethack3DEngineController {
       useVultureBillboardGrounding,
     );
     if (!sprite) {
-      const factory = useTiles
-        ? () =>
-            this.createTileTexture(tileIndex, 1, true, {
+      const factory = () => {
+        const baseTexture = useTiles
+          ? this.createTileTexture(tileIndex, 1, true, {
               sourceGlyph: normalizedSourceGlyph,
               materialKind: normalizedMaterialKind,
-            }) // Pass true: billboards use transparency
-        : () => this.createMonsterBillboardTexture(glyphChar, textColor);
+            }) // Billboards use transparency.
+          : this.createMonsterBillboardTexture(glyphChar, textColor);
+        return showPetHeart
+          ? this.createPetHighlightedBillboardTexture(baseTexture)
+          : baseTexture;
+      };
 
-      const texture = this.acquireMonsterBillboardTexture(textureKey, factory);
+      const texture = this.acquireMonsterBillboardTexture(
+        decoratedTextureKey,
+        factory,
+      );
       const material = new THREE.SpriteMaterial({
         map: texture,
         transparent: true,
@@ -26606,7 +26766,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
       sprite = new THREE.Sprite(material);
       sprite.renderOrder = spriteRenderOrder;
-      sprite.userData.textureKey = textureKey;
+      sprite.userData.textureKey = decoratedTextureKey;
       this.monsterBillboards.set(spriteKey, sprite);
       this.scene.add(sprite);
     } else {
@@ -26615,7 +26775,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         typeof sprite.userData?.textureKey === "string"
           ? sprite.userData.textureKey
           : "";
-      if (existingTextureKey !== textureKey) {
+      if (existingTextureKey !== decoratedTextureKey) {
         const material = sprite.material;
         if (material instanceof THREE.SpriteMaterial) {
           if (existingTextureKey) {
@@ -26623,23 +26783,27 @@ class Nethack3DEngine implements Nethack3DEngineController {
           } else if (material.map) {
             material.map.dispose();
           }
-          const factory = useTiles
-            ? () =>
-                this.createTileTexture(tileIndex, 1, true, {
+          const factory = () => {
+            const baseTexture = useTiles
+              ? this.createTileTexture(tileIndex, 1, true, {
                   sourceGlyph: normalizedSourceGlyph,
                   materialKind: normalizedMaterialKind,
-                }) // Pass true here as well
-            : () => this.createMonsterBillboardTexture(glyphChar, textColor);
+                })
+              : this.createMonsterBillboardTexture(glyphChar, textColor);
+            return showPetHeart
+              ? this.createPetHighlightedBillboardTexture(baseTexture)
+              : baseTexture;
+          };
 
           material.map = this.acquireMonsterBillboardTexture(
-            textureKey,
+            decoratedTextureKey,
             factory,
           );
           material.depthWrite = spriteDepthWrite;
           material.depthTest = spriteDepthTest;
           material.alphaTest = spriteAlphaTest;
           material.needsUpdate = true;
-          sprite.userData.textureKey = textureKey;
+          sprite.userData.textureKey = decoratedTextureKey;
         }
       } else {
         const material = sprite.material;
@@ -26854,47 +27018,14 @@ class Nethack3DEngine implements Nethack3DEngineController {
     context.fillStyle = presentation.bgHex;
     context.fillRect(0, 0, cellWidth, cellHeight);
     const displayChar = presentation.displayChar;
-    const boxDrawingConnections =
-      getTerminalBoxDrawingConnections(displayChar);
-    if (boxDrawingConnections) {
-      // Draw wall arms as solid rectangles all the way to the canvas edges.
-      // This removes font side bearings and avoids antialiased half-pixels at
-      // the boundary shared by neighboring terminal cells.
-      const strokeWidth = resolveTerminalWallStrokeWidth(cellWidth);
-      const verticalStrokeStart = Math.floor(
-        (cellWidth - strokeWidth) / 2,
-      );
-      const verticalStrokeEnd = verticalStrokeStart + strokeWidth;
-      const horizontalStrokeStart = Math.floor(
-        (cellHeight - strokeWidth) / 2,
-      );
-      const horizontalStrokeEnd = horizontalStrokeStart + strokeWidth;
-      context.fillStyle = presentation.fgHex;
-      if (boxDrawingConnections.left || boxDrawingConnections.right) {
-        const startX = boxDrawingConnections.left ? 0 : verticalStrokeStart;
-        const endX = boxDrawingConnections.right
-          ? cellWidth
-          : verticalStrokeEnd;
-        context.fillRect(
-          startX,
-          horizontalStrokeStart,
-          endX - startX,
-          strokeWidth,
-        );
-      }
-      if (boxDrawingConnections.up || boxDrawingConnections.down) {
-        const startY = boxDrawingConnections.up ? 0 : horizontalStrokeStart;
-        const endY = boxDrawingConnections.down
-          ? cellHeight
-          : horizontalStrokeEnd;
-        context.fillRect(
-          verticalStrokeStart,
-          startY,
-          strokeWidth,
-          endY - startY,
-        );
-      }
-    } else if (displayChar.trim().length > 0) {
+    const drewConnectedBoxGlyph = this.drawConnectedBoxDrawingGlyph(
+      context,
+      cellWidth,
+      cellHeight,
+      displayChar,
+      presentation.fgHex,
+    );
+    if (!drewConnectedBoxGlyph && displayChar.trim().length > 0) {
       const fontSize = Math.floor(cellHeight * 0.82);
       context.font = `${fontSize}px "Cascadia Mono", "Consolas", "Menlo", "DejaVu Sans Mono", monospace`;
       context.textAlign = "center";
@@ -27278,6 +27409,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const isAltarOrTombstone = this.isAltarOrTombstoneLikeBehavior(behavior);
     const isStatue = behavior.effective.kind === "statue";
     const useTiles = this.clientOptions.tilesetMode === "tiles";
+    const isOverheadAsciiMode = !useTiles && !this.isFpsMode();
     const nowMs = Date.now();
     const runtimeTrackedEntityId = this.normalizeRuntimeTrackedEntityId(
       options.runtimeTrackedEntityId,
@@ -27346,7 +27478,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       (useTiles &&
         (isSink || isFountain || isStairsUp || isAltarOrTombstone || isStatue));
     const shouldUseElevatedBillboard =
-      shouldElevateEntity && (useTiles || this.isFpsMode());
+      shouldElevateEntity &&
+      (useTiles || this.isFpsMode() || isOverheadAsciiMode);
 
     const isUndiscovered = this.isUndiscoveredKind(behavior.effective.kind);
 
@@ -27502,8 +27635,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const preferNormalModeAsciiUnderlayForFpsBillboards =
       this.isFpsMode() && !useTiles && shouldUseElevatedBillboard;
 
-    // FPS/tiles billboard rendering: hide duplicate glyph text on the tile.
-    // Terrain underlay behavior differs by branch below.
+    // Billboard rendering: hide the duplicate entity glyph on the base tile
+    // and resolve that tile from runtime or remembered terrain instead.
     if (shouldSuppressPlayerTileVisualInFps) {
       const defaultPlayerSuppressedGlyph = this.isFpsMode()
         ? getDefaultDarkFloorGlyph()
@@ -27574,7 +27707,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       // In FPS ASCII mode, entity glyphs render on billboards; keep floor-style
       // terrain underlays on the tile to avoid hostile/player tint bleed.
       renderBehavior = this.resolveFpsFloorUnderlayBehaviorFromCache(key);
-      tileGlyphChar = " ";
+      tileGlyphChar = renderBehavior.glyphChar;
       tileTextColor = renderBehavior.textColor;
     } else if (shouldUseElevatedBillboard) {
       if (
@@ -27671,7 +27804,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
           }
         } else {
           const inferredNeighborFloorBehavior =
-            useTiles && (isMonsterLikeCharacter || isLootLikeCharacter)
+            (useTiles || isOverheadAsciiMode) &&
+            (isMonsterLikeCharacter || isLootLikeCharacter)
               ? this.resolveFloorBehaviorFromNeighborTiles(x, y)
               : null;
           if (inferredNeighborFloorBehavior) {
@@ -27691,7 +27825,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
           }
         }
       }
-      tileGlyphChar = " ";
+      tileGlyphChar = isOverheadAsciiMode ? renderBehavior.glyphChar : " ";
       tileTextColor = renderBehavior.textColor;
     }
     if (shouldUseElevatedBillboard && renderBehavior.isWall) {
@@ -27704,6 +27838,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
         runtimeColor: null,
         priorTerrain: null,
       });
+      if (!useTiles) {
+        tileGlyphChar = renderBehavior.glyphChar;
+      }
       tileTextColor = renderBehavior.textColor;
     }
     const isPlayerRelatedTileInFps =
@@ -27742,18 +27879,54 @@ class Nethack3DEngine implements Nethack3DEngineController {
       tileTextColor = this.asciiFriendlyGlyphTextColor;
     }
     let glyphBackgroundColorHex: string | null = null;
-    if (!useTiles && this.clientOptions.asciiColorMode === "classic") {
-      const netHackColorHex = getNetHackColorHex(behavior.resolved.color);
-      if (netHackColorHex) {
-        tileTextColor = netHackColorHex;
-      }
-      glyphBackgroundColorHex = "#1f1f1f";
-      const shouldUsePetReverseVideo =
-        renderBehavior.effective.kind === "pet" ||
-        renderBehavior.effective.kind === "ridden";
-      if (shouldUsePetReverseVideo && tileGlyphChar.trim().length > 0) {
-        glyphBackgroundColorHex = "#f2f2f2";
-        tileTextColor = "#0d0d0d";
+    let runtimeAsciiBillboardGlyphChar: string | null = null;
+    let runtimeAsciiBillboardTextColor: string | null = null;
+    if (!useTiles) {
+      const useReconstructedAsciiUnderlay = shouldUseElevatedBillboard;
+      const asciiPresentation = resolveAsciiGlyphPresentation({
+        mode: this.clientOptions.asciiColorMode,
+        glyphChar: tileGlyphChar,
+        baseTextColor: tileTextColor,
+        runtimeChar: useReconstructedAsciiUnderlay
+          ? (renderBehavior.resolved.char ?? renderBehavior.glyphChar)
+          : char,
+        runtimeColor: useReconstructedAsciiUnderlay
+          ? renderBehavior.resolved.color
+          : color,
+        runtimeGlyphFlags:
+          !useReconstructedAsciiUnderlay &&
+          typeof options.runtimeGlyphFlags === "number"
+            ? options.runtimeGlyphFlags
+            : null,
+        terminalOptionStates: this.terminalRenderOptionStates,
+        slashEmCmapIndex: this.resolveSlashEmTerminalCmapIndex(
+          useReconstructedAsciiUnderlay
+            ? renderBehavior.effective.glyph
+            : glyph,
+        ),
+      });
+      tileGlyphChar = asciiPresentation.glyphChar;
+      tileTextColor = asciiPresentation.textColor;
+      glyphBackgroundColorHex = asciiPresentation.backgroundColorHex;
+
+      if (useReconstructedAsciiUnderlay) {
+        const entityPresentation = resolveAsciiGlyphPresentation({
+          mode: this.clientOptions.asciiColorMode,
+          glyphChar: behavior.glyphChar,
+          baseTextColor: behavior.textColor,
+          runtimeChar: char,
+          runtimeColor: color,
+          runtimeGlyphFlags:
+            typeof options.runtimeGlyphFlags === "number"
+              ? options.runtimeGlyphFlags
+              : null,
+          terminalOptionStates: this.terminalRenderOptionStates,
+          slashEmCmapIndex: this.resolveSlashEmTerminalCmapIndex(glyph),
+        });
+        runtimeAsciiBillboardGlyphChar = entityPresentation.glyphChar;
+        runtimeAsciiBillboardTextColor = entityPresentation.textColor;
+      } else if (this.clientOptions.asciiColorMode !== "nethack-3d") {
+        runtimeAsciiBillboardTextColor = asciiPresentation.textColor;
       }
     }
     if (shouldTraceAsciiPlayerTile) {
@@ -28170,13 +28343,17 @@ class Nethack3DEngine implements Nethack3DEngineController {
         key,
         x,
         y,
-        billboardBehavior.glyphChar,
-        billboardBehavior.textColor,
+        runtimeAsciiBillboardGlyphChar ?? billboardBehavior.glyphChar,
+        runtimeAsciiBillboardTextColor ?? billboardBehavior.textColor,
         billboardBehavior.effective.tileIndex,
         billboardEntityType,
         billboardIsWall,
         billboardBehavior.effective.glyph,
         billboardBehavior.materialKind,
+        this.shouldShowPetHighlightHeart(
+          billboardBehavior,
+          options.runtimeGlyphFlags,
+        ),
       );
       if (hasEntityUnderlayRaisedBillboard) {
         const entitySprite = this.monsterBillboards.get(key);

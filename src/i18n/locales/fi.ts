@@ -756,6 +756,7 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
             "ASCII-glyfien värimaailma. Klassinen käyttää alkuperäisiä NetHack-värejä tummalla taustalla ja lemmikeille käänteistä korostusta. NetHack 3D käyttää alkuperäistä muokkaamatonta renderöintiä.",
           options: {
             nethack3d: "NetHack 3D",
+            terminal: "Terminal",
             classic: "Klassinen",
           },
         },

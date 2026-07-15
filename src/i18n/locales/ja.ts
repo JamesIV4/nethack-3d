@@ -711,6 +711,7 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
             "ASCII グリフ描画時の配色です。クラシックは暗い背景に NetHack 本来の色を使い、ペットを反転表示で強調します。NetHack 3D は元の未変更レンダリングを使用します。",
           options: {
             nethack3d: "NetHack 3D",
+            terminal: "Terminal",
             classic: "クラシック",
           },
         },

@@ -248,7 +248,7 @@ export type FpsCrosshairContextState = {
 
 export type PlayMode = "normal" | "fps";
 export type Nh3dAntialiasingMode = "taa" | "fxaa";
-export type Nh3dAsciiColorMode = "nethack-3d" | "classic";
+export type Nh3dAsciiColorMode = "nethack-3d" | "classic" | "terminal";
 export type Nh3dMinimapColorMode = "nethack-3d" | "terminal";
 export type Nh3dTilesetMode = "ascii" | "tiles" | "terminal";
 export type Nh3dDesktopTouchInterfaceMode = "off" | "portrait" | "landscape";
@@ -304,6 +304,7 @@ export type Nh3dClientOptions = {
   snapCameraYawToNearest45: boolean;
   invertTouchPanningDirection: boolean;
   desktopTouchInterfaceMode: Nh3dDesktopTouchInterfaceMode;
+  animatedMovement: boolean;
   disableAnimatedTransitions: boolean;
   uiTileBackgroundRemoval: boolean;
   minimap: boolean;
@@ -459,6 +460,7 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
   snapCameraYawToNearest45: true,
   invertTouchPanningDirection: false,
   desktopTouchInterfaceMode: "off",
+  animatedMovement: true,
   disableAnimatedTransitions: false,
   uiTileBackgroundRemoval: true,
   minimap: true,
@@ -1184,6 +1186,10 @@ export function normalizeNh3dClientOptions(
       overrides?.desktopTouchInterfaceMode === "off"
         ? overrides.desktopTouchInterfaceMode
         : defaultNh3dClientOptions.desktopTouchInterfaceMode,
+    animatedMovement:
+      typeof overrides?.animatedMovement === "boolean"
+        ? overrides.animatedMovement
+        : defaultNh3dClientOptions.animatedMovement,
     disableAnimatedTransitions:
       typeof overrides?.disableAnimatedTransitions === "boolean"
         ? overrides.disableAnimatedTransitions
@@ -1318,7 +1324,10 @@ export function normalizeNh3dClientOptions(
     fpsHeldWeaponSpriteFlipXByTileset,
     tilesetMode,
     asciiColorMode:
-      overrides?.asciiColorMode === "classic" ? "classic" : "nethack-3d",
+      overrides?.asciiColorMode === "classic" ||
+      overrides?.asciiColorMode === "terminal"
+        ? overrides.asciiColorMode
+        : "nethack-3d",
     tilesetPath,
     antialiasing,
     brightness,

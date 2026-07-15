@@ -737,6 +737,7 @@ export const ru = {
             "NetHack 3D использует исходный неизменённый рендеринг.",
           options: {
             nethack3d: "NetHack 3D",
+            terminal: "Terminal",
             classic: "Классический",
           },
         },

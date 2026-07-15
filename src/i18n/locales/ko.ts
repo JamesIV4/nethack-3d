@@ -736,6 +736,7 @@ export const ko = {
             "ASCII 글리프를 렌더링할 때 사용할 색상 구성입니다. 클래식은 어두운 배경에서 NetHack 원래 색상을 사용하고, 반전 표시로 펫을 강조합니다. NetHack 3D는 원래의 수정되지 않은 렌더링을 사용합니다.",
           options: {
             nethack3d: "NetHack 3D",
+            terminal: "Terminal",
             classic: "클래식",
           },
         },

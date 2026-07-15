@@ -62,6 +62,7 @@ import {
   Nh3dIcon,
   Nh3dIconArrowDown,
   Nh3dIconArrowUp,
+  Nh3dIconInfo,
 } from "./icons";
 import { MobileDismissButton } from "./MobileDismissButton";
 import type { NethackRuntimeVersion } from "../runtime/types";
@@ -4892,6 +4893,7 @@ type ClientOptionToggleKey =
   | "cameraRelativeMovement"
   | "snapCameraYawToNearest45"
   | "invertTouchPanningDirection"
+  | "animatedMovement"
   | "disableAnimatedTransitions"
   | "uiTileBackgroundRemoval"
   | "minimap"
@@ -4920,6 +4922,122 @@ type ClientOptionToggleKey =
 type ClientOptionLookSensitivityKey =
   | "fpsLookSensitivityX"
   | "fpsLookSensitivityY";
+
+function OptionDescriptionInfo({
+  label,
+  description,
+}: {
+  label: string;
+  description: string;
+}): JSX.Element {
+  const [isOpen, setIsOpen] = useState(false);
+  const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({});
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+
+  const updatePosition = useCallback(() => {
+    const button = buttonRef.current;
+    if (!button || typeof window === "undefined") {
+      return;
+    }
+    const rect = button.getBoundingClientRect();
+    const viewportInset = 8;
+    const gap = 7;
+    const width = Math.min(310, window.innerWidth - viewportInset * 2);
+    const height = popoverRef.current?.offsetHeight ?? 96;
+    const left = Math.max(
+      viewportInset,
+      Math.min(window.innerWidth - width - viewportInset, rect.left - 8),
+    );
+    const fitsBelow = rect.bottom + gap + height <= window.innerHeight - 8;
+    const top = fitsBelow
+      ? rect.bottom + gap
+      : Math.max(viewportInset, rect.top - height - gap);
+    setPopoverStyle({ left, top, width });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (isOpen) {
+      updatePosition();
+    }
+  }, [isOpen, updatePosition]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (
+        target &&
+        !buttonRef.current?.contains(target) &&
+        !popoverRef.current?.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, updatePosition]);
+
+  const popover = isOpen ? (
+    <div
+      className="nh3d-option-info-popover"
+      ref={popoverRef}
+      role="tooltip"
+      style={popoverStyle}
+    >
+      {description}
+    </div>
+  ) : null;
+
+  return (
+    <>
+      <button
+        aria-expanded={isOpen}
+        aria-label={`${label}: information`}
+        className="nh3d-option-info-button"
+        onClick={() => setIsOpen((previous) => !previous)}
+        ref={buttonRef}
+        type="button"
+      >
+        <Nh3dIcon icon={Nh3dIconInfo} size={18} strokeWidth={2.4} />
+      </button>
+      {typeof document !== "undefined" && popover
+        ? createPortal(popover, document.body)
+        : popover}
+    </>
+  );
+}
+
+function OptionLabelWithInfo({
+  label,
+  description,
+}: {
+  label: string;
+  description: string;
+}): JSX.Element {
+  return (
+    <div className="nh3d-option-label-with-info">
+      <div className="nh3d-option-label">{label}</div>
+      <OptionDescriptionInfo label={label} description={description} />
+    </div>
+  );
+}
 
 type ControllerRemapSlotIndex = 0 | 1;
 
@@ -6370,6 +6488,10 @@ const clientOptionsConfig: ClientOption[] = [
         value: "classic",
         label: t.clientOptions.config.asciiColorMode.options.classic,
       },
+      {
+        value: "terminal",
+        label: t.clientOptions.config.asciiColorMode.options.terminal,
+      },
     ],
   },
   {
@@ -6448,6 +6570,12 @@ const clientOptionsConfig: ClientOption[] = [
     min: 0.7,
     max: 1.8,
     step: 0.01,
+  },
+  {
+    key: "animatedMovement",
+    label: t.clientOptions.config.animatedMovement.label,
+    description: t.clientOptions.config.animatedMovement.description,
+    type: "boolean",
   },
   {
     key: "disableAnimatedTransitions",
@@ -19745,15 +19873,15 @@ export default function App(): JSX.Element {
                   <>
                     <div className="nh3d-option-row nh3d-option-row-inline-toggle">
                       <div className="nh3d-option-copy">
-                        <div className="nh3d-option-label">
-                          {t.dialogs.clientOptions.updates.checkOnLaunchLabel}
-                        </div>
-                        <div className="nh3d-option-description">
-                          {
+                        <OptionLabelWithInfo
+                          label={
+                            t.dialogs.clientOptions.updates.checkOnLaunchLabel
+                          }
+                          description={
                             t.dialogs.clientOptions.updates
                               .checkOnLaunchDescription
                           }
-                        </div>
+                        />
                       </div>
                       <button
                         aria-checked={
@@ -19778,12 +19906,12 @@ export default function App(): JSX.Element {
                     </div>
                     <div className="nh3d-option-row nh3d-option-row-updates">
                       <div className="nh3d-option-copy">
-                        <div className="nh3d-option-label">
-                          {t.dialogs.clientOptions.updates.title}
-                        </div>
-                        <div className="nh3d-option-description">
-                          {t.dialogs.clientOptions.updates.description}
-                        </div>
+                        <OptionLabelWithInfo
+                          label={t.dialogs.clientOptions.updates.title}
+                          description={
+                            t.dialogs.clientOptions.updates.description
+                          }
+                        />
                         {optionsUpdateCheckStatus ? (
                           <div className="nh3d-updates-status">
                             {optionsUpdateCheckStatus}
@@ -19890,6 +20018,9 @@ export default function App(): JSX.Element {
                     const fpsModeDisabledByTerminal =
                       option.key === "fpsMode" &&
                       clientOptionsDraft.tilesetMode === "terminal";
+                    const animatedMovementDisabledByTerminal =
+                      option.key === "animatedMovement" &&
+                      clientOptionsDraft.tilesetMode === "terminal";
                     const darkWallOverrideDisabledByDarkCorridorWalls =
                       isDarkWallOverrideOption &&
                       !clientOptionsDraft.darkCorridorWalls367 &&
@@ -19903,7 +20034,8 @@ export default function App(): JSX.Element {
                       darkCorridorOptionSuppressedByVulture ||
                       darkWallOverrideDisabledByDarkCorridorWalls ||
                       invertLookOptionDisabledByFpsMode ||
-                      fpsModeDisabledByTerminal;
+                      fpsModeDisabledByTerminal ||
+                      animatedMovementDisabledByTerminal;
                     const toggleDisabledHint =
                       darkCorridorWallsForcedOnByVulture
                         ? t.dialogs.clientOptions.hints.darkWallsAlwaysEnabled
@@ -19938,13 +20070,14 @@ export default function App(): JSX.Element {
                           }`}
                         >
                           <div className="nh3d-option-copy">
-                            <div className="nh3d-option-label">
-                              {option.label}
-                            </div>
-                            <div className="nh3d-option-description">
-                              {option.description}
-                              {toggleDisabledHint}
-                            </div>
+                            <OptionLabelWithInfo
+                              label={option.label}
+                              description={`${option.description}${
+                                toggleDisabledHint
+                                  ? ` ${toggleDisabledHint}`
+                                  : ""
+                              }`}
+                            />
                           </div>
                           {isDarkWallTileOverrideOption ? (
                             <div className="nh3d-option-toggle-controls nh3d-option-secondary-controls">
@@ -20131,12 +20264,14 @@ export default function App(): JSX.Element {
                         {shouldRenderControllerRemapRow ? (
                           <div className="nh3d-option-row nh3d-option-row-controller-remap">
                             <div className="nh3d-option-copy">
-                              <div className="nh3d-option-label">
-                                {t.dialogs.clientOptions.controllerRemap.title}
-                              </div>
-                              <div className="nh3d-option-description">
-                                {t.dialogs.clientOptions.controllerRemap.hint}
-                              </div>
+                              <OptionLabelWithInfo
+                                label={
+                                  t.dialogs.clientOptions.controllerRemap.title
+                                }
+                                description={
+                                  t.dialogs.clientOptions.controllerRemap.hint
+                                }
+                              />
                             </div>
                             <div className="nh3d-option-select-controls">
                               <button
@@ -20183,12 +20318,10 @@ export default function App(): JSX.Element {
                         key={option.key}
                       >
                         <div className="nh3d-option-copy">
-                          <div className="nh3d-option-label">
-                            {option.label}
-                          </div>
-                          <div className="nh3d-option-description">
-                            {option.description}
-                          </div>
+                          <OptionLabelWithInfo
+                            label={option.label}
+                            description={option.description}
+                          />
                         </div>
                         <div
                           className={`nh3d-option-select-controls${
@@ -20270,8 +20403,9 @@ export default function App(): JSX.Element {
                               if (option.key === "asciiColorMode") {
                                 updateClientOptionDraft(
                                   option.key,
-                                  event.target.value === "classic"
-                                    ? "classic"
+                                  event.target.value === "classic" ||
+                                    event.target.value === "terminal"
+                                    ? event.target.value
                                     : "nethack-3d",
                                 );
                                 return;
@@ -20362,12 +20496,10 @@ export default function App(): JSX.Element {
                         key={option.key}
                       >
                         <div className="nh3d-option-copy">
-                          <div className="nh3d-option-label">
-                            {option.label}
-                          </div>
-                          <div className="nh3d-option-description">
-                            {option.description}
-                          </div>
+                          <OptionLabelWithInfo
+                            label={option.label}
+                            description={option.description}
+                          />
                         </div>
                         <div className="nh3d-option-slider-control">
                           <input
@@ -20444,12 +20576,10 @@ export default function App(): JSX.Element {
                         key={option.key}
                       >
                         <div className="nh3d-option-copy">
-                          <div className="nh3d-option-label">
-                            {option.label}
-                          </div>
-                          <div className="nh3d-option-description">
-                            {option.description}
-                          </div>
+                          <OptionLabelWithInfo
+                            label={option.label}
+                            description={option.description}
+                          />
                         </div>
                         <div className="nh3d-option-select-controls">
                           <input

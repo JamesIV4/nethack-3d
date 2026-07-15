@@ -1,6 +1,7 @@
 import {
   ArrowDown,
   ArrowUp,
+  Info,
   Minus,
   X,
   type LucideIcon,
@@ -36,5 +37,6 @@ export function Nh3dIcon({
 
 export const Nh3dIconArrowDown = ArrowDown;
 export const Nh3dIconArrowUp = ArrowUp;
+export const Nh3dIconInfo = Info;
 export const Nh3dIconMinus = Minus;
 export const Nh3dIconX = X;

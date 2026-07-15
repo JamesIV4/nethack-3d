@@ -733,10 +733,11 @@ export const en = {
         asciiColorMode: {
           label: "ASCII Colors",
           description:
-            "Color scheme used when rendering ASCII glyphs. Classic applies native NetHack colors with a dark background and reverse-video pet highlighting. NetHack 3D uses the original unmodified rendering.",
+            "Color scheme used when rendering 3D ASCII glyphs. NetHack 3D uses the semantic 3D palette. Classic and Terminal use the active runtime's exact colors and tty highlighting, with dark-grey and black backgrounds respectively.",
           options: {
             nethack3d: "NetHack 3D",
             classic: "Classic",
+            terminal: "Terminal",
           },
         },
         tilesetPath: {
@@ -777,6 +778,11 @@ export const en = {
         uiFontScale: {
           label: "UI font scale",
           description: "Scale all game UI font sizes from their defaults.",
+        },
+        animatedMovement: {
+          label: "Animated movement",
+          description:
+            "Animate the player and other creatures between cells in Tiles and 3D ASCII modes. True Terminal mode always updates immediately.",
         },
         disableAnimatedTransitions: {
           label: "Disable animated transitions",

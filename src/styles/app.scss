@@ -3766,6 +3766,53 @@ canvas {
   font-weight: bold;
 }
 
+.nh3d-option-label-with-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nh3d-option-info-button {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--nh3d-ui-accent-soft);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded="true"] {
+    color: var(--nh3d-ui-text);
+    outline: none;
+  }
+
+}
+
+.nh3d-option-info-popover {
+  position: fixed;
+  z-index: 120000;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border: 1px solid rgba(104, 162, 219, 0.75);
+  border-radius: 8px;
+  background: rgba(6, 18, 31, 0.98);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(8, 20, 34, 0.72);
+  color: var(--nh3d-ui-text);
+  font-size: nh3d-scale-font(13px);
+  line-height: 1.4;
+  pointer-events: auto;
+}
+
 .nh3d-option-description {
   color: var(--nh3d-ui-text-muted);
   font-size: nh3d-scale-font(13px);
