@@ -2,14 +2,18 @@ import { describe, expect, it } from "vitest";
 import {
   buildTerminalCellTextureKey,
   defaultTerminalRenderOptionStates,
+  getTerminalBoxDrawingConnections,
   getTerminalColorHex,
   mapCp437ByteToDisplayChar,
   mapDecGraphicsByteToDisplayChar,
   mapTerminalDisplayChar,
   resolveTerminalCellPresentation,
+  resolveTerminalPhysicalCellWidth,
   resolveTerminalRenderOptionStates,
+  resolveTerminalWallStrokeWidth,
   resolveTerminalSymsetHintFromName,
   splitNetHackOptionsString,
+  snapTerminalCameraCenterToPixelGrid,
   TERMINAL_BACKGROUND_HEX,
   TERMINAL_DEFAULT_FG_HEX,
   TERMINAL_MG_FLAGS,
@@ -66,6 +70,88 @@ describe("CP437 and DEC graphics mapping", () => {
     expect(mapTerminalDisplayChar("@", "dec")).toBe("@");
     expect(mapTerminalDisplayChar("", null)).toBe(" ");
     expect(mapTerminalDisplayChar(null, null)).toBe(" ");
+  });
+});
+
+describe("connected terminal cell rendering", () => {
+  it("describes every IBM/DEC single-line wall connection", () => {
+    expect(getTerminalBoxDrawingConnections("\u2500")).toEqual({
+      left: true,
+      right: true,
+      up: false,
+      down: false,
+    });
+    expect(getTerminalBoxDrawingConnections("\u2502")).toEqual({
+      left: false,
+      right: false,
+      up: true,
+      down: true,
+    });
+    expect(getTerminalBoxDrawingConnections("\u250c")).toEqual({
+      left: false,
+      right: true,
+      up: false,
+      down: true,
+    });
+    expect(getTerminalBoxDrawingConnections("\u253c")).toEqual({
+      left: true,
+      right: true,
+      up: true,
+      down: true,
+    });
+    expect(getTerminalBoxDrawingConnections("@")).toBeNull();
+  });
+
+  it("uses a whole number of physical pixels without exceeding fit", () => {
+    expect(
+      resolveTerminalPhysicalCellWidth({
+        drawingBufferWidth: 1919,
+        drawingBufferHeight: 1079,
+        mapWorldWidth: 80,
+        mapWorldHeight: 21,
+        cellAspect: 2,
+        zoomFactor: 1,
+        pixelRatio: 1.25,
+        minCellCssPx: 14,
+        maxCellCssPx: 96,
+        containWholeLevel: true,
+      }),
+    ).toBe(23);
+  });
+
+  it("uses one uniform integer wall thickness per snapped scale", () => {
+    expect(resolveTerminalWallStrokeWidth(23)).toBe(2);
+    expect(resolveTerminalWallStrokeWidth(29)).toBe(3);
+    expect(resolveTerminalWallStrokeWidth(64)).toBe(6);
+  });
+
+  it("rounds zoomed views to the nearest physical-pixel scale", () => {
+    expect(
+      resolveTerminalPhysicalCellWidth({
+        drawingBufferWidth: 1919,
+        drawingBufferHeight: 1079,
+        mapWorldWidth: 80,
+        mapWorldHeight: 21,
+        cellAspect: 2,
+        zoomFactor: 1.2,
+        pixelRatio: 1.25,
+        minCellCssPx: 14,
+        maxCellCssPx: 96,
+        containWholeLevel: false,
+      }),
+    ).toBe(29);
+  });
+
+  it("snaps the reference tile boundary to a physical pixel", () => {
+    const center = snapTerminalCameraCenterToPixelGrid({
+      centerWorld: 39.5,
+      referenceBoundaryWorld: -0.5,
+      drawingBufferPixels: 1919,
+      pixelsPerWorldUnit: 23,
+    });
+    const projectedBoundary = 1919 / 2 + (-0.5 - center) * 23;
+
+    expect(Number.isInteger(projectedBoundary)).toBe(true);
   });
 });
 

@@ -42,8 +42,12 @@ import { getNetHackColorHex } from "./glyphs/colors";
 import {
   buildTerminalCellTextureKey,
   defaultTerminalRenderOptionStates,
+  getTerminalBoxDrawingConnections,
   resolveTerminalCellPresentation,
+  resolveTerminalPhysicalCellWidth,
   resolveTerminalRenderOptionStates,
+  resolveTerminalWallStrokeWidth,
+  snapTerminalCameraCenterToPixelGrid,
   splitNetHackOptionsString,
   type TerminalCellPresentation,
   type TerminalRenderOptionStates,
@@ -1234,6 +1238,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private terminalCamera: THREE.OrthographicCamera | null = null;
   private terminalCellTextureCache: Map<string, TerminalCellTextureEntry> =
     new Map();
+  // Canvas textures are rasterized at the current snapped physical-pixel cell
+  // size. This avoids resampling both text and procedural wall strokes.
+  private terminalRasterCellWidthPx: number = 16;
   private terminalRenderOptionStates: TerminalRenderOptionStates = {
     ...defaultTerminalRenderOptionStates,
   };
@@ -26642,7 +26649,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private drawTerminalCellCanvas(
     presentation: TerminalCellPresentation,
   ): HTMLCanvasElement {
-    const cellWidth = 64;
+    const cellWidth = Math.max(1, Math.round(this.terminalRasterCellWidthPx));
     const cellHeight = Math.round(cellWidth * this.terminalCellAspect);
     const canvas = document.createElement("canvas");
     canvas.width = cellWidth;
@@ -26651,31 +26658,86 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!context) {
       throw new Error("Failed to create terminal cell canvas context");
     }
+    context.imageSmoothingEnabled = false;
     context.fillStyle = presentation.bgHex;
     context.fillRect(0, 0, cellWidth, cellHeight);
     const displayChar = presentation.displayChar;
-    if (displayChar.trim().length > 0) {
+    const boxDrawingConnections =
+      getTerminalBoxDrawingConnections(displayChar);
+    if (boxDrawingConnections) {
+      // Draw wall arms as solid rectangles all the way to the canvas edges.
+      // This removes font side bearings and avoids antialiased half-pixels at
+      // the boundary shared by neighboring terminal cells.
+      const strokeWidth = resolveTerminalWallStrokeWidth(cellWidth);
+      const verticalStrokeStart = Math.floor(
+        (cellWidth - strokeWidth) / 2,
+      );
+      const verticalStrokeEnd = verticalStrokeStart + strokeWidth;
+      const horizontalStrokeStart = Math.floor(
+        (cellHeight - strokeWidth) / 2,
+      );
+      const horizontalStrokeEnd = horizontalStrokeStart + strokeWidth;
+      context.fillStyle = presentation.fgHex;
+      if (boxDrawingConnections.left || boxDrawingConnections.right) {
+        const startX = boxDrawingConnections.left ? 0 : verticalStrokeStart;
+        const endX = boxDrawingConnections.right
+          ? cellWidth
+          : verticalStrokeEnd;
+        context.fillRect(
+          startX,
+          horizontalStrokeStart,
+          endX - startX,
+          strokeWidth,
+        );
+      }
+      if (boxDrawingConnections.up || boxDrawingConnections.down) {
+        const startY = boxDrawingConnections.up ? 0 : horizontalStrokeStart;
+        const endY = boxDrawingConnections.down
+          ? cellHeight
+          : horizontalStrokeEnd;
+        context.fillRect(
+          verticalStrokeStart,
+          startY,
+          strokeWidth,
+          endY - startY,
+        );
+      }
+    } else if (displayChar.trim().length > 0) {
       const fontSize = Math.floor(cellHeight * 0.82);
       context.font = `${fontSize}px "Cascadia Mono", "Consolas", "Menlo", "DejaVu Sans Mono", monospace`;
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.fillStyle = presentation.fgHex;
-      context.fillText(displayChar, cellWidth / 2, cellHeight / 2 + 1);
+      context.fillText(
+        displayChar,
+        Math.floor(cellWidth / 2),
+        Math.floor(cellHeight / 2),
+      );
     }
     return canvas;
+  }
+
+  private buildScaledTerminalCellTextureKey(
+    presentation: TerminalCellPresentation,
+  ): string {
+    return `${this.terminalRasterCellWidthPx}px|${buildTerminalCellTextureKey(
+      presentation,
+    )}`;
   }
 
   private acquireTerminalCellMaterial(
     presentation: TerminalCellPresentation,
   ): { material: THREE.MeshBasicMaterial; textureKey: string } {
-    const textureKey = buildTerminalCellTextureKey(presentation);
+    const textureKey = this.buildScaledTerminalCellTextureKey(presentation);
     let entry = this.terminalCellTextureCache.get(textureKey);
     if (!entry) {
       const texture = new THREE.CanvasTexture(
         this.drawTerminalCellCanvas(presentation),
       );
-      texture.magFilter = THREE.LinearFilter;
-      texture.minFilter = THREE.LinearFilter;
+      // The canvas and screen cell now have the same physical dimensions, so
+      // nearest sampling is a true 1:1 copy rather than pixel-art scaling.
+      texture.magFilter = THREE.NearestFilter;
+      texture.minFilter = THREE.NearestFilter;
       texture.generateMipmaps = false;
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.needsUpdate = true;
@@ -26709,7 +26771,33 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.releaseTerminalCellTexture(textureKey);
     }
     delete mesh.userData.terminalTextureKey;
+    delete mesh.userData.terminalPresentation;
     delete mesh.userData.terminalCell;
+  }
+
+  private refreshTerminalCellMaterialsForRasterScale(): void {
+    for (const mesh of this.tileMap.values()) {
+      if (mesh.userData?.terminalCell !== true) {
+        continue;
+      }
+      const presentation = mesh.userData
+        ?.terminalPresentation as TerminalCellPresentation | null;
+      if (!presentation || typeof presentation.displayChar !== "string") {
+        continue;
+      }
+      const previousTextureKey = mesh.userData?.terminalTextureKey;
+      const nextTextureKey =
+        this.buildScaledTerminalCellTextureKey(presentation);
+      if (previousTextureKey === nextTextureKey) {
+        continue;
+      }
+      const acquired = this.acquireTerminalCellMaterial(presentation);
+      mesh.material = acquired.material;
+      mesh.userData.terminalTextureKey = acquired.textureKey;
+      if (typeof previousTextureKey === "string") {
+        this.releaseTerminalCellTexture(previousTextureKey);
+      }
+    }
   }
 
   private disposeAllTerminalCellVisuals(): void {
@@ -26799,7 +26887,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
           : null,
       optionStates: this.terminalRenderOptionStates,
     });
-    const nextTextureKey = buildTerminalCellTextureKey(presentation);
+    const nextTextureKey =
+      this.buildScaledTerminalCellTextureKey(presentation);
 
     if (!mesh) {
       const acquired = this.acquireTerminalCellMaterial(presentation);
@@ -26841,6 +26930,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.removeEntityBlobShadow(key);
 
     mesh.userData.terminalCell = true;
+    mesh.userData.terminalPresentation = { ...presentation };
     mesh.userData.tileX = x;
     mesh.userData.tileY = y;
     // Terminal cells are flat; interaction logic still needs the semantic
@@ -38827,27 +38917,36 @@ class Nethack3DEngine implements Nethack3DEngineController {
   // the player (or position cursor) with classic edge-clamped scrolling.
   private updateTerminalCamera(deltaSeconds: number): void {
     const camera = this.ensureTerminalCamera();
-    const viewport = this.getRendererViewportSize();
+    const drawingBufferSize = this.renderer.getDrawingBufferSize(
+      new THREE.Vector2(),
+    );
+    const drawingBufferWidth = Math.max(1, Math.round(drawingBufferSize.x));
+    const drawingBufferHeight = Math.max(1, Math.round(drawingBufferSize.y));
     const mapWorldWidth = this.terminalMapColumns * TILE_SIZE;
     const mapWorldHeight = this.terminalMapRows * TILE_SIZE;
 
-    // Pixels per world unit along X; Y renders terminalCellAspect times
-    // taller so cells keep terminal-font proportions.
-    const fitScale = Math.min(
-      viewport.width / mapWorldWidth,
-      viewport.height / (mapWorldHeight * this.terminalCellAspect),
-    );
     const zoomFactor =
       this.terminalFitCameraDistance / Math.max(1, this.cameraDistance);
-    const cellScale = THREE.MathUtils.clamp(
-      fitScale * zoomFactor,
-      this.terminalMinCellPx,
-      this.terminalMaxCellPx,
-    );
+    const cellScale = resolveTerminalPhysicalCellWidth({
+      drawingBufferWidth,
+      drawingBufferHeight,
+      mapWorldWidth,
+      mapWorldHeight,
+      cellAspect: this.terminalCellAspect,
+      zoomFactor,
+      pixelRatio: this.renderer.getPixelRatio(),
+      minCellCssPx: this.terminalMinCellPx,
+      maxCellCssPx: this.terminalMaxCellPx,
+      containWholeLevel: zoomFactor <= 1,
+    });
+    if (cellScale !== this.terminalRasterCellWidthPx) {
+      this.terminalRasterCellWidthPx = cellScale;
+      this.refreshTerminalCellMaterialsForRasterScale();
+    }
 
-    const viewWorldWidth = viewport.width / cellScale;
+    const viewWorldWidth = drawingBufferWidth / cellScale;
     const viewWorldHeight =
-      viewport.height / (cellScale * this.terminalCellAspect);
+      drawingBufferHeight / (cellScale * this.terminalCellAspect);
 
     // Map bounds in world coordinates (tile y increases downward).
     const minWorldX = -TILE_SIZE / 2;
@@ -38870,7 +38969,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.cameraFollowCurrent.lerp(this.cameraFollowTarget, alpha);
     }
 
-    const centerX =
+    const unclippedCenterX =
       viewWorldWidth >= mapWorldWidth
         ? (minWorldX + maxWorldX) / 2
         : THREE.MathUtils.clamp(
@@ -38878,7 +38977,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
             minWorldX + viewWorldWidth / 2,
             maxWorldX - viewWorldWidth / 2,
           );
-    const centerY =
+    const unclippedCenterY =
       viewWorldHeight >= mapWorldHeight
         ? (minWorldY + maxWorldY) / 2
         : THREE.MathUtils.clamp(
@@ -38886,6 +38985,22 @@ class Nethack3DEngine implements Nethack3DEngineController {
             minWorldY + viewWorldHeight / 2,
             maxWorldY - viewWorldHeight / 2,
           );
+
+    // Align the map's first tile boundary to a physical-pixel edge. Since the
+    // cell size above is integral in physical pixels, every other boundary is
+    // aligned as well, including on fractional-DPR monitors.
+    const centerX = snapTerminalCameraCenterToPixelGrid({
+      centerWorld: unclippedCenterX,
+      referenceBoundaryWorld: minWorldX,
+      drawingBufferPixels: drawingBufferWidth,
+      pixelsPerWorldUnit: cellScale,
+    });
+    const centerY = snapTerminalCameraCenterToPixelGrid({
+      centerWorld: unclippedCenterY,
+      referenceBoundaryWorld: maxWorldY,
+      drawingBufferPixels: drawingBufferHeight,
+      pixelsPerWorldUnit: cellScale * this.terminalCellAspect,
+    });
 
     camera.left = -viewWorldWidth / 2;
     camera.right = viewWorldWidth / 2;
