@@ -9,6 +9,7 @@ import {
   mapDecGraphicsByteToDisplayChar,
   mapSlashEmCmapCharForTerminal,
   mapTerminalDisplayChar,
+  replaceNetHackLookDescriptionSymbol,
   resolveTerminalCellPresentation,
   resolveTerminalPhysicalCellWidth,
   resolveTerminalRenderOptionStates,
@@ -73,6 +74,21 @@ describe("CP437 and DEC graphics mapping", () => {
     expect(mapTerminalDisplayChar("@", "dec")).toBe("@");
     expect(mapTerminalDisplayChar("", null)).toBe(" ");
     expect(mapTerminalDisplayChar(null, null)).toBe(" ");
+  });
+
+  it("replaces the encoded symbol field in NetHack look descriptions", () => {
+    expect(
+      replaceNetHackLookDescriptionSymbol(
+        `${String.fromCharCode(0xb3)}       a wall`,
+        "\u2502",
+      ),
+    ).toBe("\u2502       a wall");
+    expect(
+      replaceNetHackLookDescriptionSymbol("\ufffd       a corridor", "\u2500"),
+    ).toBe("\u2500       a corridor");
+    expect(
+      replaceNetHackLookDescriptionSymbol("The jackal bites!", "\u2502"),
+    ).toBe("The jackal bites!");
   });
 });
 

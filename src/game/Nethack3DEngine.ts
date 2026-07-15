@@ -49,6 +49,7 @@ import {
   getTerminalColorHex,
   getTerminalBoxDrawingConnections,
   isTerminalVoidGridTargetAdjacentToPlayer,
+  replaceNetHackLookDescriptionSymbol,
   resolveTerminalCellPresentation,
   resolveTerminalPhysicalCellWidth,
   resolveTerminalRenderOptionStates,
@@ -40644,6 +40645,34 @@ class Nethack3DEngine implements Nethack3DEngineController {
       .trim();
   }
 
+  private resolveFpsCrosshairGlanceDisplayChar(tileKey: string): string | null {
+    const signature = this.tileStateCache.get(tileKey);
+    const tile = signature ? this.parseTileStateSignature(signature) : null;
+    if (!tile) {
+      return null;
+    }
+    const presentation = resolveTerminalCellPresentation({
+      char: tile.char ?? null,
+      color: tile.color ?? null,
+      glyphFlags: tile.glyphFlags ?? null,
+      optionStates: this.terminalRenderOptionStates,
+      slashEmCmapIndex: this.resolveSlashEmTerminalCmapIndex(tile.glyph),
+    });
+    return presentation.displayChar.trim().length > 0
+      ? presentation.displayChar
+      : null;
+  }
+
+  private normalizeFpsCrosshairGlanceText(
+    rawText: string,
+    tileKey: string,
+  ): string {
+    const displayChar = this.resolveFpsCrosshairGlanceDisplayChar(tileKey);
+    return this.sanitizeFpsCrosshairGlanceText(
+      replaceNetHackLookDescriptionSymbol(rawText, displayChar),
+    );
+  }
+
   private mergeFpsCrosshairGlanceSourceText(
     existingSourceText: string,
     nextLineText: string,
@@ -40767,12 +40796,15 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
 
-    const text = this.sanitizeFpsCrosshairGlanceText(messageLike);
+    const pending = this.fpsCrosshairGlancePending;
+    const text = this.normalizeFpsCrosshairGlanceText(
+      messageLike,
+      pending.tileKey,
+    );
     if (!text || this.shouldIgnoreFpsCrosshairGlanceText(text)) {
       return;
     }
 
-    const pending = this.fpsCrosshairGlancePending;
     const cachedEntry = this.fpsCrosshairGlanceCache.get(pending.tileKey);
     const merged = this.mergeFpsCrosshairGlanceSourceText(
       cachedEntry?.sourceText ?? "",
