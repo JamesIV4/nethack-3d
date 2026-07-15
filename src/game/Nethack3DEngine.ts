@@ -38,7 +38,10 @@ import {
   isSinkCmapGlyph,
   isVerticalDoorCmapGlyph,
 } from "./glyphs/behavior";
-import { resolveAsciiGlyphPresentation } from "./ascii-color-mode";
+import {
+  CLASSIC_ASCII_BACKGROUND_HEX,
+  resolveAsciiGlyphPresentation,
+} from "./ascii-color-mode";
 import { resolveSlashEmCommandInputBinding } from "./slashem-command-capabilities";
 import {
   buildTerminalCellTextureKey,
@@ -1209,6 +1212,7 @@ const NH3D_VULTURE_PREBAKED_PROJECTION_MANIFEST_RELATIVE_PATH =
 const NH3D_LUCIDE_HEART_PATH =
   "M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5";
 const NH3D_PET_HEART_COLOR = "#ff244f";
+const NH3D_PET_HEART_MIN_TILE_RESOLUTION = 32;
 
 function createControllerBooleanActionMap(
   initialValue: boolean,
@@ -1784,7 +1788,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     new Map();
   private fpsWallChamferFloorMeshes: Map<string, THREE.Mesh> = new Map();
   private fpsWallChamferFaceMaterialCache: Map<
-    TileMaterialKind,
+    string,
     THREE.MeshBasicMaterial
   > = new Map();
   private fpsWallChamferFloorMaterialCache: Map<
@@ -21684,15 +21688,31 @@ class Nethack3DEngine implements Nethack3DEngineController {
           solidWallMaterial,
         ];
       } else {
-        // In ASCII mode, keep chamfer cuts floor-tinted for diagonal readability.
-        const chamferKind =
-          typeof mesh.userData?.fpsWallChamferMaterialKind === "string"
-            ? (mesh.userData.fpsWallChamferMaterialKind as TileMaterialKind)
-            : null;
-        const chamferMaterial = chamferKind
-          ? this.getMaterialByKind(chamferKind)
-          : baseMaterial;
-        mesh.material = [overlay.material, baseMaterial, chamferMaterial];
+        const asciiColorModeFaceMaterial = resolvedGlyphBackgroundColorHex
+          ? this.getFpsAsciiWallColorModeFaceMaterial(
+              resolvedGlyphBackgroundColorHex,
+            )
+          : null;
+        if (asciiColorModeFaceMaterial) {
+          // Classic and Terminal define an explicit cell background. Apply it
+          // to every vertical wall face so chamfers cannot fall back to the
+          // semantic 3D wall/floor palette.
+          mesh.material = [
+            overlay.material,
+            asciiColorModeFaceMaterial,
+            asciiColorModeFaceMaterial,
+          ];
+        } else {
+          // NetHack 3D colors retain the semantic floor-tinted chamfer.
+          const chamferKind =
+            typeof mesh.userData?.fpsWallChamferMaterialKind === "string"
+              ? (mesh.userData.fpsWallChamferMaterialKind as TileMaterialKind)
+              : null;
+          const chamferMaterial = chamferKind
+            ? this.getMaterialByKind(chamferKind)
+            : baseMaterial;
+          mesh.material = [overlay.material, baseMaterial, chamferMaterial];
+        }
       }
     } else if (isWall) {
       if (shouldUseVultureWallFaceMaterials && useTiles) {
@@ -23786,6 +23806,37 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return wallMaterialKind === "dark_wall" ? "dark" : "floor";
   }
 
+  private getFpsAsciiWallColorModeFaceMaterial(
+    backgroundColorHex: string,
+  ): THREE.MeshBasicMaterial {
+    const cacheKey = backgroundColorHex.trim().toLowerCase();
+    const cached = this.fpsWallChamferFaceMaterialCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    const material = new THREE.MeshBasicMaterial({
+      color: backgroundColorHex,
+      transparent: false,
+      toneMapped: false,
+    });
+    this.patchMaterialForVignette(material);
+    this.fpsWallChamferFaceMaterialCache.set(cacheKey, material);
+    return material;
+  }
+
+  private resolveFpsAsciiColorModeBackground(): string | null {
+    if (this.clientOptions.tilesetMode !== "ascii") {
+      return null;
+    }
+    if (this.clientOptions.asciiColorMode === "terminal") {
+      return TERMINAL_BACKGROUND_HEX;
+    }
+    if (this.clientOptions.asciiColorMode === "classic") {
+      return CLASSIC_ASCII_BACKGROUND_HEX;
+    }
+    return null;
+  }
+
   private getFpsWallChamferFloorMaterial(
     tileX: number,
     tileY: number,
@@ -23808,9 +23859,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const useBackgroundReferenceTileKey = useBackgroundReferenceTile
       ? "ubgref:1"
       : "ubgref:0";
+    const asciiColorModeBackground = useTiles
+      ? null
+      : this.resolveFpsAsciiColorModeBackground();
     const cacheKey = useTiles
       ? `tile:${tileIndex}|sg:${sourceGlyphKey}|mk:${resolvedMaterialKind}|${useBackgroundReferenceTileKey}`
-      : `ascii:${resolvedMaterialKind}`;
+      : `ascii:${resolvedMaterialKind}|bg:${asciiColorModeBackground ?? "semantic"}`;
     const cached = this.fpsWallChamferFloorMaterialCache.get(cacheKey);
     if (cached) {
       return cached.material;
@@ -23834,6 +23888,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
           1,
           256,
           true,
+          asciiColorModeBackground,
         );
     const material = new THREE.MeshBasicMaterial({
       map: texture,
@@ -25095,14 +25150,26 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return baseTexture;
     }
 
+    const sourceMinAxis = Math.max(
+      1,
+      Math.min(sourceInfo.width, sourceInfo.height),
+    );
+    const outputScale = Math.max(
+      1,
+      Math.ceil(NH3D_PET_HEART_MIN_TILE_RESOLUTION / sourceMinAxis),
+    );
     const canvas = document.createElement("canvas");
-    canvas.width = sourceInfo.width;
-    canvas.height = sourceInfo.height;
+    canvas.width = sourceInfo.width * outputScale;
+    canvas.height = sourceInfo.height * outputScale;
     const context = canvas.getContext("2d");
     if (!context) {
       return baseTexture;
     }
 
+    // Preserve the tileset's original pixel boundaries when a sub-32px tile
+    // needs a larger decoration surface. The heart itself is then rasterized
+    // at no less than the resolution of a 32px tileset.
+    context.imageSmoothingEnabled = outputScale === 1;
     context.drawImage(sourceInfo.source, 0, 0, canvas.width, canvas.height);
     const iconSize = Math.max(
       8,
@@ -25112,7 +25179,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const iconScale = iconSize / 24;
     const heartPath = new Path2D(NH3D_LUCIDE_HEART_PATH);
     context.save();
-    context.translate(inset, inset);
+    context.translate(canvas.width - inset - iconSize, inset);
     context.scale(iconScale, iconScale);
     context.lineJoin = "round";
     context.lineCap = "round";
