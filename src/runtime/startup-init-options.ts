@@ -66,6 +66,7 @@ const automaticRuntimeInitOptionTokensByVersion: Readonly<
   Record<NethackRuntimeVersion, readonly string[]>
 > = {
   "3.6.7": [
+    "color",
     "mouse_support",
     "runmode:walk",
     "time",
@@ -77,6 +78,7 @@ const automaticRuntimeInitOptionTokensByVersion: Readonly<
     "clicklook",
   ],
   "5.0": [
+    "color",
     "mouse_support",
     "runmode:walk",
     "time",
@@ -88,6 +90,7 @@ const automaticRuntimeInitOptionTokensByVersion: Readonly<
     "!bones",
   ],
   slashem: [
+    "color",
     "mouse_support",
     "runmode:walk",
     "time",
@@ -327,7 +330,7 @@ export const startupInitOptionDefinitions: ReadonlyArray<StartupInitOptionDefini
       label: startupStrings.options.symset.label,
       description: startupStrings.options.symset.description,
       control: "select",
-      defaultValue: "",
+      defaultValue: "IBMgraphics",
       options: [
         { value: "", label: startupStrings.options.symset.options.default },
         {
