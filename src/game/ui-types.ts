@@ -248,6 +248,7 @@ export type FpsCrosshairContextState = {
 export type PlayMode = "normal" | "fps";
 export type Nh3dAntialiasingMode = "taa" | "fxaa";
 export type Nh3dAsciiColorMode = "nethack-3d" | "classic";
+export type Nh3dTilesetMode = "ascii" | "tiles" | "terminal";
 export type Nh3dDesktopTouchInterfaceMode = "off" | "portrait" | "landscape";
 export type Nh3dBloodDetailMode = "veryLow" | "low" | "medium" | "high";
 export type Nh3dInventoryFixedTileSizeMode =
@@ -361,7 +362,7 @@ export type Nh3dClientOptions = {
   fpsHeldWeaponVisible: boolean;
   fpsHeldWeaponSpriteFlipX: boolean;
   fpsHeldWeaponSpriteFlipXByTileset: TilesetWeaponSpriteFlipXByTileset;
-  tilesetMode: "ascii" | "tiles";
+  tilesetMode: Nh3dTilesetMode;
   asciiColorMode: Nh3dAsciiColorMode;
   tilesetPath: string;
   antialiasing: Nh3dAntialiasingMode;
@@ -953,12 +954,16 @@ export function normalizeNh3dClientOptions(
       ? "tiles"
       : overrides?.tilesetMode === "ascii"
         ? "ascii"
-        : defaultNh3dClientOptions.tilesetMode;
+        : overrides?.tilesetMode === "terminal"
+          ? "terminal"
+          : defaultNh3dClientOptions.tilesetMode;
   const resolvedTilesetPathExists = isNh3dTilesetPathAvailable(tilesetPath);
-  const tilesetMode =
-    requestedTilesetMode === "tiles" && resolvedTilesetPathExists
-      ? "tiles"
-      : "ascii";
+  const tilesetMode: Nh3dTilesetMode =
+    requestedTilesetMode === "terminal"
+      ? "terminal"
+      : requestedTilesetMode === "tiles" && resolvedTilesetPathExists
+        ? "tiles"
+        : "ascii";
   const darkCorridorWallTileOverrideEnabledByTileset =
     normalizeDarkCorridorWallOverrideEnabledByTileset(
       overrides?.darkCorridorWallTileOverrideEnabledByTileset,

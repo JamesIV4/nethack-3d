@@ -1886,6 +1886,19 @@ class LocalNetHackRuntime {
     if (this.isClosed || !tile || !this.eventHandler) {
       return;
     }
+    if (
+      typeof tile.glyphFlags !== "number" &&
+      typeof tile.x === "number" &&
+      typeof tile.y === "number"
+    ) {
+      // Emit sites store decoded MG_* flags in gameMap before queueing; the
+      // client (terminal display mode) needs them for tty-style highlighting.
+      const storedTile = this.gameMap.get(`${tile.x},${tile.y}`);
+      tile.glyphFlags =
+        storedTile && typeof storedTile.glyphFlags === "number"
+          ? storedTile.glyphFlags
+          : null;
+    }
     this.emit(tile);
   }
 
@@ -4806,10 +4819,14 @@ class LocalNetHackRuntime {
     if (!glyphInfo || typeof glyphInfo !== "object") {
       return null;
     }
+    // 5.0 map_glyphinfo exposes "glyphflags"; the 3.6.7/Slash'EM mapglyph
+    // helper returns the same MG_* bits as "special".
     const glyphFlagsCandidate =
       typeof glyphInfo.glyphflags === "number"
         ? glyphInfo.glyphflags
-        : glyphInfo.glyphFlags;
+        : typeof glyphInfo.glyphFlags === "number"
+          ? glyphInfo.glyphFlags
+          : glyphInfo.special;
     if (
       typeof glyphFlagsCandidate === "number" &&
       Number.isFinite(glyphFlagsCandidate)

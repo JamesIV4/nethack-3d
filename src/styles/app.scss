@@ -139,6 +139,7 @@
   --nh3d-live-log-font-scale: 1;
   --nh3d-desktop-log-window-scale: 1;
   --nh3d-minimap-scale: 1;
+  --nh3d-terminal-log-gutter-width: clamp(300px, 24vw, 420px);
 
   @supports (height: 100dvh) {
     --nh3d-mobile-visible-height: 100dvh;
@@ -440,6 +441,33 @@ select {
   }
 }
 
+// Terminal desktop layout reserves a real sidebar for the message history.
+// Keeping the renderer's host out of this area also makes the terminal camera
+// fit against the actual gameplay rectangle instead of rendering behind UI.
+:root.nh3d-terminal-desktop-gutter {
+  .nh3d-canvas-root {
+    right: var(--nh3d-terminal-log-gutter-width);
+  }
+
+  .nh3d-minimap {
+    display: none !important;
+    pointer-events: none !important;
+  }
+}
+
+.nh3d-terminal-log-gutter {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--nh3d-terminal-log-gutter-width);
+  box-sizing: border-box;
+  background: #030303;
+  border-left: 1px solid rgba(190, 205, 220, 0.28);
+  box-shadow: -8px 0 18px rgba(0, 0, 0, 0.38);
+  z-index: 900;
+}
+
 canvas {
   display: block;
 }
@@ -483,6 +511,38 @@ canvas {
     #game-log {
       display: none;
     }
+  }
+}
+
+.top-left-ui.nh3d-terminal-log-gutter-panel {
+  top: calc(
+    var(--nh3d-safe-area-top) + var(--nh3d-stats-bar-height, 52px) + 10px
+  );
+  right: 12px;
+  bottom: 12px;
+  left: auto;
+  display: flex;
+  width: calc(var(--nh3d-terminal-log-gutter-width) - 24px);
+  max-width: none;
+  min-height: 0;
+  box-sizing: border-box;
+  flex-direction: column;
+  background: rgba(3, 3, 3, 0.96);
+  border-color: rgba(190, 205, 220, 0.36);
+  border-radius: 4px;
+  pointer-events: auto;
+
+  .nh3d-overflow-glow-frame {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #game-log {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    box-sizing: border-box;
   }
 }
 
@@ -1264,6 +1324,17 @@ canvas {
     opacity: 0;
     transform: translateY(calc(-1 * var(--floating-message-rise-px)));
   }
+}
+
+// Terminal display mode: back each live gameplay message with translucent
+// black so the text stays readable over the bright glyph grid. The
+// background sits on the same element as the rise/fade animation, so it
+// fades out together with the message.
+.nh3d-floating-log-terminal .floating-message-text {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  padding: calc(2px * var(--nh3d-ui-font-scale, 1))
+    calc(10px * var(--nh3d-ui-font-scale, 1));
 }
 
 .nh3d-meta-command {

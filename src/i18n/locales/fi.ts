@@ -367,6 +367,31 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
           "Välilyönneillä erotetut lisävahvistukset (esim. confirm quit attack pray).",
         placeholder: "attack confirm pray quit",
       },
+      hilite_pet: {
+        label: "Korosta lemmikit",
+        description:
+          "Korostaa lemmikit (`hilite_pet`). Pääte-näyttötilassa lemmikit näytetään käänteisvärein kuten klassisessa tty-NetHackissa.",
+      },
+      hilite_pile: {
+        label: "Korosta esinekasat",
+        description:
+          "Korostaa esinekasat (`hilite_pile`). Pääte-näyttötilassa kasat näytetään käänteisvärein.",
+      },
+      use_inverse: {
+        label: "Käänteiskorostus",
+        description:
+          "Sallii käänteisvärikorostuksen (`use_inverse`), esimerkiksi havaituille hirviöille.",
+      },
+      symset: {
+        label: "Symbolijoukko",
+        description:
+          "NetHackin symbolijoukko karttamerkeille (`symset`). IBMgraphics ja DECgraphics piirtävät seinät viivamerkeillä ASCII- ja Pääte-näyttötiloissa.",
+        options: {
+          default: "Oletus (pelkkä ASCII)",
+          ibm: "IBMgraphics",
+          dec: "DECgraphics",
+        },
+      },
       sparkle: {
         label: "Taikavastuksen säihke",
         description: "Näytä erityiset säihketehosteet taikavastukselle.",
@@ -712,10 +737,12 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
         sectionDisplayGraphics: "Grafiikka ja renderöinti",
         tilesetMode: {
           label: "Näyttö",
-          description: "Käytä graafisia ruutuja ASCII:n sijaan.",
+          description:
+            "Miten pelimaailma piirretään: 3D-ASCII-lohkot, graafiset ruudut tai simuloitu pääte, joka näyttää täsmälleen NetHackin tuottamat merkit ja värit (kunnioittaen asetuksia kuten symset, hilite_pet ja hilite_pile).",
           options: {
             ascii: "ASCII-grafiikka",
             tiles: "Ruudut",
+            terminal: "Pääte",
           },
         },
         asciiColorMode: {

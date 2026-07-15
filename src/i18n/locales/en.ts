@@ -350,6 +350,31 @@ export const en = {
           "Space-separated extra confirmations (example: confirm quit attack pray).",
         placeholder: "confirm quit attack pray",
       },
+      hilite_pet: {
+        label: "Highlight Pets",
+        description:
+          "Highlight pets (`hilite_pet`). In Terminal display mode pets are shown in reverse video, matching classic tty NetHack.",
+      },
+      hilite_pile: {
+        label: "Highlight Item Piles",
+        description:
+          "Highlight piles of items (`hilite_pile`). In Terminal display mode piles are shown in reverse video.",
+      },
+      use_inverse: {
+        label: "Inverse Highlighting",
+        description:
+          "Allow reverse-video highlighting (`use_inverse`), for example for detected monsters.",
+      },
+      symset: {
+        label: "Symbol Set",
+        description:
+          "NetHack symbol set for map glyphs (`symset`). IBMgraphics and DECgraphics draw walls with line-drawing characters in ASCII and Terminal display modes.",
+        options: {
+          default: "Default (plain ASCII)",
+          ibm: "IBMgraphics",
+          dec: "DECgraphics",
+        },
+      },
       sparkle: {
         label: "Magic Resistance Sparkle",
         description: "Show special sparkle effects for magic resistance.",
@@ -692,10 +717,12 @@ export const en = {
         sectionDisplayGraphics: "Graphics and rendering",
         tilesetMode: {
           label: "Display",
-          description: "Use graphical tiles instead of ASCII.",
+          description:
+            "How the game world is drawn: 3D ASCII blocks, graphical tiles, or a simulated terminal that shows the exact glyphs and colors produced by NetHack (honoring options like symset, hilite_pet, and hilite_pile).",
           options: {
             ascii: "ASCII",
             tiles: "Tiles",
+            terminal: "Terminal",
           },
         },
         asciiColorMode: {

@@ -349,6 +349,31 @@ export const ru = {
           "Дополнительные подтверждения через пробел (пример: confirm quit attack pray).",
         placeholder: "confirm quit attack pray",
       },
+      hilite_pet: {
+        label: "Подсветка питомцев",
+        description:
+          "Подсвечивает питомцев (`hilite_pet`). В режиме отображения «Терминал» питомцы выводятся инверсией, как в классическом tty NetHack.",
+      },
+      hilite_pile: {
+        label: "Подсветка куч предметов",
+        description:
+          "Подсвечивает кучи предметов (`hilite_pile`). В режиме «Терминал» кучи выводятся инверсией.",
+      },
+      use_inverse: {
+        label: "Инверсная подсветка",
+        description:
+          "Разрешает инверсную подсветку (`use_inverse`), например для обнаруженных монстров.",
+      },
+      symset: {
+        label: "Набор символов",
+        description:
+          "Набор символов NetHack для карты (`symset`). IBMgraphics и DECgraphics рисуют стены псевдографикой в режимах ASCII и «Терминал».",
+        options: {
+          default: "По умолчанию (обычный ASCII)",
+          ibm: "IBMgraphics",
+          dec: "DECgraphics",
+        },
+      },
       sparkle: {
         label: "Искры сопротивления магии",
         description: "Показывать особые искры для сопротивления магии.",
@@ -691,10 +716,12 @@ export const ru = {
         sectionDisplayGraphics: "Графика и рендеринг",
         tilesetMode: {
           label: "Отображение",
-          description: "Использовать графические тайлы вместо ASCII.",
+          description:
+            "Как отрисовывается игровой мир: 3D ASCII-блоки, графические тайлы или имитация терминала, показывающая ровно те символы и цвета, которые выдаёт NetHack (с учётом опций symset, hilite_pet и hilite_pile).",
           options: {
             ascii: "ASCII-графика",
             tiles: "Тайлы",
+            terminal: "Терминал",
           },
         },
         asciiColorMode: {

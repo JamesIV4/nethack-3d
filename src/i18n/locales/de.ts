@@ -368,6 +368,31 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
           "Leerzeichengetrennte zus\u00e4tzliche Best\u00e4tigungen (Beispiel: confirm quit attack pray).",
         placeholder: "confirm quit attack pray",
       },
+      hilite_pet: {
+        label: "Haustiere hervorheben",
+        description:
+          "Hebt Haustiere hervor (`hilite_pet`). Im Terminal-Anzeigemodus werden Haustiere wie im klassischen tty-NetHack invers dargestellt.",
+      },
+      hilite_pile: {
+        label: "Gegenstandsstapel hervorheben",
+        description:
+          "Hebt Stapel von Gegenst\u00e4nden hervor (`hilite_pile`). Im Terminal-Anzeigemodus werden Stapel invers dargestellt.",
+      },
+      use_inverse: {
+        label: "Inverse Hervorhebung",
+        description:
+          "Erlaubt inverse Hervorhebung (`use_inverse`), zum Beispiel f\u00fcr erkannte Monster.",
+      },
+      symset: {
+        label: "Symbolsatz",
+        description:
+          "NetHack-Symbolsatz f\u00fcr Kartenzeichen (`symset`). IBMgraphics und DECgraphics zeichnen W\u00e4nde mit Linienzeichen in den Anzeigemodi ASCII und Terminal.",
+        options: {
+          default: "Standard (reines ASCII)",
+          ibm: "IBMgraphics",
+          dec: "DECgraphics",
+        },
+      },
       sparkle: {
         label: "Magieresistenz-Funkeln",
         description:
@@ -716,10 +741,12 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
         sectionDisplayGraphics: "Grafik und Rendering",
         tilesetMode: {
           label: "Anzeige",
-          description: "Verwendet grafische Kacheln statt ASCII.",
+          description:
+            "Wie die Spielwelt dargestellt wird: 3D-ASCII-Blöcke, grafische Kacheln oder ein simuliertes Terminal, das genau die von NetHack erzeugten Zeichen und Farben anzeigt (inklusive Optionen wie symset, hilite_pet und hilite_pile).",
           options: {
             ascii: "ASCII",
             tiles: "Kacheln",
+            terminal: "Terminal",
           },
         },
         tilesetPath: {

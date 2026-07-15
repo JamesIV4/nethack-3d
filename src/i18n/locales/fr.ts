@@ -368,6 +368,31 @@ export const fr = {
           "Confirmations supplementaires separees par des espaces (exemple : confirm quit attack pray).",
         placeholder: "confirm quit attack pray",
       },
+      hilite_pet: {
+        label: "Surligner les animaux apprivoises",
+        description:
+          "Met en evidence les animaux apprivoises (`hilite_pet`). En mode d'affichage Terminal, ils apparaissent en video inverse, comme dans le NetHack tty classique.",
+      },
+      hilite_pile: {
+        label: "Surligner les piles d'objets",
+        description:
+          "Met en evidence les piles d'objets (`hilite_pile`). En mode Terminal, les piles apparaissent en video inverse.",
+      },
+      use_inverse: {
+        label: "Surlignage inverse",
+        description:
+          "Autorise le surlignage en video inverse (`use_inverse`), par exemple pour les monstres detectes.",
+      },
+      symset: {
+        label: "Jeu de symboles",
+        description:
+          "Jeu de symboles NetHack pour les glyphes de la carte (`symset`). IBMgraphics et DECgraphics tracent les murs avec des caracteres semi-graphiques dans les modes ASCII et Terminal.",
+        options: {
+          default: "Par defaut (ASCII simple)",
+          ibm: "IBMgraphics",
+          dec: "DECgraphics",
+        },
+      },
       sparkle: {
         label: "Etincelle de resistance magique",
         description:
@@ -720,10 +745,12 @@ export const fr = {
         sectionDisplayGraphics: "Graphismes et rendu",
         tilesetMode: {
           label: "Affichage",
-          description: "Utilise des tuiles graphiques au lieu de l'ASCII.",
+          description:
+            "Facon dont le monde du jeu est dessine : blocs ASCII en 3D, tuiles graphiques ou terminal simule affichant exactement les glyphes et couleurs produits par NetHack (en respectant les options comme symset, hilite_pet et hilite_pile).",
           options: {
             ascii: "Mode ASCII",
             tiles: "Tuiles",
+            terminal: "Terminal",
           },
         },
         asciiColorMode: {

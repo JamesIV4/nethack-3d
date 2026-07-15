@@ -180,6 +180,31 @@ export const zhCnOverrides = {
         description: "以空格分隔的额外确认项（例如：confirm quit attack pray）。",
         placeholder: "confirm quit attack pray",
       },
+      hilite_pet: {
+        label: "高亮宠物",
+        description:
+          "高亮显示宠物（`hilite_pet`）。在终端显示模式下，宠物以反色显示，与经典 tty NetHack 一致。",
+      },
+      hilite_pile: {
+        label: "高亮物品堆",
+        description:
+          "高亮显示物品堆（`hilite_pile`）。在终端显示模式下，物品堆以反色显示。",
+      },
+      use_inverse: {
+        label: "反色高亮",
+        description:
+          "允许反色高亮（`use_inverse`），例如用于已侦测到的怪物。",
+      },
+      symset: {
+        label: "符号集",
+        description:
+          "地图字符使用的 NetHack 符号集（`symset`）。IBMgraphics 和 DECgraphics 在 ASCII 与终端显示模式下用制表符绘制墙壁。",
+        options: {
+          default: "默认（纯 ASCII）",
+          ibm: "IBMgraphics",
+          dec: "DECgraphics",
+        },
+      },
       sparkle: { label: "魔抗闪光", description: "显示魔法抗性特效闪光。" },
       standout: { label: "突出显示怪物/更多", description: "将怪物和 --More-- 提示加粗显示。" },
       tombstone: { label: "墓碑", description: "死亡时显示墓碑图像。" },
@@ -460,10 +485,12 @@ export const zhCnOverrides = {
         sectionDisplayGraphics: "图形与渲染",
         tilesetMode: {
           label: "显示方式",
-          description: "使用图形瓦片代替 ASCII。",
+          description:
+            "游戏世界的绘制方式：3D ASCII 方块、图形瓦片，或精确显示 NetHack 输出字符与颜色的模拟终端（遵循 symset、hilite_pet、hilite_pile 等选项）。",
           options: {
             ascii: "ASCII",
             tiles: "瓦片",
+            terminal: "终端",
           },
         },
         tilesetPath: {

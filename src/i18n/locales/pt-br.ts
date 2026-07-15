@@ -365,6 +365,31 @@ export const ptBrOverrides = {
           "Confirmações extras separadas por espaço (exemplo: confirm quit attack pray).",
         placeholder: "confirm quit attack pray",
       },
+      hilite_pet: {
+        label: "Destacar mascotes",
+        description:
+          "Destaca os mascotes (`hilite_pet`). No modo de exibição Terminal, mascotes aparecem em vídeo reverso, como no NetHack tty clássico.",
+      },
+      hilite_pile: {
+        label: "Destacar pilhas de itens",
+        description:
+          "Destaca pilhas de itens (`hilite_pile`). No modo Terminal, pilhas aparecem em vídeo reverso.",
+      },
+      use_inverse: {
+        label: "Destaque invertido",
+        description:
+          "Permite destaque em vídeo reverso (`use_inverse`), por exemplo para monstros detectados.",
+      },
+      symset: {
+        label: "Conjunto de símbolos",
+        description:
+          "Conjunto de símbolos do NetHack para os glifos do mapa (`symset`). IBMgraphics e DECgraphics desenham paredes com caracteres de linha nos modos ASCII e Terminal.",
+        options: {
+          default: "Padrão (ASCII puro)",
+          ibm: "IBMgraphics",
+          dec: "DECgraphics",
+        },
+      },
       sparkle: {
         label: "Brilho da resistência mágica",
         description:
@@ -713,10 +738,12 @@ export const ptBrOverrides = {
         sectionDisplayGraphics: "Gráficos e renderização",
         tilesetMode: {
           label: "Exibição",
-          description: "Usa tiles gráficos em vez de ASCII.",
+          description:
+            "Como o mundo do jogo é desenhado: blocos ASCII em 3D, tiles gráficos ou um terminal simulado que mostra exatamente os glifos e cores produzidos pelo NetHack (respeitando opções como symset, hilite_pet e hilite_pile).",
           options: {
             ascii: "ASCII",
             tiles: "Tiles",
+            terminal: "Terminal",
           },
         },
         tilesetPath: {

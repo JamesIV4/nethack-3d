@@ -350,6 +350,31 @@ export const ko = {
           "공백으로 구분한 추가 확인 목록입니다(예: confirm quit attack pray).",
         placeholder: "예: confirm quit attack pray",
       },
+      hilite_pet: {
+        label: "펫 강조 표시",
+        description:
+          "펫을 강조 표시합니다 (`hilite_pet`). 터미널 표시 모드에서는 클래식 tty NetHack처럼 펫이 반전 색상으로 표시됩니다.",
+      },
+      hilite_pile: {
+        label: "아이템 더미 강조 표시",
+        description:
+          "아이템 더미를 강조 표시합니다 (`hilite_pile`). 터미널 표시 모드에서는 더미가 반전 색상으로 표시됩니다.",
+      },
+      use_inverse: {
+        label: "반전 강조 허용",
+        description:
+          "반전 색상 강조를 허용합니다 (`use_inverse`). 예: 감지된 몬스터.",
+      },
+      symset: {
+        label: "심볼 세트",
+        description:
+          "맵 글리프에 사용할 NetHack 심볼 세트입니다 (`symset`). IBMgraphics와 DECgraphics는 ASCII 및 터미널 표시 모드에서 선 문자로 벽을 그립니다.",
+        options: {
+          default: "기본값 (일반 ASCII)",
+          ibm: "IBMgraphics",
+          dec: "DECgraphics",
+        },
+      },
       sparkle: {
         label: "마법 저항 반짝임",
         description: "마법 저항에 특수 반짝임 효과를 표시합니다.",
@@ -692,10 +717,12 @@ export const ko = {
         sectionDisplayGraphics: "그래픽 및 렌더링",
         tilesetMode: {
           label: "표시 방식",
-          description: "ASCII 대신 그래픽 타일을 사용합니다.",
+          description:
+            "게임 세계를 그리는 방식: 3D ASCII 블록, 그래픽 타일 또는 NetHack이 출력한 글리프와 색상을 그대로 보여주는 시뮬레이션 터미널(symset, hilite_pet, hilite_pile 등의 옵션 반영).",
           options: {
             ascii: "문자",
             tiles: "타일",
+            terminal: "터미널",
           },
         },
         asciiColorMode: {

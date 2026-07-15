@@ -6340,6 +6340,10 @@ const clientOptionsConfig: ClientOption[] = [
         value: "tiles",
         label: t.clientOptions.config.tilesetMode.options.tiles,
       },
+      {
+        value: "terminal",
+        label: t.clientOptions.config.tilesetMode.options.terminal,
+      },
     ],
   },
   {
@@ -12043,6 +12047,27 @@ export default function App(): JSX.Element {
     connectionState === "running" &&
     !loadingVisible;
 
+  const terminalDesktopGutterVisible =
+    isDesktopGameRunning && clientOptions.tilesetMode === "terminal";
+
+  useLayoutEffect(() => {
+    if (typeof document === "undefined" || typeof window === "undefined") {
+      return;
+    }
+    const root = document.documentElement;
+    root.classList.toggle(
+      "nh3d-terminal-desktop-gutter",
+      terminalDesktopGutterVisible,
+    );
+    // The engine sizes its renderer from the canvas host. Notify it after the
+    // gutter changes that host's available width so camera fitting and pointer
+    // coordinates use the visible gameplay area.
+    window.dispatchEvent(new Event("resize"));
+    return () => {
+      root.classList.remove("nh3d-terminal-desktop-gutter");
+    };
+  }, [terminalDesktopGutterVisible]);
+
   const forcedDesktopTouchInterfaceMode = !isMobileViewport
     ? clientOptions.desktopTouchInterfaceMode
     : "off";
@@ -17567,7 +17592,8 @@ export default function App(): JSX.Element {
     );
   };
 
-  const gameMessageLog = clientOptions.liveMessageLog ? (
+  const gameMessageLog =
+    clientOptions.liveMessageLog || terminalDesktopGutterVisible ? (
     <div
       className="nh3d-message-log-scroll"
       data-nh3d-overflow-glow
@@ -17586,9 +17612,30 @@ export default function App(): JSX.Element {
     </div>
   ) : null;
 
+  const desktopGameMessageLog =
+    !isMobileViewport && isDesktopGameRunning ? (
+      <div
+        className={`top-left-ui with-stats${
+          terminalDesktopGutterVisible
+            ? " nh3d-terminal-log-gutter-panel"
+            : ""
+        }`}
+      >
+        <div id="game-status">{statusText}</div>
+        {gameMessageLog ? (
+          <div className="nh3d-overflow-glow-frame">{gameMessageLog}</div>
+        ) : null}
+      </div>
+    ) : null;
+
   return (
     <>
       <div className="nh3d-canvas-root" ref={canvasRootRef} />
+      {terminalDesktopGutterVisible ? (
+        <div className="nh3d-terminal-log-gutter">
+          {desktopGameMessageLog}
+        </div>
+      ) : null}
       {renderPauseMenu()}
       {startupMenuVisible ? (
         <>
@@ -19413,16 +19460,10 @@ export default function App(): JSX.Element {
           )
         : null}
 
-      {!isMobileViewport && isDesktopGameRunning ? (
-        <div className="top-left-ui with-stats">
-          <div id="game-status">{statusText}</div>
-          {gameMessageLog ? (
-            <div className="nh3d-overflow-glow-frame">{gameMessageLog}</div>
-          ) : null}
-        </div>
-      ) : mobileTouchUiVisible &&
-        gameMessageLog &&
-        (isMobileLogVisible || clientOptions.showPersistentMobileMessageLog) ? (
+      {!terminalDesktopGutterVisible ? desktopGameMessageLog : null}
+      {mobileTouchUiVisible &&
+      gameMessageLog &&
+      (isMobileLogVisible || clientOptions.showPersistentMobileMessageLog) ? (
         <div
           className={`nh3d-mobile-log nh3d-overflow-glow-frame${
             isMobileLogVisible ? "" : " nh3d-mobile-log-collapsed"
@@ -19437,7 +19478,14 @@ export default function App(): JSX.Element {
         </div>
       ) : null}
 
-      <div id="floating-log-message-layer">
+      <div
+        className={
+          clientOptions.tilesetMode === "terminal"
+            ? "nh3d-floating-log-terminal"
+            : undefined
+        }
+        id="floating-log-message-layer"
+      >
         {floatingMessages.map((entry, index) => (
           <div
             className="floating-message-container"
@@ -20090,7 +20138,9 @@ export default function App(): JSX.Element {
                         ? !clientOptionsDraft.reduceInventoryMotion
                         : isBloodDetailSelect
                           ? !clientOptionsDraft.bloodGround
-                        : Boolean(option.disabled);
+                          : option.key === "asciiColorMode"
+                            ? clientOptionsDraft.tilesetMode === "terminal"
+                            : Boolean(option.disabled);
                     return (
                       <div
                         className={`nh3d-option-row${
@@ -20138,7 +20188,9 @@ export default function App(): JSX.Element {
                                   option.key,
                                   event.target.value === "tiles"
                                     ? "tiles"
-                                    : "ascii",
+                                    : event.target.value === "terminal"
+                                      ? "terminal"
+                                      : "ascii",
                                 );
                                 return;
                               }

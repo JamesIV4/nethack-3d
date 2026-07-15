@@ -40,6 +40,15 @@ import {
 } from "./glyphs/behavior";
 import { getNetHackColorHex } from "./glyphs/colors";
 import {
+  buildTerminalCellTextureKey,
+  defaultTerminalRenderOptionStates,
+  resolveTerminalCellPresentation,
+  resolveTerminalRenderOptionStates,
+  splitNetHackOptionsString,
+  type TerminalCellPresentation,
+  type TerminalRenderOptionStates,
+} from "./terminal/terminal-display";
+import {
   getGlyphCatalogEntry,
   getGlyphCatalogRanges,
   setActiveGlyphCatalog,
@@ -931,11 +940,18 @@ type TileUpdateOptions = {
   runtimeTrackedEntityId?: number;
   runtimeTileIndex?: number;
   runtimeSymidx?: number;
+  runtimeGlyphFlags?: number;
   runtimeFloorUnderlayGlyph?: number;
   runtimeFloorUnderlayChar?: string;
   runtimeFloorUnderlayColor?: number;
   runtimeFloorUnderlayTileIndex?: number;
   runtimeFloorUnderlaySymidx?: number;
+};
+
+type TerminalCellTextureEntry = {
+  texture: THREE.CanvasTexture;
+  material: THREE.MeshBasicMaterial;
+  refCount: number;
 };
 
 type LevelCacheObservedTile = {
@@ -1211,6 +1227,27 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private camera!: THREE.PerspectiveCamera;
   private readonly mountElement: HTMLElement | null;
   private readonly uiAdapter: Nethack3DEngineUIAdapter;
+
+  // --- Terminal display mode ---
+  // Simulated-terminal presentation: flat cells with runtime-exact glyphs and
+  // colors, rendered through a dedicated top-down orthographic camera.
+  private terminalCamera: THREE.OrthographicCamera | null = null;
+  private terminalCellTextureCache: Map<string, TerminalCellTextureEntry> =
+    new Map();
+  private terminalRenderOptionStates: TerminalRenderOptionStates = {
+    ...defaultTerminalRenderOptionStates,
+  };
+  // Height of one terminal cell on screen relative to its width. Real
+  // terminal fonts are roughly twice as tall as they are wide.
+  private readonly terminalCellAspect: number = 2;
+  private readonly terminalMapColumns: number = 80;
+  private readonly terminalMapRows: number = 21;
+  // Camera distance at which the terminal view renders at its fitted scale.
+  private readonly terminalFitCameraDistance: number = 20;
+  // Smallest readable cell width in CSS pixels; fitting never goes below
+  // this, which pushes small screens into follow-scroll behavior instead.
+  private readonly terminalMinCellPx: number = 14;
+  private readonly terminalMaxCellPx: number = 96;
 
   private tileMap: TileMap = new Map();
   private glyphOverlayMap: GlyphOverlayMap = new Map();
@@ -3281,7 +3318,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
       typeof explicitFpsMode === "boolean"
         ? explicitFpsMode
         : this.characterCreationConfig.playMode === "fps";
-    this.playMode = initialFpsMode ? "fps" : "normal";
+    this.playMode =
+      initialFpsMode && this.clientOptions.tilesetMode !== "terminal"
+        ? "fps"
+        : "normal";
     this.clientOptions.fpsMode = this.playMode === "fps";
     if (typeof options.loggingEnabled === "boolean") {
       setLoggingEnabled(options.loggingEnabled);
@@ -3314,6 +3354,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.updateMinimapVisibility();
     this.applyClientOptions(this.clientOptions);
     this.applyVultureIsometricCameraPresetIfNeeded({ force: true });
+    if (this.isTerminalDisplayMode()) {
+      // Terminal mode persisted from a previous session starts active, so
+      // the option-change path never fires; initialize it directly.
+      this.enterTerminalDisplayMode();
+    }
   }
 
   private initThreeJS(): void {
@@ -3685,6 +3730,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     color?: number;
     tileIndex?: number;
     symidx?: number;
+    glyphFlags?: number | null;
     floorUnderlayGlyph?: number;
     floorUnderlayChar?: string;
     floorUnderlayColor?: number;
@@ -3699,6 +3745,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
       typeof tile.tileIndex === "number" ? Math.trunc(tile.tileIndex) : "";
     const symidxPart =
       typeof tile.symidx === "number" ? Math.trunc(tile.symidx) : "";
+    const glyphFlagsPart =
+      typeof tile.glyphFlags === "number" && Number.isFinite(tile.glyphFlags)
+        ? Math.trunc(tile.glyphFlags)
+        : "";
     const floorGlyphPart =
       typeof tile.floorUnderlayGlyph === "number"
         ? Math.trunc(tile.floorUnderlayGlyph)
@@ -3715,7 +3765,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       typeof tile.floorUnderlaySymidx === "number"
         ? Math.trunc(tile.floorUnderlaySymidx)
         : "";
-    return `${tile.glyph}|${encodedGlyphChar}|${tile.color ?? ""}|ti:${tileIndexPart}|si:${symidxPart}|fg:${floorGlyphPart}|fc:${encodedFloorUnderlayChar}|fco:${floorColorPart}|fti:${floorTileIndexPart}|fsi:${floorSymidxPart}`;
+    return `${tile.glyph}|${encodedGlyphChar}|${tile.color ?? ""}|ti:${tileIndexPart}|si:${symidxPart}|gf:${glyphFlagsPart}|fg:${floorGlyphPart}|fc:${encodedFloorUnderlayChar}|fco:${floorColorPart}|fti:${floorTileIndexPart}|fsi:${floorSymidxPart}`;
   }
 
   private normalizeLevelCacheName(rawValue: unknown): string | null {
@@ -4058,7 +4108,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
 
     this.bloodGroundOverlayMesh.visible =
-      this.clientOptions.bloodGround && this.bloodGroundHasVisibleData;
+      this.clientOptions.bloodGround &&
+      this.bloodGroundHasVisibleData &&
+      !this.isTerminalDisplayMode();
   }
 
   private clearAllCachedBloodGroundSnapshots(): void {
@@ -5584,6 +5636,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     color?: number;
     tileIndex?: number;
     symidx?: number;
+    glyphFlags?: number;
   } | null {
     const parts = String(signature || "").split("|");
     if (parts.length < 3) {
@@ -5631,12 +5684,14 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const parsedColor = Number.parseInt(String(colorToken ?? "").trim(), 10);
     const tileIndex = readEncodedInteger("ti");
     const symidx = readEncodedInteger("si");
+    const glyphFlags = readEncodedInteger("gf");
     return {
       glyph,
       char: normalizedChar,
       color: Number.isFinite(parsedColor) ? parsedColor : undefined,
       tileIndex,
       symidx,
+      glyphFlags,
     };
   }
 
@@ -6519,6 +6574,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private isDarkCorridorWallInferenceEnabled(): boolean {
+    if (this.isTerminalDisplayMode()) {
+      // The terminal shows runtime output verbatim; inferred walls are a
+      // 3D-mode presentation aid.
+      return false;
+    }
     const runtimeVersion =
       this.characterCreationConfig.runtimeVersion ?? "3.6.7";
     if (runtimeVersion === "5.0") {
@@ -6890,6 +6950,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       char?: string;
       color?: number;
       tileIndex?: number;
+      glyphFlags?: number;
     }> = [];
     for (const [key, signature] of this.tileStateCache.entries()) {
       const [rawX, rawY] = key.split(",");
@@ -6909,6 +6970,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         char: parsed.char,
         color: parsed.color,
         tileIndex: parsed.tileIndex,
+        glyphFlags: parsed.glyphFlags,
       });
     }
 
@@ -6924,6 +6986,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
             typeof snapshot.tileIndex === "number"
               ? snapshot.tileIndex
               : undefined,
+          runtimeGlyphFlags:
+            typeof snapshot.glyphFlags === "number"
+              ? snapshot.glyphFlags
+              : undefined,
         },
       );
     }
@@ -6934,8 +7000,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
   private applyPlayMode(nextPlayMode: PlayMode): void {
     const previousPlayMode = this.playMode;
+    // The simulated terminal is inherently top-down; FPS play is suspended
+    // while it is active (the stored fpsMode preference is left untouched).
     const resolvedPlayMode: PlayMode =
-      nextPlayMode === "fps" ? "fps" : "normal";
+      nextPlayMode === "fps" && !this.isTerminalDisplayMode()
+        ? "fps"
+        : "normal";
     if (this.playMode === resolvedPlayMode) {
       this.configureBaseLightingForPlayMode();
       this.markLightingDirty();
@@ -7218,6 +7288,17 @@ class Nethack3DEngine implements Nethack3DEngineController {
         this.clearEntityMoveTransitions();
       }
       this.clearMenuTilePreviewCache();
+      const enteredTerminal =
+        normalized.tilesetMode === "terminal" &&
+        previous.tilesetMode !== "terminal";
+      const leftTerminal =
+        previous.tilesetMode === "terminal" &&
+        normalized.tilesetMode !== "terminal";
+      if (enteredTerminal) {
+        this.enterTerminalDisplayMode();
+      } else if (leftTerminal) {
+        this.leaveTerminalDisplayMode();
+      }
       this.refreshTilesFromStateCache();
     }
     if (asciiColorModeChanged && !tilesetModeChanged) {
@@ -7293,7 +7374,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private applyStandardCameraPresetForTopDownModes(params?: {
     force?: boolean;
   }): void {
-    if (this.playMode === "fps") {
+    if (this.playMode === "fps" || this.isTerminalDisplayMode()) {
       return;
     }
     const nextDistance = 15;
@@ -8110,6 +8191,25 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private computeMinimapViewportRect(): MinimapViewportRect {
+    if (this.isTerminalDisplayMode() && this.terminalCamera) {
+      const ortho = this.terminalCamera;
+      const viewWidthTiles = THREE.MathUtils.clamp(
+        (ortho.right - ortho.left) / TILE_SIZE,
+        4,
+        MINIMAP_WIDTH_TILES,
+      );
+      const viewHeightTiles = THREE.MathUtils.clamp(
+        (ortho.top - ortho.bottom) / TILE_SIZE,
+        3,
+        MINIMAP_HEIGHT_TILES,
+      );
+      return {
+        minX: ortho.position.x / TILE_SIZE - viewWidthTiles / 2,
+        minY: -ortho.position.y / TILE_SIZE - viewHeightTiles / 2,
+        width: viewWidthTiles,
+        height: viewHeightTiles,
+      };
+    }
     const centerWorldX = this.cameraFollowInitialized
       ? this.cameraFollowCurrent.x
       : this.playerPos.x * TILE_SIZE + this.cameraPanTargetX;
@@ -8667,7 +8767,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     worldZ: number,
   ): { x: number; y: number; visible: boolean } {
     const vector = new THREE.Vector3(worldX, worldY, worldZ);
-    vector.project(this.camera);
+    vector.project(this.getActiveCamera());
 
     if (
       !Number.isFinite(vector.x) ||
@@ -11356,6 +11456,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.setNumberPadModeEnabled(runtimeNumberPadModeEnabled, {
         announce: false,
       });
+    }
+    const terminalOptionStatesChanged = this.refreshTerminalRenderOptionStates();
+    if (terminalOptionStatesChanged && this.isTerminalDisplayMode()) {
+      // hilite_pet / hilite_pile / use_inverse / symset resolved differently
+      // than assumed; re-render the terminal grid with the new rules.
+      this.refreshTilesFromStateCache();
     }
     if (typeof window !== "undefined") {
       (window as any).nethackRuntimeGlobals = this.latestRuntimeGlobalsSnapshot;
@@ -14359,6 +14465,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
             typeof tile.tileIndex === "number" ? tile.tileIndex : undefined,
           runtimeSymidx:
             typeof tile.symidx === "number" ? tile.symidx : undefined,
+          runtimeGlyphFlags:
+            typeof tile.glyphFlags === "number" ? tile.glyphFlags : undefined,
           runtimeFloorUnderlayGlyph:
             typeof tile.floorUnderlayGlyph === "number"
               ? tile.floorUnderlayGlyph
@@ -14394,6 +14502,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       runtimeTileIndex:
         typeof tile.tileIndex === "number" ? tile.tileIndex : undefined,
       runtimeSymidx: typeof tile.symidx === "number" ? tile.symidx : undefined,
+      runtimeGlyphFlags:
+        typeof tile.glyphFlags === "number" ? tile.glyphFlags : undefined,
       runtimeFloorUnderlayGlyph:
         typeof tile.floorUnderlayGlyph === "number"
           ? tile.floorUnderlayGlyph
@@ -20545,7 +20655,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     this.playerUiNumberScreenAnchor
       .copy(this.playerUiNumberAnchor)
-      .project(this.camera);
+      .project(this.getActiveCamera());
     const ndc = this.playerUiNumberScreenAnchor;
     return {
       screenX: (ndc.x + 1) * 0.5 * viewportRect.width,
@@ -24138,6 +24248,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     // Clear all tile meshes
     this.tileMap.forEach((mesh) => {
+      this.releaseTerminalCellVisualFromMesh(mesh);
       this.disposeWallSideTileOverlay(mesh);
       this.disposeVultureWallFaceOverlay(mesh);
       this.disposeVultureWallPlaneOverlay(mesh);
@@ -26448,6 +26559,315 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.updateMonsterBillboardPitchLockStateForEntry(sprite);
   }
 
+  private isTerminalDisplayMode(): boolean {
+    return this.clientOptions.tilesetMode === "terminal";
+  }
+
+  // Re-reads the NetHack option state relevant to terminal rendering
+  // (hilite_pet, hilite_pile, use_inverse, symset) from the runtime's
+  // configured NETHACKOPTIONS, falling back to the startup init options.
+  // Returns true when the resolved states changed.
+  private refreshTerminalRenderOptionStates(): boolean {
+    const snapshot = this.getLatestRuntimeGlobalsSnapshot() as {
+      configuredNethackOptions?: unknown;
+    } | null;
+    const configuredTokens = splitNetHackOptionsString(
+      snapshot?.configuredNethackOptions,
+    );
+    const startupTokens = Array.isArray(this.characterCreationConfig.initOptions)
+      ? this.characterCreationConfig.initOptions
+      : [];
+    const nextStates = resolveTerminalRenderOptionStates([
+      startupTokens,
+      configuredTokens,
+    ]);
+    const previousStates = this.terminalRenderOptionStates;
+    const changed =
+      previousStates.hilitePet !== nextStates.hilitePet ||
+      previousStates.hilitePile !== nextStates.hilitePile ||
+      previousStates.useInverse !== nextStates.useInverse ||
+      previousStates.symsetHint !== nextStates.symsetHint;
+    this.terminalRenderOptionStates = nextStates;
+    return changed;
+  }
+
+  // Suspends the 3D presentation (billboards, glyph overlays, AO, inferred
+  // walls) and prepares the flat simulated-terminal view. Tile meshes are
+  // reconfigured in place by the subsequent refreshTilesFromStateCache().
+  private enterTerminalDisplayMode(): void {
+    this.applyPlayMode("normal");
+    this.refreshTerminalRenderOptionStates();
+    for (const key of Array.from(this.monsterBillboards.keys())) {
+      this.removeMonsterBillboard(key);
+    }
+    for (const key of Array.from(this.entityBlobShadows.keys())) {
+      this.removeEntityBlobShadow(key);
+    }
+    this.glyphOverlayMap.forEach((overlay) => {
+      this.disposeGlyphOverlay(overlay);
+    });
+    this.glyphOverlayMap.clear();
+    this.disposeAllWallSideTileOverlays();
+    this.clearFloorBlockAmbientOcclusion();
+    this.clearFpsWallChamferFloorMeshes();
+    this.clearAllInferredDarkCorridorWallMeshes();
+    this.clearPositionCursor();
+    this.updateBloodGroundOverlayVisibility();
+    this.cameraDistance = this.terminalFitCameraDistance;
+    this.cameraPanX = 0;
+    this.cameraPanY = 0;
+    this.cameraPanTargetX = 0;
+    this.cameraPanTargetY = 0;
+    this.cameraFollowInitialized = false;
+    // True terminal black behind the glyph grid.
+    this.renderer.setClearColor(0x000000, 1);
+    const host = this.mountElement ?? document.body;
+    host.style.backgroundColor = "#000000";
+  }
+
+  private leaveTerminalDisplayMode(): void {
+    this.disposeAllTerminalCellVisuals();
+    this.renderer.setClearColor(0x000000, 0);
+    const host = this.mountElement ?? document.body;
+    host.style.backgroundColor = "#000011";
+    this.cameraPanX = 0;
+    this.cameraPanY = 0;
+    this.cameraPanTargetX = 0;
+    this.cameraPanTargetY = 0;
+    this.applyStandardCameraPresetForTopDownModes({ force: true });
+    this.updateBloodGroundOverlayVisibility();
+    this.markLightingDirty();
+  }
+
+  private drawTerminalCellCanvas(
+    presentation: TerminalCellPresentation,
+  ): HTMLCanvasElement {
+    const cellWidth = 64;
+    const cellHeight = Math.round(cellWidth * this.terminalCellAspect);
+    const canvas = document.createElement("canvas");
+    canvas.width = cellWidth;
+    canvas.height = cellHeight;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Failed to create terminal cell canvas context");
+    }
+    context.fillStyle = presentation.bgHex;
+    context.fillRect(0, 0, cellWidth, cellHeight);
+    const displayChar = presentation.displayChar;
+    if (displayChar.trim().length > 0) {
+      const fontSize = Math.floor(cellHeight * 0.82);
+      context.font = `${fontSize}px "Cascadia Mono", "Consolas", "Menlo", "DejaVu Sans Mono", monospace`;
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillStyle = presentation.fgHex;
+      context.fillText(displayChar, cellWidth / 2, cellHeight / 2 + 1);
+    }
+    return canvas;
+  }
+
+  private acquireTerminalCellMaterial(
+    presentation: TerminalCellPresentation,
+  ): { material: THREE.MeshBasicMaterial; textureKey: string } {
+    const textureKey = buildTerminalCellTextureKey(presentation);
+    let entry = this.terminalCellTextureCache.get(textureKey);
+    if (!entry) {
+      const texture = new THREE.CanvasTexture(
+        this.drawTerminalCellCanvas(presentation),
+      );
+      texture.magFilter = THREE.LinearFilter;
+      texture.minFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.needsUpdate = true;
+      const material = new THREE.MeshBasicMaterial({ map: texture });
+      entry = { texture, material, refCount: 0 };
+      this.terminalCellTextureCache.set(textureKey, entry);
+    }
+    entry.refCount += 1;
+    return { material: entry.material, textureKey };
+  }
+
+  private releaseTerminalCellTexture(textureKey: string): void {
+    const entry = this.terminalCellTextureCache.get(textureKey);
+    if (!entry) {
+      return;
+    }
+    entry.refCount -= 1;
+    if (entry.refCount > 0) {
+      return;
+    }
+    this.terminalCellTextureCache.delete(textureKey);
+    entry.material.dispose();
+    entry.texture.dispose();
+  }
+
+  // Releases the shared terminal texture referenced by a tile mesh. Safe to
+  // call for non-terminal meshes; it only acts when terminal state is tagged.
+  private releaseTerminalCellVisualFromMesh(mesh: THREE.Mesh): void {
+    const textureKey = mesh.userData?.terminalTextureKey;
+    if (typeof textureKey === "string" && textureKey.length > 0) {
+      this.releaseTerminalCellTexture(textureKey);
+    }
+    delete mesh.userData.terminalTextureKey;
+    delete mesh.userData.terminalCell;
+  }
+
+  private disposeAllTerminalCellVisuals(): void {
+    for (const mesh of this.tileMap.values()) {
+      this.releaseTerminalCellVisualFromMesh(mesh);
+    }
+    for (const entry of this.terminalCellTextureCache.values()) {
+      entry.material.dispose();
+      entry.texture.dispose();
+    }
+    this.terminalCellTextureCache.clear();
+  }
+
+  // Terminal-mode replacement for the 3D tile pipeline: renders one map cell
+  // as a flat plane whose texture shows exactly the character and color the
+  // runtime produced, with tty-style MG_* highlighting. Interaction metadata
+  // (userData) is still derived from the glyph catalog so clicking,
+  // context menus, and the minimap behave identically to the other modes.
+  private updateTerminalCell(
+    x: number,
+    y: number,
+    glyph: number,
+    char?: string,
+    color?: number,
+    options: TileUpdateOptions = {},
+  ): void {
+    const key = `${x},${y}`;
+    let mesh = this.tileMap.get(key);
+    const previousTerrainSnapshot = this.lastKnownTerrain.get(key) ?? null;
+    const behavior = classifyTileBehavior({
+      glyph,
+      runtimeChar: char ?? null,
+      runtimeColor: typeof color === "number" ? color : null,
+      runtimeTileIndex:
+        typeof options.runtimeTileIndex === "number"
+          ? options.runtimeTileIndex
+          : null,
+      runtimeSymidx:
+        typeof options.runtimeSymidx === "number" &&
+        Number.isFinite(options.runtimeSymidx) &&
+        options.runtimeSymidx >= 0
+          ? Math.trunc(options.runtimeSymidx)
+          : null,
+      priorTerrain: previousTerrainSnapshot,
+    });
+
+    const isUndiscovered = this.isUndiscoveredKind(behavior.effective.kind);
+    if (isUndiscovered) {
+      if (mesh) {
+        this.releaseTerminalCellVisualFromMesh(mesh);
+        this.disposeWallSideTileOverlay(mesh);
+        this.disposeVultureWallFaceOverlay(mesh);
+        this.disposeVultureWallPlaneOverlay(mesh);
+        this.disposeVultureDoorPlaneOverlay(mesh);
+        this.disposeTransparentWallGroundPlaneOverlay(mesh);
+        this.disposeIronBarsWallPlaneOverlay(mesh);
+        this.scene.remove(mesh);
+        this.tileMap.delete(key);
+      }
+      this.removeMonsterBillboard(key);
+      this.activeEffectTileKeys.delete(key);
+      const overlay = this.glyphOverlayMap.get(key);
+      if (overlay) {
+        this.disposeGlyphOverlay(overlay);
+        this.glyphOverlayMap.delete(key);
+      }
+      this.queueMinimapTileUpdate(x, y, behavior, true);
+      return;
+    }
+
+    // Keep the persistent-terrain memory in sync so switching back to the
+    // 3D modes (and level cache restores) behave exactly as before.
+    const terrainSnapshot = this.snapshotPersistentTerrainFromTile(
+      { glyph, symidx: options.runtimeSymidx },
+      behavior,
+    );
+    if (terrainSnapshot) {
+      this.lastKnownTerrain.set(key, terrainSnapshot);
+    }
+
+    const presentation = resolveTerminalCellPresentation({
+      char,
+      color,
+      glyphFlags:
+        typeof options.runtimeGlyphFlags === "number"
+          ? options.runtimeGlyphFlags
+          : null,
+      optionStates: this.terminalRenderOptionStates,
+    });
+    const nextTextureKey = buildTerminalCellTextureKey(presentation);
+
+    if (!mesh) {
+      const acquired = this.acquireTerminalCellMaterial(presentation);
+      mesh = new THREE.Mesh(this.floorGeometry, acquired.material);
+      mesh.position.set(x * TILE_SIZE, -y * TILE_SIZE, 0);
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+      this.scene.add(mesh);
+      this.tileMap.set(key, mesh);
+      mesh.userData.terminalTextureKey = acquired.textureKey;
+    } else {
+      // Reconfigure a mesh that may still carry 3D-mode state (geometry,
+      // wall overlays, lambert materials) from before the mode switch.
+      this.disposeWallSideTileOverlay(mesh);
+      this.disposeVultureWallFaceOverlay(mesh);
+      this.disposeVultureWallPlaneOverlay(mesh);
+      this.disposeVultureDoorPlaneOverlay(mesh);
+      this.disposeTransparentWallGroundPlaneOverlay(mesh);
+      this.disposeIronBarsWallPlaneOverlay(mesh);
+      const previousTextureKey = mesh.userData?.terminalTextureKey;
+      if (previousTextureKey !== nextTextureKey) {
+        const acquired = this.acquireTerminalCellMaterial(presentation);
+        if (typeof previousTextureKey === "string") {
+          this.releaseTerminalCellTexture(previousTextureKey);
+        }
+        mesh.material = acquired.material;
+        mesh.userData.terminalTextureKey = acquired.textureKey;
+      }
+      mesh.geometry = this.floorGeometry;
+      mesh.position.set(x * TILE_SIZE, -y * TILE_SIZE, 0);
+      mesh.scale.set(1, 1, 1);
+    }
+    const existingOverlay = this.glyphOverlayMap.get(key);
+    if (existingOverlay) {
+      this.disposeGlyphOverlay(existingOverlay);
+      this.glyphOverlayMap.delete(key);
+    }
+    this.removeMonsterBillboard(key);
+    this.removeEntityBlobShadow(key);
+
+    mesh.userData.terminalCell = true;
+    mesh.userData.tileX = x;
+    mesh.userData.tileY = y;
+    // Terminal cells are flat; interaction logic still needs the semantic
+    // terrain classification for context menus and travel targeting.
+    mesh.userData.isWall = false;
+    mesh.userData.isInferredDarkCorridorWall = false;
+    mesh.userData.useDarkCorridorWallCompatibility = false;
+    mesh.userData.materialKind = behavior.materialKind;
+    mesh.userData.effectKind = behavior.effectKind;
+    mesh.userData.disposition = behavior.disposition;
+    mesh.userData.isPlayerGlyph = behavior.isPlayerGlyph;
+    mesh.userData.isMonsterLikeCharacter = this.isMonsterLikeBehavior(behavior);
+    mesh.userData.isLootLikeCharacter = this.isLootLikeBehavior(behavior);
+    mesh.userData.isDamageFlashableCharacter =
+      this.isDamageFlashableBehavior(behavior);
+    mesh.userData.glyphChar = behavior.glyphChar;
+    mesh.userData.sourceGlyph = glyph;
+    mesh.userData.tileTextureSourceGlyph = behavior.effective.glyph;
+    mesh.userData.glyphTextColor = presentation.fgHex;
+    mesh.userData.glyphBackgroundColor = presentation.bgHex;
+
+    if (!this.tileRevealStartMs.has(key)) {
+      this.tileRevealStartMs.set(key, performance.now());
+    }
+    this.queueMinimapTileUpdate(x, y, behavior, false);
+  }
+
   private updateTile(
     x: number,
     y: number,
@@ -26456,6 +26876,14 @@ class Nethack3DEngine implements Nethack3DEngineController {
     color?: number,
     options: TileUpdateOptions = {},
   ): void {
+    if (this.isTerminalDisplayMode()) {
+      // The simulated terminal shows only what the runtime printed;
+      // synthetic inferred-wall tiles are a 3D-mode presentation aid.
+      if (options.inferredDarkCorridorWall !== true) {
+        this.updateTerminalCell(x, y, glyph, char, color, options);
+      }
+      return;
+    }
     const key = `${x},${y}`;
     const isInferredDarkCorridorWall =
       options.inferredDarkCorridorWall === true;
@@ -33130,6 +33558,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.updateConnectionStatus("Disconnected", "disconnected");
     this.setLoadingVisible(false);
     this.clearScene();
+    this.disposeAllTerminalCellVisuals();
 
     this.session?.dispose();
     this.session = null;
@@ -38370,7 +38799,127 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.sendInput(event.key);
   }
 
+  private ensureTerminalCamera(): THREE.OrthographicCamera {
+    if (!this.terminalCamera) {
+      this.terminalCamera = new THREE.OrthographicCamera(
+        -1,
+        1,
+        1,
+        -1,
+        0.1,
+        1000,
+      );
+      // Straight top-down: look down -Z with world +Y (map north) up.
+      this.terminalCamera.up.set(0, 1, 0);
+    }
+    return this.terminalCamera;
+  }
+
+  private getActiveCamera(): THREE.Camera {
+    if (this.isTerminalDisplayMode() && this.terminalCamera) {
+      return this.terminalCamera;
+    }
+    return this.camera;
+  }
+
+  // Top-down orthographic terminal camera. The whole level is shown when it
+  // fits the viewport at a readable cell size; otherwise the view follows
+  // the player (or position cursor) with classic edge-clamped scrolling.
+  private updateTerminalCamera(deltaSeconds: number): void {
+    const camera = this.ensureTerminalCamera();
+    const viewport = this.getRendererViewportSize();
+    const mapWorldWidth = this.terminalMapColumns * TILE_SIZE;
+    const mapWorldHeight = this.terminalMapRows * TILE_SIZE;
+
+    // Pixels per world unit along X; Y renders terminalCellAspect times
+    // taller so cells keep terminal-font proportions.
+    const fitScale = Math.min(
+      viewport.width / mapWorldWidth,
+      viewport.height / (mapWorldHeight * this.terminalCellAspect),
+    );
+    const zoomFactor =
+      this.terminalFitCameraDistance / Math.max(1, this.cameraDistance);
+    const cellScale = THREE.MathUtils.clamp(
+      fitScale * zoomFactor,
+      this.terminalMinCellPx,
+      this.terminalMaxCellPx,
+    );
+
+    const viewWorldWidth = viewport.width / cellScale;
+    const viewWorldHeight =
+      viewport.height / (cellScale * this.terminalCellAspect);
+
+    // Map bounds in world coordinates (tile y increases downward).
+    const minWorldX = -TILE_SIZE / 2;
+    const maxWorldX = minWorldX + mapWorldWidth;
+    const maxWorldY = TILE_SIZE / 2;
+    const minWorldY = maxWorldY - mapWorldHeight;
+
+    const { x: targetX, y: targetY } =
+      this.getOverheadCameraFollowTargetWorldPosition();
+    this.cameraFollowTarget.set(targetX, targetY, 0);
+    if (!this.cameraFollowInitialized) {
+      this.cameraFollowCurrent.copy(this.cameraFollowTarget);
+      this.cameraFollowInitialized = true;
+    } else {
+      const alpha =
+        1 -
+        Math.exp(
+          (-Math.LN2 * deltaSeconds * 1000) / this.cameraFollowHalfLifeMs,
+        );
+      this.cameraFollowCurrent.lerp(this.cameraFollowTarget, alpha);
+    }
+
+    const centerX =
+      viewWorldWidth >= mapWorldWidth
+        ? (minWorldX + maxWorldX) / 2
+        : THREE.MathUtils.clamp(
+            this.cameraFollowCurrent.x,
+            minWorldX + viewWorldWidth / 2,
+            maxWorldX - viewWorldWidth / 2,
+          );
+    const centerY =
+      viewWorldHeight >= mapWorldHeight
+        ? (minWorldY + maxWorldY) / 2
+        : THREE.MathUtils.clamp(
+            this.cameraFollowCurrent.y,
+            minWorldY + viewWorldHeight / 2,
+            maxWorldY - viewWorldHeight / 2,
+          );
+
+    camera.left = -viewWorldWidth / 2;
+    camera.right = viewWorldWidth / 2;
+    camera.top = viewWorldHeight / 2;
+    camera.bottom = -viewWorldHeight / 2;
+    camera.position.set(centerX, centerY, 100);
+    camera.updateProjectionMatrix();
+    camera.lookAt(centerX, centerY, 0);
+  }
+
+  // The anisotropic terminal projection stretches world-space sprites
+  // vertically; rescale live effect sprites once per frame after their
+  // update loops so damage numbers and blood mist keep their proportions.
+  private compensateTerminalWorldSpriteAspect(): void {
+    if (!this.isTerminalDisplayMode() || this.terminalCellAspect === 1) {
+      return;
+    }
+    const inverseAspect = 1 / this.terminalCellAspect;
+    for (const particle of this.playerDamageNumberParticles) {
+      particle.sprite.scale.y *= inverseAspect;
+    }
+    for (const particle of this.damageParticles) {
+      const sprite = particle.sprite;
+      if (sprite) {
+        sprite.scale.y *= inverseAspect;
+      }
+    }
+  }
+
   private updateCamera(deltaSeconds: number): void {
+    if (this.isTerminalDisplayMode()) {
+      this.updateTerminalCamera(deltaSeconds);
+      return;
+    }
     if (this.isFpsMode()) {
       const targetEyeX = this.playerPos.x * TILE_SIZE;
       const targetEyeY = -this.playerPos.y * TILE_SIZE;
@@ -39105,10 +39654,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const candidates = this.pointerRaycastCandidates;
     candidates.length = 0;
 
-    this.camera.updateMatrixWorld();
+    const activeCamera = this.getActiveCamera();
+    activeCamera.updateMatrixWorld();
     this.pointerRaycastProjectionMatrix.multiplyMatrices(
-      this.camera.projectionMatrix,
-      this.camera.matrixWorldInverse,
+      activeCamera.projectionMatrix,
+      activeCamera.matrixWorldInverse,
     );
     this.pointerRaycastFrustum.setFromProjectionMatrix(
       this.pointerRaycastProjectionMatrix,
@@ -39159,7 +39709,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
 
     this.pointerNdc.set(ndcX, ndcY);
-    this.pointerRaycaster.setFromCamera(this.pointerNdc, this.camera);
+    this.pointerRaycaster.setFromCamera(this.pointerNdc, this.getActiveCamera());
     const intersections = this.pointerRaycaster.intersectObjects(
       candidates,
       false,
@@ -39924,7 +40474,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       -target.y * TILE_SIZE,
       z,
     );
-    world.project(this.camera);
+    world.project(this.getActiveCamera());
     if (!Number.isFinite(world.x) || !Number.isFinite(world.y)) {
       return null;
     }
@@ -43301,7 +43851,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       ((clientX - rect.left) / rect.width) * 2 - 1,
       -((clientY - rect.top) / rect.height) * 2 + 1,
     );
-    this.pointerRaycaster.setFromCamera(this.pointerNdc, this.camera);
+    this.pointerRaycaster.setFromCamera(this.pointerNdc, this.getActiveCamera());
 
     const hit = this.pointerRaycaster.ray.intersectPlane(
       this.groundPlane,
@@ -43425,7 +43975,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const directButtonId = this.directionPromptOverlay.hitTest(
       this.directionPromptOverlayNdc.x,
       this.directionPromptOverlayNdc.y,
-      this.camera,
+      this.getActiveCamera(),
       this.pointerRaycaster,
     );
     if (directButtonId) {
@@ -45381,7 +45931,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.updateMonsterBillboardPitchLockState();
     this.syncDirectionPromptOverlayVisibility();
     this.directionPromptOverlay?.update(
-      this.camera,
+      this.getActiveCamera(),
       this.playerPos.x,
       this.playerPos.y,
     );
@@ -45403,10 +45953,23 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.updateTileRevealFades(timeMs);
     this.updateVultureDoorPlaneRenderOrdering();
     this.updateIronBarsWallPlaneVisibility();
+    this.compensateTerminalWorldSpriteAspect();
     const shouldCollectFpsDebugStats = this.fpsDebugDisplayVisible;
     const renderStartedAtMs = shouldCollectFpsDebugStats
       ? performance.now()
       : 0;
+    if (this.isTerminalDisplayMode()) {
+      // Render the simulated terminal directly (no AA/tone passes) so glyph
+      // text stays crisp, through the top-down orthographic camera.
+      this.renderer.render(this.scene, this.ensureTerminalCamera());
+      if (shouldCollectFpsDebugStats) {
+        this.updateFpsDebugDisplay(
+          rawDeltaMs,
+          performance.now() - renderStartedAtMs,
+        );
+      }
+      return;
+    }
     if (this.composer) {
       this.updateTaaState();
       this.composer.render(deltaSeconds);

@@ -301,6 +301,47 @@ export const startupInitOptionDefinitions: ReadonlyArray<StartupInitOptionDefini
     //   defaultValue: true,
     // },
     {
+      key: "hilite_pet",
+      label: startupStrings.options.hilite_pet.label,
+      description: startupStrings.options.hilite_pet.description,
+      control: "boolean",
+      defaultValue: false,
+    },
+    {
+      key: "hilite_pile",
+      label: startupStrings.options.hilite_pile.label,
+      description: startupStrings.options.hilite_pile.description,
+      control: "boolean",
+      defaultValue: false,
+      supportedRuntimeVersions: ["3.6.7", "5.0"],
+    },
+    {
+      key: "use_inverse",
+      label: startupStrings.options.use_inverse.label,
+      description: startupStrings.options.use_inverse.description,
+      control: "boolean",
+      defaultValue: true,
+    },
+    {
+      key: "symset",
+      label: startupStrings.options.symset.label,
+      description: startupStrings.options.symset.description,
+      control: "select",
+      defaultValue: "",
+      options: [
+        { value: "", label: startupStrings.options.symset.options.default },
+        {
+          value: "IBMgraphics",
+          label: startupStrings.options.symset.options.ibm,
+        },
+        {
+          value: "DECgraphics",
+          label: startupStrings.options.symset.options.dec,
+        },
+      ],
+      supportedRuntimeVersions: ["3.6.7", "5.0"],
+    },
+    {
       key: "sortloot",
       label: startupStrings.options.sortloot.label,
       description: startupStrings.options.sortloot.description,

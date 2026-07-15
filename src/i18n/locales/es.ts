@@ -339,6 +339,27 @@ export const esOverrides = {
                 description: "Confirmaciones adicionales separadas por espacios (ejemplo: confirmar, salir, atacar, orar).",
                 placeholder: "confirmar abandonar ataque orar",
             },
+            hilite_pet: {
+                label: "Resaltar mascotas",
+                description: "Resalta las mascotas (`hilite_pet`). En el modo de pantalla Terminal las mascotas se muestran en v\u00EDdeo inverso, como en el NetHack tty cl\u00E1sico.",
+            },
+            hilite_pile: {
+                label: "Resaltar montones de objetos",
+                description: "Resalta montones de objetos (`hilite_pile`). En el modo Terminal los montones se muestran en v\u00EDdeo inverso.",
+            },
+            use_inverse: {
+                label: "Resaltado inverso",
+                description: "Permite el resaltado en v\u00EDdeo inverso (`use_inverse`), por ejemplo para monstruos detectados.",
+            },
+            symset: {
+                label: "Conjunto de s\u00EDmbolos",
+                description: "Conjunto de s\u00EDmbolos de NetHack para los glifos del mapa (`symset`). IBMgraphics y DECgraphics dibujan las paredes con caracteres de l\u00EDneas en los modos ASCII y Terminal.",
+                options: {
+                    default: "Predeterminado (ASCII plano)",
+                    ibm: "IBMgraphics",
+                    dec: "DECgraphics",
+                },
+            },
             sparkle: {
                 label: "Brillo de resistencia m\u00E1gica",
                 description: "Muestra efectos de brillo especiales para la resistencia m\u00E1gica.",
@@ -659,10 +680,11 @@ export const esOverrides = {
                 sectionDisplayGraphics: "Gr\u00E1ficos y renderizado",
                 tilesetMode: {
                     label: "Mostrar",
-                    description: "Utilice mosaicos gr\u00E1ficos en lugar de ASCII.",
+                    description: "C\u00F3mo se dibuja el mundo del juego: bloques ASCII en 3D, mosaicos gr\u00E1ficos o un terminal simulado que muestra exactamente los glifos y colores producidos por NetHack (respetando opciones como symset, hilite_pet y hilite_pile).",
                     options: {
                         ascii: "ASCII",
                         tiles: "Azulejos",
+                        terminal: "Terminal",
                     },
                 },
                 tilesetPath: {

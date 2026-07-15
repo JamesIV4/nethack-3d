@@ -339,6 +339,31 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
         description:
           "空白区切りの追加確認項目です（例: confirm quit attack pray）。",
       },
+      hilite_pet: {
+        label: "ペットを強調表示",
+        description:
+          "ペットを強調表示します (`hilite_pet`)。ターミナル表示モードでは、従来の tty 版 NetHack と同様にペットが反転表示されます。",
+      },
+      hilite_pile: {
+        label: "アイテムの山を強調表示",
+        description:
+          "アイテムの山を強調表示します (`hilite_pile`)。ターミナル表示モードでは山が反転表示されます。",
+      },
+      use_inverse: {
+        label: "反転表示の許可",
+        description:
+          "反転表示による強調を許可します (`use_inverse`)。例: 感知したモンスター。",
+      },
+      symset: {
+        label: "シンボルセット",
+        description:
+          "マップグリフに使う NetHack のシンボルセットです (`symset`)。IBMgraphics と DECgraphics は ASCII およびターミナル表示モードで罫線文字の壁を描画します。",
+        options: {
+          default: "デフォルト（プレーン ASCII）",
+          ibm: "IBMgraphics",
+          dec: "DECgraphics",
+        },
+      },
       sparkle: {
         label: "魔法耐性きらめき",
         description: "魔法耐性用の特別なきらめき効果を表示します。",
@@ -667,10 +692,12 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
         sectionDisplayGraphics: "グラフィックと描画",
         tilesetMode: {
           label: "表示",
-          description: "ASCII の代わりにグラフィカルタイルを使用します。",
+          description:
+            "ゲーム世界の描画方法: 3D ASCII ブロック、グラフィカルタイル、または NetHack が出力したグリフと色をそのまま表示するシミュレートされた端末（symset、hilite_pet、hilite_pile などのオプションを反映）。",
           options: {
             ascii: "ASCII",
             tiles: "タイル",
+            terminal: "ターミナル",
           },
         },
         asciiColorMode: {
