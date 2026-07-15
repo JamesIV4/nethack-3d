@@ -81,6 +81,13 @@ import {
   isRecoverableCheckpointLevelZeroByteLength,
 } from "../runtime/save-storage";
 import {
+  getRuntimeSavePresentationMetadataKey,
+  normalizeSavePresentationRuntimeVersion,
+  normalizeStoredSaveInitOptions,
+  resolveSaveResumeInitOptionTokens,
+  resolveSavePresentationMetadataEntry,
+} from "../runtime/save-presentation-metadata";
+import {
   fetchTopScores,
   saveTopScoreDetailSnapshot,
   type TopScoreInventoryItem,
@@ -7713,6 +7720,7 @@ type SavePresentationMetadataEntry = {
   characterName: string;
   playMode: "normal" | "explore" | "debug" | null;
   initOptions?: string[];
+  runtimeVersion?: NethackRuntimeVersion;
   updatedAt: string;
 };
 
@@ -7753,10 +7761,17 @@ function readSavePresentationMetadataByKey(): Record<
         candidate.playMode === "normal"
           ? candidate.playMode
           : null;
+      const runtimeVersion = normalizeSavePresentationRuntimeVersion(
+        candidate.runtimeVersion,
+      );
       normalized[rawKey] = {
         characterName,
         playMode,
-        initOptions: sanitizeStartupInitOptionTokens(candidate.initOptions),
+        initOptions: normalizeStoredSaveInitOptions(
+          candidate.initOptions,
+          runtimeVersion,
+        ),
+        runtimeVersion,
         updatedAt:
           typeof candidate.updatedAt === "string" && candidate.updatedAt.trim()
             ? candidate.updatedAt
@@ -7802,27 +7817,10 @@ function resolveStartupPlayModeForSavePresentation(
   return "normal";
 }
 
-function resolveSaveResumeInitOptionTokens(
-  rawInitOptions: unknown,
-  runtimeVersion: NethackRuntimeVersion,
-): string[] {
-  const tokens = sanitizeStartupInitOptionTokens(
-    rawInitOptions,
-    runtimeVersion,
-  );
-  const hasNumberPadToken = tokens.some((token) =>
-    String(token || "")
-      .trim()
-      .toLowerCase()
-      .startsWith("number_pad:"),
-  );
-  return hasNumberPadToken ? tokens : [...tokens, "number_pad:1"];
-}
-
 function persistSavePresentationMetadataForCharacter(
   runtimeName: string,
   characterName: string,
-  runtimeVersion: NethackRuntimeVersion | undefined,
+  runtimeVersion: NethackRuntimeVersion,
   initOptions: string[] | undefined,
 ): void {
   const normalizedRuntimeName = normalizeStartupCharacterName(runtimeName);
@@ -7836,14 +7834,23 @@ function persistSavePresentationMetadataForCharacter(
     runtimeVersion,
     initOptions,
   );
-  const sanitizedInitOptions = sanitizeStartupInitOptionTokens(initOptions);
+  const sanitizedInitOptions = sanitizeStartupInitOptionTokens(
+    initOptions,
+    runtimeVersion,
+  );
   const updatedAt = new Date().toISOString();
   const categories: Array<"manual" | "autosave"> = ["manual", "autosave"];
   for (const category of categories) {
-    metadataByKey[`${category}:${normalizedRuntimeName}`] = {
+    const metadataKey = getRuntimeSavePresentationMetadataKey(
+      runtimeVersion,
+      category,
+      normalizedRuntimeName,
+    );
+    metadataByKey[metadataKey] = {
       characterName: normalizedCharacterName,
       playMode,
       initOptions: sanitizedInitOptions,
+      runtimeVersion,
       updatedAt,
     };
   }
@@ -8022,8 +8029,12 @@ async function fetchSavedGames(
         if (name && value && value.timestamp) {
           const timestamp = new Date(value.timestamp);
           const logicalKey = `${category}:${name}`;
-          const presentationMetadata =
-            savePresentationMetadataByKey[logicalKey];
+          const presentationMetadata = resolveSavePresentationMetadataEntry(
+            savePresentationMetadataByKey,
+            runtimeVersion,
+            category,
+            name,
+          );
           const displayPlayMode =
             presentationMetadata &&
             (presentationMetadata.playMode === "normal" ||

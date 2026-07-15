@@ -163,6 +163,9 @@ import {
   type FpsHeldWeaponAnimationVector3,
 } from "./fps-held-weapon-animations";
 import { sanitizeStartupInitOptionTokens } from "../runtime/startup-init-options";
+import {
+  extractRuntimeNumberPadModeEnabled as extractNumberPadModeFromRuntimeSnapshot,
+} from "../runtime/number-pad-mode";
 
 type PendingCharacterDamage = {
   amount: number;
@@ -11641,74 +11644,15 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return null;
     }
 
-    const readNestedValue = (
-      root: unknown,
-      path: readonly string[],
-    ): unknown => {
-      let current: unknown = root;
-      for (const key of path) {
-        if (!current || typeof current !== "object") {
-          return null;
-        }
-        current = (current as Record<string, unknown>)[key];
-      }
-      return current;
-    };
-
-    const normalizeNumberPadValue = (value: unknown): boolean | null => {
-      if (typeof value === "boolean") {
-        return value;
-      }
-      if (typeof value === "number" && Number.isFinite(value)) {
-        return Math.trunc(value) !== 0;
-      }
-      if (typeof value === "string") {
-        const normalized = value.trim().toLowerCase();
-        if (!normalized) {
-          return null;
-        }
-        if (
-          normalized === "0" ||
-          normalized === "-1" ||
-          normalized === "false" ||
-          normalized === "off"
-        ) {
-          return false;
-        }
-        if (
-          normalized === "1" ||
-          normalized === "true" ||
-          normalized === "on"
-        ) {
-          return true;
-        }
-      }
-      return null;
-    };
-
-    const globalsRoot = readNestedValue(snapshot, ["nethackGlobal", "globals"]);
-    const candidatePaths: ReadonlyArray<readonly string[]> = [
-      ["iflags", "num_pad"],
-      ["iflags", "number_pad"],
-      ["flags", "num_pad"],
-      ["flags", "number_pad"],
-      ["g", "iflags", "num_pad"],
-      ["g", "iflags", "number_pad"],
-      ["g", "flags", "num_pad"],
-      ["g", "flags", "number_pad"],
-    ];
-    for (const path of candidatePaths) {
-      const normalized = normalizeNumberPadValue(
-        readNestedValue(globalsRoot, path),
-      );
-      if (normalized !== null) {
-        return normalized;
-      }
+    const restoredRuntimeMode =
+      extractNumberPadModeFromRuntimeSnapshot(snapshot);
+    if (restoredRuntimeMode !== null) {
+      return restoredRuntimeMode;
     }
 
-    const configuredNethackOptions = readNestedValue(snapshot, [
-      "configuredNethackOptions",
-    ]);
+    const configuredNethackOptions = (
+      snapshot as { configuredNethackOptions?: unknown }
+    ).configuredNethackOptions;
     if (typeof configuredNethackOptions === "string") {
       return this.extractNumberPadModeEnabledFromOptionTokens(
         configuredNethackOptions.split(","),
@@ -37118,7 +37062,15 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private isCameraRelativeMovementEnabled(): boolean {
-    return !this.isFpsMode() && this.clientOptions.cameraRelativeMovement;
+    // Terminal mode is a fixed north-up grid, independent of the orbit-camera
+    // yaw retained from the 3D display modes. Applying that stale yaw here can
+    // rotate the cardinal controls by 180 degrees even though the map itself is
+    // rendered in the correct NetHack orientation.
+    return (
+      !this.isFpsMode() &&
+      !this.isTerminalDisplayMode() &&
+      this.clientOptions.cameraRelativeMovement
+    );
   }
 
   private resolveCameraRelativeDirectionInputFromLocalDelta(

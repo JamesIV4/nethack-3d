@@ -7,6 +7,7 @@ import {
   getAutomaticRuntimeInitOptionTokens,
   sanitizeStartupInitOptionTokens,
 } from "./startup-init-options";
+import { extractRuntimeNumberPadModeEnabled } from "./number-pad-mode";
 import {
   hasRuntimeCheckpointRecoveryPrimitiveExport,
   supportsRuntimeCheckpointRecovery,
@@ -1818,9 +1819,15 @@ class LocalNetHackRuntime {
   }
 
   requestRuntimeGlobalsSnapshot() {
+    const snapshot = this.buildRuntimeGlobalsSnapshot();
+    const restoredNumberPadMode =
+      extractRuntimeNumberPadModeEnabled(snapshot);
+    if (restoredNumberPadMode !== null) {
+      this.numberPadModeEnabled = restoredNumberPadMode;
+    }
     this.emit({
       type: "runtime_globals_snapshot",
-      snapshot: this.buildRuntimeGlobalsSnapshot(),
+      snapshot,
     });
   }
 
