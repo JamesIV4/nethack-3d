@@ -33,11 +33,27 @@ Launch it from your Home Screen for a web app fullscreen experience.
 
 ## Screenshots
 
-| Combat in the Gnomish Mines                                                                                            | Shatter monsters into pieces!                                                                                |
-| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [![Combat in the Gnomish Mines](docs/screenshots/combat-gnomish-mines.png)](docs/screenshots/combat-gnomish-mines.png) | [![Shatter monsters into pieces!](docs/screenshots/combat-effects.png)](docs/screenshots/combat-effects.png) |
-| **Multiple tile sets**                                                                                                 | **Beautiful UI**                                                                                             |
-| [![Multiple tile sets](docs/screenshots/tile-sets.png)](docs/screenshots/tile-sets.png)                                | [![Beautiful UI](docs/screenshots/inventory-panel.png)](docs/screenshots/inventory-panel.png)                |
+<table>
+  <tr>
+    <th>Combat in the Gnomish Mines</th>
+    <th>Shatter monsters into pieces!</th>
+  </tr>
+  <tr>
+    <td><a href="docs/screenshots/combat-gnomish-mines.png"><img src="docs/screenshots/combat-gnomish-mines.png" alt="Combat in the Gnomish Mines"></a></td>
+    <td><a href="docs/screenshots/combat-effects.png"><img src="docs/screenshots/combat-effects.png" alt="Shatter monsters into pieces!"></a></td>
+  </tr>
+  <tr>
+    <th>Multiple tile sets</th>
+    <th>Beautiful UI</th>
+  </tr>
+  <tr>
+    <td><a href="docs/screenshots/tile-sets.png"><img src="docs/screenshots/tile-sets.png" alt="Multiple tile sets"></a></td>
+    <td><a href="docs/screenshots/inventory-panel.png"><img src="docs/screenshots/inventory-panel.png" alt="Beautiful UI"></a></td>
+  </tr>
+  <tr>
+    <td colspan="2"><a href="docs/screenshots/terminal-mode.png"><img src="docs/screenshots/terminal-mode.png" alt="Terminal mode"></a></td>
+  </tr>
+</table>
 
 ## Current Features
 
