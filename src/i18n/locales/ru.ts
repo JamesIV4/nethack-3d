@@ -697,6 +697,17 @@ export const ru = {
             tiles: "Тайлы",
           },
         },
+        asciiColorMode: {
+          label: "Цвета ASCII",
+          description:
+            "Цветовая схема для отображения ASCII-глифов. " +
+            "Классический режим использует родные цвета NetHack с тёмным фоном и обратной подсветкой питомцев. " +
+            "NetHack 3D использует исходный неизменённый рендеринг.",
+          options: {
+            nethack3d: "NetHack 3D",
+            classic: "Классический",
+          },
+        },
         tilesetPath: {
           label: "Тайлсет",
           description: "Встроенные и загруженные тайлсеты.",

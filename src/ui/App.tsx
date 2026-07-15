@@ -4775,6 +4775,7 @@ type ClientOptionSelect = {
   key:
     | "locale"
     | "tilesetMode"
+    | "asciiColorMode"
     | "tilesetPath"
     | "antialiasing"
     | "inventoryFixedTileSize"
@@ -6338,6 +6339,22 @@ const clientOptionsConfig: ClientOption[] = [
       {
         value: "tiles",
         label: t.clientOptions.config.tilesetMode.options.tiles,
+      },
+    ],
+  },
+  {
+    key: "asciiColorMode",
+    label: t.clientOptions.config.asciiColorMode.label,
+    description: t.clientOptions.config.asciiColorMode.description,
+    type: "select",
+    options: [
+      {
+        value: "nethack-3d",
+        label: t.clientOptions.config.asciiColorMode.options.nethack3d,
+      },
+      {
+        value: "classic",
+        label: t.clientOptions.config.asciiColorMode.options.classic,
       },
     ],
   },
@@ -20156,6 +20173,15 @@ export default function App(): JSX.Element {
                                     ? event.target.value
                                     : "medium";
                                 updateClientOptionDraft(option.key, nextValue);
+                                return;
+                              }
+                              if (option.key === "asciiColorMode") {
+                                updateClientOptionDraft(
+                                  option.key,
+                                  event.target.value === "classic"
+                                    ? "classic"
+                                    : "nethack-3d",
+                                );
                                 return;
                               }
                               updateClientOptionDraft(

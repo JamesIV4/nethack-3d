@@ -698,6 +698,15 @@ export const en = {
             tiles: "Tiles",
           },
         },
+        asciiColorMode: {
+          label: "ASCII Colors",
+          description:
+            "Color scheme used when rendering ASCII glyphs. Classic applies native NetHack colors with a dark background and reverse-video pet highlighting. NetHack 3D uses the original unmodified rendering.",
+          options: {
+            nethack3d: "NetHack 3D",
+            classic: "Classic",
+          },
+        },
         tilesetPath: {
           label: "Tileset",
           description: "Built-in and uploaded tilesets.",

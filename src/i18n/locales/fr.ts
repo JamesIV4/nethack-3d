@@ -726,6 +726,15 @@ export const fr = {
             tiles: "Tuiles",
           },
         },
+        asciiColorMode: {
+          label: "Couleurs ASCII",
+          description:
+            "Schéma de couleurs utilisé pour le rendu des glyphes ASCII. Classique applique les couleurs natives de NetHack avec un fond sombre et une mise en évidence inversée des familiers. NetHack 3D utilise le rendu d'origine non modifié.",
+          options: {
+            nethack3d: "NetHack 3D",
+            classic: "Classique",
+          },
+        },
         tilesetPath: {
           label: "Jeu de tuiles",
           description: "Jeux de tuiles integres et importes.",

@@ -718,6 +718,15 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
             tiles: "Ruudut",
           },
         },
+        asciiColorMode: {
+          label: "ASCII-värit",
+          description:
+            "ASCII-glyfien värimaailma. Klassinen käyttää alkuperäisiä NetHack-värejä tummalla taustalla ja lemmikeille käänteistä korostusta. NetHack 3D käyttää alkuperäistä muokkaamatonta renderöintiä.",
+          options: {
+            nethack3d: "NetHack 3D",
+            classic: "Klassinen",
+          },
+        },
         tilesetPath: {
           label: "Ruutusetti",
           description: "Sisäänrakennetut ja ladatut ruutusetit.",
