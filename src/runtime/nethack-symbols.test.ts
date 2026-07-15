@@ -25,7 +25,7 @@ describe("ensureBundledTerminalSymbolSetsFile", () => {
     expect(bundledTerminalSymbolSets).toContain("S_vwall: \\xf8");
   });
 
-  it("preserves an embedded symbols file", () => {
+  it("preserves an existing NetHack 3.6.7 symbols file", () => {
     const writeFile = vi.fn();
     const result = ensureBundledTerminalSymbolSetsFile(
       {
@@ -34,26 +34,46 @@ describe("ensureBundledTerminalSymbolSetsFile", () => {
           writeFile,
         },
       },
-      "5.0",
+      "3.6.7",
     );
 
     expect(result).toBe("present");
     expect(writeFile).not.toHaveBeenCalled();
   });
 
-  it("does not install NetHack symbol sets into Slash'EM", () => {
+  it("leaves NetHack 5.0's late-initialized embedded symbols file alone", () => {
+    const analyzePath = vi.fn(() => ({ exists: false }));
     const writeFile = vi.fn();
     const result = ensureBundledTerminalSymbolSetsFile(
       {
         FS: {
-          analyzePath: () => ({ exists: false }),
+          analyzePath,
+          writeFile,
+        },
+      },
+      "5.0",
+    );
+
+    expect(result).toBe("embedded");
+    expect(analyzePath).not.toHaveBeenCalled();
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it("uses Slash'EM's built-in legacy IBM and DEC graphics options", () => {
+    const analyzePath = vi.fn(() => ({ exists: false }));
+    const writeFile = vi.fn();
+    const result = ensureBundledTerminalSymbolSetsFile(
+      {
+        FS: {
+          analyzePath,
           writeFile,
         },
       },
       "slashem",
     );
 
-    expect(result).toBe("unsupported");
+    expect(result).toBe("legacy-builtin");
+    expect(analyzePath).not.toHaveBeenCalled();
     expect(writeFile).not.toHaveBeenCalled();
   });
 });

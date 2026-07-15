@@ -1,9 +1,14 @@
 import type { NethackRuntimeVersion } from "./types";
 
-// The WASM builds do not currently embed NetHack's dat/symbols file. Keep the
-// two symbol sets exposed by the startup UI here, using the definitions from
-// NetHack 3.6.7's canonical dat/symbols file. String.raw preserves the byte
-// escape syntax for NetHack's own parser.
+// The NetHack 3.6.7 WASM build does not embed NetHack's dat/symbols file. Keep
+// the two symbol sets exposed by the startup UI here, using the definitions
+// from NetHack 3.6.7's canonical dat/symbols file. String.raw preserves the
+// byte escape syntax for NetHack's own parser.
+//
+// NetHack 5.0 embeds its own /symbols file while the WASM runtime initializes.
+// That file is not visible yet during our preRun callback, so attempting to
+// create it here collides with the embedded filesystem setup and aborts startup
+// with ENOTDIR.
 export const bundledTerminalSymbolSets = String.raw`# NetHack 3.6 symbol sets bundled for the WASM runtime
 start: IBMgraphics
 Description: special line-drawing characters used for walls
@@ -98,9 +103,19 @@ type RuntimeModuleWithFileSystem = {
 export function ensureBundledTerminalSymbolSetsFile(
   runtimeModule: RuntimeModuleWithFileSystem,
   runtimeVersion: NethackRuntimeVersion,
-): "created" | "present" | "unsupported" {
-  if (runtimeVersion !== "3.6.7" && runtimeVersion !== "5.0") {
-    return "unsupported";
+):
+  | "created"
+  | "present"
+  | "embedded"
+  | "legacy-builtin"
+  | "unsupported" {
+  if (runtimeVersion === "5.0") {
+    return "embedded";
+  }
+  if (runtimeVersion === "slashem") {
+    // Slash'EM predates named symbol-set files. IBMgraphics and DECgraphics
+    // are built-in boolean options and are serialized in startup-init-options.
+    return "legacy-builtin";
   }
 
   const fs = runtimeModule?.FS;
