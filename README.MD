@@ -60,15 +60,18 @@ Launch it from your Home Screen for a web app fullscreen experience.
 - Play NetHack in a 3D dungeon view while keeping core game rules and depth.
 - Not a reimagining or rework, this is authentic NetHack in a 3D engine.
 - Choose between playing NetHack 5.0, NetHack 3.6.7, and Slash'Em, with separate save states for each.
-- Mix and match gameplay modes: classic top-down or first-person (FPS) modes with ASCII, tiles, or Vulture graphics.
+- Mix and match gameplay modes: classic top-down or first-person (FPS) modes with 3D ASCII, graphical tiles, or Vulture graphics, plus a true terminal view.
 - Combat feedback effects: Monsters dynamically shatter into bloody pieces, different every time.
 - Full sound support. Monsters die with a satisfying crunch.
 - Customize sound to your liking and create your own sound packs directly in-game.
 - Play on the couch with full controller support. Radial wheel for actions, move confirmation for careful roguelike navigation.
-- Scalable minimap for level awareness, with viewport box and drag-to-center camera navigation.
+- Scalable minimap for level awareness, with NetHack 3D and terminal color schemes, a viewport box, and drag-to-center camera navigation.
 - Optional floating damage/heal numbers, status changes, XP, blood mist, blood splatter, and more.
-- Camera panning and rotation.
-- Crisp ASCII monsters and items are supported in addition to tiles.
+- Camera panning, rotation, and zoom for close inspection or a whole-level overview.
+- Crisp 3D ASCII monsters and items are supported in addition to tiles, with NetHack 3D, Classic, and Terminal color schemes.
+- Terminal mode renders the active runtime's exact glyphs, colors, symbol set, and tty highlighting in a sharp, zoomable grid with a dedicated message-log gutter.
+- Native pet, item-pile, and standout highlighting is supported, including an overhead heart marker for pets.
+- Optional smooth creature movement in Tiles and 3D ASCII modes; Terminal mode keeps authentic immediate cell updates.
 - Built-in graphical tilesets: Vulture tiles, Absurdly Evil, DawnHack, NetHack Modern, Nevanda, PixelHack, RZTiles, and Vanilla NetHack Tiles.
 - Upload and manage your own custom tilesets directly in-game.
 - Tileset background removal tools built-in.
@@ -79,7 +82,7 @@ Launch it from your Home Screen for a web app fullscreen experience.
 - Full mobile touch support (or even in desktop if you want).
 - Beautiful menus: item category headers, keyboard tips, multi-pickup selection, and menu paging.
 - Fast character start: random hero or create a character (name, role, race, gender, alignment), saved for your next run too.
-- Customize your NetHack initialization options: explore mode, autopickup, pet names and other advanced settings.
+- Customize your NetHack initialization options: explore mode, autopickup, pet names, native highlighting, and other advanced settings.
 - Save and load your game. Perfect for long runs.
 - Autofill on extended commands with `#` so advanced playstyles are easy to manage, plus all commands available via buttons on mobile.
 - Desktop-friendly controls: keyboard-first with mouse support for map interaction and camera control.
