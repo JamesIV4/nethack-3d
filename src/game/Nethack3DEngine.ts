@@ -33279,6 +33279,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private syncDirectionPromptOverlayVisibility(): void {
+    this.directionPromptOverlay?.setWorldVerticalAspectScale(
+      this.isTerminalDisplayMode() ? 1 / this.terminalCellAspect : 1,
+    );
     this.directionPromptOverlay?.setDisplayMode(
       this.isFpsMode() ? "single_preview" : "full",
     );

@@ -20,6 +20,7 @@ import {
   resolveSystemLocale,
   type SupportedLocale,
 } from "../i18n/core";
+import { constrainFpsModeForTilesetMode } from "./client-option-constraints";
 
 export type NethackConnectionState =
   | "disconnected"
@@ -1130,10 +1131,12 @@ export function normalizeNh3dClientOptions(
         : resolveDefaultNh3dTilesetWeaponSpriteFlipX(tilesetPath);
   return {
     locale,
-    fpsMode:
+    fpsMode: constrainFpsModeForTilesetMode(
       typeof overrides?.fpsMode === "boolean"
         ? overrides.fpsMode
         : defaultNh3dClientOptions.fpsMode,
+      tilesetMode,
+    ),
     fpsFov,
     fpsLookSensitivityX,
     fpsLookSensitivityY,

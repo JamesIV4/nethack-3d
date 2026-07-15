@@ -31,6 +31,7 @@ type DirectionPromptOverlayTextures = Record<
 
 type DirectionPromptOverlayButton = {
   id: DirectionPromptOverlayButtonId;
+  aspectRoot: THREE.Group;
   mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   kind: DirectionPromptOverlayButtonKind;
   icon: DirectionPromptOverlayIconKind;
@@ -326,6 +327,7 @@ export class DirectionPromptOverlay {
   private readonly textureLoadMaxRetries = 6;
   private visible = false;
   private displayMode: DirectionPromptOverlayDisplayMode = "full";
+  private worldVerticalAspectScale = 1;
   private hoveredButtonId: DirectionPromptOverlayButtonId | null = null;
   private pressedButtonId: DirectionPromptOverlayButtonId | null = null;
   private previewedButtonId: DirectionPromptOverlayButtonId | null = null;
@@ -363,6 +365,20 @@ export class DirectionPromptOverlay {
     this.applyVisualState();
   }
 
+  public setWorldVerticalAspectScale(scaleY: number): void {
+    const normalizedScale =
+      typeof scaleY === "number" && Number.isFinite(scaleY)
+        ? THREE.MathUtils.clamp(scaleY, 0.1, 10)
+        : 1;
+    if (Math.abs(this.worldVerticalAspectScale - normalizedScale) < 0.0001) {
+      return;
+    }
+    this.worldVerticalAspectScale = normalizedScale;
+    for (const button of this.buttons.values()) {
+      button.aspectRoot.scale.set(1, normalizedScale, 1);
+    }
+  }
+
   public setInteractionState(options: {
     hoveredButtonId: DirectionPromptOverlayButtonId | null;
     pressedButtonId: DirectionPromptOverlayButtonId | null;
@@ -392,7 +408,7 @@ export class DirectionPromptOverlay {
       if (!button) {
         continue;
       }
-      button.mesh.position.set(
+      button.aspectRoot.position.set(
         baseX + spec.mapDx * TILE_SIZE,
         baseY - spec.mapDy * TILE_SIZE,
         directionPromptOverlayGroundZ,
@@ -430,7 +446,7 @@ export class DirectionPromptOverlay {
       if (!button) {
         continue;
       }
-      button.mesh.position.set(0, button.billboardScreenOffsetY, 0);
+      button.aspectRoot.position.set(0, button.billboardScreenOffsetY, 0);
       button.mesh.rotation.set(0, 0, button.billboardScreenRotationZ);
     }
   }
@@ -617,11 +633,15 @@ export class DirectionPromptOverlay {
       );
       const material = createMaterial(spec.icon);
       const mesh = new THREE.Mesh(geometry, material);
+      const aspectRoot = new THREE.Group();
+      aspectRoot.scale.set(1, this.worldVerticalAspectScale, 1);
+      aspectRoot.add(mesh);
       mesh.renderOrder = directionPromptOverlayRenderOrder;
       mesh.userData.directionPromptOverlayButtonId = spec.id;
-      this.groundButtonGroup.add(mesh);
+      this.groundButtonGroup.add(aspectRoot);
       this.buttons.set(spec.id, {
         id: spec.id,
+        aspectRoot,
         mesh,
         kind: "ground",
         icon: spec.icon,
@@ -642,11 +662,15 @@ export class DirectionPromptOverlay {
       );
       const material = createMaterial(spec.icon);
       const mesh = new THREE.Mesh(geometry, material);
+      const aspectRoot = new THREE.Group();
+      aspectRoot.scale.set(1, this.worldVerticalAspectScale, 1);
+      aspectRoot.add(mesh);
       mesh.renderOrder = directionPromptOverlayRenderOrder;
       mesh.userData.directionPromptOverlayButtonId = spec.id;
-      this.billboardButtonGroup.add(mesh);
+      this.billboardButtonGroup.add(aspectRoot);
       this.buttons.set(spec.id, {
         id: spec.id,
+        aspectRoot,
         mesh,
         kind: "billboard",
         icon: spec.icon,

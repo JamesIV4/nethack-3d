@@ -39,6 +39,7 @@ import {
   nh3dToggleControllerActionWheelEventName,
   normalizeNh3dClientOptions,
 } from "../game/ui-types";
+import { constrainFpsModeForTilesetMode } from "../game/client-option-constraints";
 import {
   createAxisBinding,
   createButtonBinding,
@@ -19885,6 +19886,9 @@ export default function App(): JSX.Element {
                     const invertLookOptionDisabledByFpsMode =
                       option.key === "invertLookYAxis" &&
                       !clientOptionsDraft.fpsMode;
+                    const fpsModeDisabledByTerminal =
+                      option.key === "fpsMode" &&
+                      clientOptionsDraft.tilesetMode === "terminal";
                     const darkWallOverrideDisabledByDarkCorridorWalls =
                       isDarkWallOverrideOption &&
                       !clientOptionsDraft.darkCorridorWalls367 &&
@@ -19897,7 +19901,8 @@ export default function App(): JSX.Element {
                         clientOptionsDraft.reduceInventoryMotion) ||
                       darkCorridorOptionSuppressedByVulture ||
                       darkWallOverrideDisabledByDarkCorridorWalls ||
-                      invertLookOptionDisabledByFpsMode;
+                      invertLookOptionDisabledByFpsMode ||
+                      fpsModeDisabledByTerminal;
                     const toggleDisabledHint =
                       darkCorridorWallsForcedOnByVulture
                         ? t.dialogs.clientOptions.hints.darkWallsAlwaysEnabled
@@ -20212,14 +20217,20 @@ export default function App(): JSX.Element {
                                 return;
                               }
                               if (option.key === "tilesetMode") {
-                                updateClientOptionDraft(
-                                  option.key,
+                                const nextTilesetMode =
                                   event.target.value === "tiles"
                                     ? "tiles"
                                     : event.target.value === "terminal"
                                       ? "terminal"
-                                      : "ascii",
-                                );
+                                      : "ascii";
+                                setClientOptionsDraft((previous) => ({
+                                  ...previous,
+                                  tilesetMode: nextTilesetMode,
+                                  fpsMode: constrainFpsModeForTilesetMode(
+                                    previous.fpsMode,
+                                    nextTilesetMode,
+                                  ),
+                                }));
                                 return;
                               }
                               if (option.key === "tilesetPath") {
