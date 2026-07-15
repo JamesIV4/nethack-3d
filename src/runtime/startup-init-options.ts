@@ -316,14 +316,14 @@ export const startupInitOptionDefinitions: ReadonlyArray<StartupInitOptionDefini
       label: startupStrings.options.hilite_pet.label,
       description: startupStrings.options.hilite_pet.description,
       control: "boolean",
-      defaultValue: false,
+      defaultValue: true,
     },
     {
       key: "hilite_pile",
       label: startupStrings.options.hilite_pile.label,
       description: startupStrings.options.hilite_pile.description,
       control: "boolean",
-      defaultValue: false,
+      defaultValue: true,
       supportedRuntimeVersions: ["3.6.7", "5.0"],
     },
     {
@@ -463,7 +463,7 @@ export const startupInitOptionDefinitions: ReadonlyArray<StartupInitOptionDefini
       label: startupStrings.options.standout.label,
       description: startupStrings.options.standout.description,
       control: "boolean",
-      defaultValue: false,
+      defaultValue: true,
     },
     {
       key: "tombstone",
