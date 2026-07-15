@@ -21,6 +21,7 @@ import {
   supportsRuntimeRootPersistence,
 } from "./save-storage";
 import { STATUS_FIELD_MAP_367, STATUS_FIELD_MAP_5 } from "./status-map";
+import { ensureBundledTerminalSymbolSetsFile } from "./nethack-symbols";
 
 const process =
   typeof globalThis !== "undefined" && globalThis.process
@@ -10234,6 +10235,14 @@ class LocalNetHackRuntime {
             this.lastConfiguredNethackOptions = mod.ENV.NETHACKOPTIONS;
             console.log(`Configured NETHACKOPTIONS: ${mod.ENV.NETHACKOPTIONS}`);
 
+            const terminalSymbolSetsFileState =
+              ensureBundledTerminalSymbolSetsFile(mod, runtimeVersion);
+            if (terminalSymbolSetsFileState === "created") {
+              console.log(
+                "Installed bundled IBMgraphics and DECgraphics symbol sets into /symbols",
+              );
+            }
+
             // Ensure NetHack chdirs into a valid data root inside the wasm FS.
             // If HACKDIR/NETHACKDIR points at a host path, main() will abort
             // before js_helpers_init/js_constants_init run.
@@ -10353,6 +10362,7 @@ class LocalNetHackRuntime {
                 const normalized = String(filename || "").toLowerCase();
                 return (
                   normalized === "nhdat" ||
+                  normalized === "symbols" ||
                   normalized === "sysconf" ||
                   normalized === "perm" ||
                   normalized === "timestamp" ||
