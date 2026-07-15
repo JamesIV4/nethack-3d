@@ -189,6 +189,11 @@ export const en = {
           debug: "Wizard/Debug",
         },
       },
+      tutorial: {
+        label: "Offer Tutorial",
+        description:
+          "Ask whether to enter the tutorial when a new game begins. Turn this off to pass `!tutorial` and start regular play immediately.",
+      },
       number_pad: {
         label: "Movement Keys",
         description:

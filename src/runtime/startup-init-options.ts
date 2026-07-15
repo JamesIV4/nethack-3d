@@ -133,6 +133,14 @@ export const startupInitOptionDefinitions: ReadonlyArray<StartupInitOptionDefini
       supportedRuntimeVersions: ["3.6.7", "5.0"],
     },
     {
+      key: "tutorial",
+      label: startupStrings.options.tutorial.label,
+      description: startupStrings.options.tutorial.description,
+      control: "boolean",
+      defaultValue: true,
+      supportedRuntimeVersions: ["5.0"],
+    },
+    {
       key: "number_pad",
       label: startupStrings.options.number_pad.label,
       description: startupStrings.options.number_pad.description,

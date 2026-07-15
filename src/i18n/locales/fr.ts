@@ -198,6 +198,11 @@ export const fr = {
           debug: "Assistant/Debug",
         },
       },
+      tutorial: {
+        label: "Proposer le tutoriel",
+        description:
+          "Demander si le tutoriel doit être lancé au début d'une nouvelle partie. Désactivez cette option pour appliquer `!tutorial` et commencer immédiatement.",
+      },
       number_pad: {
         label: "Touches de deplacement",
         description:

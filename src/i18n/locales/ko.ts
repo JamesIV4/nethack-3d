@@ -189,6 +189,11 @@ export const ko = {
           debug: "위저드/디버그",
         },
       },
+      tutorial: {
+        label: "튜토리얼 제공",
+        description:
+          "새 게임을 시작할 때 튜토리얼 진행 여부를 묻습니다. 끄면 `!tutorial`을 적용하여 일반 플레이를 즉시 시작합니다.",
+      },
       number_pad: {
         label: "이동 키",
         description:

@@ -118,6 +118,11 @@ export const zhCnOverrides = {
           "选择启动模式。巫师模式是 NetHack 调试模式（`playmode:debug`）。",
         options: { normal: "正常", explore: "探索", debug: "巫师/调试" },
       },
+      tutorial: {
+        label: "提供教程",
+        description:
+          "开始新游戏时询问是否进入教程。关闭后将应用 `!tutorial` 并立即开始正常游戏。",
+      },
       number_pad: {
         label: "移动按键",
         description:

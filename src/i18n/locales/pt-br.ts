@@ -196,6 +196,11 @@ export const ptBrOverrides = {
           debug: "Assistente/Depuração",
         },
       },
+      tutorial: {
+        label: "Oferecer tutorial",
+        description:
+          "Perguntar se o tutorial deve ser iniciado ao começar um novo jogo. Desative para aplicar `!tutorial` e começar a jogar imediatamente.",
+      },
       number_pad: {
         label: "Teclas de movimento",
         description:

@@ -60,4 +60,48 @@ describe("terminal-friendly startup defaults", () => {
       ),
     ).toEqual(["DECgraphics"]);
   });
+
+  it("offers the NetHack 5 tutorial toggle without exposing it to older runtimes", () => {
+    const defaults = createDefaultStartupInitOptionValues();
+
+    expect(
+      getStartupInitOptionDefinitions("5.0").some(
+        (definition) => definition.key === "tutorial",
+      ),
+    ).toBe(true);
+    expect(
+      getStartupInitOptionDefinitions("3.6.7").some(
+        (definition) => definition.key === "tutorial",
+      ),
+    ).toBe(false);
+    expect(
+      getStartupInitOptionDefinitions("slashem").some(
+        (definition) => definition.key === "tutorial",
+      ),
+    ).toBe(false);
+    expect(serializeStartupInitOptionTokens(defaults, "5.0")).toContain(
+      "tutorial",
+    );
+    expect(
+      serializeStartupInitOptionTokens(
+        { ...defaults, tutorial: false },
+        "5.0",
+      ),
+    ).toContain("!tutorial");
+    expect(
+      serializeStartupInitOptionTokens(
+        { ...defaults, tutorial: false },
+        "3.6.7",
+      ),
+    ).not.toContain("!tutorial");
+    expect(sanitizeStartupInitOptionTokens(["!tutorial"], "5.0")).toEqual([
+      "!tutorial",
+    ]);
+    expect(
+      sanitizeStartupInitOptionTokens(["!tutorial"], "3.6.7"),
+    ).toEqual([]);
+    expect(
+      sanitizeStartupInitOptionTokens(["!tutorial"], "slashem"),
+    ).toEqual([]);
+  });
 });

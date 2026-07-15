@@ -191,6 +191,11 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
           debug: "Wizard / Debug",
         },
       },
+      tutorial: {
+        label: "チュートリアルを案内",
+        description:
+          "新しいゲームの開始時にチュートリアルへ入るか確認します。オフにすると `!tutorial` が適用され、すぐに通常プレイを開始します。",
+      },
       number_pad: {
         label: "移動キー",
         description:

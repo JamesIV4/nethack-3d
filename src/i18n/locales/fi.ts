@@ -199,6 +199,11 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
           debug: "Velho/Debug",
         },
       },
+      tutorial: {
+        label: "Tarjoa opastus",
+        description:
+          "Kysy uuden pelin alussa, halutaanko opastukseen. Poista käytöstä, jotta `!tutorial` aloittaa normaalin pelin heti.",
+      },
       number_pad: {
         label: "Liikenappaimet",
         description:

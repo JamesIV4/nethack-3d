@@ -197,6 +197,11 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
           debug: "Zauberer/Debug",
         },
       },
+      tutorial: {
+        label: "Tutorial anbieten",
+        description:
+          "Beim Start eines neuen Spiels nach dem Tutorial fragen. Deaktivieren, um mit `!tutorial` sofort regulär zu spielen.",
+      },
       number_pad: {
         label: "Bewegungstasten",
         description:

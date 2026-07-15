@@ -188,6 +188,10 @@ export const esOverrides = {
                     debug: "Asistente/Depuraci\u00F3n",
                 },
             },
+            tutorial: {
+                label: "Ofrecer tutorial",
+                description: "Preguntar si se desea iniciar el tutorial al comenzar una partida nueva. Desactívalo para usar `!tutorial` y empezar a jugar inmediatamente.",
+            },
             number_pad: {
                 label: "Teclas de movimiento",
                 description: "Elige si el movimiento de NetHack usa el teclado num\u00E9rico (`number_pad:1`) o las teclas vi tradicionales (`number_pad:0`).",
