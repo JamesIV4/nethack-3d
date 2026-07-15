@@ -368,7 +368,7 @@ export const en = {
       symset: {
         label: "Symbol Set",
         description:
-          "NetHack symbol set for map glyphs (`symset`). IBMgraphics and DECgraphics draw walls with line-drawing characters in ASCII and Terminal display modes.",
+          "Map symbol set (`symset` in NetHack; legacy `IBMgraphics`/`DECgraphics` in Slash'EM). IBM and DEC graphics draw walls with line-drawing characters, including in Terminal display mode.",
         options: {
           default: "Default (plain ASCII)",
           ibm: "IBMgraphics",

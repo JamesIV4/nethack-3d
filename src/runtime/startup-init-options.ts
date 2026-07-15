@@ -342,7 +342,7 @@ export const startupInitOptionDefinitions: ReadonlyArray<StartupInitOptionDefini
           label: startupStrings.options.symset.options.dec,
         },
       ],
-      supportedRuntimeVersions: ["3.6.7", "5.0"],
+      supportedRuntimeVersions: ["3.6.7", "5.0", "slashem"],
     },
     {
       key: "sortloot",
@@ -722,6 +722,12 @@ export function serializeStartupInitOptionTokens(
     if (!serializedValue) {
       continue;
     }
+    if (runtimeVersion === "slashem" && definition.key === "symset") {
+      // Slash'EM predates named symbol sets. Its equivalent startup options
+      // are the legacy IBMgraphics and DECgraphics boolean flags.
+      tokens.push(serializedValue);
+      continue;
+    }
     tokens.push(`${definition.key}:${serializedValue}`);
   }
   return tokens;
@@ -751,6 +757,15 @@ export function sanitizeStartupInitOptionToken(
   )
     .trim()
     .toLowerCase();
+  if (
+    runtimeVersion === "slashem" &&
+    separatorIndex < 0 &&
+    (optionKey === "ibmgraphics" || optionKey === "decgraphics")
+  ) {
+    const canonicalOption =
+      optionKey === "ibmgraphics" ? "IBMgraphics" : "DECgraphics";
+    return negated ? `!${canonicalOption}` : canonicalOption;
+  }
   const definition = startupInitOptionDefinitionByKey.get(optionKey);
   if (!definition) {
     if (negated || separatorIndex < 0) {
@@ -800,7 +815,13 @@ export function sanitizeStartupInitOptionTokens(
     if (!sanitizedToken) {
       continue;
     }
-    tokenByKey.set(extractOptionKey(sanitizedToken), sanitizedToken);
+    const extractedKey = extractOptionKey(sanitizedToken);
+    const semanticKey =
+      runtimeVersion === "slashem" &&
+      (extractedKey === "ibmgraphics" || extractedKey === "decgraphics")
+        ? "symset"
+        : extractedKey;
+    tokenByKey.set(semanticKey, sanitizedToken);
   }
   return Array.from(tokenByKey.values());
 }

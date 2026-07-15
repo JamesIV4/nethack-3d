@@ -873,6 +873,8 @@ const MINIMAP_HEIGHT_TILES = 21;
 // distinction between a gray floor dot and a gray wall segment. Keep the
 // NetHack hue, but move floor-like cells toward the map background.
 const MINIMAP_FLOOR_FOREGROUND_WEIGHT = 0.12;
+const MINIMAP_PLAYER_PULSE_PERIOD_MS = 1200;
+const MINIMAP_PLAYER_PULSE_MIN_BRIGHTNESS = 164;
 const MINIMAP_NETHACK_3D_PALETTE: readonly string[] = [
   "rgba(10, 16, 28, 0.82)",
   "rgba(20, 29, 46, 0.9)",
@@ -886,7 +888,7 @@ const MINIMAP_NETHACK_3D_PALETTE: readonly string[] = [
   "#954647",
   "#4f9a6f",
   "#5d89ba",
-  "#4df79e",
+  "#ffffff",
 ];
 
 type MinimapViewportRect = {
@@ -901,6 +903,7 @@ type MinimapCellPresentation = {
   backgroundHex?: string | null;
   displayChar?: string | null;
   inverse?: boolean;
+  forcePlayer?: boolean;
 };
 
 type AimDirection = {
@@ -1326,6 +1329,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     RuntimeMonsterLastSeenState
   > = new Map();
   private runtimeTrackedPlayerEntitySeen: boolean = false;
+  private minimapTrackedPlayerTileKey: string | null = null;
   private lastKnownTerrain: Map<string, TerrainSnapshot> = new Map();
   private flatFeatureUnderPlayerCache: Map<string, TerrainSnapshot> = new Map();
   private suppressedLootLikeUnderPlayerCacheKeys: Set<string> = new Set();
@@ -3777,6 +3781,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     glyph: number;
     char?: string;
     color?: number;
+    monsterId?: number;
     tileIndex?: number;
     symidx?: number;
     glyphFlags?: number | null;
@@ -3798,6 +3803,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
       typeof tile.glyphFlags === "number" && Number.isFinite(tile.glyphFlags)
         ? Math.trunc(tile.glyphFlags)
         : "";
+    const monsterIdPart =
+      typeof tile.monsterId === "number" && Number.isFinite(tile.monsterId)
+        ? Math.trunc(tile.monsterId)
+        : "";
     const floorGlyphPart =
       typeof tile.floorUnderlayGlyph === "number"
         ? Math.trunc(tile.floorUnderlayGlyph)
@@ -3814,7 +3823,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       typeof tile.floorUnderlaySymidx === "number"
         ? Math.trunc(tile.floorUnderlaySymidx)
         : "";
-    return `${tile.glyph}|${encodedGlyphChar}|${tile.color ?? ""}|ti:${tileIndexPart}|si:${symidxPart}|gf:${glyphFlagsPart}|fg:${floorGlyphPart}|fc:${encodedFloorUnderlayChar}|fco:${floorColorPart}|fti:${floorTileIndexPart}|fsi:${floorSymidxPart}`;
+    return `${tile.glyph}|${encodedGlyphChar}|${tile.color ?? ""}|mid:${monsterIdPart}|ti:${tileIndexPart}|si:${symidxPart}|gf:${glyphFlagsPart}|fg:${floorGlyphPart}|fc:${encodedFloorUnderlayChar}|fco:${floorColorPart}|fti:${floorTileIndexPart}|fsi:${floorSymidxPart}`;
   }
 
   private normalizeLevelCacheName(rawValue: unknown): string | null {
@@ -8137,6 +8146,19 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return y * MINIMAP_WIDTH_TILES + x;
   }
 
+  private resolveMinimapPlayerTile(): { x: number; y: number } {
+    const trackedPlayerTile = this.minimapTrackedPlayerTileKey
+      ? this.parseTileKey(this.minimapTrackedPlayerTileKey)
+      : null;
+    if (
+      trackedPlayerTile &&
+      this.isValidMinimapCoordinate(trackedPlayerTile.x, trackedPlayerTile.y)
+    ) {
+      return trackedPlayerTile;
+    }
+    return this.playerPos;
+  }
+
   private resolveMinimapBackgroundColor(): string {
     return this.clientOptions.minimapColorMode === "terminal"
       ? TERMINAL_BACKGROUND_HEX
@@ -8195,6 +8217,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
     presentation: MinimapCellPresentation = {},
   ): string {
     if (this.clientOptions.minimapColorMode === "nethack-3d") {
+      if (presentation.forcePlayer === true) {
+        return MINIMAP_NETHACK_3D_PALETTE[12];
+      }
       return this.resolveNh3dMinimapCellColor(behavior, isUndiscovered);
     }
 
@@ -8212,6 +8237,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const foregroundHex =
       presentation.foregroundHex ??
       getTerminalColorHex(behavior.resolved.color);
+    if (presentation.forcePlayer === true) {
+      return presentation.inverse === true ? backgroundHex : foregroundHex;
+    }
     // A one-pixel minimap cell cannot show both halves of reverse video.
     // Its colored background is the useful identifying color; choosing the
     // black foreground makes highlighted pets and piles disappear.
@@ -8352,7 +8380,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     };
   }
 
-  private renderMinimapViewportOverlay(): void {
+  private renderMinimapViewportOverlay(timeMs: number = performance.now()): void {
     if (!this.minimapViewportContext) {
       return;
     }
@@ -8400,10 +8428,16 @@ class Nethack3DEngine implements Nethack3DEngineController {
       );
     }
 
-    if (this.isValidMinimapCoordinate(this.playerPos.x, this.playerPos.y)) {
+    const minimapPlayerTile = this.resolveMinimapPlayerTile();
+    if (
+      this.isValidMinimapCoordinate(
+        minimapPlayerTile.x,
+        minimapPlayerTile.y,
+      )
+    ) {
       if (fpsMode) {
-        const playerX = this.playerPos.x + 0.5;
-        const playerY = this.playerPos.y + 0.5;
+        const playerX = minimapPlayerTile.x + 0.5;
+        const playerY = minimapPlayerTile.y + 0.5;
         const forwardX = -Math.sin(this.cameraYaw);
         const forwardY = Math.cos(this.cameraYaw);
         const facingAngle = Math.atan2(forwardY, forwardX);
@@ -8485,19 +8519,34 @@ class Nethack3DEngine implements Nethack3DEngineController {
       }
 
       const playerCellIndex = this.getMinimapCellIndex(
-        this.playerPos.x,
-        this.playerPos.y,
+        minimapPlayerTile.x,
+        minimapPlayerTile.y,
       );
-      context.fillStyle =
-        this.pendingMinimapCellUpdates.get(playerCellIndex) ??
-        this.minimapCells[playerCellIndex] ??
-        TERMINAL_DEFAULT_FG_HEX;
+      if (this.clientOptions.minimapColorMode === "nethack-3d") {
+        const pulseAmount = this.clientOptions.disableAnimatedTransitions
+          ? 1
+          : (Math.sin(
+                (timeMs / MINIMAP_PLAYER_PULSE_PERIOD_MS) * Math.PI * 2,
+              ) +
+              1) /
+            2;
+        const brightness = Math.round(
+          MINIMAP_PLAYER_PULSE_MIN_BRIGHTNESS +
+            (255 - MINIMAP_PLAYER_PULSE_MIN_BRIGHTNESS) * pulseAmount,
+        );
+        context.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
+      } else {
+        context.fillStyle =
+          this.pendingMinimapCellUpdates.get(playerCellIndex) ??
+          this.minimapCells[playerCellIndex] ??
+          TERMINAL_DEFAULT_FG_HEX;
+      }
       // The overlay canvas is exactly one pixel per map cell. Fractional
       // bounds blend into the cells above, left, and above-left, producing a
       // false 2x2 brightness block around the player.
       context.fillRect(
-        this.playerPos.x,
-        this.playerPos.y,
+        minimapPlayerTile.x,
+        minimapPlayerTile.y,
         1,
         1,
       );
@@ -13722,6 +13771,62 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return this.runtimeTrackedPlayerEntitySeen;
   }
 
+  private restoreMinimapTileFromRememberedTerrain(tileKey: string): void {
+    const tile = this.parseTileKey(tileKey);
+    if (!tile) {
+      return;
+    }
+    const snapshot = this.getPlayerTileUnderlaySnapshotFromCache(tileKey);
+    const fallbackGlyph = getDefaultFloorGlyph();
+    const behavior = classifyTileBehavior({
+      glyph: snapshot?.glyph ?? fallbackGlyph,
+      runtimeChar: snapshot?.char ?? ".",
+      runtimeColor:
+        snapshot && typeof snapshot.color === "number" ? snapshot.color : null,
+      runtimeTileIndex:
+        snapshot && typeof snapshot.tileIndex === "number"
+          ? snapshot.tileIndex
+          : null,
+      runtimeSymidx:
+        snapshot && typeof snapshot.symidx === "number"
+          ? snapshot.symidx
+          : null,
+      priorTerrain: snapshot,
+    });
+    this.queueMinimapTileUpdate(tile.x, tile.y, behavior, false, {
+      foregroundHex: getTerminalColorHex(behavior.resolved.color),
+      displayChar: snapshot?.char ?? behavior.glyphChar,
+    });
+  }
+
+  private queueRuntimeTrackedPlayerMinimapTile(tile: any): void {
+    const behavior = this.classifyTilePayload(tile);
+    if (
+      behavior === null ||
+      typeof tile?.x !== "number" ||
+      !Number.isFinite(tile.x) ||
+      typeof tile?.y !== "number" ||
+      !Number.isFinite(tile.y)
+    ) {
+      return;
+    }
+    const presentation = resolveTerminalCellPresentation({
+      char: typeof tile.char === "string" ? tile.char : behavior.glyphChar,
+      color:
+        typeof tile.color === "number" ? tile.color : behavior.resolved.color,
+      glyphFlags:
+        typeof tile.glyphFlags === "number" ? tile.glyphFlags : null,
+      optionStates: this.terminalRenderOptionStates,
+    });
+    this.queueMinimapTileUpdate(tile.x, tile.y, behavior, false, {
+      foregroundHex: presentation.fgHex,
+      backgroundHex: presentation.bgHex,
+      displayChar: presentation.displayChar,
+      inverse: presentation.inverse,
+      forcePlayer: true,
+    });
+  }
+
   private shouldAnimatePlayerBillboardsInFps(): boolean {
     return false;
   }
@@ -13922,6 +14027,14 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.pendingRuntimeMonsterVacatedTileKeyById.delete(eventMonsterId);
     this.runtimeMonsterTileKeyById.set(eventMonsterId, key);
     this.runtimeMonsterIdByTileKey.set(key, eventMonsterId);
+    if (eventMonsterId === 0) {
+      const previousMinimapPlayerKey = this.minimapTrackedPlayerTileKey;
+      if (previousMinimapPlayerKey && previousMinimapPlayerKey !== key) {
+        this.restoreMinimapTileFromRememberedTerrain(previousMinimapPlayerKey);
+      }
+      this.minimapTrackedPlayerTileKey = key;
+      this.queueRuntimeTrackedPlayerMinimapTile(tile);
+    }
   }
 
   private resolveRuntimeMonsterLastSeenTileById(
@@ -14487,8 +14600,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.recordNewlyDiscoveredDarkCorridorTileForCurrentInput(tile);
     const behavior = this.classifyTilePayload(tile);
     const nowMs = Date.now();
+    const isRuntimeTrackedPlayerTile = this.isRuntimeTrackedPlayerEntityId(
+      tile.monsterId,
+    );
     const isRuntimeTrackedPlayerTileInFps =
-      this.isFpsMode() && this.isRuntimeTrackedPlayerEntityId(tile.monsterId);
+      this.isFpsMode() && isRuntimeTrackedPlayerTile;
     const tileRelation = this.getFpsPlayerTileRelationFlags(
       tile.x,
       tile.y,
@@ -14502,7 +14618,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const isOverheadPlayerTileNeedingUnderlaySeed =
       this.shouldShowUnderPlayerFeaturesInOverheadTilesMode() &&
       behavior !== null &&
-      (isLikelyPlayerGlyphTile ||
+      (isRuntimeTrackedPlayerTile ||
+        isLikelyPlayerGlyphTile ||
         (this.hasSeenPlayerPosition &&
           tile.x === this.playerPos.x &&
           tile.y === this.playerPos.y));
@@ -14616,6 +14733,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     this.tileStateCache.set(key, signature);
     this.updateTile(tile.x, tile.y, tile.glyph, tile.char, tile.color, {
+      runtimeTrackedEntityId:
+        typeof tile.monsterId === "number" ? tile.monsterId : undefined,
       runtimeTileIndex:
         typeof tile.tileIndex === "number" ? tile.tileIndex : undefined,
       runtimeSymidx: typeof tile.symidx === "number" ? tile.symidx : undefined,
@@ -21116,6 +21235,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.lastParsedDefeatAtMs = 0;
     this.runtimeMonsterKillHeuristicSuppressionUntilMs = 0;
     this.runtimeTrackedPlayerEntitySeen = false;
+    this.minimapTrackedPlayerTileKey = null;
     this.normalModePlayerMoveCameraFollowActive = false;
     this.runtimeMonsterTileKeyById.clear();
     this.runtimeMonsterIdByTileKey.clear();
@@ -24390,6 +24510,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
     this.monsterBillboardTextures.clear();
     this.runtimeTrackedPlayerEntitySeen = false;
+    this.minimapTrackedPlayerTileKey = null;
     this.normalModePlayerMoveCameraFollowActive = false;
     this.runtimeMonsterTileKeyById.clear();
     this.runtimeMonsterIdByTileKey.clear();
@@ -26922,10 +27043,34 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.terminalCellTextureCache.clear();
   }
 
+  private resolveSlashEmTerminalCmapIndex(glyph: number): number | null {
+    if (
+      (this.characterCreationConfig.runtimeVersion ?? "3.6.7") !== "slashem"
+    ) {
+      return null;
+    }
+    const normalizedGlyph = Math.trunc(glyph);
+    const entry = getGlyphCatalogEntry(normalizedGlyph);
+    if (!entry || entry.kind !== "cmap") {
+      return null;
+    }
+    const cmapRange = getGlyphCatalogRanges().find(
+      (range) => range.kind === "cmap",
+    );
+    if (!cmapRange || normalizedGlyph < cmapRange.start) {
+      return null;
+    }
+    const cmapIndex = normalizedGlyph - Math.trunc(cmapRange.start);
+    return cmapIndex >= 0 && cmapIndex < cmapRange.endExclusive - cmapRange.start
+      ? cmapIndex
+      : null;
+  }
+
   // Terminal-mode replacement for the 3D tile pipeline: renders one map cell
-  // as a flat plane whose texture shows exactly the character and color the
-  // runtime produced, with tty-style MG_* highlighting. Interaction metadata
-  // (userData) is still derived from the glyph catalog so clicking,
+  // as a flat plane whose texture shows the runtime character and color with
+  // tty-style MG_* highlighting. Slash'EM's legacy symbol-set substitution is
+  // applied client-side because its shim build omits tty graphics. Interaction
+  // metadata (userData) is still derived from the glyph catalog so clicking,
   // context menus, and the minimap behave identically to the other modes.
   private updateTerminalCell(
     x: number,
@@ -26997,6 +27142,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
           ? options.runtimeGlyphFlags
           : null,
       optionStates: this.terminalRenderOptionStates,
+      slashEmCmapIndex: this.resolveSlashEmTerminalCmapIndex(glyph),
     });
     const nextTextureKey =
       this.buildScaledTerminalCellTextureKey(presentation);
@@ -27071,6 +27217,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
       backgroundHex: presentation.bgHex,
       displayChar: presentation.displayChar,
       inverse: presentation.inverse,
+      forcePlayer: this.isRuntimeTrackedPlayerEntityId(
+        options.runtimeTrackedEntityId,
+      ),
     });
   }
 
@@ -28126,6 +28275,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.queueMinimapTileUpdate(x, y, behavior, false, {
       foregroundHex: getTerminalColorHex(behavior.resolved.color),
       displayChar: char ?? behavior.glyphChar,
+      forcePlayer: runtimeTrackedEntityId === 0,
     });
     this.refreshFpsWallChamferGeometryNear(x, y);
     this.refreshFloorBlockAmbientOcclusionNear(x, y);
@@ -46217,7 +46367,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.expireBlindSearchInferenceWindowIfNeeded();
     this.updateLightingCenter(deltaSeconds);
     if (this.clientOptions.minimap || this.terminalGutterMinimapVisible) {
-      this.renderMinimapViewportOverlay();
+      this.renderMinimapViewportOverlay(timeMs);
     }
     this.updateMetaCommandModalPosition();
     this.disposeLightingOverlay();

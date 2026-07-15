@@ -7,6 +7,7 @@ import {
   isTerminalVoidGridTargetAdjacentToPlayer,
   mapCp437ByteToDisplayChar,
   mapDecGraphicsByteToDisplayChar,
+  mapSlashEmCmapCharForTerminal,
   mapTerminalDisplayChar,
   resolveTerminalCellPresentation,
   resolveTerminalPhysicalCellWidth,
@@ -273,6 +274,36 @@ describe("resolveTerminalRenderOptionStates", () => {
     ]);
     expect(states.hilitePet).toBe(false);
     expect(states.symsetHint).toBe("ibm");
+  });
+
+  it("recognizes Slash'EM's legacy graphics options", () => {
+    expect(resolveTerminalRenderOptionStates([["IBMgraphics"]]).symsetHint).toBe(
+      "ibm",
+    );
+    expect(resolveTerminalRenderOptionStates([["DECgraphics"]]).symsetHint).toBe(
+      "dec",
+    );
+    expect(
+      resolveTerminalRenderOptionStates([["DECgraphics", "!DECgraphics"]])
+        .symsetHint,
+    ).toBeNull();
+  });
+});
+
+describe("Slash'EM legacy terminal symbol sets", () => {
+  it("maps Slash'EM wall cmap indexes to IBM line drawing bytes", () => {
+    const rawChar = mapSlashEmCmapCharForTerminal("|", 1, "ibm");
+    expect(mapTerminalDisplayChar(rawChar, "ibm")).toBe("│");
+  });
+
+  it("maps Slash'EM wall cmap indexes to DEC line drawing bytes", () => {
+    const rawChar = mapSlashEmCmapCharForTerminal("-", 2, "dec");
+    expect(mapTerminalDisplayChar(rawChar, "dec")).toBe("─");
+  });
+
+  it("leaves symbols without a legacy override unchanged", () => {
+    expect(mapSlashEmCmapCharForTerminal("<", 22, "ibm")).toBe("<");
+    expect(mapSlashEmCmapCharForTerminal("|", 1, null)).toBe("|");
   });
 });
 

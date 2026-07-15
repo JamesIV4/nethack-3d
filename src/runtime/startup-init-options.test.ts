@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   createDefaultStartupInitOptionValues,
   getAutomaticRuntimeInitOptionTokens,
+  getStartupInitOptionDefinitions,
+  sanitizeStartupInitOptionTokens,
   serializeStartupInitOptionTokens,
 } from "./startup-init-options";
 
@@ -28,11 +30,34 @@ describe("terminal-friendly startup defaults", () => {
     );
   });
 
-  it("does not send the unsupported symset option to Slash'EM", () => {
+  it("offers legacy Slash'EM terminal symbol sets", () => {
     const defaults = createDefaultStartupInitOptionValues();
 
+    expect(
+      getStartupInitOptionDefinitions("slashem").some(
+        (definition) => definition.key === "symset",
+      ),
+    ).toBe(true);
+    expect(serializeStartupInitOptionTokens(defaults, "slashem")).toContain(
+      "IBMgraphics",
+    );
     expect(serializeStartupInitOptionTokens(defaults, "slashem")).not.toContain(
       "symset:IBMgraphics",
     );
+  });
+
+  it("serializes and sanitizes the Slash'EM DEC graphics option", () => {
+    const defaults = createDefaultStartupInitOptionValues();
+    const values = { ...defaults, symset: "DECgraphics" };
+
+    expect(serializeStartupInitOptionTokens(values, "slashem")).toContain(
+      "DECgraphics",
+    );
+    expect(
+      sanitizeStartupInitOptionTokens(
+        ["IBMgraphics", "DECgraphics"],
+        "slashem",
+      ),
+    ).toEqual(["DECgraphics"]);
   });
 });
