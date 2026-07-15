@@ -4,6 +4,7 @@ import {
   defaultTerminalRenderOptionStates,
   getTerminalBoxDrawingConnections,
   getTerminalColorHex,
+  isTerminalVoidGridTargetAdjacentToPlayer,
   mapCp437ByteToDisplayChar,
   mapDecGraphicsByteToDisplayChar,
   mapTerminalDisplayChar,
@@ -12,6 +13,7 @@ import {
   resolveTerminalRenderOptionStates,
   resolveTerminalWallStrokeWidth,
   resolveTerminalSymsetHintFromName,
+  shouldShowTerminalGutterMinimap,
   splitNetHackOptionsString,
   snapTerminalCameraCenterToPixelGrid,
   TERMINAL_BACKGROUND_HEX,
@@ -125,6 +127,41 @@ describe("connected terminal cell rendering", () => {
     expect(resolveTerminalWallStrokeWidth(64)).toBe(6);
   });
 
+  it("recognizes only the eight void cells adjacent to the player", () => {
+    expect(
+      isTerminalVoidGridTargetAdjacentToPlayer({
+        gridX: 7.1,
+        gridY: 18.2,
+        playerX: 8,
+        playerY: 18,
+      }),
+    ).toBe(true);
+    expect(
+      isTerminalVoidGridTargetAdjacentToPlayer({
+        gridX: 8.9,
+        gridY: 17.1,
+        playerX: 8,
+        playerY: 18,
+      }),
+    ).toBe(true);
+    expect(
+      isTerminalVoidGridTargetAdjacentToPlayer({
+        gridX: 10,
+        gridY: 18,
+        playerX: 8,
+        playerY: 18,
+      }),
+    ).toBe(false);
+    expect(
+      isTerminalVoidGridTargetAdjacentToPlayer({
+        gridX: 8.2,
+        gridY: 18.1,
+        playerX: 8,
+        playerY: 18,
+      }),
+    ).toBe(false);
+  });
+
   it("rounds zoomed views to the nearest physical-pixel scale", () => {
     expect(
       resolveTerminalPhysicalCellWidth({
@@ -140,6 +177,36 @@ describe("connected terminal cell rendering", () => {
         containWholeLevel: false,
       }),
     ).toBe(29);
+  });
+
+  it("shows the gutter minimap when the level is clipped or zoomed", () => {
+    expect(
+      shouldShowTerminalGutterMinimap({
+        mapWorldWidth: 80,
+        mapWorldHeight: 21,
+        viewWorldWidth: 80,
+        viewWorldHeight: 21,
+        zoomFactor: 1,
+      }),
+    ).toBe(false);
+    expect(
+      shouldShowTerminalGutterMinimap({
+        mapWorldWidth: 80,
+        mapWorldHeight: 21,
+        viewWorldWidth: 72,
+        viewWorldHeight: 21,
+        zoomFactor: 1,
+      }),
+    ).toBe(true);
+    expect(
+      shouldShowTerminalGutterMinimap({
+        mapWorldWidth: 80,
+        mapWorldHeight: 21,
+        viewWorldWidth: 80,
+        viewWorldHeight: 21,
+        zoomFactor: 1.05,
+      }),
+    ).toBe(true);
   });
 
   it("snaps the reference tile boundary to a physical pixel", () => {

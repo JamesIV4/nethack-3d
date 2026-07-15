@@ -4776,6 +4776,7 @@ type ClientOptionSelect = {
     | "locale"
     | "tilesetMode"
     | "asciiColorMode"
+    | "minimapColorMode"
     | "tilesetPath"
     | "antialiasing"
     | "inventoryFixedTileSize"
@@ -6531,6 +6532,22 @@ const clientOptionsConfig: ClientOption[] = [
     label: t.clientOptions.config.minimap.label,
     description: t.clientOptions.config.minimap.description,
     type: "boolean",
+  },
+  {
+    key: "minimapColorMode",
+    label: t.clientOptions.config.minimapColorMode.label,
+    description: t.clientOptions.config.minimapColorMode.description,
+    type: "select",
+    options: [
+      {
+        value: "nethack-3d",
+        label: t.clientOptions.config.minimapColorMode.options.nethack3d,
+      },
+      {
+        value: "terminal",
+        label: t.clientOptions.config.minimapColorMode.options.terminal,
+      },
+    ],
   },
   {
     key: "minimapScale",
@@ -20232,6 +20249,15 @@ export default function App(): JSX.Element {
                                   option.key,
                                   event.target.value === "classic"
                                     ? "classic"
+                                    : "nethack-3d",
+                                );
+                                return;
+                              }
+                              if (option.key === "minimapColorMode") {
+                                updateClientOptionDraft(
+                                  option.key,
+                                  event.target.value === "terminal"
+                                    ? "terminal"
                                     : "nethack-3d",
                                 );
                                 return;

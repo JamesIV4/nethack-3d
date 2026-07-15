@@ -42,13 +42,18 @@ import { getNetHackColorHex } from "./glyphs/colors";
 import {
   buildTerminalCellTextureKey,
   defaultTerminalRenderOptionStates,
+  getTerminalColorHex,
   getTerminalBoxDrawingConnections,
+  isTerminalVoidGridTargetAdjacentToPlayer,
   resolveTerminalCellPresentation,
   resolveTerminalPhysicalCellWidth,
   resolveTerminalRenderOptionStates,
   resolveTerminalWallStrokeWidth,
+  shouldShowTerminalGutterMinimap,
   snapTerminalCameraCenterToPixelGrid,
   splitNetHackOptionsString,
+  TERMINAL_BACKGROUND_HEX,
+  TERMINAL_DEFAULT_FG_HEX,
   type TerminalCellPresentation,
   type TerminalRenderOptionStates,
 } from "./terminal/terminal-display";
@@ -864,12 +869,38 @@ const serializeFpsHeldWeaponTileFlipOverrides = (
 
 const MINIMAP_WIDTH_TILES = 79;
 const MINIMAP_HEIGHT_TILES = 21;
+// A minimap cell is only one pixel, so it cannot preserve the glyph-shape
+// distinction between a gray floor dot and a gray wall segment. Keep the
+// NetHack hue, but move floor-like cells toward the map background.
+const MINIMAP_FLOOR_FOREGROUND_WEIGHT = 0.12;
+const MINIMAP_NETHACK_3D_PALETTE: readonly string[] = [
+  "rgba(10, 16, 28, 0.82)",
+  "rgba(20, 29, 46, 0.9)",
+  "#3f4b5d",
+  "#687384",
+  "#7d614a",
+  "#2b78ab",
+  "#8f76c7",
+  "#886137",
+  "#b59037",
+  "#954647",
+  "#4f9a6f",
+  "#5d89ba",
+  "#4df79e",
+];
 
 type MinimapViewportRect = {
   minX: number;
   minY: number;
   width: number;
   height: number;
+};
+
+type MinimapCellPresentation = {
+  foregroundHex?: string | null;
+  backgroundHex?: string | null;
+  displayChar?: string | null;
+  inverse?: boolean;
 };
 
 type AimDirection = {
@@ -1241,6 +1272,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
   // Canvas textures are rasterized at the current snapped physical-pixel cell
   // size. This avoids resampling both text and procedural wall strokes.
   private terminalRasterCellWidthPx: number = 16;
+  private terminalDesktopGutterActive: boolean = false;
+  private terminalGutterMinimapVisible: boolean = false;
   private terminalRenderOptionStates: TerminalRenderOptionStates = {
     ...defaultTerminalRenderOptionStates,
   };
@@ -2332,29 +2365,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private minimapContainer: HTMLDivElement | null = null;
   private minimapCanvasContext: CanvasRenderingContext2D | null = null;
   private minimapViewportContext: CanvasRenderingContext2D | null = null;
-  private minimapCells: Uint8Array = new Uint8Array(
+  private minimapCells: string[] = Array(
     MINIMAP_WIDTH_TILES * MINIMAP_HEIGHT_TILES,
-  );
-  private pendingMinimapCellUpdates: Map<number, number> = new Map();
+  ).fill(MINIMAP_NETHACK_3D_PALETTE[0]);
+  private pendingMinimapCellUpdates: Map<number, string> = new Map();
   private minimapFlushScheduled: boolean = false;
   private minimapDragPointerId: number | null = null;
   private minimapActionRailSyncRafId: number | null = null;
-  private readonly minimapPalette: string[] = [
-    "rgba(10, 16, 28, 0.82)",
-    "rgba(20, 29, 46, 0.9)",
-    "#3f4b5d",
-    "#687384",
-    "#7d614a",
-    "#2b78ab",
-    "#8f76c7",
-    "#886137",
-    "#b59037",
-    "#954647",
-    "#4f9a6f",
-    "#5d89ba",
-    "#4df79e",
-  ];
-
   // Pre-create geometries and materials
   private floorGeometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE);
   private readonly bloodGroundPlaneGeometry = new THREE.PlaneGeometry(
@@ -3601,9 +3618,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private resetMinimap(): void {
+    const backgroundColor = this.resolveMinimapBackgroundColor();
     this.pendingMinimapCellUpdates.clear();
     this.minimapFlushScheduled = false;
-    this.minimapCells.fill(0);
+    this.minimapCells.fill(backgroundColor);
     this.stopMinimapDrag();
 
     if (this.minimapCanvasContext) {
@@ -3613,7 +3631,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         MINIMAP_WIDTH_TILES,
         MINIMAP_HEIGHT_TILES,
       );
-      this.minimapCanvasContext.fillStyle = this.minimapPalette[0];
+      this.minimapCanvasContext.fillStyle = backgroundColor;
       this.minimapCanvasContext.fillRect(
         0,
         0,
@@ -3636,8 +3654,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
 
+    const minimapRequested = this.terminalDesktopGutterActive
+      ? this.terminalGutterMinimapVisible
+      : this.clientOptions.minimap;
     const visible =
-      this.clientOptions.minimap && this.runtimeConnectionState === "running";
+      minimapRequested && this.runtimeConnectionState === "running";
     this.minimapContainer.style.display = visible ? "" : "none";
     this.minimapContainer.style.pointerEvents = visible ? "auto" : "none";
     this.minimapContainer.setAttribute(
@@ -3666,6 +3687,27 @@ class Nethack3DEngine implements Nethack3DEngineController {
     );
     this.scheduleMinimapActionRailOverlapSync();
     this.syncFpsHeldWeaponAnimationDebugPanelPosition();
+  }
+
+  private setTerminalGutterMinimapState(
+    gutterActive: boolean,
+    minimapVisible: boolean,
+  ): void {
+    const normalizedGutterActive = Boolean(gutterActive);
+    const normalizedVisible = normalizedGutterActive && Boolean(minimapVisible);
+    const root = document.documentElement;
+    const className = "nh3d-terminal-gutter-minimap-visible";
+    if (
+      this.terminalDesktopGutterActive === normalizedGutterActive &&
+      this.terminalGutterMinimapVisible === normalizedVisible &&
+      root.classList.contains(className) === normalizedVisible
+    ) {
+      return;
+    }
+    this.terminalDesktopGutterActive = normalizedGutterActive;
+    this.terminalGutterMinimapVisible = normalizedVisible;
+    root.classList.toggle(className, normalizedVisible);
+    this.updateMinimapVisibility();
   }
 
   private scheduleMinimapActionRailOverlapSync(): void {
@@ -7146,6 +7188,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       previous.showItemsUnderPlayerInOverheadTilesMode !==
       normalized.showItemsUnderPlayerInOverheadTilesMode;
     const minimapChanged = previous.minimap !== normalized.minimap;
+    const minimapColorModeChanged =
+      previous.minimapColorMode !== normalized.minimapColorMode;
     const minimapLayoutChanged =
       previous.minimapScale !== normalized.minimapScale ||
       previous.manualMobileBottomSafeZoneEnabled !==
@@ -7237,6 +7281,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.updateMinimapVisibility();
     } else if (minimapLayoutChanged) {
       this.scheduleMinimapActionRailOverlapSync();
+    }
+    if (minimapColorModeChanged) {
+      this.resetMinimap();
+      this.refreshTilesFromStateCache();
     }
     if (damageNumbersChanged && !normalized.damageNumbers) {
       this.clearPlayerDamageNumberParticles();
@@ -8089,50 +8137,101 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return y * MINIMAP_WIDTH_TILES + x;
   }
 
-  private resolveMinimapPaletteIndex(
+  private resolveMinimapBackgroundColor(): string {
+    return this.clientOptions.minimapColorMode === "terminal"
+      ? TERMINAL_BACKGROUND_HEX
+      : MINIMAP_NETHACK_3D_PALETTE[0];
+  }
+
+  private resolveNh3dMinimapCellColor(
     behavior: TileBehaviorResult,
     isUndiscovered: boolean,
-  ): number {
+  ): string {
     if (behavior.isPlayerGlyph || behavior.materialKind === "player") {
-      return 12;
+      return MINIMAP_NETHACK_3D_PALETTE[12];
     }
     if (isUndiscovered) {
-      return 1;
+      return MINIMAP_NETHACK_3D_PALETTE[1];
     }
 
     switch (behavior.materialKind) {
       case "wall":
       case "dark_wall":
-        return 3;
+        return MINIMAP_NETHACK_3D_PALETTE[3];
       case "door":
-        return 4;
+        return MINIMAP_NETHACK_3D_PALETTE[4];
       case "water":
       case "fountain":
-        return 5;
+        return MINIMAP_NETHACK_3D_PALETTE[5];
       case "stairs_up":
       case "stairs_down":
-        return 6;
+        return MINIMAP_NETHACK_3D_PALETTE[6];
       case "trap":
       case "feature":
       case "effect_warning":
       case "effect_zap":
       case "effect_explode":
       case "effect_swallow":
-        return 7;
+        return MINIMAP_NETHACK_3D_PALETTE[7];
       case "item":
-        return 8;
+        return MINIMAP_NETHACK_3D_PALETTE[8];
       case "monster_hostile":
-        return 9;
+        return MINIMAP_NETHACK_3D_PALETTE[9];
       case "monster_friendly":
-        return 10;
+        return MINIMAP_NETHACK_3D_PALETTE[10];
       case "monster_neutral":
-        return 11;
+        return MINIMAP_NETHACK_3D_PALETTE[11];
       case "floor":
       case "dark":
       case "default":
       default:
-        return 2;
+        return MINIMAP_NETHACK_3D_PALETTE[2];
     }
+  }
+
+  private resolveMinimapCellColor(
+    behavior: TileBehaviorResult,
+    isUndiscovered: boolean,
+    presentation: MinimapCellPresentation = {},
+  ): string {
+    if (this.clientOptions.minimapColorMode === "nethack-3d") {
+      return this.resolveNh3dMinimapCellColor(behavior, isUndiscovered);
+    }
+
+    const backgroundHex =
+      presentation.backgroundHex ?? TERMINAL_BACKGROUND_HEX;
+    if (isUndiscovered) {
+      return backgroundHex;
+    }
+
+    const displayChar = presentation.displayChar ?? behavior.glyphChar;
+    if (!displayChar || displayChar.trim().length === 0) {
+      return backgroundHex;
+    }
+
+    const foregroundHex =
+      presentation.foregroundHex ??
+      getTerminalColorHex(behavior.resolved.color);
+    // A one-pixel minimap cell cannot show both halves of reverse video.
+    // Its colored background is the useful identifying color; choosing the
+    // black foreground makes highlighted pets and piles disappear.
+    if (presentation.inverse === true) {
+      return backgroundHex;
+    }
+    if (
+      behavior.materialKind !== "floor" &&
+      behavior.materialKind !== "dark"
+    ) {
+      return foregroundHex;
+    }
+
+    const floorColor = new THREE.Color(foregroundHex);
+    const backgroundColor = new THREE.Color(backgroundHex);
+    floorColor.lerp(
+      backgroundColor,
+      1 - MINIMAP_FLOOR_FOREGROUND_WEIGHT,
+    );
+    return `#${floorColor.getHexString()}`;
   }
 
   private queueMinimapTileUpdate(
@@ -8140,6 +8239,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     y: number,
     behavior: TileBehaviorResult,
     isUndiscovered: boolean,
+    presentation: MinimapCellPresentation = {},
   ): void {
     const tileX = Math.trunc(x);
     const tileY = Math.trunc(y);
@@ -8148,22 +8248,23 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
 
     const index = this.getMinimapCellIndex(tileX, tileY);
-    const paletteIndex = this.resolveMinimapPaletteIndex(
+    const cellColor = this.resolveMinimapCellColor(
       behavior,
       isUndiscovered,
+      presentation,
     );
     const pending = this.pendingMinimapCellUpdates.get(index);
-    if (pending === paletteIndex) {
+    if (pending === cellColor) {
       return;
     }
     if (
       !this.pendingMinimapCellUpdates.has(index) &&
-      this.minimapCells[index] === paletteIndex
+      this.minimapCells[index] === cellColor
     ) {
       return;
     }
 
-    this.pendingMinimapCellUpdates.set(index, paletteIndex);
+    this.pendingMinimapCellUpdates.set(index, cellColor);
     this.scheduleMinimapTileFlush();
   }
 
@@ -8185,13 +8286,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     for (const [
       index,
-      paletteIndex,
+      cellColor,
     ] of this.pendingMinimapCellUpdates.entries()) {
-      this.minimapCells[index] = paletteIndex;
+      this.minimapCells[index] = cellColor;
       const x = index % MINIMAP_WIDTH_TILES;
       const y = Math.floor(index / MINIMAP_WIDTH_TILES);
-      this.minimapCanvasContext.fillStyle =
-        this.minimapPalette[paletteIndex] ?? this.minimapPalette[0];
+      this.minimapCanvasContext.fillStyle = cellColor;
       this.minimapCanvasContext.fillRect(x, y, 1, 1);
     }
     this.pendingMinimapCellUpdates.clear();
@@ -8384,12 +8484,22 @@ class Nethack3DEngine implements Nethack3DEngineController {
         return;
       }
 
-      context.fillStyle = this.minimapPalette[12];
+      const playerCellIndex = this.getMinimapCellIndex(
+        this.playerPos.x,
+        this.playerPos.y,
+      );
+      context.fillStyle =
+        this.pendingMinimapCellUpdates.get(playerCellIndex) ??
+        this.minimapCells[playerCellIndex] ??
+        TERMINAL_DEFAULT_FG_HEX;
+      // The overlay canvas is exactly one pixel per map cell. Fractional
+      // bounds blend into the cells above, left, and above-left, producing a
+      // false 2x2 brightness block around the player.
       context.fillRect(
-        this.playerPos.x - 0.4,
-        this.playerPos.y - 0.4,
-        0.8,
-        0.8,
+        this.playerPos.x,
+        this.playerPos.y,
+        1,
+        1,
       );
     }
   }
@@ -26633,6 +26743,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private leaveTerminalDisplayMode(): void {
+    this.setTerminalGutterMinimapState(false, false);
     this.disposeAllTerminalCellVisuals();
     this.renderer.setClearColor(0x000000, 0);
     const host = this.mountElement ?? document.body;
@@ -26955,7 +27066,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!this.tileRevealStartMs.has(key)) {
       this.tileRevealStartMs.set(key, performance.now());
     }
-    this.queueMinimapTileUpdate(x, y, behavior, false);
+    this.queueMinimapTileUpdate(x, y, behavior, false, {
+      foregroundHex: presentation.fgHex,
+      backgroundHex: presentation.bgHex,
+      displayChar: presentation.displayChar,
+      inverse: presentation.inverse,
+    });
   }
 
   private updateTile(
@@ -28007,7 +28123,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
         }
       }
     }
-    this.queueMinimapTileUpdate(x, y, behavior, false);
+    this.queueMinimapTileUpdate(x, y, behavior, false, {
+      foregroundHex: getTerminalColorHex(behavior.resolved.color),
+      displayChar: char ?? behavior.glyphChar,
+    });
     this.refreshFpsWallChamferGeometryNear(x, y);
     this.refreshFloorBlockAmbientOcclusionNear(x, y);
     this.refreshVultureWallMaterialsNear(x, y);
@@ -33602,6 +33721,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
     this.disposed = true;
+    this.setTerminalGutterMinimapState(false, false);
 
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
@@ -38947,6 +39067,20 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const viewWorldWidth = drawingBufferWidth / cellScale;
     const viewWorldHeight =
       drawingBufferHeight / (cellScale * this.terminalCellAspect);
+    const terminalDesktopGutterActive =
+      document.documentElement.classList.contains(
+        "nh3d-terminal-desktop-gutter",
+      );
+    this.setTerminalGutterMinimapState(
+      terminalDesktopGutterActive,
+      shouldShowTerminalGutterMinimap({
+        mapWorldWidth,
+        mapWorldHeight,
+        viewWorldWidth,
+        viewWorldHeight,
+        zoomFactor,
+      }),
+    );
 
     // Map bounds in world coordinates (tile y increases downward).
     const minWorldX = -TILE_SIZE / 2;
@@ -41395,6 +41529,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
       );
       if (!gridTarget) {
         return false;
+      }
+      if (this.shouldSearchAdjacentTerminalVoid(gridTarget)) {
+        this.onSwipeCommandExecuted();
+        this.executeQuickAction("search", true);
+        return true;
       }
       const dx = gridTarget.x - this.playerPos.x;
       const dy = gridTarget.y - this.playerPos.y;
@@ -43991,6 +44130,21 @@ class Nethack3DEngine implements Nethack3DEngineController {
     );
   }
 
+  private shouldSearchAdjacentTerminalVoid(gridTarget: {
+    x: number;
+    y: number;
+  }): boolean {
+    return (
+      this.isTerminalDisplayMode() &&
+      isTerminalVoidGridTargetAdjacentToPlayer({
+        gridX: gridTarget.x,
+        gridY: gridTarget.y,
+        playerX: this.playerPos.x,
+        playerY: this.playerPos.y,
+      })
+    );
+  }
+
   private resolvePointerTargetTileFromClientCoordinates(
     clientX: number,
     clientY: number,
@@ -44285,6 +44439,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
         event.clientY,
       );
       if (gridTarget) {
+        if (this.shouldSearchAdjacentTerminalVoid(gridTarget)) {
+          this.executeQuickAction("search", true);
+          return true;
+        }
         const dx = gridTarget.x - this.playerPos.x;
         const dy = gridTarget.y - this.playerPos.y;
         const direction = this.resolveDirectionFromDelta(dx, dy);
@@ -46058,7 +46216,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.updatePositionCursorPulse(timeMs);
     this.expireBlindSearchInferenceWindowIfNeeded();
     this.updateLightingCenter(deltaSeconds);
-    if (this.clientOptions.minimap) {
+    if (this.clientOptions.minimap || this.terminalGutterMinimapVisible) {
       this.renderMinimapViewportOverlay();
     }
     this.updateMetaCommandModalPosition();

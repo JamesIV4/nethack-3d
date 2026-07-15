@@ -140,6 +140,11 @@
   --nh3d-desktop-log-window-scale: 1;
   --nh3d-minimap-scale: 1;
   --nh3d-terminal-log-gutter-width: clamp(300px, 24vw, 420px);
+  --nh3d-terminal-gutter-minimap-height: clamp(
+    73px,
+    calc(6.38vw - 6px),
+    106px
+  );
 
   @supports (height: 100dvh) {
     --nh3d-mobile-visible-height: 100dvh;
@@ -449,9 +454,26 @@ select {
     right: var(--nh3d-terminal-log-gutter-width);
   }
 
-  .nh3d-minimap {
-    display: none !important;
-    pointer-events: none !important;
+  &.nh3d-terminal-gutter-minimap-visible {
+    .nh3d-minimap {
+      top: calc(
+        var(--nh3d-safe-area-top) + var(--nh3d-stats-bar-height, 52px) + 10px
+      );
+      right: 12px;
+      width: calc(var(--nh3d-terminal-log-gutter-width) - 24px);
+      height: var(--nh3d-terminal-gutter-minimap-height);
+      max-width: none;
+      aspect-ratio: auto;
+      box-sizing: border-box;
+      border-radius: 4px;
+    }
+
+    .top-left-ui.nh3d-terminal-log-gutter-panel {
+      top: calc(
+        var(--nh3d-safe-area-top) + var(--nh3d-stats-bar-height, 52px) + 22px +
+          var(--nh3d-terminal-gutter-minimap-height)
+      );
+    }
   }
 }
 

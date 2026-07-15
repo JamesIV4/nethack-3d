@@ -855,6 +855,15 @@ export const en = {
           label: "Minimap",
           description: "Show or hide the dungeon minimap.",
         },
+        minimapColorMode: {
+          label: "Minimap colors",
+          description:
+            "Choose the NetHack 3D semantic palette or NetHack's terminal colors.",
+          options: {
+            nethack3d: "NetHack 3D",
+            terminal: "Terminal",
+          },
+        },
         minimapScale: {
           label: "Minimap scale",
           description: "Scale the minimap size from its default.",

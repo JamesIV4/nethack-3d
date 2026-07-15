@@ -248,6 +248,7 @@ export type FpsCrosshairContextState = {
 export type PlayMode = "normal" | "fps";
 export type Nh3dAntialiasingMode = "taa" | "fxaa";
 export type Nh3dAsciiColorMode = "nethack-3d" | "classic";
+export type Nh3dMinimapColorMode = "nethack-3d" | "terminal";
 export type Nh3dTilesetMode = "ascii" | "tiles" | "terminal";
 export type Nh3dDesktopTouchInterfaceMode = "off" | "portrait" | "landscape";
 export type Nh3dBloodDetailMode = "veryLow" | "low" | "medium" | "high";
@@ -305,6 +306,7 @@ export type Nh3dClientOptions = {
   disableAnimatedTransitions: boolean;
   uiTileBackgroundRemoval: boolean;
   minimap: boolean;
+  minimapColorMode: Nh3dMinimapColorMode;
   minimapScale: number;
   reduceInventoryMotion: boolean;
   inventoryTileOnlyMotion: boolean;
@@ -459,6 +461,7 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
   disableAnimatedTransitions: false,
   uiTileBackgroundRemoval: true,
   minimap: true,
+  minimapColorMode: "nethack-3d",
   minimapScale: 1,
   reduceInventoryMotion: true,
   inventoryTileOnlyMotion: true,
@@ -1190,6 +1193,8 @@ export function normalizeNh3dClientOptions(
       typeof overrides?.minimap === "boolean"
         ? overrides.minimap
         : defaultNh3dClientOptions.minimap,
+    minimapColorMode:
+      overrides?.minimapColorMode === "terminal" ? "terminal" : "nethack-3d",
     minimapScale,
     reduceInventoryMotion:
       typeof overrides?.reduceInventoryMotion === "boolean"
