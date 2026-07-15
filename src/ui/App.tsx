@@ -40,6 +40,7 @@ import {
   normalizeNh3dClientOptions,
 } from "../game/ui-types";
 import { constrainFpsModeForTilesetMode } from "../game/client-option-constraints";
+import { augmentRuntimeCommandNames } from "../game/slashem-command-capabilities";
 import {
   createAxisBinding,
   createButtonBinding,
@@ -13179,8 +13180,8 @@ export default function App(): JSX.Element {
       seen.add(normalized);
       uniqueCommands.push(normalized);
     }
-    return uniqueCommands;
-  }, [extendedCommands]);
+    return augmentRuntimeCommandNames(activeRuntimeVersion, uniqueCommands);
+  }, [activeRuntimeVersion, extendedCommands]);
   const mobileCommonExtendedCommandNames = useMemo(() => {
     const available = new Set(mobileExtendedCommandNames);
     return commonExtendedCommandWhitelist.filter((command) =>

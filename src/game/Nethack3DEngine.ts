@@ -39,6 +39,7 @@ import {
   isVerticalDoorCmapGlyph,
 } from "./glyphs/behavior";
 import { getNetHackColorHex } from "./glyphs/colors";
+import { resolveSlashEmCommandInputBinding } from "./slashem-command-capabilities";
 import {
   buildTerminalCellTextureKey,
   defaultTerminalRenderOptionStates,
@@ -15742,6 +15743,19 @@ class Nethack3DEngine implements Nethack3DEngineController {
     | { kind: "input"; input: string }
     | { kind: "sequence"; inputs: string[] }
     | null {
+    if (this.resolveRuntimeVersion() === "slashem") {
+      const binding = resolveSlashEmCommandInputBinding(normalizedCommandText);
+      if (binding) {
+        const input =
+          binding.modifier === "ctrl"
+            ? `${this.ctrlInputPrefix}${binding.key}`
+            : binding.modifier === "meta"
+              ? `${this.metaInputPrefix}${binding.key}`
+              : binding.key;
+        return { kind: "input", input };
+      }
+    }
+
     switch (normalizedCommandText) {
       case "apply":
         return { kind: "input", input: "a" };
@@ -15814,9 +15828,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
           ? { kind: "sequence", inputs: ["I", "+"] }
           : null;
       case "spells":
-        return this.resolveRuntimeVersion() === "slashem"
-          ? { kind: "input", input: "Z" }
-          : null;
+        return null;
       case "takeoff":
         return { kind: "input", input: "T" };
       case "throw":
