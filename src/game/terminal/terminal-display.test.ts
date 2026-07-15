@@ -116,6 +116,7 @@ describe("connected terminal cell rendering", () => {
         zoomFactor: 1,
         pixelRatio: 1.25,
         minCellCssPx: 14,
+        zoomOutMinCellCssPx: 2,
         maxCellCssPx: 96,
         containWholeLevel: true,
       }),
@@ -174,10 +175,65 @@ describe("connected terminal cell rendering", () => {
         zoomFactor: 1.2,
         pixelRatio: 1.25,
         minCellCssPx: 14,
+        zoomOutMinCellCssPx: 2,
         maxCellCssPx: 96,
         containWholeLevel: false,
       }),
     ).toBe(29);
+  });
+
+  it("keeps the readable starting scale on a narrow high-DPI viewport", () => {
+    expect(
+      resolveTerminalPhysicalCellWidth({
+        drawingBufferWidth: 1170,
+        drawingBufferHeight: 2532,
+        mapWorldWidth: 80,
+        mapWorldHeight: 21,
+        cellAspect: 2,
+        zoomFactor: 1,
+        pixelRatio: 3,
+        minCellCssPx: 14,
+        zoomOutMinCellCssPx: 2,
+        maxCellCssPx: 96,
+        containWholeLevel: true,
+      }),
+    ).toBe(42);
+  });
+
+  it("allows far zoom-out on a narrow high-DPI viewport", () => {
+    expect(
+      resolveTerminalPhysicalCellWidth({
+        drawingBufferWidth: 1170,
+        drawingBufferHeight: 2532,
+        mapWorldWidth: 80,
+        mapWorldHeight: 21,
+        cellAspect: 2,
+        zoomFactor: 0.125,
+        pixelRatio: 3,
+        minCellCssPx: 14,
+        zoomOutMinCellCssPx: 2,
+        maxCellCssPx: 96,
+        containWholeLevel: true,
+      }),
+    ).toBe(6);
+  });
+
+  it("allows far zoom-out on a desktop viewport", () => {
+    expect(
+      resolveTerminalPhysicalCellWidth({
+        drawingBufferWidth: 1919,
+        drawingBufferHeight: 1079,
+        mapWorldWidth: 80,
+        mapWorldHeight: 21,
+        cellAspect: 2,
+        zoomFactor: 0.125,
+        pixelRatio: 1.25,
+        minCellCssPx: 14,
+        zoomOutMinCellCssPx: 2,
+        maxCellCssPx: 96,
+        containWholeLevel: true,
+      }),
+    ).toBe(3);
   });
 
   it("shows the gutter minimap when the level is clipped or zoomed", () => {

@@ -1291,10 +1291,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private readonly terminalMapRows: number = 21;
   // Camera distance at which the terminal view renders at its fitted scale.
   private readonly terminalFitCameraDistance: number = 20;
-  // Smallest readable cell width in CSS pixels; fitting never goes below
-  // this, which pushes small screens into follow-scroll behavior instead.
+  // Smallest readable cell width at Terminal's starting zoom. Small screens
+  // begin in follow-scroll rather than shrinking below this size.
   private readonly terminalMinCellPx: number = 14;
+  // Explicit zooming can shrink cells further for a whole-level overview.
+  private readonly terminalZoomOutMinCellPx: number = 2;
   private readonly terminalMaxCellPx: number = 96;
+  private readonly terminalMaxCameraDistance: number = 160;
 
   private tileMap: TileMap = new Map();
   private glyphOverlayMap: GlyphOverlayMap = new Map();
@@ -3508,7 +3511,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.handleMouseUp.bind(this),
       eventListenerSignal,
     );
-    this.renderer.domElement.addEventListener(
+    const touchInputSurface = this.mountElement ?? this.renderer.domElement;
+    touchInputSurface.addEventListener(
       "touchstart",
       this.handleTouchStart.bind(this),
       {
@@ -3516,7 +3520,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         signal: this.domEventAbortController.signal,
       },
     );
-    this.renderer.domElement.addEventListener(
+    touchInputSurface.addEventListener(
       "touchmove",
       this.handleTouchMove.bind(this),
       {
@@ -3524,7 +3528,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         signal: this.domEventAbortController.signal,
       },
     );
-    this.renderer.domElement.addEventListener(
+    touchInputSurface.addEventListener(
       "touchend",
       this.handleTouchEnd.bind(this),
       {
@@ -3532,7 +3536,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         signal: this.domEventAbortController.signal,
       },
     );
-    this.renderer.domElement.addEventListener(
+    touchInputSurface.addEventListener(
       "touchcancel",
       this.handleTouchCancel.bind(this),
       eventListenerSignal,
@@ -39173,6 +39177,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       zoomFactor,
       pixelRatio: this.renderer.getPixelRatio(),
       minCellCssPx: this.terminalMinCellPx,
+      zoomOutMinCellCssPx: this.terminalZoomOutMinCellPx,
       maxCellCssPx: this.terminalMaxCellPx,
       containWholeLevel: zoomFactor <= 1,
     });
@@ -41492,7 +41497,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const delta = event.deltaY > 0 ? zoomSpeed : -zoomSpeed;
     this.cameraDistance = Math.max(
       this.minDistance,
-      Math.min(this.maxDistance, this.cameraDistance + delta),
+      Math.min(
+        this.isTerminalDisplayMode()
+          ? this.terminalMaxCameraDistance
+          : this.maxDistance,
+        this.cameraDistance + delta,
+      ),
     );
   }
 
@@ -41524,8 +41534,14 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return true;
   }
 
-  private isTouchEventOnGameCanvas(event: TouchEvent): boolean {
+  private isTouchEventOnGameSurface(event: TouchEvent): boolean {
     if (event.target === this.renderer.domElement) {
+      return true;
+    }
+    // The renderer can leave a small amount of its full-screen host exposed,
+    // especially in Terminal mode. Treat that backdrop as map input without
+    // accepting touches from controls or other child overlays in the host.
+    if (this.mountElement && event.target === this.mountElement) {
       return true;
     }
     if (typeof event.composedPath === "function") {
@@ -41538,7 +41554,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!this.session) {
       return false;
     }
-    if (!this.isTouchEventOnGameCanvas(event)) {
+    if (!this.isTouchEventOnGameSurface(event)) {
       return false;
     }
     if (this.isAnyModalVisible()) {
@@ -41560,7 +41576,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!this.session || this.isFpsMode() || !this.positionInputModeActive) {
       return false;
     }
-    if (!this.isTouchEventOnGameCanvas(event)) {
+    if (!this.isTouchEventOnGameSurface(event)) {
       return false;
     }
     if (this.isAnyModalVisible()) {
@@ -41583,7 +41599,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!this.session || !this.isFpsMode()) {
       return false;
     }
-    if (!this.isTouchEventOnGameCanvas(event)) {
+    if (!this.isTouchEventOnGameSurface(event)) {
       return false;
     }
     if (this.isAnyModalVisible()) {
@@ -41604,7 +41620,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!this.session || !this.isFpsMode() || !this.positionInputModeActive) {
       return false;
     }
-    if (!this.isTouchEventOnGameCanvas(event)) {
+    if (!this.isTouchEventOnGameSurface(event)) {
       return false;
     }
     if (this.isAnyModalVisible()) {
@@ -43788,7 +43804,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
           this.cameraDistance +
             leftZoomAxis * this.controllerZoomDistancePerSec * deltaSeconds,
           this.minDistance,
-          this.maxDistance,
+          this.isTerminalDisplayMode()
+            ? this.terminalMaxCameraDistance
+            : this.maxDistance,
         );
       }
     }
@@ -44326,7 +44344,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!this.isNormalDirectionPromptOverlayActive()) {
       return false;
     }
-    if (!this.isTouchEventOnGameCanvas(event)) {
+    if (!this.isTouchEventOnGameSurface(event)) {
       return false;
     }
     if (
@@ -44457,7 +44475,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (!this.session || !this.isFpsMode() || !this.isInDirectionQuestion) {
       return false;
     }
-    if (!this.isTouchEventOnGameCanvas(event)) {
+    if (!this.isTouchEventOnGameSurface(event)) {
       return false;
     }
     if (
@@ -44786,7 +44804,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (
       !this.isFpsMode() &&
       this.shouldConsumeSuppressedMapPrimaryPointerEvent(
-        this.isTouchEventOnGameCanvas(event),
+        this.isTouchEventOnGameSurface(event),
       )
     ) {
       this.touchSwipeStart = null;
@@ -45269,7 +45287,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.cameraDistance = THREE.MathUtils.clamp(
         newCameraDistance,
         this.minDistance,
-        this.maxDistance,
+        this.isTerminalDisplayMode()
+          ? this.terminalMaxCameraDistance
+          : this.maxDistance,
       );
 
       if (event.cancelable) {
