@@ -10521,3 +10521,14 @@ button.nh3d-technique-row {
     min-width: 0;
   }
 }
+
+.nh3d-hotbar-edit-list {
+  gap: 8px;
+}
+
+.nh3d-hotbar-edit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 6px;
+  align-items: center;
+}

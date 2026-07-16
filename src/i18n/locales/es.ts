@@ -1305,6 +1305,8 @@ export const esOverrides = {
                 commonCommands: "Comandos comunes",
                 allCommands: "Todos los comandos",
                 actions: "Acciones",
+                hotbar: "Barra rápida",
+                addAction: "Añadir acción",
                 menu: "Men\u00FA",
                 close: "Cerrar",
                 wizardCommands: "Comandos del asistente",

@@ -1438,6 +1438,8 @@ export const en = {
         commonCommands: "Common commands",
         allCommands: "All commands",
         actions: "Actions",
+        hotbar: "Hotbar",
+        addAction: "Add Action",
         menu: "Menu",
         close: "Close",
         wizardCommands: "Wizard Commands",
