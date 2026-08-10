@@ -234,6 +234,7 @@ export default function SoundPackSettings({
   const [newPackName, setNewPackName] = useState("");
   const [activeAudioTab, setActiveAudioTab] =
     useState<SoundPackAudioTab>("effects");
+  const [soundFilterQuery, setSoundFilterQuery] = useState("");
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const [reverbPanelExpanded, setReverbPanelExpanded] = useState(false);
   const [playingSoundSlotKey, setPlayingSoundSlotKey] = useState<string | null>(
@@ -262,6 +263,72 @@ export default function SoundPackSettings({
     [packs],
   );
   const isDefaultDraft = Boolean(draftPack?.isDefault);
+
+  const sortedSoundEffectDefinitions = useMemo(
+    () =>
+      [...nh3dSoundEffectDefinitions].sort((a, b) =>
+        a.label.localeCompare(b.label),
+      ),
+    [],
+  );
+
+  const sortedAmbientTrackDefinitions = useMemo(
+    () =>
+      [...nh3dAmbientTrackDefinitions].sort((a, b) =>
+        a.label.localeCompare(b.label),
+      ),
+    [],
+  );
+
+  const filteredSoundEffectDefinitions = useMemo(() => {
+    const query = soundFilterQuery.trim().toLowerCase();
+    if (!query) {
+      return sortedSoundEffectDefinitions;
+    }
+    return sortedSoundEffectDefinitions.filter((definition) => {
+      if (definition.label.toLowerCase().includes(query)) {
+        return true;
+      }
+      if (definition.key.toLowerCase().includes(query)) {
+        return true;
+      }
+      if (
+        "messageLogKeywords" in definition &&
+        definition.messageLogKeywords
+      ) {
+        for (const keyword of definition.messageLogKeywords) {
+          const str = typeof keyword === "string" ? keyword : keyword.source;
+          if (str.toLowerCase().includes(query)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    });
+  }, [sortedSoundEffectDefinitions, soundFilterQuery]);
+
+  const filteredAmbientTrackDefinitions = useMemo(() => {
+    const query = soundFilterQuery.trim().toLowerCase();
+    if (!query) {
+      return sortedAmbientTrackDefinitions;
+    }
+    return sortedAmbientTrackDefinitions.filter((definition) => {
+      if (definition.label.toLowerCase().includes(query)) {
+        return true;
+      }
+      if (definition.key.toLowerCase().includes(query)) {
+        return true;
+      }
+      if ("branchTags" in definition && definition.branchTags) {
+        for (const tag of definition.branchTags) {
+          if (tag.toLowerCase().includes(query)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    });
+  }, [sortedAmbientTrackDefinitions, soundFilterQuery]);
 
   const stopPreview = useCallback((): void => {
     for (const handle of oneShotPreviewHandlesRef.current) {
@@ -1412,6 +1479,26 @@ export default function SoundPackSettings({
       applyAttribution(nextValue);
     };
 
+  const isSoundVariationPlayable = useCallback(
+    (soundKey: Nh3dSoundEffectKey, view: SoundVariationView): boolean => {
+      const uploadSlotKey = createNh3dSoundUploadSlotKey(soundKey, view.id);
+      const pendingUpload =
+        pendingUploads[uploadSlotKey] ??
+        (view.isBase ? pendingUploads[soundKey] : undefined);
+      if (pendingUpload instanceof Blob) {
+        return true;
+      }
+      if (pendingUpload === null) {
+        const fallbackSound = defaultPack?.sounds[soundKey];
+        return Boolean(
+          fallbackSound?.path || resolveNh3dBundledBuiltinSoundPath(soundKey),
+        );
+      }
+      return Boolean(view.value.path);
+    },
+    [defaultPack, pendingUploads],
+  );
+
   // --- Renderers ------------------------------------------------------------
   const renderSoundEffectVariation = (
     definition: (typeof nh3dSoundEffectDefinitions)[number],
@@ -1476,6 +1563,7 @@ export default function SoundPackSettings({
         playAriaLabel={soundPackStrings.play}
         playRetriggerable
         stopAriaLabel={soundPackStrings.stopPreview}
+        playDisabled={isBusy || !isSoundVariationPlayable(soundKey, view)}
         showFile={!isDefaultDraft}
         fileLabel={soundPackStrings.soundFile}
         displayFileName={displayFileName}
@@ -1636,7 +1724,7 @@ export default function SoundPackSettings({
         onStop={stopPreview}
         playAriaLabel={soundPackStrings.play}
         stopAriaLabel={soundPackStrings.stopPreview}
-        playDisabled={!canClear}
+        playDisabled={isBusy || !canClear}
         showFile
         fileLabel={soundPackStrings.soundFile}
         displayFileName={displayFileName}
@@ -1958,7 +2046,7 @@ export default function SoundPackSettings({
               },
             }))
           }
-          levelTypes={nh3dAmbientTrackDefinitions.map((definition) => ({
+          levelTypes={sortedAmbientTrackDefinitions.map((definition) => ({
             key: definition.key,
             label: definition.label,
           }))}
@@ -2005,6 +2093,27 @@ export default function SoundPackSettings({
         </button>
       </div>
 
+      <div className="nh3d-soundpack-filter">
+        <input
+          aria-label={soundPackStrings.filterPlaceholder}
+          className="nh3d-soundpack-filter-input"
+          onChange={(event) => setSoundFilterQuery(event.target.value)}
+          placeholder={soundPackStrings.filterPlaceholder}
+          type="text"
+          value={soundFilterQuery}
+        />
+        {soundFilterQuery ? (
+          <button
+            aria-label={soundPackStrings.clearFilter}
+            className="nh3d-soundpack-filter-clear"
+            onClick={() => setSoundFilterQuery("")}
+            type="button"
+          >
+            ×
+          </button>
+        ) : null}
+      </div>
+
       {isLoading ? (
         <div className="nh3d-option-description">{soundPackStrings.loading}</div>
       ) : null}
@@ -2017,79 +2126,88 @@ export default function SoundPackSettings({
 
       {draftPack && activeAudioTab === "effects" ? (
         <div className="nh3d-soundpack-list">
-          {nh3dSoundEffectDefinitions.map((definition) => {
-            const soundKey = definition.key;
-            const sound = draftPack.sounds[soundKey];
-            const variationViews = getSoundVariationViews(soundKey, sound);
-            const rowKey = `sfx:${soundKey}`;
-            const expanded = expandedKeys.has(rowKey);
-            const previewKey = `preview:${rowKey}`;
-            const matchInfoLines = formatNh3dMessageLogKeywordsForDisplay(
-              "messageLogKeywords" in definition
-                ? definition.messageLogKeywords
-                : undefined,
-            );
-            const matchInfo =
-              matchInfoLines.length > 0
-                ? `${soundPackStrings.matchInfoHeading}\n${matchInfoLines.join("\n")}`
-                : undefined;
-            return (
-              <SoundAccordionRow
-                key={soundKey}
-                title={definition.label}
-                expanded={expanded}
-                onToggleExpanded={() => toggleExpanded(rowKey)}
-                expandAriaLabel={soundPackStrings.expandAria(definition.label)}
-                collapseAriaLabel={soundPackStrings.collapseAria(
-                  definition.label,
-                )}
-                matchInfo={matchInfo}
-                matchInfoAriaLabel={soundPackStrings.matchInfoAria(
-                  definition.label,
-                )}
-                isPlaying={playingSoundSlotKey === previewKey}
-                onPlay={() => {
-                  const enabledViews = variationViews.filter(
-                    (view) => view.value.enabled,
-                  );
-                  const pool =
-                    enabledViews.length > 0 ? enabledViews : variationViews;
-                  const picked = pickWeightedVariationView(
-                    pool,
-                    lastPreviewVariationIdRef.current[rowKey],
-                    0.35,
-                  );
-                  if (!picked) {
-                    return;
-                  }
-                  lastPreviewVariationIdRef.current[rowKey] = picked.id;
-                  void handlePlayPreview(soundKey, picked.id);
-                }}
-                onStop={stopPreview}
-                playAriaLabel={soundPackStrings.play}
-                playRetriggerable
-                stopAriaLabel={soundPackStrings.stopPreview}
-                playDisabled={isBusy}
-                isDefaultPack={isDefaultDraft}
-              >
-                <div className="nh3d-soundpack-variation-list">
-                  {variationViews.map((view, index) =>
-                    renderSoundEffectVariation(definition, view, index),
+          {filteredSoundEffectDefinitions.length === 0 ? (
+            <div className="nh3d-soundpack-no-results">
+              {soundPackStrings.noMatchingSounds}
+            </div>
+          ) : (
+            filteredSoundEffectDefinitions.map((definition) => {
+              const soundKey = definition.key;
+              const sound = draftPack.sounds[soundKey];
+              const variationViews = getSoundVariationViews(soundKey, sound);
+              const playableViews = variationViews.filter((view) =>
+                isSoundVariationPlayable(soundKey, view),
+              );
+              const rowKey = `sfx:${soundKey}`;
+              const expanded = expandedKeys.has(rowKey);
+              const previewKey = `preview:${rowKey}`;
+              const matchInfoLines = formatNh3dMessageLogKeywordsForDisplay(
+                "messageLogKeywords" in definition
+                  ? definition.messageLogKeywords
+                  : undefined,
+              );
+              const matchInfo =
+                matchInfoLines.length > 0
+                  ? `${soundPackStrings.matchInfoHeading}\n${matchInfoLines.join("\n")}`
+                  : undefined;
+              return (
+                <SoundAccordionRow
+                  key={soundKey}
+                  title={definition.label}
+                  expanded={expanded}
+                  onToggleExpanded={() => toggleExpanded(rowKey)}
+                  expandAriaLabel={soundPackStrings.expandAria(definition.label)}
+                  collapseAriaLabel={soundPackStrings.collapseAria(
+                    definition.label,
                   )}
-                </div>
-                {!isDefaultDraft ? (
-                  <button
-                    className="nh3d-menu-action-button"
-                    disabled={isBusy}
-                    onClick={() => addDraftSoundVariation(soundKey)}
-                    type="button"
-                  >
-                    {soundPackStrings.addVariation}
-                  </button>
-                ) : null}
-              </SoundAccordionRow>
-            );
-          })}
+                  matchInfo={matchInfo}
+                  matchInfoAriaLabel={soundPackStrings.matchInfoAria(
+                    definition.label,
+                  )}
+                  isPlaying={playingSoundSlotKey === previewKey}
+                  onPlay={() => {
+                    const enabledViews = playableViews.filter(
+                      (view) => view.value.enabled,
+                    );
+                    const pool =
+                      enabledViews.length > 0 ? enabledViews : playableViews;
+                    const picked = pickWeightedVariationView(
+                      pool,
+                      lastPreviewVariationIdRef.current[rowKey],
+                      0.35,
+                    );
+                    if (!picked) {
+                      return;
+                    }
+                    lastPreviewVariationIdRef.current[rowKey] = picked.id;
+                    void handlePlayPreview(soundKey, picked.id);
+                  }}
+                  onStop={stopPreview}
+                  playAriaLabel={soundPackStrings.play}
+                  playRetriggerable
+                  stopAriaLabel={soundPackStrings.stopPreview}
+                  playDisabled={isBusy || playableViews.length === 0}
+                  isDefaultPack={isDefaultDraft}
+                >
+                  <div className="nh3d-soundpack-variation-list">
+                    {variationViews.map((view, index) =>
+                      renderSoundEffectVariation(definition, view, index),
+                    )}
+                  </div>
+                  {!isDefaultDraft ? (
+                    <button
+                      className="nh3d-menu-action-button"
+                      disabled={isBusy}
+                      onClick={() => addDraftSoundVariation(soundKey)}
+                      type="button"
+                    >
+                      {soundPackStrings.addVariation}
+                    </button>
+                  ) : null}
+                </SoundAccordionRow>
+              );
+            })
+          )}
         </div>
       ) : null}
 
@@ -2098,68 +2216,74 @@ export default function SoundPackSettings({
           <div className="nh3d-option-description nh3d-soundpack-ambient-description">
             {soundPackStrings.ambientDescription}
           </div>
-          {nh3dAmbientTrackDefinitions.map((definition) => {
-            const trackKey = definition.key;
-            const track = draftPack.ambient[trackKey];
-            const variationViews = getAmbientVariationViews(track);
-            const rowKey = `ambient:${trackKey}`;
-            const expanded = expandedKeys.has(rowKey);
-            const previewKey = `preview:${rowKey}`;
-            const playableViews = variationViews.filter(
-              (view) =>
-                pendingUploads[
-                  createNh3dAmbientUploadSlotKey(trackKey, view.id)
-                ] instanceof Blob || Boolean(view.value.path),
-            );
-            return (
-              <SoundAccordionRow
-                key={trackKey}
-                title={definition.label}
-                expanded={expanded}
-                onToggleExpanded={() => toggleExpanded(rowKey)}
-                expandAriaLabel={soundPackStrings.expandAria(definition.label)}
-                collapseAriaLabel={soundPackStrings.collapseAria(
-                  definition.label,
-                )}
-                isPlaying={playingSoundSlotKey === previewKey}
-                onPlay={() => {
-                  const enabledViews = playableViews.filter(
-                    (view) => view.value.enabled,
-                  );
-                  const pool =
-                    enabledViews.length > 0 ? enabledViews : playableViews;
-                  const picked = pickWeightedVariationView(
-                    pool,
-                    lastPreviewVariationIdRef.current[rowKey],
-                    0.4,
-                  );
-                  if (!picked) {
-                    return;
-                  }
-                  lastPreviewVariationIdRef.current[rowKey] = picked.id;
-                  void handlePlayAmbientPreview(trackKey, picked.id, previewKey);
-                }}
-                onStop={stopPreview}
-                playAriaLabel={soundPackStrings.play}
-                stopAriaLabel={soundPackStrings.stopPreview}
-                playDisabled={isBusy || playableViews.length === 0}
-              >
-                <div className="nh3d-soundpack-variation-list">
-                  {variationViews.map((view, index) =>
-                    renderAmbientVariation(definition, view, index),
+          {filteredAmbientTrackDefinitions.length === 0 ? (
+            <div className="nh3d-soundpack-no-results">
+              {soundPackStrings.noMatchingSounds}
+            </div>
+          ) : (
+            filteredAmbientTrackDefinitions.map((definition) => {
+              const trackKey = definition.key;
+              const track = draftPack.ambient[trackKey];
+              const variationViews = getAmbientVariationViews(track);
+              const rowKey = `ambient:${trackKey}`;
+              const expanded = expandedKeys.has(rowKey);
+              const previewKey = `preview:${rowKey}`;
+              const playableViews = variationViews.filter(
+                (view) =>
+                  pendingUploads[
+                    createNh3dAmbientUploadSlotKey(trackKey, view.id)
+                  ] instanceof Blob || Boolean(view.value.path),
+              );
+              return (
+                <SoundAccordionRow
+                  key={trackKey}
+                  title={definition.label}
+                  expanded={expanded}
+                  onToggleExpanded={() => toggleExpanded(rowKey)}
+                  expandAriaLabel={soundPackStrings.expandAria(definition.label)}
+                  collapseAriaLabel={soundPackStrings.collapseAria(
+                    definition.label,
                   )}
-                </div>
-                <button
-                  className="nh3d-menu-action-button"
-                  disabled={isBusy}
-                  onClick={() => addDraftAmbientVariation(trackKey)}
-                  type="button"
+                  isPlaying={playingSoundSlotKey === previewKey}
+                  onPlay={() => {
+                    const enabledViews = playableViews.filter(
+                      (view) => view.value.enabled,
+                    );
+                    const pool =
+                      enabledViews.length > 0 ? enabledViews : playableViews;
+                    const picked = pickWeightedVariationView(
+                      pool,
+                      lastPreviewVariationIdRef.current[rowKey],
+                      0.4,
+                    );
+                    if (!picked) {
+                      return;
+                    }
+                    lastPreviewVariationIdRef.current[rowKey] = picked.id;
+                    void handlePlayAmbientPreview(trackKey, picked.id, previewKey);
+                  }}
+                  onStop={stopPreview}
+                  playAriaLabel={soundPackStrings.play}
+                  stopAriaLabel={soundPackStrings.stopPreview}
+                  playDisabled={isBusy || playableViews.length === 0}
                 >
-                  {soundPackStrings.addVariation}
-                </button>
-              </SoundAccordionRow>
-            );
-          })}
+                  <div className="nh3d-soundpack-variation-list">
+                    {variationViews.map((view, index) =>
+                      renderAmbientVariation(definition, view, index),
+                    )}
+                  </div>
+                  <button
+                    className="nh3d-menu-action-button"
+                    disabled={isBusy}
+                    onClick={() => addDraftAmbientVariation(trackKey)}
+                    type="button"
+                  >
+                    {soundPackStrings.addVariation}
+                  </button>
+                </SoundAccordionRow>
+              );
+            })
+          )}
         </div>
       ) : null}
 

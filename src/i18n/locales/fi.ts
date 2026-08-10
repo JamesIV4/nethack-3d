@@ -1142,6 +1142,9 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
       addVariation: "+ Lisää variaatio",
       tabSoundEffects: "Ääniefektit",
       tabAmbient: "Musiikki / Äänimaisemat",
+      filterPlaceholder: "Suodata ääniä...",
+      clearFilter: "Tyhjennä suodatin",
+      noMatchingSounds: "Mikään ääni ei vastaa suodatinta.",
       ambientDescription:
         "Taustalla toistuva tunnelmamusiikki luolaston tasotyypin mukaan. Lisää muunnelmia, joita rajaavat syvyys, pelaajan taso tai Yendorin amuletti, jotta musiikki tiivistyy pelin vaikeutuessa.",
       expandAria: (label: string) => `Laajenna ${label}`,

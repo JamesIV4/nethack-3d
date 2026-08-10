@@ -1182,6 +1182,9 @@ export const fr = {
       addVariation: "+ Ajouter une variation",
       tabSoundEffects: "Effets sonores",
       tabAmbient: "Musique / Ambiances",
+      filterPlaceholder: "Filtrer les sons...",
+      clearFilter: "Effacer le filtre",
+      noMatchingSounds: "Aucun son ne correspond au filtre.",
       ambientDescription:
         "Musique d'ambiance en boucle selon le type de niveau du donjon. Ajoutez des variantes conditionnees par la profondeur, le niveau du joueur ou l'Amulette d'Yendor pour que la musique s'intensifie a mesure que la partie devient difficile.",
       expandAria: (label: string) => `Developper ${label}`,

@@ -1177,6 +1177,9 @@ export const ptBrOverrides = {
       addVariation: "+ Adicionar variação",
       tabSoundEffects: "Efeitos sonoros",
       tabAmbient: "Música / Ambientes",
+      filterPlaceholder: "Filtrar sons...",
+      clearFilter: "Limpar filtro",
+      noMatchingSounds: "Nenhum som corresponde ao filtro.",
       ambientDescription:
         "Música de fundo em loop por tipo de nível da masmorra. Adicione variantes condicionadas pela profundidade, pelo nível do jogador ou pelo Amuleto de Yendor para que a música fique mais intensa conforme a partida fica difícil.",
       expandAria: (label: string) => `Expandir ${label}`,

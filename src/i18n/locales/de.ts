@@ -1171,6 +1171,9 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
       addVariation: "+ Variation hinzuf\u00fcgen",
       tabSoundEffects: "Soundeffekte",
       tabAmbient: "Musik / Klanglandschaften",
+      filterPlaceholder: "Sounds filtern...",
+      clearFilter: "Filter zurücksetzen",
+      noMatchingSounds: "Keine Sounds entsprechen dem Filter.",
       ambientDescription:
         "Schleifende Hintergrundmusik je Dungeon-Ebenentyp. F\u00fcge Varianten hinzu, die nach Tiefe, Spielerstufe oder dem Amulett von Yendor gesteuert werden, damit die Musik intensiver wird, je schwieriger der Lauf wird.",
       expandAria: (label: string) => `${label} ausklappen`,

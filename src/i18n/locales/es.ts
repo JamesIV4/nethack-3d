@@ -1064,6 +1064,9 @@ export const esOverrides = {
             addVariation: "+ Agregar variaci\u00F3n",
             tabSoundEffects: "Efectos de sonido",
             tabAmbient: "M\u00FAsica / Ambientes",
+            filterPlaceholder: "Filtrar sonidos...",
+            clearFilter: "Borrar filtro",
+            noMatchingSounds: "Ning\u00FAn sonido coincide con el filtro.",
             ambientDescription:
                 "M\u00FAsica de fondo en bucle por tipo de nivel de mazmorra. A\u00F1ade variantes seg\u00FAn la profundidad, el nivel del jugador o el Amuleto de Yendor para que la m\u00FAsica se intensifique a medida que avanza la partida.",
             expandAria: (label: string) => `Expandir ${label}`,

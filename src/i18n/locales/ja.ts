@@ -1098,6 +1098,9 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
       addVariation: "+ バリエーションを追加",
       tabSoundEffects: "効果音",
       tabAmbient: "音楽 / アンビエンス",
+      filterPlaceholder: "サウンドをフィルター...",
+      clearFilter: "フィルターをクリア",
+      noMatchingSounds: "フィルターに一致するサウンドはありません。",
       ambientDescription:
         "ダンジョンの階層タイプごとにループ再生する環境音楽。深さ、プレイヤーのレベル、イェンダーの魔除けの所持を条件にしたバリエーションを追加すると、冒険が難しくなるほど音楽を盛り上げられます。",
       expandAria: (label: string) => `${label}を展開`,

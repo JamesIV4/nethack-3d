@@ -878,6 +878,9 @@ export const zhCnOverrides = {
       addVariation: "+ 添加变体",
       tabSoundEffects: "音效",
       tabAmbient: "音乐 / 环境音景",
+      filterPlaceholder: "过滤声音...",
+      clearFilter: "清除过滤",
+      noMatchingSounds: "没有符合过滤条件的声音。",
       ambientDescription:
         "按地下城层级类型循环播放的背景音乐。可添加按深度、玩家等级或是否持有延德的护身符触发的变体，让音乐随着游戏难度提升而愈发紧张。",
       expandAria: (label: string) => `展开${label}`,

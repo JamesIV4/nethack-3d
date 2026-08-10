@@ -1355,6 +1355,9 @@ export const en = {
       addVariation: "+ Add variation",
       tabSoundEffects: "Sound Effects",
       tabAmbient: "Music / Audioscapes",
+      filterPlaceholder: "Filter sounds...",
+      clearFilter: "Clear filter",
+      noMatchingSounds: "No sounds match the filter.",
       ambientDescription:
         "Looping ambient music per dungeon level type. Add variants gated by depth, player level, or the Amulet of Yendor so the score escalates as the run gets harder.",
       expandAria: (label: string) => `Expand ${label}`,

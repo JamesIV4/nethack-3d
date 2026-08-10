@@ -1143,6 +1143,9 @@ export const ko = {
       addVariation: "+ 변형 추가",
       tabSoundEffects: "효과음",
       tabAmbient: "음악 / 사운드스케이프",
+      filterPlaceholder: "사운드 필터링...",
+      clearFilter: "필터 초기화",
+      noMatchingSounds: "필터와 일치하는 사운드가 없습니다.",
       ambientDescription:
         "던전 층 유형별로 반복 재생되는 배경 음악입니다. 깊이, 플레이어 레벨, 옌도르의 부적 소지 여부로 조건을 건 변형을 추가하면 플레이가 어려워질수록 음악이 고조됩니다.",
       expandAria: (label: string) => `${label} 펼치기`,
