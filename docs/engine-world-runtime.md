@@ -4,7 +4,7 @@ This guide locates the code that turns NetHack runtime events into remembered wo
 
 ## Runtime boundary
 
-[LocalNetHackRuntime](../src/runtime/LocalNetHackRuntime.ts) decodes NetHack callbacks in the worker. [runtime-worker.ts](../src/runtime/runtime-worker.ts) and [WorkerRuntimeBridge](../src/runtime/WorkerRuntimeBridge.ts) transport events and commands. [Nethack3DEngine.handleRuntimeEvent](../src/game/Nethack3DEngine.ts) receives those events and preserves their coordination order; domain implementations live under `src/game/engine/`.
+[LocalNetHackRuntime](../src/runtime/LocalNetHackRuntime.ts) coordinates startup, callback guards and dispatch, public commands, and shutdown in the worker. Its [runtime subsystems](../src/runtime/local/README.md) own callback decoding, input waits, caches, ABI handling, and persistence; [create-runtime-systems.ts](../src/runtime/local/create-runtime-systems.ts) assembles their explicit dependencies before WASM starts. [runtime-worker.ts](../src/runtime/runtime-worker.ts) and [WorkerRuntimeBridge](../src/runtime/WorkerRuntimeBridge.ts) transport events and commands. [Nethack3DEngine.handleRuntimeEvent](../src/game/Nethack3DEngine.ts) receives those events and preserves their coordination order; presentation implementations live under `src/game/engine/`.
 
 The event and command envelope types are in [runtime/types.ts](../src/runtime/types.ts). Engine-side shared types, such as level snapshots and tracked entity appearances, are in [engine/shared/types.ts](../src/game/engine/shared/types.ts).
 
@@ -12,6 +12,9 @@ The event and command envelope types are in [runtime/types.ts](../src/runtime/ty
 
 | Concern | Owner and starting methods |
 | --- | --- |
+| Worker map/player callback decoding and runtime map cache | [local/world/map-callbacks.ts](../src/runtime/local/world/map-callbacks.ts): `handleShimPrintGlyph`, `handleShimCliparound`, `handleShimCurs` |
+| Worker player-tile refresh intent and authoritative item results | [local/world/post-action-refresh.ts](../src/runtime/local/world/post-action-refresh.ts), [local/world/under-player-items.ts](../src/runtime/local/world/under-player-items.ts) |
+| Worker status batching and reconnect replay | [local/status/status.ts](../src/runtime/local/status/status.ts), [local/world/global-snapshots.ts](../src/runtime/local/world/global-snapshots.ts) |
 | Map event batching and refresh requests | [world/tile-updates.ts](../src/game/engine/world/tile-updates.ts): `enqueueTileUpdate`, `processPendingTileUpdate`, `flushPendingTileUpdates`, `requestTileUpdateWithRetry` |
 | Glyph classification and features under the player | [world/world-classification.ts](../src/game/engine/world/world-classification.ts): `classifyTilePayload`, `shouldRenderFlatFeatureUnderPlayer`, `applyUnderPlayerItemGlyphEvent`, `clearUnderPlayerItemGlyphEvent` |
 | Level identity, snapshots, and restoration | [world/level-terrain-cache.ts](../src/game/engine/world/level-terrain-cache.ts): `persistActiveLevelTerrainCache`, `beginPendingLevelCacheTransition`, `maybeFinalizePendingLevelCacheTransition`, `restoreLevelTerrainCacheEntry` |
@@ -49,7 +52,11 @@ These handlers are active in FPS mode and in overhead tiles mode when under-play
 
 For pickup, partial pickup, drop, eat, or travel onto loot, inspect both ends: the runtime's pending post-action refresh and helper result, then the engine's feature cache and suppression behavior. A rendering fix alone cannot recover a missing runtime item event.
 
+On the worker side, `RuntimePostActionRefresh` owns pending refresh reasons, targets and snapshots; `RuntimeUnderPlayerItems` queries and emits authoritative item results. `RuntimeMapCallbacks` owns `gameMap` and player position, and `RuntimeTileRefresh` owns deferred tile/area requests. These owners read live peer state through declared dependencies so a replaced position or collection is visible immediately.
+
 ## Level transitions and snapshots
+
+The worker's `handleShimClearNhwindow` in [local/messages/window-text.ts](../src/runtime/local/messages/window-text.ts) resets window text and emits `clear_scene` for the map window. It retains the worker map cache. `RuntimeGlobalSnapshots.sendReconnectSnapshot` also starts with `clear_scene`, then replays commands, map chunks, player position, latest status, inventory and recent text in order.
 
 The `clear_scene` event follows this order:
 
@@ -70,6 +77,8 @@ Runtime entity ID `0` is the player; positive IDs are monsters. `RuntimeEntityTr
 The minimap follows the tracked player ID and restores the previous player's minimap cell from remembered terrain when the tracked tile changes.
 
 ## Status, debugging, and validation
+
+The worker's `RuntimeStatus` decodes callback values, updates its latest-value cache, and batches pending fields until a flush marker. Flushes sort numeric field indices and clear pending state before emitting. Keep that ordering and the reconnect snapshot's live cache reads stable when changing runtime dependencies.
 
 `PlayerStatus` decodes status fields, stores runtime globals and object-to-tile mappings, and sends HUD state through the UI adapter. It also notifies level-identity tracking when relevant status fields arrive. Status baselines survive `clearScene()` so damage and stat deltas remain meaningful across redraws; `connectToRuntime()` resets them for a new session.
 

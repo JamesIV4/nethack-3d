@@ -2,7 +2,7 @@
 
 This is a living steering doc. Update it whenever movement, input broker behavior, or position-mode flows change.
 
-This document describes movement and position input across the engine subsystems and worker runtime. Use the [engine ownership map](../../src/game/engine/README.md#code-hotspots) to locate implementations and the [world/runtime guide](../../docs/engine-world-runtime.md) for player, map and item presentation.
+This document describes movement and position input across the engine subsystems and worker runtime. Use the [engine ownership map](../../src/game/engine/README.md#code-hotspots) and [runtime ownership map](../../src/runtime/local/README.md#code-hotspots) to locate implementations, and the [world/runtime guide](../../docs/engine-world-runtime.md) for player, map and item presentation.
 
 It focuses on:
 
@@ -48,15 +48,24 @@ It focuses on:
 - `src/runtime/runtime-worker.ts`
   - command forwarding for `send_input`, `send_input_sequence`, and `send_mouse_input`
 - `src/runtime/LocalNetHackRuntime.ts`
+  - public command forwarding, callback guards/dispatch, and ordered shutdown
+- `src/runtime/local/input/client-dispatch.ts`
   - `handleClientInput`
+- `src/runtime/local/input/input-requests.ts`
   - `requestInputCode`
   - `consumeInputResult`
   - `handleShimGetNhEvent`
   - `handleShimNhGetch`
+- `src/runtime/local/input/questions.ts`
   - `handleShimYnFunction`
-  - `handleShimNhPoskey`
-  - `shim_cliparound`
-  - `shim_curs`
+- `src/runtime/local/input/mouse-poskey.ts`
+  - mouse-token encoding and position-pointer writes
+- `src/runtime/local/input/position-selection.ts`
+  - `handleShimNhPoskey`, far-look FSM, position mode and cursor state
+- `src/runtime/local/world/map-callbacks.ts`
+  - `handleShimCliparound`, `handleShimCurs`, `handleShimPrintGlyph`, and player/map state
+- `src/runtime/local/world/post-action-refresh.ts`
+  - pending post-action player-tile refresh state
 - `src/runtime/input/RuntimeInputBroker.ts`
   - broker queue and waiter coordination
 
@@ -85,7 +94,7 @@ Runtime boot config includes:
 | Mouse button/drag state; touch gestures/long-press/run-button state | `input/mouse-input.ts`; `input/touch-input.ts` |
 | `fpsCrosshairGlancePending`, context target and action selection | `ui/tile-context-actions.ts` |
 
-Runtime waiters and far-look FSM state remain in `src/runtime/LocalNetHackRuntime.ts`. These engine state holders control presentation and routing; they do not replace the input broker or NetHack state.
+Runtime waiters belong to `src/runtime/local/input/input-requests.ts`; menu waiter state belongs to `menus/selection.ts`, and the far-look FSM belongs to `input/position-selection.ts`. These engine state holders control presentation and routing; they do not replace the input broker or NetHack state.
 
 ## End-To-End Flow (Normal Movement Key)
 
@@ -94,13 +103,15 @@ Runtime waiters and far-look FSM state remain in `src/runtime/LocalNetHackRuntim
 3. Engine sends input via `sendInput`, or `sendInputSequence` for synthetic multi-key flows, or `sendMouseInput` for click-based actions.
 4. `WorkerRuntimeBridge` posts `send_input`, `send_input_sequence`, or `send_mouse_input` to the worker.
 5. `runtime-worker.ts` forwards the command to `LocalNetHackRuntime`.
-6. `LocalNetHackRuntime.handleClientInput` normalizes the key and enqueues it into `RuntimeInputBroker` as an `InputToken`.
+6. The root delegates to `RuntimeInputDispatch.handleClientInput`; keyboard helpers normalize the key and `RuntimeInputRequests` enqueues it into its `RuntimeInputBroker` as an `InputToken`.
 7. NetHack callback waits request input through `requestInputCode(kind)`.
 8. The broker returns exactly one token for exactly one request, in FIFO order, when the token matches the request kind.
 9. Runtime converts the key with `processKey` and returns one keycode to NetHack.
 10. NetHack advances state and emits updates such as `shim_cliparound`, `shim_print_glyph`, status updates, menus, and text callbacks.
 11. Runtime emits worker events like `player_position`, `map_glyph_batch`, `position_cursor`, and `status_update`.
 12. Engine consumes runtime events in `handleRuntimeEvent`.
+
+Runtime assembly is synchronous and completes before WASM startup. Callback guards remain in the root; domain callbacks read current peer state through declared dependencies. Keep position-mode changes, input consumption, menu-result writes, and event emission in their existing order when editing the owners.
 
 ## Runtime Input Broker Model
 

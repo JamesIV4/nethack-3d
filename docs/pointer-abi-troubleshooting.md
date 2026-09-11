@@ -67,11 +67,14 @@ In logs, look for:
 
 ## Locating Runtime and Presentation Code
 
-Pointer contracts and callback decoding remain in [LocalNetHackRuntime.ts](../src/runtime/LocalNetHackRuntime.ts). Events pass through [runtime-worker.ts](../src/runtime/runtime-worker.ts) and [WorkerRuntimeBridge.ts](../src/runtime/WorkerRuntimeBridge.ts) to `handleRuntimeEvent` in [Nethack3DEngine.ts](../src/game/Nethack3DEngine.ts). The root coordinates dispatch; its former domain methods now live in engine subsystems.
+Pointer profiles and validation live in [local/abi/pointer-contract.ts](../src/runtime/local/abi/pointer-contract.ts); pointer normalization and heap reads live in [local/abi/memory.ts](../src/runtime/local/abi/memory.ts). [LocalNetHackRuntime.handleUICallback](../src/runtime/LocalNetHackRuntime.ts) validates callbacks before routing them to their [runtime subsystem](../src/runtime/local/README.md). Events pass through [runtime-worker.ts](../src/runtime/runtime-worker.ts) and [WorkerRuntimeBridge.ts](../src/runtime/WorkerRuntimeBridge.ts) to `handleRuntimeEvent` in [Nethack3DEngine.ts](../src/game/Nethack3DEngine.ts), which coordinates engine presentation owners.
 
 | Evidence | First implementation to inspect |
 | --- | --- |
-| Callback argument or memory-layout warnings | `LocalNetHackRuntime.buildDefaultRuntimePointerContract` and the affected callback decoder |
+| Callback argument or memory-layout warnings | [local/abi/pointer-contract.ts](../src/runtime/local/abi/pointer-contract.ts): `buildDefaultRuntimePointerContract`, `validateCallbackPointerContract`; then the affected callback owner |
+| Extended-command table decoding or unresolved command names | [local/input/extended-command-catalog.ts](../src/runtime/local/input/extended-command-catalog.ts) |
+| Incorrect selected identifier/count or output pointer | [local/menus/selection.ts](../src/runtime/local/menus/selection.ts): `writeMenuSelectionResult` |
+| Invalid runtime glyph callback payload | [local/world/map-callbacks.ts](../src/runtime/local/world/map-callbacks.ts), [local/world/glyphs.ts](../src/runtime/local/world/glyphs.ts) |
 | Valid map payload reaches the engine but the tile is stale | [world/tile-updates.ts](../src/game/engine/world/tile-updates.ts): enqueue, flush, and refresh/retry logic |
 | Valid runtime item metadata becomes the wrong visual kind | [world/world-classification.ts](../src/game/engine/world/world-classification.ts), [glyphs/behavior.ts](../src/game/glyphs/behavior.ts), and [glyphs/registry.ts](../src/game/glyphs/registry.ts) |
 | Correct classified tile has the wrong mesh, texture, or overlay | [rendering/tile-rendering.ts](../src/game/engine/rendering/tile-rendering.ts): `updateTile` and its rendering dependencies |
@@ -91,7 +94,7 @@ How to confirm:
 - You do not see the `Resolved extended command table...` log.
 
 Fix:
-- Update extcmd layout in `src/runtime/LocalNetHackRuntime.ts` under `buildDefaultRuntimePointerContract().extcmd`.
+- Update extcmd layout in `src/runtime/local/abi/pointer-contract.ts` under `buildDefaultRuntimePointerContract().extcmd`.
 
 ### Symptom: Map/tiles stop rendering or render erratically
 Likely cause:

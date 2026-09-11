@@ -6,6 +6,7 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 
 - [Engine architecture and code hotspots](../../src/game/engine/README.md)
 - [React UI architecture and code hotspots](../../src/ui/README.md)
+- [Runtime architecture and code hotspots](../../src/runtime/local/README.md)
 - [Input and player/cursor movement](movement-flow.md)
 - [Change playbook](logic-hotspots.md)
 - [World/runtime flow guide](../../docs/engine-world-runtime.md)
@@ -40,7 +41,8 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 - `src/audio/FmodRuntime.ts`: FMOD runtime bootstrap and wrapper.
 - `src/audio/sound-pack-storage.ts`: sound-pack persistence.
 - `src/runtime/index.ts`: public runtime barrel.
-- `src/runtime/LocalNetHackRuntime.ts`: NetHack callback adapter, input waits, menu/state logic, and runtime event emission.
+- `src/runtime/LocalNetHackRuntime.ts`: public runtime facade and ordered startup, callback dispatch, event emission, and shutdown coordination.
+- `src/runtime/local/`: state-owning runtime subsystems with explicit peer dependencies; `create-runtime-systems.ts` assembles them and `runtime-coordinator.ts` defines their root-operation contract.
 - `src/runtime/runtime-worker.ts`: worker entry that hosts the runtime.
 - `src/runtime/WorkerRuntimeBridge.ts`: main-thread worker bridge.
 - `src/runtime/input/RuntimeInputBroker.ts`: broker for event, menu, and position input.
@@ -73,7 +75,7 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 3. `Nethack3DEngine` creates a `WorkerRuntimeBridge`.
 4. `WorkerRuntimeBridge` starts `src/runtime/runtime-worker.ts` as a module worker.
 5. The worker creates `LocalNetHackRuntime`.
-6. `LocalNetHackRuntime` loads the NetHack runtime artifacts, applies startup init options, and routes shim callbacks through `handleUICallback`.
+6. `LocalNetHackRuntime` assembles its runtime subsystems before starting WASM. Startup and persistence owners load artifacts and apply init options; `handleUICallback` preserves callback guards and dispatches to the relevant owner.
 7. Runtime events flow back to `Nethack3DEngine.handleRuntimeEvent` for rendering and UI updates.
 
 ## Useful Commands
@@ -91,16 +93,21 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 
 ## Runtime Logic Map
 
-### `src/runtime/LocalNetHackRuntime.ts`
+### `src/runtime/LocalNetHackRuntime.ts` and `src/runtime/local/`
 
-- Input intake from the engine: `sendInput`, `sendInputSequence`, `sendMouseInput`, `handleClientInput`.
-- Input broker and wait flow: `requestInputCode`, `consumeInputResult`, `waitForQuestionInput`.
-- NetHack callback switchboard: `handleUICallback`.
-- Key callbacks: `handleShimGetNhEvent`, `handleShimNhGetch`, `handleShimYnFunction`, `handleShimNhPoskey`, `handleShimGetlin`.
-- Menu callbacks: `shim_start_menu`, `shim_add_menu`, `shim_end_menu`, `shim_select_menu`.
-- Map and position callbacks: `shim_print_glyph`, `shim_cliparound`, `shim_curs`, `shim_clear_nhwindow`.
-- Status batching: `shim_status_update`, `statusPending`, `latestStatusUpdates`.
-- Runtime bookkeeping: `pendingMenuSelection`, `menuSelectionReadyCount`, `pendingExtendedCommandRequest`, `pendingTextRequest`, `farLookMode`, `farLookOrigin`, `pendingLookMenuFarLookArm`.
+- Public command intake, callback guards and dispatch, startup/reconnect ordering, and coordinated shutdown: `LocalNetHackRuntime.ts`.
+- Input normalization and routing: `input/client-dispatch.ts`, `input/keyboard.ts`, and `input/mouse-poskey.ts` under `local/`.
+- Broker ownership, active request identity, and waits: `input/input-requests.ts`; question callbacks: `input/questions.ts`; text callbacks: `input/text-input.ts`.
+- Far-look and position input state: `input/position-selection.ts`; contextual look automation: `input/contextual-look.ts`.
+- Menu capture callbacks: `menus/menu-capture.ts`; selections, `pendingMenuSelection`, and `menuSelectionReadyCount`: `menus/selection.ts`.
+- Inventory context actions: `menus/inventory-context.ts`; inventory snapshots: `menus/inventory-snapshots.ts`; tile-context menus: `menus/tile-context.ts`.
+- Extended command submissions and pending requests: `input/extended-commands.ts`; WASM command-table decoding: `input/extended-command-catalog.ts`.
+- Map callbacks, `gameMap`, and `playerPosition`: `world/map-callbacks.ts`; refresh requests: `world/tile-refresh.ts`; pending item refreshes: `world/post-action-refresh.ts`; under-player item helpers: `world/under-player-items.ts`.
+- Window text capture and map-window `clear_scene`: `messages/window-text.ts`; raw/text/history events: `messages/message-callbacks.ts`; prompt context: `messages/prompt-context.ts`.
+- Status decoding, `statusPending`, and `latestStatusUpdates`: `status/status.ts`.
+- Pointer contracts and callback validation: `abi/pointer-contract.ts`; heap reads and pointer normalization: `abi/memory.ts`.
+- WASM startup, configuration and assets: `startup/`; save mounts, checkpoint recovery and locks: `persistence/`; game-over state: `lifecycle/game-over.ts`.
+- See the [runtime ownership guide](../../src/runtime/local/README.md) for construction, dependency, and ordering invariants.
 
 ### `src/game/Nethack3DEngine.ts`
 
@@ -147,7 +154,7 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 
 ## WASM Pointer Contract
 
-- Decode and ABI validation remain in `src/runtime/LocalNetHackRuntime.ts`; engine decomposition does not change WASM pointers, callbacks or command identifiers.
+- Pointer contracts and validation live in `src/runtime/local/abi/`; callback bodies live with their domain owners. `LocalNetHackRuntime.handleUICallback` validates the contract before dispatch. Subsystem boundaries do not change WASM pointers, callback signatures, or command identifiers.
 - Current runtime choices are NetHack 3.6.7, NetHack 5.0 and Slash'EM, defined by `NethackRuntimeVersion` in `src/runtime/types.ts`. Older wasm-37 WSL locations in the steering reference are source references, not current public artifact names.
 - Current pointer ABI tags are defined by `vite.config.ts`: `VITE_NH3D_WASM_367_POINTER_ABI_TAG`, `VITE_NH3D_WASM_5_POINTER_ABI_TAG` and `VITE_NH3D_WASM_SLASHEM_POINTER_ABI_TAG`.
 - Use the active runtime's callback/struct layout contract and validate shapes before reading memory. Do not scan arbitrary heap memory or silently replace unresolved command identifiers with guessed indices.
@@ -157,7 +164,7 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 ## High-Risk Zones
 
 - Async input state in runtime: `activeInputRequest`, `awaitingQuestionInput`, `pendingTextRequest`, `pendingExtendedCommandRequest`, `pendingMenuSelection`.
-- Position state: `positionInputModeActive` in `src/game/engine/input/position-selection.ts`; runtime far-look state `farLookMode`, `farLookOrigin`, and `pendingLookMenuFarLookArm` stays in `src/runtime/LocalNetHackRuntime.ts`.
+- Position state: `positionInputModeActive` in `src/game/engine/input/position-selection.ts`; runtime far-look state `farLookMode`, `farLookOrigin`, and `pendingLookMenuFarLookArm` belongs to `src/runtime/local/input/position-selection.ts`.
 - Tile classification: `src/game/glyphs/behavior.ts`, `src/game/glyphs/registry.ts`, `src/game/engine/world/world-classification.ts`, and `updateTile` in `src/game/engine/rendering/tile-rendering.ts`.
 - Generated runtime catalogs (fallback/reference data): `src/game/glyphs/glyph-catalog.367.generated.ts`, `src/game/glyphs/glyph-catalog.5.generated.ts`, `src/game/glyphs/glyph-catalog.slashem.generated.ts`, `src/game/tilesets.generated.ts`, `src/game/vulture/vulture-monster-keys.367.generated.ts`.
 - Update flow: `src/update/*` plus the UI in `src/ui/app/updates/`.

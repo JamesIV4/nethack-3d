@@ -138,13 +138,17 @@ Launch it from your Home Screen for a web app fullscreen experience.
 
 Rendering, input, camera, world presentation, menus, audio, and diagnostics live in focused classes under [src/game/engine/](src/game/engine/README.md). Each subsystem owns its state and declares the specific members it uses from neighboring systems. NetHack's authoritative game state and rules continue to run in WASM inside the worker.
 
+[LocalNetHackRuntime.ts](src/runtime/LocalNetHackRuntime.ts) coordinates the worker-facing API, callback dispatch, startup and shutdown. Its [runtime subsystems](src/runtime/local/README.md) own input waits, menus, map and status caches, callback decoding, and persistence, with explicit dependencies assembled before WASM starts.
+
 ```mermaid
 flowchart LR
   UI[React UI] -->|controller calls| Engine[Engine coordinator]
   Engine --> Systems[Engine subsystems]
   Systems -->|commands| Bridge[WorkerRuntimeBridge]
-  Bridge --> Worker[Worker / LocalNetHackRuntime / WASM]
-  Worker -->|runtime events| Bridge
+  Bridge --> Runtime[LocalNetHackRuntime coordinator]
+  Runtime --> RuntimeSystems[Runtime subsystems]
+  RuntimeSystems <--> WASM[NetHack WASM]
+  Runtime -->|runtime events| Bridge
   Bridge -->|runtime events| Engine
   Engine -->|UI adapter and store| UI
   Systems -->|UI adapter and store| UI
@@ -160,11 +164,12 @@ flowchart LR
 | Sound, haptics, and developer panels | [audio/](src/game/engine/audio/), [diagnostics/](src/game/engine/diagnostics/) |
 | React state bridge | [engineUiAdapter.ts](src/state/engineUiAdapter.ts), [gameStore.ts](src/state/gameStore.ts) |
 | Worker transport and host | [WorkerRuntimeBridge.ts](src/runtime/WorkerRuntimeBridge.ts), [runtime-worker.ts](src/runtime/runtime-worker.ts) |
-| NetHack callbacks and input waits | [LocalNetHackRuntime.ts](src/runtime/LocalNetHackRuntime.ts), [RuntimeInputBroker.ts](src/runtime/input/RuntimeInputBroker.ts) |
+| Runtime API and subsystem assembly | [LocalNetHackRuntime.ts](src/runtime/LocalNetHackRuntime.ts), [create-runtime-systems.ts](src/runtime/local/create-runtime-systems.ts) |
+| NetHack callbacks, input waits, state and persistence | [Runtime ownership guide](src/runtime/local/README.md), [RuntimeInputBroker.ts](src/runtime/input/RuntimeInputBroker.ts) |
 | Glyph classification and fallback catalogs | [glyphs/](src/game/glyphs/) |
 | Browser debug helpers | [app.ts](src/app.ts) |
 
-For task-to-file maps and ownership rules, start with the [engine guide](src/game/engine/README.md) and [React UI guide](src/ui/README.md). The [world/runtime flow guide](docs/engine-world-runtime.md) covers map updates, under-player items, level transitions, and movement. Contributor and agent references include the [project structure](.agents/rules/project-structure.md), [code hotspots](.agents/rules/logic-hotspots.md), [movement and input flow](.agents/rules/movement-flow.md), and [WASM pointer troubleshooting](docs/pointer-abi-troubleshooting.md).
+For task-to-file maps and ownership rules, start with the [engine guide](src/game/engine/README.md), [runtime guide](src/runtime/local/README.md), and [React UI guide](src/ui/README.md). The [world/runtime flow guide](docs/engine-world-runtime.md) covers map updates, under-player items, level transitions, and movement. Contributor and agent references include the [project structure](.agents/rules/project-structure.md), [code hotspots](.agents/rules/logic-hotspots.md), [movement and input flow](.agents/rules/movement-flow.md), and [WASM pointer troubleshooting](docs/pointer-abi-troubleshooting.md).
 
 ## Credits
 

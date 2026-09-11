@@ -8,7 +8,7 @@ Start here before making changes.
 - `src/game/Nethack3DEngine.ts` is the main orchestration layer for rendering, input, camera control, and runtime events.
 - `src/game/engine/` contains the engine subsystems. Each class owns its state and declares the exact members it needs from other subsystems through typed dependency contracts.
 - `src/runtime/runtime-worker.ts` hosts the NetHack runtime inside a Web Worker.
-- `src/runtime/LocalNetHackRuntime.ts` adapts NetHack callbacks, input waits, and status or map events.
+- `src/runtime/LocalNetHackRuntime.ts` coordinates runtime startup, callback dispatch, public commands, and shutdown. State-owning callback, input, ABI, and persistence implementations live in `src/runtime/local/`.
 - `src/runtime/WorkerRuntimeBridge.ts` is the main-thread transport to the worker.
 - `src/ui/App.tsx` is the React entry point; `src/ui/app/` contains feature hooks, components and helpers for startup, dialogs, input, scores and client options.
 
@@ -23,6 +23,7 @@ Start here before making changes.
 - Runtime barrel: `src/runtime/index.ts`.
 - Runtime worker entry: `src/runtime/runtime-worker.ts`.
 - Runtime callback adapter: `src/runtime/LocalNetHackRuntime.ts`.
+- Runtime subsystem assembly: `src/runtime/local/create-runtime-systems.ts`; root-operation contract: `src/runtime/local/runtime-coordinator.ts`.
 - Worker bridge: `src/runtime/WorkerRuntimeBridge.ts`.
 - Runtime command and event types: `src/runtime/types.ts`.
 - Client state store: `src/state/gameStore.ts`.
@@ -41,6 +42,7 @@ Start here before making changes.
 
 - [Engine architecture and task-to-owner hotspots](../../src/game/engine/README.md)
 - [React UI architecture and task-to-owner hotspots](../../src/ui/README.md)
+- [Runtime architecture and task-to-owner hotspots](../../src/runtime/local/README.md)
 - [Project structure](project-structure.md)
 - [Change playbook](logic-hotspots.md)
 - [Movement and input flow](movement-flow.md)
@@ -62,13 +64,14 @@ Start here before making changes.
 - Extend the subsystem that owns the behavior and state. Keep startup, runtime event ordering, frame sequencing, and coordinated disposal in the engine; preserve the public `Nethack3DEngineController` API when moving implementation.
 - Dependency contracts should expose only the members a subsystem uses. Avoid passing the entire engine into a subsystem or adding untyped access to its internals.
 - Use type-only peer imports. Dependency getters do not remove initialization requirements: eager initializer dependencies must be constructed before their consumers. Start browser/runtime work only after assembly and option assignment.
+- Keep `LocalNetHackRuntime` focused on public delegation, ordered callback guards, startup, reconnect, and shutdown coordination. Extend the responsible class in `src/runtime/local/`; declare only the peer members it uses through typed `Pick` contracts. Read state from its current owner because menus, queues, and snapshots can replace collections.
 - Use React components when it reduces duplication and keeps the UI and CSS maintainable.
   - If refactoring to make code DRY is needed, suggest it to the user, or do it if it is clearly within the task scope.
   - Store components in logical subfolders instead of dumping everything into one UI folder.
   - Renaming or regrouping a component folder to keep things organized is fine when it improves clarity.
 - Keep React feature behavior in `src/ui/app/` and the app composition focused on wiring exact typed dependencies. Preserve unconditional hook order, effect registration order, callback dependencies, DOM ids/classes and animated-dialog mounting when extracting UI code. Separate hook sites may be intentional because other feature effects run between them.
 - If adding or changing runtime event payloads, update both:
-  - emit sites in `src/runtime/LocalNetHackRuntime.ts`
+  - emit sites in the responsible `src/runtime/local/` subsystem and any root coordination in `src/runtime/LocalNetHackRuntime.ts`
   - event handling in `src/game/Nethack3DEngine.ts`
 - Keep async menu and input behavior stable in runtime state handling, especially:
   - `activeInputRequest`

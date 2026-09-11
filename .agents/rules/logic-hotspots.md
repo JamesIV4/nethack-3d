@@ -3,7 +3,7 @@
 This is a living steering doc. Update it whenever hotspots, ownership, or edit playbooks change.
 
 Use this file when deciding where to implement a change.
-Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-hotspots) or [React UI task-to-owner map](../../src/ui/README.md#code-hotspots). This playbook records the invariants to preserve after locating the implementation. Detailed guides: [movement and cursor flow](movement-flow.md), [world/runtime flows](../../docs/engine-world-runtime.md), and [project structure](project-structure.md).
+Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-hotspots), [runtime task-to-owner map](../../src/runtime/local/README.md#code-hotspots), or [React UI task-to-owner map](../../src/ui/README.md#code-hotspots). This playbook records the invariants to preserve after locating the implementation. Detailed guides: [movement and cursor flow](movement-flow.md), [world/runtime flows](../../docs/engine-world-runtime.md), and [project structure](project-structure.md).
 
 ## If You Need To Change Engine Wiring Or Shared State
 
@@ -45,7 +45,9 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 
 ## If You Need To Change Runtime Event Behavior
 
-- Runtime event emit points are in `src/runtime/LocalNetHackRuntime.ts` (`emit(...)` sites, mostly inside `handleUICallback`).
+- `src/runtime/LocalNetHackRuntime.ts` keeps callback guards and ordered dispatch in `handleUICallback`; emit sites live in the responsible `src/runtime/local/` owners and route through the root's `emit`.
+- Runtime dependencies are assembled in `src/runtime/local/create-runtime-systems.ts`. Each owner declares exact peer members with `Pick` contracts; `runtime-coordinator.ts` exposes the root operations they use. Preserve live owner reads when a selection map, queue, or position object is replaced.
+- Do not introduce a Promise boundary into a synchronous callback. Existing asynchronous menu, question, text, and position callbacks must retain their waiter identity and return timing.
 - Worker transport lives in `src/runtime/runtime-worker.ts` and `src/runtime/WorkerRuntimeBridge.ts`.
 - Engine receive and dispatch is `handleRuntimeEvent` in `src/game/Nethack3DEngine.ts`.
 - Add or update event payloads in runtime and engine in one commit.
@@ -54,7 +56,7 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 ### Under-Player Loot / Flat-Feature Refresh Is A Hot Path
 
 - The "item shown under the player" is a runtime-to-engine contract between:
-  - `src/runtime/LocalNetHackRuntime.ts`
+  - `src/runtime/local/world/post-action-refresh.ts` and `src/runtime/local/world/under-player-items.ts`
   - `src/game/Nethack3DEngine.ts`
   - `src/game/engine/world/tile-updates.ts` and `src/game/engine/world/world-classification.ts`
   - the WASM helper functions `topItemGlyphUnderPlayer` and `topItemTileIndexUnderPlayer`
@@ -163,7 +165,7 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 
 ### First Places To Check
 
-- Runtime arm/clear points in `src/runtime/LocalNetHackRuntime.ts`:
+- Runtime arm/clear points in `src/runtime/local/world/post-action-refresh.ts`:
   - `armPendingPostActionPlayerTileRefreshByReason`
   - `clearPendingPostActionPlayerTileRefreshByReason`
   - `clearPendingPostActionPlayerTileRefresh`
@@ -171,7 +173,7 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
   - `maybeArmPendingPostActionPlayerTileRefreshForLootMoveTarget`
   - `maybeArmPendingPostActionPlayerTileRefreshForCurrentPlayerLoot`
   - `resolvePostActionPlayerTileRefreshQuestionContext`
-- Runtime consume / result points in `src/runtime/LocalNetHackRuntime.ts`:
+- Runtime consume / result points across `src/runtime/local/world/post-action-refresh.ts`, `world/under-player-items.ts`, `input/position-selection.ts`, and `menus/menu-capture.ts`:
   - `maybeRefreshPendingPostActionPlayerTile`
   - `handleShimNhPoskey`
   - `shim_update_inventory`
@@ -192,7 +194,7 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 - Shared glyph resolution/classification:
   - `resolveGlyph`
   - `classifyTileBehavior`
-- Runtime event decode helpers in `src/runtime/LocalNetHackRuntime.ts`:
+- Runtime event decode helpers in `src/runtime/local/world/glyphs.ts`:
   - `extractGlyphInfoTileIndex`
   - `extractGlyphInfoSymidx`
   - `extractGlyphInfoGlyphFlags`
@@ -223,8 +225,9 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 - `QuestionMenus` owns `isInQuestion`, selection counts, pagination and pickup state. `DirectionPrompts` in `src/game/engine/ui/direction-prompts.ts` owns `isInDirectionQuestion` and direction overlay state. `PromptDialogs` in `src/game/engine/ui/prompt-dialogs.ts` owns text, inventory and information dialog state, including `isTextInputActive`.
 - `src/game/engine/ui/extended-commands.ts` owns the extended-command palette, while `input-commands.ts` submits the resulting command. `src/game/engine/ui/modal-navigation.ts` owns DOM keyboard focus/scroll behavior; `src/game/engine/input/pointer-lock.ts` owns pointer-lock UI gating.
 - Runtime input broker implementation: `src/runtime/input/RuntimeInputBroker.ts`.
-- Runtime key normalization and enqueue path: `handleClientInput` in `src/runtime/LocalNetHackRuntime.ts`.
-- Runtime consume path: `requestInputCode`, `consumeInputResult`, `waitForQuestionInput` in `src/runtime/LocalNetHackRuntime.ts`.
+- Runtime key normalization and enqueue path: `handleClientInput` in `src/runtime/local/input/client-dispatch.ts`, supported by `input/keyboard.ts`.
+- Runtime consume path: `requestInputCode`, `consumeInputResult`, `waitForQuestionInput` in `src/runtime/local/input/input-requests.ts`.
+- Callback owners: `input/input-requests.ts` for event/key waits, `input/questions.ts` for Y/N prompts, `input/position-selection.ts` for position input, and `input/text-input.ts` for text prompts. Mouse-token pointer writes are in `input/mouse-poskey.ts`. These paths are under `src/runtime/local/`.
 - Runtime callback-kind targeting (`targetKinds`) should be preserved for synthetic, meta, and menu key sequences.
 - Key callbacks:
   - `handleShimGetNhEvent`: non-blocking NetHack event-pump hook; does not consume command input.
@@ -233,15 +236,18 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
   - `handleShimNhPoskey`: position/direction input wait (x, y, mod pointers) used for far-look and cursor targeting.
   - `handleShimGetlin`: free-text prompt handler that emits `text_request` and writes the response buffer.
 - Menu callbacks:
+  - Capture and finalization live in `src/runtime/local/menus/menu-capture.ts`; selection and WASM result writes live in `menus/selection.ts`.
   - `shim_start_menu`: begins menu capture for a window.
   - `shim_add_menu`: appends a selectable menu row/item to the active menu.
   - `shim_end_menu`: finalizes menu content and prompt text before selection.
   - `shim_select_menu`: waits for/collects menu picks and writes selected items back to NetHack.
 - Menu waiter isolation state:
+  - Owned by `src/runtime/local/menus/selection.ts`, except extended-command requests in `input/extended-commands.ts`.
   - `pendingMenuSelection`
   - `menuSelectionReadyCount`
   - `pendingExtendedCommandRequest`
 - Position and far-look state:
+  - Runtime owner: `src/runtime/local/input/position-selection.ts`.
   - `farLookMode` (`none | armed | active`)
   - `farLookOrigin`
   - `pendingLookMenuFarLookArm`
@@ -253,7 +259,7 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 - React row/context/drop interactions live in `src/ui/app/inventory/`; item eligibility is in `actions.ts`, geometry in `position.ts`, and runtime tile metadata resolution in `src/ui/app/tilesets/menu-glyphs.ts`.
 - React question choice and selection helpers live in `src/ui/app/menus/question-choices.ts`. Keep category rows nonselectable and preserve runtime-specific shortcut and explicit tile decisions.
 - Preserve existing hook registration order, shared row refs, pointer/touch release handling, menu portal placement and focus restoration when changing these interactions.
-- Runtime inventory updates and inventory-help menus are produced in `shim_end_menu` handling for window 4 in `src/runtime/LocalNetHackRuntime.ts`.
+- Runtime inventory updates and inventory-help menus are produced by `handleShimEndMenu` for window 4 in `src/runtime/local/menus/menu-capture.ts`; snapshot state lives in `menus/inventory-snapshots.ts`.
 - Engine inventory handling:
   - event handling: `inventory_update` case in `handleRuntimeEvent`
   - UI display: `updateInventoryDisplay`, `showInventoryDialog` in `src/game/engine/ui/prompt-dialogs.ts`
@@ -264,6 +270,7 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 
 - React condition badges and line severity live in `src/ui/app/status/conditions.ts`; stat baselines and character-field formatting live beside it. Condition bit meanings differ across runtimes.
 - Runtime status decode and flush batching:
+  - Owner: `src/runtime/local/status/status.ts`; reconnect replay reads its latest cache in `world/global-snapshots.ts`.
   - `shim_status_update`: receives status field/value updates and batches them until flush/reset markers.
   - `statusPending`
   - `latestStatusUpdates`
@@ -311,13 +318,13 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 
 ## If You Need To Change Level Transition Behavior
 
-- Runtime triggers clear on map window reset: `shim_clear_nhwindow` in `src/runtime/LocalNetHackRuntime.ts` (window-clear callback; map clears should emit `clear_scene`).
+- Runtime triggers clear on map window reset: `handleShimClearNhwindow` in `src/runtime/local/messages/window-text.ts` (window-clear callback; map clears should emit `clear_scene`). The callback resets text capture and emits the event; it does not erase the runtime map cache.
 - Engine clear path: `clearScene` and the `clear_scene` event case in `handleRuntimeEvent`.
 - Player movement reconciliation is handled by `recordPlayerMovement` in `src/game/engine/world/player-movement.ts` and the engine's player position event branch. Level snapshots belong to `world/level-terrain-cache.ts`; visual movement transitions belong to `world/entity-movement.ts`.
 
 ## Sanity Checklist For Agents
 
-- If changing the worker protocol, verify `src/runtime/types.ts`, `src/runtime/runtime-worker.ts`, `src/runtime/WorkerRuntimeBridge.ts`, `src/runtime/LocalNetHackRuntime.ts`, and `src/game/Nethack3DEngine.ts` together.
+- If changing the worker protocol, verify `src/runtime/types.ts`, `src/runtime/runtime-worker.ts`, `src/runtime/WorkerRuntimeBridge.ts`, `src/runtime/LocalNetHackRuntime.ts`, the affected `src/runtime/local/` owner, and `src/game/Nethack3DEngine.ts` together.
 - If changing runtime artifacts or glyph catalogs, make sure the generated files stay aligned with the loaded runtime version.
 - If changing menus or input, confirm Esc and Enter flow, direction prompts, inventory selection, far-look transitions, and extended commands still work.
 - If changing broker behavior, ensure no callback bypasses `requestInputCode(...)` for key-consuming waits.
