@@ -134,7 +134,7 @@ Launch it from your Home Screen for a web app fullscreen experience.
 
 ## Architecture
 
-[src/main.tsx](src/main.tsx) mounts the React app. [App.tsx](src/ui/App.tsx) creates the engine and UI adapter. [Nethack3DEngine.ts](src/game/Nethack3DEngine.ts) coordinates startup, runtime events, frame updates, options, and disposal, and preserves the public controller API used by the UI.
+[src/main.tsx](src/main.tsx) mounts [App.tsx](src/ui/App.tsx). The [React UI feature modules](src/ui/README.md) own startup, dialogs, client options and interaction state; the app composition wires them to the engine and UI adapter. [Nethack3DEngine.ts](src/game/Nethack3DEngine.ts) coordinates startup, runtime events, frame updates, options, and disposal, and preserves the public controller API used by the UI.
 
 Rendering, input, camera, world presentation, menus, audio, and diagnostics live in focused classes under [src/game/engine/](src/game/engine/README.md). Each subsystem owns its state and declares the specific members it uses from neighboring systems. NetHack's authoritative game state and rules continue to run in WASM inside the worker.
 
@@ -164,7 +164,7 @@ flowchart LR
 | Glyph classification and fallback catalogs | [glyphs/](src/game/glyphs/) |
 | Browser debug helpers | [app.ts](src/app.ts) |
 
-For a task-to-file map and ownership rules, start with the [engine guide](src/game/engine/README.md). The [world/runtime flow guide](docs/engine-world-runtime.md) covers map updates, under-player items, level transitions, and movement. Contributor and agent references include the [project structure](.agents/rules/project-structure.md), [code hotspots](.agents/rules/logic-hotspots.md), [movement and input flow](.agents/rules/movement-flow.md), and [WASM pointer troubleshooting](docs/pointer-abi-troubleshooting.md).
+For task-to-file maps and ownership rules, start with the [engine guide](src/game/engine/README.md) and [React UI guide](src/ui/README.md). The [world/runtime flow guide](docs/engine-world-runtime.md) covers map updates, under-player items, level transitions, and movement. Contributor and agent references include the [project structure](.agents/rules/project-structure.md), [code hotspots](.agents/rules/logic-hotspots.md), [movement and input flow](.agents/rules/movement-flow.md), and [WASM pointer troubleshooting](docs/pointer-abi-troubleshooting.md).
 
 ## Credits
 

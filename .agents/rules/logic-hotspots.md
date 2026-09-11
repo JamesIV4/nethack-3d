@@ -3,7 +3,7 @@
 This is a living steering doc. Update it whenever hotspots, ownership, or edit playbooks change.
 
 Use this file when deciding where to implement a change.
-Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-hotspots). This playbook records the invariants to preserve after locating the implementation. Detailed guides: [movement and cursor flow](movement-flow.md), [world/runtime flows](../../docs/engine-world-runtime.md), and [project structure](project-structure.md).
+Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-hotspots) or [React UI task-to-owner map](../../src/ui/README.md#code-hotspots). This playbook records the invariants to preserve after locating the implementation. Detailed guides: [movement and cursor flow](movement-flow.md), [world/runtime flows](../../docs/engine-world-runtime.md), and [project structure](project-structure.md).
 
 ## If You Need To Change Engine Wiring Or Shared State
 
@@ -250,6 +250,9 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 
 ## If You Need To Change Inventory UX
 
+- React row/context/drop interactions live in `src/ui/app/inventory/`; item eligibility is in `actions.ts`, geometry in `position.ts`, and runtime tile metadata resolution in `src/ui/app/tilesets/menu-glyphs.ts`.
+- React question choice and selection helpers live in `src/ui/app/menus/question-choices.ts`. Keep category rows nonselectable and preserve runtime-specific shortcut and explicit tile decisions.
+- Preserve existing hook registration order, shared row refs, pointer/touch release handling, menu portal placement and focus restoration when changing these interactions.
 - Runtime inventory updates and inventory-help menus are produced in `shim_end_menu` handling for window 4 in `src/runtime/LocalNetHackRuntime.ts`.
 - Engine inventory handling:
   - event handling: `inventory_update` case in `handleRuntimeEvent`
@@ -259,6 +262,7 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 
 ## If You Need To Change Stats Or HUD
 
+- React condition badges and line severity live in `src/ui/app/status/conditions.ts`; stat baselines and character-field formatting live beside it. Condition bit meanings differ across runtimes.
 - Runtime status decode and flush batching:
   - `shim_status_update`: receives status field/value updates and batches them until flush/reset markers.
   - `statusPending`
@@ -277,7 +281,7 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 - `ControllerGameplay` owns button snapshots, release/rearm latches and movement previews. `ControllerDialogs` owns slider interaction, dialog repeat, focus and virtual cursor state. Preserve neutral/release transitions when changing bindings or prompt routing.
 - `src/game/engine/input/touch-input.ts` owns touch gesture and long-press timers, including the FPS run button. Mouse drag state belongs to `mouse-input.ts`; raycast/alpha-hit rules belong to `pointer-targeting.ts`.
 - `src/game/engine/ui/tile-context-actions.ts` owns active tile context and glance probes; `ui/aim-highlights.ts` owns FPS aim resources. Keep action inference separate from raycast target resolution and direction prompt state.
-- Controller bindings and action labels live in `src/game/controller-bindings.ts` and are surfaced in `src/ui/App.tsx`.
+- Controller bindings and action labels live in `src/game/controller-bindings.ts`; React capture/navigation/wheel helpers live in `src/ui/app/controller/`, and option descriptors live in `src/ui/app/settings/config.ts`.
 
 ## If You Need To Change Minimap, Sound Or Developer Panels
 
@@ -297,12 +301,13 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 
 - Startup init option schema, defaults, normalization, and serialization live in `src/runtime/startup-init-options.ts`.
 - Client option schema/defaults/normalization live in `src/game/ui-types.ts`.
-- Client option UI, tab grouping, and draft/apply flow live in `src/ui/App.tsx`.
+- Client option UI and draft/apply flow live in `src/ui/app/settings/`; option descriptors and tab grouping live in `settings/config.ts`.
 - Persisted client options and localStorage-to-IndexedDB migration live in `src/storage/client-options-storage.ts`.
 - Engine-side application of options at runtime lives in `src/game/Nethack3DEngine.ts` (`setClientOptions`, `applyClientOptions`).
 - Save database naming and mount logic live in `src/runtime/save-storage.ts`.
 - Runtime checkpoint recovery support is gated in `src/runtime/runtime-capabilities.ts`.
-- GitHub release/version checking lives in `src/update/github-version-checker.ts` and `src/update/types.ts`, with UI in `src/ui/App.tsx`. Packaging helpers remain under `scripts/updates/`.
+- GitHub release/version checking lives in `src/update/github-version-checker.ts` and `src/update/types.ts`, with UI in `src/ui/app/updates/`. Packaging helpers remain under `scripts/updates/`.
+- Save discovery and presentation helpers live in `src/ui/app/startup/saved-games.ts` and `save-presentation.ts`; score formatting, filtering and timeline presentation live in `src/ui/app/scores/`.
 
 ## If You Need To Change Level Transition Behavior
 

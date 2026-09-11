@@ -10,7 +10,7 @@ Start here before making changes.
 - `src/runtime/runtime-worker.ts` hosts the NetHack runtime inside a Web Worker.
 - `src/runtime/LocalNetHackRuntime.ts` adapts NetHack callbacks, input waits, and status or map events.
 - `src/runtime/WorkerRuntimeBridge.ts` is the main-thread transport to the worker.
-- `src/ui/App.tsx` owns the UI shell, dialogs, startup flow, updates, and client-option editing.
+- `src/ui/App.tsx` is the React entry point; `src/ui/app/` contains feature hooks, components and helpers for startup, dialogs, input, scores and client options.
 
 ## Core Paths
 
@@ -32,7 +32,7 @@ Start here before making changes.
 
 - Client option schema/defaults/normalization: `src/game/ui-types.ts`.
 - Controller binding schema/defaults/normalization: `src/game/controller-bindings.ts`.
-- Client options UI and draft/apply flow: `src/ui/App.tsx`.
+- Client options UI and draft/apply flow: `src/ui/app/settings/`; option descriptors and tabs: `settings/config.ts`.
 - Client options and startup preference persistence: `src/storage/client-options-storage.ts`.
 - Startup init option schema and serialization: `src/runtime/startup-init-options.ts`.
 - Engine-side option application: `src/game/Nethack3DEngine.ts`.
@@ -40,6 +40,7 @@ Start here before making changes.
 ## Steering Docs
 
 - [Engine architecture and task-to-owner hotspots](../../src/game/engine/README.md)
+- [React UI architecture and task-to-owner hotspots](../../src/ui/README.md)
 - [Project structure](project-structure.md)
 - [Change playbook](logic-hotspots.md)
 - [Movement and input flow](movement-flow.md)
@@ -65,6 +66,7 @@ Start here before making changes.
   - If refactoring to make code DRY is needed, suggest it to the user, or do it if it is clearly within the task scope.
   - Store components in logical subfolders instead of dumping everything into one UI folder.
   - Renaming or regrouping a component folder to keep things organized is fine when it improves clarity.
+- Keep React feature behavior in `src/ui/app/` and the app composition focused on wiring exact typed dependencies. Preserve unconditional hook order, effect registration order, callback dependencies, DOM ids/classes and animated-dialog mounting when extracting UI code. Separate hook sites may be intentional because other feature effects run between them.
 - If adding or changing runtime event payloads, update both:
   - emit sites in `src/runtime/LocalNetHackRuntime.ts`
   - event handling in `src/game/Nethack3DEngine.ts`

@@ -5,6 +5,7 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 ## Related Steering Docs
 
 - [Engine architecture and code hotspots](../../src/game/engine/README.md)
+- [React UI architecture and code hotspots](../../src/ui/README.md)
 - [Input and player/cursor movement](movement-flow.md)
 - [Change playbook](logic-hotspots.md)
 - [World/runtime flow guide](../../docs/engine-world-runtime.md)
@@ -14,7 +15,8 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 - `index.html`: Vite HTML entry point.
 - `src/main.tsx`: React app bootstrap and engine mount.
 - `src/app.ts`: debug helper registration.
-- `src/ui/App.tsx`: UI shell, dialogs, startup flow, update flow, and client options UI.
+- `src/ui/App.tsx`: React entry point and app composition.
+- `src/ui/app/`: feature hooks, components and helpers, grouped into startup, settings, controller, menus, inventory, status, scores, tilesets, updates and shared presentation. See the [UI ownership map](../../src/ui/README.md#code-hotspots).
 - `src/state/gameStore.ts`: Zustand store for live UI/game state.
 - `src/state/engineUiAdapter.ts`: bridge from engine updates into the store.
 - `src/game/Nethack3DEngine.ts`: main engine orchestration layer for rendering, input, camera, and runtime events.
@@ -67,7 +69,7 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 ## Runtime Architecture
 
 1. `src/main.tsx` mounts React and its `App` component.
-2. `src/ui/App.tsx` creates the engine controller and UI adapter. The engine assembles its state-owning subsystems with `createEngineSystems` before starting rendering and runtime work.
+2. The React app composition wires feature hooks and views; its engine lifecycle creates the engine controller and UI adapter. Hooks run in their established order so listener priority, prompt focus and layout measurement remain stable. The engine assembles its state-owning subsystems with `createEngineSystems` before starting rendering and runtime work.
 3. `Nethack3DEngine` creates a `WorkerRuntimeBridge`.
 4. `WorkerRuntimeBridge` starts `src/runtime/runtime-worker.ts` as a module worker.
 5. The worker creates `LocalNetHackRuntime`.
@@ -158,5 +160,5 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 - Position state: `positionInputModeActive` in `src/game/engine/input/position-selection.ts`; runtime far-look state `farLookMode`, `farLookOrigin`, and `pendingLookMenuFarLookArm` stays in `src/runtime/LocalNetHackRuntime.ts`.
 - Tile classification: `src/game/glyphs/behavior.ts`, `src/game/glyphs/registry.ts`, `src/game/engine/world/world-classification.ts`, and `updateTile` in `src/game/engine/rendering/tile-rendering.ts`.
 - Generated runtime catalogs (fallback/reference data): `src/game/glyphs/glyph-catalog.367.generated.ts`, `src/game/glyphs/glyph-catalog.5.generated.ts`, `src/game/glyphs/glyph-catalog.slashem.generated.ts`, `src/game/tilesets.generated.ts`, `src/game/vulture/vulture-monster-keys.367.generated.ts`.
-- Update flow: `src/update/*` plus the UI in `src/ui/App.tsx`.
+- Update flow: `src/update/*` plus the UI in `src/ui/app/updates/`.
 - Startup options and checkpoint recovery: `src/runtime/startup-init-options.ts`, `src/runtime/runtime-capabilities.ts`, and `src/storage/client-options-storage.ts`.
