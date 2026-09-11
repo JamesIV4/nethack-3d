@@ -53,6 +53,7 @@ During command execution:
 ## Fast Diagnostics
 
 In DevTools:
+- Run `requestRuntimeGlobalsSnapshot()` to request fresh worker state, then inspect it after the response arrives.
 - Run `dumpRuntimeGlobals()`.
 - Confirm:
   - `nethackGlobal.pointers.extcmdlist` exists and is non-zero.
@@ -63,6 +64,21 @@ In logs, look for:
 - `Extcmd pointer contract validation failed for all bases...`.
 - `No valid extcmd table base candidates...`.
 - `shim_print_glyph received unexpected arg count ...`.
+
+## Locating Runtime and Presentation Code
+
+Pointer contracts and callback decoding remain in [LocalNetHackRuntime.ts](../src/runtime/LocalNetHackRuntime.ts). Events pass through [runtime-worker.ts](../src/runtime/runtime-worker.ts) and [WorkerRuntimeBridge.ts](../src/runtime/WorkerRuntimeBridge.ts) to `handleRuntimeEvent` in [Nethack3DEngine.ts](../src/game/Nethack3DEngine.ts). The root coordinates dispatch; its former domain methods now live in engine subsystems.
+
+| Evidence | First implementation to inspect |
+| --- | --- |
+| Callback argument or memory-layout warnings | `LocalNetHackRuntime.buildDefaultRuntimePointerContract` and the affected callback decoder |
+| Valid map payload reaches the engine but the tile is stale | [world/tile-updates.ts](../src/game/engine/world/tile-updates.ts): enqueue, flush, and refresh/retry logic |
+| Valid runtime item metadata becomes the wrong visual kind | [world/world-classification.ts](../src/game/engine/world/world-classification.ts), [glyphs/behavior.ts](../src/game/glyphs/behavior.ts), and [glyphs/registry.ts](../src/game/glyphs/registry.ts) |
+| Correct classified tile has the wrong mesh, texture, or overlay | [rendering/tile-rendering.ts](../src/game/engine/rendering/tile-rendering.ts): `updateTile` and its rendering dependencies |
+| Runtime globals/object tile map reaches the engine but UI state is stale | [ui/player-status.ts](../src/game/engine/ui/player-status.ts): `applyRuntimeGlobalsSnapshot`, `applyRuntimeObjectTileIndexByObjectId` |
+| Command text is changed before reaching the worker | [input/input-commands.ts](../src/game/engine/input/input-commands.ts) and [ui/extended-commands.ts](../src/game/engine/ui/extended-commands.ts) |
+
+The browser helpers are registered in [src/app.ts](../src/app.ts). `dumpRuntimeGlobals()` returns the last received snapshot; it does not synchronously read WASM memory. See [World state and runtime presentation](engine-world-runtime.md) for map, under-player item, level-transition, and entity-tracking flows, and the [engine subsystem guide](../src/game/engine/README.md) for ownership and wiring.
 
 ## Failure Modes and Fixes
 

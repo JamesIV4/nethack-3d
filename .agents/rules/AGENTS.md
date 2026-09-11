@@ -6,6 +6,7 @@ Start here before making changes.
 
 - NetHack 3D is a browser-first TypeScript and React app.
 - `src/game/Nethack3DEngine.ts` is the main orchestration layer for rendering, input, camera control, and runtime events.
+- `src/game/engine/` contains the engine subsystems. Each class owns its state and declares the exact members it needs from other subsystems through typed dependency contracts.
 - `src/runtime/runtime-worker.ts` hosts the NetHack runtime inside a Web Worker.
 - `src/runtime/LocalNetHackRuntime.ts` adapts NetHack callbacks, input waits, and status or map events.
 - `src/runtime/WorkerRuntimeBridge.ts` is the main-thread transport to the worker.
@@ -16,6 +17,8 @@ Start here before making changes.
 - App bootstrap: `src/main.tsx`.
 - Debug helpers: `src/app.ts`.
 - Main engine: `src/game/Nethack3DEngine.ts`.
+- Engine implementation by responsibility: `src/game/engine/` (camera, input, UI, rendering, world state, effects, and diagnostics).
+- Engine assembly: `src/game/engine/create-engine-systems.ts`; root-operation contract: `src/game/engine/engine-coordinator.ts`.
 - Engine barrel: `src/game/index.ts`.
 - Runtime barrel: `src/runtime/index.ts`.
 - Runtime worker entry: `src/runtime/runtime-worker.ts`.
@@ -36,9 +39,11 @@ Start here before making changes.
 
 ## Steering Docs
 
-- Architecture and file map: `.agents/rules/project-structure.md`
-- Logic hotspots and change playbook: `.agents/rules/logic-hotspots.md`
-- Movement and input flow: `.agents/rules/movement-flow.md`
+- [Engine architecture and task-to-owner hotspots](../../src/game/engine/README.md)
+- [Project structure](project-structure.md)
+- [Change playbook](logic-hotspots.md)
+- [Movement and input flow](movement-flow.md)
+- [World/runtime event flows](../../docs/engine-world-runtime.md)
 
 ## Steering Docs Are Living Docs
 
@@ -52,7 +57,10 @@ Start here before making changes.
 - Do not edit generated runtime bundles or other build outputs directly. The checked-in runtime assets in `public/` and the generated files under `src/game/glyphs/*.generated.ts` are inputs to the app, not hand-authored source.
 - Treat generated glyph catalogs as fallback/reference data, not authoritative truth for all tile resolution cases; prefer live NetHack/WASM data paths and callbacks whenever possible.
 - Prefer adding new gameplay/runtime features in focused files by function rather than growing `src/game/Nethack3DEngine.ts` further.
-- Keep `src/game/Nethack3DEngine.ts` as an orchestration layer when possible: wire modules together there, but move new domain logic into separate modules to support gradual decomposition.
+- Keep `src/game/Nethack3DEngine.ts` focused on ordered orchestration and public delegation; wire subsystem dependencies in `src/game/engine/create-engine-systems.ts`.
+- Extend the subsystem that owns the behavior and state. Keep startup, runtime event ordering, frame sequencing, and coordinated disposal in the engine; preserve the public `Nethack3DEngineController` API when moving implementation.
+- Dependency contracts should expose only the members a subsystem uses. Avoid passing the entire engine into a subsystem or adding untyped access to its internals.
+- Use type-only peer imports. Dependency getters do not remove initialization requirements: eager initializer dependencies must be constructed before their consumers. Start browser/runtime work only after assembly and option assignment.
 - Use React components when it reduces duplication and keeps the UI and CSS maintainable.
   - If refactoring to make code DRY is needed, suggest it to the user, or do it if it is clearly within the task scope.
   - Store components in logical subfolders instead of dumping everything into one UI folder.
@@ -65,8 +73,8 @@ Start here before making changes.
   - `awaitingQuestionInput`
   - `pendingMenuSelection`
   - `menuSelectionReadyCount`
-  - `positionInputModeActive`
   - `farLookMode`
+- Engine prompt state has separate owners: `positionInputModeActive` in `src/game/engine/input/position-selection.ts`, question selections in `src/game/engine/ui/question-menus.ts`, and direction state in `src/game/engine/ui/direction-prompts.ts`. Preserve their synchronous transitions with runtime events.
 - Validate rendering-impacting changes by checking:
   - player position updates
   - tile refresh commands
@@ -104,3 +112,4 @@ Start here before making changes.
 - Do not run the build.
 - The user will run build and package validation.
 - A safe post-task check is `npm run check:tsc` to catch TS and TSX regressions without formatting noise.
+- Run focused regression tests with `npm test -- <test-file>` as appropriate; input, world-state and rendering-resource tests live alongside the engine subsystems. Use browser checks for rendering and device interaction changes.

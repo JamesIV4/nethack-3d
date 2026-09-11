@@ -2,7 +2,7 @@
 
 This is a living steering doc. Update it whenever movement, input broker behavior, or position-mode flows change.
 
-This document is the source of truth for movement and position input behavior after the runtime interaction overhaul.
+This document describes movement and position input across the engine subsystems and worker runtime. Use the [engine ownership map](../../src/game/engine/README.md#code-hotspots) to locate implementations and the [world/runtime guide](../../docs/engine-world-runtime.md) for player, map and item presentation.
 
 It focuses on:
 
@@ -15,14 +15,32 @@ It focuses on:
 ## Main Files
 
 - `src/game/Nethack3DEngine.ts`
-  - `handleKeyDown`
-  - `sendInput`
-  - `sendInputSequence`
-  - `sendMouseInput`
   - `handleRuntimeEvent`
-  - `updateTile`
-  - `recordPlayerMovement`
+  - coordinates runtime events and frame updates; preserves the public controller API
+- `src/game/engine/input/keyboard-input.ts`
+  - `handleKeyDown`
+- `src/game/engine/input/input-commands.ts`
+  - `sendInput`, `sendInputSequence`, `sendMouseInput`
+- `src/game/engine/input/movement-input.ts`
+  - direction mapping and movement input gates
+- `src/game/engine/input/position-selection.ts`
+  - `setPositionInputMode`, `setPositionCursorPosition`, far-look selection
+- `src/game/engine/ui/question-menus.ts`
+  - question selection counts, pickup toggles, pagination and prompt state
+- `src/game/engine/camera/camera.ts`
   - `updateCamera`
+- `src/game/engine/world/player-movement.ts`
+  - `recordPlayerMovement`
+- `src/game/engine/rendering/tile-rendering.ts`
+  - `updateTile`
+- `src/game/engine/input/controller-gameplay.ts` and `controller-dialogs.ts`
+  - controller sampling/gameplay and dialog navigation, respectively
+- `src/game/engine/input/mouse-input.ts`, `touch-input.ts`, and `pointer-targeting.ts`
+  - device events/gesture state and tile raycast targeting
+- `src/game/engine/ui/direction-prompts.ts`, `prompt-dialogs.ts`, and `tile-context-actions.ts`
+  - direction overlay, text/inventory/info UI, and context/glance state
+- `src/game/engine/audio/audio-haptics-platform.ts`
+  - movement footstep arming and cliparound sound dispatch
 - `src/runtime/WorkerRuntimeBridge.ts`
   - `sendInput`
   - `sendInputSequence`
@@ -51,9 +69,27 @@ Runtime boot config includes:
 
 `number_pad:1` is still required because both engine and runtime translate directional input using numpad semantics.
 
+## Engine State Owners
+
+| State | Owner under `src/game/engine/` |
+| --- | --- |
+| `playerPos`, `hasPlayerMovedOnce`, predicted and recent player tiles | `world/player-movement.ts` |
+| `cameraYaw`, `cameraPitch`, `cameraPanX`, `cameraPanY`, step/far-look camera state | `camera/camera.ts` |
+| `positionInputModeActive`, `positionInputOrigin`, `positionCursor`, `hasRuntimePositionCursor` | `input/position-selection.ts` |
+| `isInQuestion`, active question text/items, pickup selections/counts/pages | `ui/question-menus.ts` |
+| `isInDirectionQuestion`, direction overlay pointer state | `ui/direction-prompts.ts` |
+| `isTextInputActive`, inventory/info dialog visibility and refresh state | `ui/prompt-dialogs.ts` |
+| `numberPadModeEnabled`, repeat action and command prefixes | `input/input-commands.ts` |
+| `controllerPreviousActionState`, movement previews, confirm/cancel rearm latches | `input/controller-gameplay.ts` |
+| Controller dialog focus/repeat/slider and virtual cursor state | `input/controller-dialogs.ts` |
+| Mouse button/drag state; touch gestures/long-press/run-button state | `input/mouse-input.ts`; `input/touch-input.ts` |
+| `fpsCrosshairGlancePending`, context target and action selection | `ui/tile-context-actions.ts` |
+
+Runtime waiters and far-look FSM state remain in `src/runtime/LocalNetHackRuntime.ts`. These engine state holders control presentation and routing; they do not replace the input broker or NetHack state.
+
 ## End-To-End Flow (Normal Movement Key)
 
-1. Browser keydown enters `Nethack3DEngine.handleKeyDown`.
+1. Browser keydown enters `KeyboardInput.handleKeyDown`, registered by the engine with the keyboard subsystem as its receiver.
 2. Engine applies input gates and remaps for dialogs, direction prompts, movement remaps, command shortcuts, and meta handling.
 3. Engine sends input via `sendInput`, or `sendInputSequence` for synthetic multi-key flows, or `sendMouseInput` for click-based actions.
 4. `WorkerRuntimeBridge` posts `send_input`, `send_input_sequence`, or `send_mouse_input` to the worker.
@@ -174,9 +210,10 @@ Menu selection state is isolated from the general broker path:
   - `pendingPostActionPlayerTileRefreshTarget`
   - `pendingPostActionPlayerTileRefreshSnapshot`
 - The engine-side render state is:
-  - `authoritativeUnderPlayerItemSnapshots`
   - `flatFeatureUnderPlayerCache`
-  - `fpsAuthoritativeUnderPlayerFallbackSuppressedKeys`
+  - `suppressedLootLikeUnderPlayerCacheKeys`
+  - `lastKnownTerrain`
+- The feature cache and suppression keys belong to `src/game/engine/world/world-classification.ts`; remembered terrain belongs to `world/level-terrain-cache.ts`. Tile refresh methods belong to `world/tile-updates.ts`.
 - The authoritative source of "what is visibly on top of the pile under the
   player right now" is the WASM helper `topItemGlyphUnderPlayer`
   (and `topItemTileIndexUnderPlayer` when available for tile decode).
@@ -255,16 +292,28 @@ Menu selection state is isolated from the general broker path:
 - `under_player_item_glyph` may now include runtime-side item hints such as
   `kind` and `glyphFlags`. Preserve those through the under-player snapshot path
   so later re-renders do not depend solely on the generated glyph catalog.
-- Generic loot from `flatFeatureUnderPlayerCache` may still be shown under the player in normal cases, but must not override an explicit clear for the same key.
-- Player movement prunes stale `authoritativeUnderPlayerItemSnapshots` so only the current tile can keep an authoritative under-player item snapshot.
+- `applyUnderPlayerItemGlyphEvent` stores the runtime result and its metadata in `flatFeatureUnderPlayerCache`, then refreshes that tile.
+- `clearUnderPlayerItemGlyphEvent` removes the cached feature and records the key in `suppressedLootLikeUnderPlayerCacheKeys` so generic loot fallback cannot undo an explicit clear.
+- `getPlayerTileUnderlaySnapshotFromCache` resolves the shared feature cache and remembered terrain. There is no separate authoritative-under-player snapshot map.
 
 ## Camera Follow Behavior
 
-Camera behavior is unchanged:
+Camera behavior is implemented in `src/game/engine/camera/camera.ts`:
 
 - follows `playerPos` each frame with smoothing
 - pan offsets remain additive
-- far-look cursor does not retarget the camera
+- overhead follow can target the active far-look cursor; FPS far-look owns its orbit and return transition
+- a cursor event received before the position-mode activation event is preserved
+
+## Subsystem Lifecycle
+
+- Engine event dispatch remains synchronous; moving input and camera methods into classes does not introduce a queue or change worker messages.
+- The command subsystem is the single submission path for keyboard, controller, touch and UI commands.
+- Question state belongs to `QuestionMenus`; position state belongs to `PositionSelection`; their reset operations must finish before pointer-lock reacquisition or the next runtime event observes them.
+- DOM event listeners are bound to the subsystem that owns the handler and retain the engine's abort signal. Engine disposal aborts listeners and clears gesture/prompt timers before disposing runtime and rendering resources.
+- Device dispatch converges in `InputCommands`; preserve atomic synthetic sequences and the distinction between movement, direction answers and position selection. A position/direction input must not arm player-movement prediction as though the player had moved.
+- `ControllerGameplay.updateControllerInput` runs from the root frame before camera updates. Touch timers and pointer-lock transitions remain part of input lifecycle, not independent polling loops.
+- Automated regressions in `src/game/engine/input/input-lifecycle.test.ts` cover early cursor publication, position exit cleanup, pickup confirmation/reset ordering, movement suppression in prompt modes, atomic forced-direction submission and cancel precedence. Use the manual checks below for visible/device behavior.
 
 ## Invariants To Preserve
 

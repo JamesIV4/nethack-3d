@@ -4,8 +4,10 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 
 ## Related Steering Docs
 
-- Input and player/cursor movement pipeline: `.agents/rules/movement-flow.md`
-- Edit hotspots and change playbook: `.agents/rules/logic-hotspots.md`
+- [Engine architecture and code hotspots](../../src/game/engine/README.md)
+- [Input and player/cursor movement](movement-flow.md)
+- [Change playbook](logic-hotspots.md)
+- [World/runtime flow guide](../../docs/engine-world-runtime.md)
 
 ## Top-Level Layout
 
@@ -16,6 +18,7 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 - `src/state/gameStore.ts`: Zustand store for live UI/game state.
 - `src/state/engineUiAdapter.ts`: bridge from engine updates into the store.
 - `src/game/Nethack3DEngine.ts`: main engine orchestration layer for rendering, input, camera, and runtime events.
+- `src/game/engine/`: state-owning subsystems with explicit typed dependencies, grouped by responsibility. Public controller calls delegate from `Nethack3DEngine` to these classes.
 - `src/game/index.ts`: public game barrel.
 - `src/game/controller-bindings.ts`: controller action schema, defaults, parsing, and normalization.
 - `src/game/tilesets.ts`: builtin, user, and Vulture tileset catalog and asset resolution.
@@ -27,7 +30,7 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 - `src/game/glyphs/behavior.ts`: tile classification and default terrain glyph helpers.
 - `src/game/glyphs/overrides.ts`: runtime glyph override registry.
 - `src/game/glyphs/glyph-catalog.367.generated.ts`: checked-in generated glyph fallback/reference for NetHack 3.6.7 (not authoritative for all item-variation tiles).
-- `src/game/glyphs/glyph-catalog.37.generated.ts`: checked-in generated glyph fallback/reference for NetHack 3.7 (not authoritative for all item-variation tiles).
+- `src/game/glyphs/glyph-catalog.5.generated.ts` and `src/game/glyphs/glyph-catalog.slashem.generated.ts`: generated fallbacks for NetHack 5.0 and Slash'EM, loaded by the registry for the active runtime.
 - `src/game/vulture/translation.ts`: Vulture projection and tileset translation adapter.
 - `src/game/vulture/nethack-object-tokens.ts`: Vulture object token bridge to imported NetHack data.
 - `src/game/vulture/vulture-monster-keys.367.generated.ts`: generated Vulture monster lookup data.
@@ -45,11 +48,10 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 - `src/runtime/displayFileCatalog.ts`: bundled help and display-file text catalog.
 - `src/runtime/types.ts`: runtime commands, envelopes, and shared bridge types.
 - `src/storage/client-options-storage.ts`: IndexedDB persistence plus localStorage migration for client options and startup preferences.
-- `src/update/client-updater.ts`: client update check, apply, cancel, and progress handling.
-- `src/update/manifest.ts`: update manifest parsing and resolution.
+- `src/update/github-version-checker.ts`: GitHub release/version checks used by the UI.
 - `src/update/types.ts`: update type definitions.
 - `public/assets/*`: shipped images, UI icons, and Vulture asset roots.
-- `public/nethack-367.js`, `public/nethack-367.wasm`, `public/nethack-37.js`, `public/nethack-37.wasm`, `public/slashem.js`, `public/slashem.wasm`: checked-in runtime artifacts consumed by the browser build.
+- `public/nethack-367.js`, `public/nethack-367.wasm`, `public/nethack-5.js`, `public/nethack-5.wasm`, `public/slashem.js`, `public/slashem.wasm`: checked-in runtime artifacts consumed by the browser build.
 - `imported/nethack-3.6.7/*`: A few imported NetHack 3.6.7 source code files needed to run the UI properly.
 - `\\wsl.localhost\Ubuntu\home\james\Repos\forked\neth4ck-monorepo`: forked NetHack WASM monorepo reference in WSL.
 - `\\wsl.localhost\Ubuntu\home\james\Repos\forked\neth4ck-monorepo\packages\wasm-367`: forked wasm-367 package reference in WSL.
@@ -64,8 +66,8 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 
 ## Runtime Architecture
 
-1. `src/main.tsx` mounts React and creates `Nethack3DEngine`.
-2. `src/ui/App.tsx` creates the engine controller and UI adapter.
+1. `src/main.tsx` mounts React and its `App` component.
+2. `src/ui/App.tsx` creates the engine controller and UI adapter. The engine assembles its state-owning subsystems with `createEngineSystems` before starting rendering and runtime work.
 3. `Nethack3DEngine` creates a `WorkerRuntimeBridge`.
 4. `WorkerRuntimeBridge` starts `src/runtime/runtime-worker.ts` as a module worker.
 5. The worker creates `LocalNetHackRuntime`.
@@ -76,6 +78,7 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 
 - Install dependencies: `npm i`
 - Type-check only: `npm run check:tsc`
+- Behavioral regressions: `npm test`
 - Dev server: `npm run dev`
 - Preview production build: `npm run preview`
 
@@ -101,19 +104,34 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 
 - Engine setup: constructor, `initThreeJS`, and `connectToRuntime`.
 - Runtime event dispatcher: `handleRuntimeEvent`.
-- Rendering path: `updateTile`, `applyGlyphMaterial`, `createGlyphTexture`, `ensureGlyphOverlay`.
-- Camera path: `updateCamera`, pan inertia, and mouse handlers.
-- HUD and stats: `updatePlayerStats`, `updateStatsDisplay`.
-- Dialog systems: `showQuestion`, `showDirectionQuestion`, `showInventoryDialog`, `showInfoMenuDialog`.
-- Input path: `handleKeyDown`, `sendInput`, `sendInputSequence`, `sendMouseInput`.
-- Runtime/application state: `applyClientOptions`, `setClientOptions`, `clearScene`, `recordPlayerMovement`.
+- Frame sequencing and coordinated lifecycle: `animate`, `dispose`, `clearScene`.
+- Runtime/application option orchestration: `applyClientOptions`, `setClientOptions`, `applyPlayMode`.
+- Public controller API delegates to the responsible subsystem.
+
+### `src/game/engine/`
+
+- Camera transforms and smoothing: `camera/camera.ts`.
+- Browser keyboard intake: `input/keyboard-input.ts`; directional mapping: `input/movement-input.ts`.
+- Shared command submission: `input/input-commands.ts` (`sendInput`, `sendInputSequence`, `sendMouseInput`).
+- Mouse/touch/controller devices: `input/mouse-input.ts`, `input/touch-input.ts`, `input/controller-gameplay.ts`, `input/controller-dialogs.ts`.
+- Position and far-look cursor state: `input/position-selection.ts`; raycasts: `input/pointer-targeting.ts`; pointer lock: `input/pointer-lock.ts`.
+- Question selections, counts and pagination: `ui/question-menus.ts`; inventory, information and text dialogs: `ui/prompt-dialogs.ts`.
+- Direction overlays: `ui/direction-prompts.ts`; extended-command palette: `ui/extended-commands.ts`; context actions and glance probes: `ui/tile-context-actions.ts`.
+- Tile presentation: `rendering/tile-rendering.ts`, `rendering/tile-materials.ts`, `rendering/glyph-textures.ts`; frame resources and postprocessing: `rendering/render-pipeline.ts`.
+- World snapshots and tile updates: `world/level-terrain-cache.ts`, `world/tile-updates.ts`, `world/world-classification.ts`; player and entity motion: `world/player-movement.ts`, `world/entity-movement.ts`.
+- Status/HUD: `ui/player-status.ts`; postmortem lifecycle: `ui/game-over.ts`; telemetry: `world/run-telemetry.ts`; minimap: `ui/minimap.ts`.
+- Audio/haptics: `audio/audio-haptics-platform.ts`; developer panels: `diagnostics/`. Effects and specialized rendering have separate owners. Search for the owning method inside `src/game/engine/` before extending a feature.
+- `create-engine-systems.ts` assembles dependencies; `shared/` contains engine types and constants used by multiple subsystems.
+- `runtime/engine-state.ts` owns configuration and lifecycle state; `world/player-movement.ts` owns `playerPos` and player movement state.
+- Each subsystem owns its fields and receives narrow `Pick` contracts for the other owners it accesses. Assembly initializes eager dependencies before consumers and preserves synchronous runtime/frame ordering. Gameplay subsystems still collaborate through these declared contracts.
 
 ## Runtime Event Contract
 
 - Common map events: `map_glyph`, `map_glyph_batch`, `player_position`, `map_cursor`, `tile_not_found`, `area_refresh_complete`, `clear_scene`.
-- Common UI events: `text`, `raw_print`, `question`, `direction_question`, `position_request`, `name_request`, `inventory_update`, `info_menu`, `extended_commands`.
+- Common UI events: `text`, `raw_print`, `question`, `direction_question`, `position_request`, `name_request`, `text_request`, `inventory_update`, `info_menu`, `extended_commands`.
 - Common state events: `position_input_state`, `position_cursor`, `number_pad_mode`, `status_update`, `runtime_globals_snapshot`, `runtime_object_tile_map`, `damage_event`, `game_over_complete`, `inventory_updated_signal`.
-- Transport/runtime events: `runtime_ready`, `runtime_error`, `runtime_terminated`.
+- Entity/item events include `monster_attack`, `monster_killed`, `confirmed_boulder_push`, `under_player_item_glyph`, and `under_player_item_glyph_cleared`.
+- Worker envelope `runtime_ready` is consumed by `WorkerRuntimeBridge`; engine runtime events include `runtime_error` and `runtime_terminated`.
 
 ## Runtime Command Contract
 
@@ -127,31 +145,18 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 
 ## WASM Pointer Contract
 
-- Pointer arguments with callback format type `p` are treated as direct WASM pointers (no extra dereference) in `src/runtime/LocalNetHackRuntime.ts`.
-- Runtime pointer ABI tags are build-defined in `vite.config.ts` as `VITE_NH3D_WASM_367_POINTER_ABI_TAG` and `VITE_NH3D_WASM_37_POINTER_ABI_TAG`; pointer-sensitive callback/struct handling must align with these tags.
-- `LocalNetHackRuntime` validates callback argument shapes and pointer layouts (menu_item, extcmd table, glyphinfo) against the active ABI contract and fails closed on mismatches.
-- Current fork note: wasm-367 `shim_print_glyph` uses 5 callback args `(winid, x, y, glyph, bkglyph)` (not a glyphinfo pointer payload).
-- Current fork note: the tracked wasm-367 `shim_print_glyph` extension may emit `monsterId=0` for the current player tile; positive ids remain real NetHack monster `m_id` values.
-- Current fork note: wasm-367 `shim_get_ext_cmd` format is `iv`, so callback args appear as `[undefined]` and that is expected.
-- Current fork note: wasm-37 `shim_add_menu` format is `vipi00iisi` (9 args); menu text is arg index `7`, item flags are arg index `8`, and identifier is delivered as a value (not pointer slot).
-- Current fork note: wasm-37 `shim_print_glyph` format is `vi11pp` and uses glyphinfo pointers at args `3` and `4`.
-- Current fork note: wasm-37 `menu_item` output layout for `select_menu` is `stride=16`, `countOffset=8`, `itemFlagsOffset=12` (3.7 `anything` union includes 64-bit members).
-- 3.6.7 extended command resolution order (`LocalNetHackRuntime`):
-  1. Decode extcmd entries from `globalThis.nethackGlobal.pointers.extcmdlist` using the active extcmd layout contract.
-  2. Extcmd layout source: app-owned 3.6.7 ABI profile (`stride=24`, `textPtrOffset=4`, `flagsOffset=16`, pointer mode `direct_or_slot`).
-  3. Match typed text against decoded names (exact match, then unique-prefix match) and return the corresponding extcmd index.
-  4. Validation is fail-closed (`minEntries`, required names), and unresolved commands return `-1` (no command).
-- 3.7 extended command layout currently matches 3.6.7 for WASM32 (`struct ext_func_tab` stride `24`, `ef_txt` offset `4`, flags offset `16`), and uses the same decode/validation path.
-- 3.7 contextual item-action menus (`src/iactions.c`) encode action identity in `add_menu` identifiers (`anything.a_int` enum values), not extcmd indices; runtime action auto-selection should match these identifiers first, then fall back to accelerator/text heuristics.
-- Inventory-context UI actions that run extended commands should force `#...` submission so NetHack resolves through decoded `extcmdlist` (rather than direct key shortcuts) for 3.7 stability.
-- Troubleshooting and quick-fix steps: see `docs/pointer-abi-troubleshooting.md`.
-- Do not scan arbitrary heap memory to discover command tables or silently fall back to hardcoded command indices, because that can misroute commands after WASM updates.
+- Decode and ABI validation remain in `src/runtime/LocalNetHackRuntime.ts`; engine decomposition does not change WASM pointers, callbacks or command identifiers.
+- Current runtime choices are NetHack 3.6.7, NetHack 5.0 and Slash'EM, defined by `NethackRuntimeVersion` in `src/runtime/types.ts`. Older wasm-37 WSL locations in the steering reference are source references, not current public artifact names.
+- Current pointer ABI tags are defined by `vite.config.ts`: `VITE_NH3D_WASM_367_POINTER_ABI_TAG`, `VITE_NH3D_WASM_5_POINTER_ABI_TAG` and `VITE_NH3D_WASM_SLASHEM_POINTER_ABI_TAG`.
+- Use the active runtime's callback/struct layout contract and validate shapes before reading memory. Do not scan arbitrary heap memory or silently replace unresolved command identifiers with guessed indices.
+- The tracked 3.6.7 map extension uses `monsterId=0` for the player; positive ids identify monsters. Preserve that identity through engine tile/entity presentation.
+- See [pointer ABI troubleshooting](../../docs/pointer-abi-troubleshooting.md) for callback formats and command-table diagnostics, and [world/runtime flows](../../docs/engine-world-runtime.md) for the engine receivers.
 
 ## High-Risk Zones
 
 - Async input state in runtime: `activeInputRequest`, `awaitingQuestionInput`, `pendingTextRequest`, `pendingExtendedCommandRequest`, `pendingMenuSelection`.
-- Position and far-look state: `positionInputModeActive`, `farLookMode`, `farLookOrigin`, `pendingLookMenuFarLookArm`.
-- Tile classification: `src/game/glyphs/behavior.ts`, `src/game/glyphs/registry.ts`, and `updateTile` orchestration.
-- Generated runtime catalogs (fallback/reference data): `src/game/glyphs/glyph-catalog.367.generated.ts`, `src/game/glyphs/glyph-catalog.37.generated.ts`, `src/game/tilesets.generated.ts`, `src/game/vulture/vulture-monster-keys.367.generated.ts`.
+- Position state: `positionInputModeActive` in `src/game/engine/input/position-selection.ts`; runtime far-look state `farLookMode`, `farLookOrigin`, and `pendingLookMenuFarLookArm` stays in `src/runtime/LocalNetHackRuntime.ts`.
+- Tile classification: `src/game/glyphs/behavior.ts`, `src/game/glyphs/registry.ts`, `src/game/engine/world/world-classification.ts`, and `updateTile` in `src/game/engine/rendering/tile-rendering.ts`.
+- Generated runtime catalogs (fallback/reference data): `src/game/glyphs/glyph-catalog.367.generated.ts`, `src/game/glyphs/glyph-catalog.5.generated.ts`, `src/game/glyphs/glyph-catalog.slashem.generated.ts`, `src/game/tilesets.generated.ts`, `src/game/vulture/vulture-monster-keys.367.generated.ts`.
 - Update flow: `src/update/*` plus the UI in `src/ui/App.tsx`.
 - Startup options and checkpoint recovery: `src/runtime/startup-init-options.ts`, `src/runtime/runtime-capabilities.ts`, and `src/storage/client-options-storage.ts`.

@@ -3,17 +3,26 @@
 This is a living steering doc. Update it whenever hotspots, ownership, or edit playbooks change.
 
 Use this file when deciding where to implement a change.
-Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
+Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-hotspots). This playbook records the invariants to preserve after locating the implementation. Detailed guides: [movement and cursor flow](movement-flow.md), [world/runtime flows](../../docs/engine-world-runtime.md), and [project structure](project-structure.md).
+
+## If You Need To Change Engine Wiring Or Shared State
+
+- `src/game/engine/create-engine-systems.ts` constructs state-owning classes and wires their dependencies. Each class declares a `NameDependencies` interface containing the exact peer members it uses through `Pick` contracts.
+- `src/game/engine/engine-coordinator.ts` is the contract for root lifecycle operations. `src/game/Nethack3DEngine.ts` implements the public controller and preserves startup, event, frame, mode-change and disposal sequencing.
+- `src/game/engine/runtime/engine-state.ts` owns session/configuration and lifecycle fields such as `session`, `clientOptions`, `playMode`, `disposed`, and `domEventAbortController`. Player position belongs to `src/game/engine/world/player-movement.ts`, not this shared state holder.
+- `src/game/engine/shared/types.ts` and `src/game/engine/shared/constants.ts` contain internal shared definitions. UI/controller contracts stay in `src/game/ui-types.ts`; runtime envelopes stay in `src/runtime/types.ts`.
+- Peer-class imports should be type-only. Dependency getters resolve peers after construction; an initializer that eagerly reads a peer still requires that peer and its eager dependencies to be constructed first.
+- Keep subsystem constructors free of runtime startup, browser listener registration and independent frame loops. State ownership does not eliminate cross-domain ordering requirements.
 
 ## If You Need To Change Rendering
 
-- Start in `src/game/Nethack3DEngine.ts` (`updateTile`, `applyGlyphMaterial`, `createGlyphTexture`, `ensureGlyphOverlay`).
+- Start in `src/game/engine/rendering/tile-rendering.ts` (`updateTile`), `tile-materials.ts` (`applyGlyphMaterial`), and `glyph-textures.ts` (`createGlyphTexture`, `ensureGlyphOverlay`). `Nethack3DEngine.ts` coordinates their setup, runtime events and frame ordering.
 - Glyph resolution and classification should prioritize live runtime data and NetHack/WASM callback paths whenever possible. Use these files for mapping/orchestration:
   - `src/game/glyphs/index.ts`
   - `src/game/glyphs/registry.ts`
   - `src/game/glyphs/behavior.ts`
   - `src/game/glyphs/glyph-catalog.367.generated.ts` (generated fallback/reference; not authoritative for all variant item tiles)
-  - `src/game/glyphs/glyph-catalog.37.generated.ts` (generated fallback/reference; not authoritative for all variant item tiles)
+  - `src/game/glyphs/glyph-catalog.5.generated.ts` and `src/game/glyphs/glyph-catalog.slashem.generated.ts` (generated fallback/reference; not authoritative for all variant item tiles)
 - Generated glyph catalogs are fallback references, not the final source of truth.
   If live runtime payloads disagree with the catalog, especially for item-like
   top-of-pile results, prefer the runtime payload.
@@ -21,6 +30,18 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
 - User tileset persistence lives in `src/game/user-tileset-storage.ts`.
 - Vulture projection helpers live in `src/game/vulture/translation.ts`.
 - If tile appearance changes affect overlays or material reuse, check the glyph overlay and reveal-fade code paths near `ensureGlyphOverlay`, `createGlyphTexture`, `applyGlyphMaterial`, and the tile reveal timing fields.
+- Additional owners: `src/game/engine/rendering/wall-geometry.ts` for chamfer/door geometry, `floor-occlusion.ts` for floor ambient occlusion, `wall-overlays.ts` for overlay resources, and `vulture-walls.ts` / `vulture-projection.ts` for Vulture walls and projection.
+- Entity appearance and texture references live in `src/game/engine/rendering/entity-billboards.ts`; held-weapon animation/rendering lives in `held-weapon.ts`. Entity move interpolation belongs to `src/game/engine/world/entity-movement.ts`.
+
+## If You Need To Change Resource Lifetimes Or Frame Work
+
+- Root `animate` in `src/game/Nethack3DEngine.ts` polls controllers and advances entity transitions before camera updates, then updates presentation/effects before rendering. Preserve the root sequence when adding frame work.
+- Root `clearScene` handles scene/level resets; it is distinct from full engine `dispose`. Root `applyClientOptions` / `applyPlayMode` coordinate mode changes and cache invalidation.
+- `src/game/engine/rendering/render-pipeline.ts` owns the renderer/composer, viewport changes, `initAntialiasingPipeline`, `disposeAntialiasingPipeline`, and WebGL context diagnostics. Terminal cells are owned by `terminal-rendering.ts`; the orthographic camera is owned by `src/game/engine/camera/camera.ts`.
+- `src/game/engine/rendering/tileset-assets.ts` owns `tilesetTexture` and `invalidateTilesetDependentCaches`. Glyph texture references are owned by `glyph-textures.ts`; billboard textures by `entity-billboards.ts`. Update all dependent caches when changing an atlas or appearance source.
+- `src/game/engine/effects/` owns effect resources and animation. `clearDamageEffects` in `src/game/engine/world/combat-attribution.ts` coordinates effect cleanup across those owners.
+- Engine `dispose` marks the lifecycle disposed, cancels the frame and aborts DOM listeners, clears interaction work, resets UI/scene, disconnects runtime/audio, then removes DOM and releases renderer/material/texture/geometry resources. Add a resource to each relevant clear, invalidation and disposal path.
+- DOM handlers must be bound to their owning subsystem; use the shared abort signal. Keep pending touch, minimap, cursor and dialog callbacks from outliving their state/resources.
 
 ## If You Need To Change Runtime Event Behavior
 
@@ -35,6 +56,7 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
 - The "item shown under the player" is a runtime-to-engine contract between:
   - `src/runtime/LocalNetHackRuntime.ts`
   - `src/game/Nethack3DEngine.ts`
+  - `src/game/engine/world/tile-updates.ts` and `src/game/engine/world/world-classification.ts`
   - the WASM helper functions `topItemGlyphUnderPlayer` and `topItemTileIndexUnderPlayer`
 - Those helper functions are authoritative for the visible top-of-pile item on the
   current player tile. After partial pickup, drop, or any other stack mutation,
@@ -47,10 +69,10 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
   The engine should preserve and reuse those hints instead of re-deriving kind
   solely from the generated glyph catalog.
 - The engine consumes those in `handleRuntimeEvent` and updates:
-  - `authoritativeUnderPlayerItemSnapshots`
   - `flatFeatureUnderPlayerCache`
-  - `fpsAuthoritativeUnderPlayerFallbackSuppressedKeys`
+  - `suppressedLootLikeUnderPlayerCacheKeys`
   - the affected tile via `refreshTileVisualFromStateCache(...)`
+- Cache and event methods belong to `src/game/engine/world/world-classification.ts`; refresh queuing belongs to `src/game/engine/world/tile-updates.ts`; remembered `lastKnownTerrain` belongs to `src/game/engine/world/level-terrain-cache.ts`. See the [world/runtime guide](../../docs/engine-world-runtime.md) for the complete path.
 
 ### Runtime Model
 
@@ -97,21 +119,17 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
 
 ### Engine Model
 
-- The engine keeps three distinct layers of state:
-  - `authoritativeUnderPlayerItemSnapshots`: runtime-confirmed item-under-player state
-  - `flatFeatureUnderPlayerCache`: generic cached under-player flat features and loot-like visuals
+- The engine keeps the shared feature and terrain caches:
+  - `flatFeatureUnderPlayerCache`: cached flat features and runtime-confirmed under-player item results
   - `lastKnownTerrain`: remembered terrain/floor state
-- `authoritativeUnderPlayerItemSnapshots` may now carry runtime-side item-kind
+- Entries in `flatFeatureUnderPlayerCache` carry runtime-side item-kind
   hints (`kind`, `glyphFlags`) in addition to `glyph`, `char`, `color`,
   `tileIndex`, and `symidx`.
 - `classifyTileBehavior(...)` / `resolveGlyph(...)` should treat those runtime
   hints as authoritative when present, especially for under-player item events.
-- `fpsAuthoritativeUnderPlayerFallbackSuppressedKeys` prevents generic loot fallback from resurrecting stale loot after the runtime has explicitly cleared it.
-- `getFpsPlayerTileUnderlaySnapshotFromCache(...)` now prefers:
-  - authoritative under-player item
-  - generic under-player flat feature cache, unless suppressed
-  - runtime floor underlay / remembered terrain
-- Player position updates prune `authoritativeUnderPlayerItemSnapshots` to the current tile so stale authoritative loot does not leak across movement.
+- `suppressedLootLikeUnderPlayerCacheKeys` prevents generic loot fallback from resurrecting stale loot after the runtime has explicitly cleared it. A clear event removes the corresponding feature-cache entry.
+- `getPlayerTileUnderlaySnapshotFromCache(...)` prefers the shared feature cache, then the runtime floor underlay, then remembered terrain.
+- There is no separate authoritative-under-player snapshot map. `applyUnderPlayerItemGlyphEvent` updates the shared feature cache and removes suppression for a valid visible result.
 
 ### Common Break Patterns
 
@@ -165,14 +183,12 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
   - `scripts/wasm/copy-wasm.mjs`
   - `public/nethack-367.js`
   - `\\wsl.localhost\Ubuntu\home\james\Repos\forked\neth4ck-monorepo\packages\wasm-367\build\nethack.js`
-- Engine receive/cache/render in `src/game/Nethack3DEngine.ts`:
+- Engine receive/cache in `src/game/engine/world/world-classification.ts`, reached through `Nethack3DEngine.handleRuntimeEvent`:
   - `applyUnderPlayerItemGlyphEvent`
   - `clearUnderPlayerItemGlyphEvent`
-  - `getAuthoritativeUnderPlayerItemSnapshot`
-  - `getFpsPlayerTileUnderlaySnapshotFromCache`
+  - `getPlayerTileUnderlaySnapshotFromCache`
   - `shouldRenderFlatFeatureUnderPlayer`
-  - `updateTile`
-  - `refreshTileVisualFromStateCache`
+- Visual refresh: `refreshTileVisualFromStateCache` in `src/game/engine/world/tile-updates.ts`, then `updateTile` in `src/game/engine/rendering/tile-rendering.ts`.
 - Shared glyph resolution/classification:
   - `resolveGlyph`
   - `classifyTileBehavior`
@@ -202,7 +218,10 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
 
 ## If You Need To Change Input Or Menus
 
-- Browser key mapping and dialog gating: `src/game/Nethack3DEngine.ts` (`handleKeyDown`).
+- Browser key mapping and dialog gating: `src/game/engine/input/keyboard-input.ts` (`handleKeyDown`) and `movement-input.ts`.
+- Shared command submission: `src/game/engine/input/input-commands.ts`; question selections and counts: `src/game/engine/ui/question-menus.ts`.
+- `QuestionMenus` owns `isInQuestion`, selection counts, pagination and pickup state. `DirectionPrompts` in `src/game/engine/ui/direction-prompts.ts` owns `isInDirectionQuestion` and direction overlay state. `PromptDialogs` in `src/game/engine/ui/prompt-dialogs.ts` owns text, inventory and information dialog state, including `isTextInputActive`.
+- `src/game/engine/ui/extended-commands.ts` owns the extended-command palette, while `input-commands.ts` submits the resulting command. `src/game/engine/ui/modal-navigation.ts` owns DOM keyboard focus/scroll behavior; `src/game/engine/input/pointer-lock.ts` owns pointer-lock UI gating.
 - Runtime input broker implementation: `src/runtime/input/RuntimeInputBroker.ts`.
 - Runtime key normalization and enqueue path: `handleClientInput` in `src/runtime/LocalNetHackRuntime.ts`.
 - Runtime consume path: `requestInputCode`, `consumeInputResult`, `waitForQuestionInput` in `src/runtime/LocalNetHackRuntime.ts`.
@@ -226,7 +245,7 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
   - `farLookMode` (`none | armed | active`)
   - `farLookOrigin`
   - `pendingLookMenuFarLookArm`
-  - `positionInputModeActive` on the engine side
+  - `positionInputModeActive` in `src/game/engine/input/position-selection.ts` on the engine side
   - `position_input_state` and `position_cursor` emit paths
 
 ## If You Need To Change Inventory UX
@@ -234,7 +253,7 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
 - Runtime inventory updates and inventory-help menus are produced in `shim_end_menu` handling for window 4 in `src/runtime/LocalNetHackRuntime.ts`.
 - Engine inventory handling:
   - event handling: `inventory_update` case in `handleRuntimeEvent`
-  - UI display: `updateInventoryDisplay`, `showInventoryDialog`
+  - UI display: `updateInventoryDisplay`, `showInventoryDialog` in `src/game/engine/ui/prompt-dialogs.ts`
 - Contextual inventory actions in the runtime use `pendingInventoryContextSelection` to route follow-up menu picks.
 - Multi-pickup uses `isInMultiPickup`, `menuSelections`, and `menuSelectionReadyCount`.
 
@@ -244,16 +263,28 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
   - `shim_status_update`: receives status field/value updates and batches them until flush/reset markers.
   - `statusPending`
   - `latestStatusUpdates`
-- Engine field mapping and parsing: `updatePlayerStats`.
-- Rendering HUD bars and labels: `updateStatsDisplay`.
+- Engine field mapping and parsing: `updatePlayerStats` in `src/game/engine/ui/player-status.ts`.
+- Rendering HUD bars and labels: `updateStatsDisplay` in the same subsystem.
 - If status changes affect reconnects, check `runtime_globals_snapshot` and the store hydration path in `src/state/gameStore.ts`.
 
 ## If You Need To Change Camera Or Controls
 
-- Keyboard movement mappings and dialog-aware suppression: `src/game/Nethack3DEngine.ts` (`handleKeyDown`).
-- Mouse zoom, rotate, pan, and click-look handlers: `src/game/Nethack3DEngine.ts` mouse handlers.
-- Camera transform calculation: `updateCamera`.
+- Keyboard movement mappings and dialog-aware suppression: `src/game/engine/input/keyboard-input.ts` and `movement-input.ts`.
+- Mouse zoom, rotate, pan, and click-look handlers: `src/game/engine/input/mouse-input.ts`; touch gestures: `touch-input.ts`.
+- Camera transform calculation: `updateCamera` in `src/game/engine/camera/camera.ts`.
+- Position cursor state and far-look lifecycle: `src/game/engine/input/position-selection.ts`.
+- Controller sampling/gameplay and dialog navigation: `src/game/engine/input/controller-gameplay.ts` and `controller-dialogs.ts`.
+- `ControllerGameplay` owns button snapshots, release/rearm latches and movement previews. `ControllerDialogs` owns slider interaction, dialog repeat, focus and virtual cursor state. Preserve neutral/release transitions when changing bindings or prompt routing.
+- `src/game/engine/input/touch-input.ts` owns touch gesture and long-press timers, including the FPS run button. Mouse drag state belongs to `mouse-input.ts`; raycast/alpha-hit rules belong to `pointer-targeting.ts`.
+- `src/game/engine/ui/tile-context-actions.ts` owns active tile context and glance probes; `ui/aim-highlights.ts` owns FPS aim resources. Keep action inference separate from raycast target resolution and direction prompt state.
 - Controller bindings and action labels live in `src/game/controller-bindings.ts` and are surfaced in `src/ui/App.tsx`.
+
+## If You Need To Change Minimap, Sound Or Developer Panels
+
+- `src/game/engine/ui/minimap.ts` owns cell updates, viewport overlay, visibility and drag state. Camera recenter/pan behavior belongs to `src/game/engine/camera/camera.ts`.
+- `src/game/engine/audio/audio-haptics-platform.ts` owns sound/rumble dispatch and platform detection. Sound matching is in `src/game/message-sound-hooks.ts`; FMOD implementation remains in `src/audio/FmodRuntime.ts`.
+- `src/game/engine/diagnostics/fps-diagnostics.ts`, `held-weapon-animation-debug.ts`, and `vulture-projection-debug.ts` own the respective developer panels. Keep their remove/reset paths connected to root disposal.
+- Public browser debug helpers remain in `src/app.ts`. Root engine delegators/getters preserve tile refresh, globals snapshots, info-menu toggling and `statusDebugHistory`; status history storage is in `src/game/engine/ui/player-status.ts`.
 
 ## If You Need To Change Tiles, Glyphs, Or World Classification
 
@@ -271,13 +302,13 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
 - Engine-side application of options at runtime lives in `src/game/Nethack3DEngine.ts` (`setClientOptions`, `applyClientOptions`).
 - Save database naming and mount logic live in `src/runtime/save-storage.ts`.
 - Runtime checkpoint recovery support is gated in `src/runtime/runtime-capabilities.ts`.
-- Update check/apply/cancel/progress flow lives in `src/update/client-updater.ts`, `src/update/manifest.ts`, and `src/update/types.ts`.
+- GitHub release/version checking lives in `src/update/github-version-checker.ts` and `src/update/types.ts`, with UI in `src/ui/App.tsx`. Packaging helpers remain under `scripts/updates/`.
 
 ## If You Need To Change Level Transition Behavior
 
 - Runtime triggers clear on map window reset: `shim_clear_nhwindow` in `src/runtime/LocalNetHackRuntime.ts` (window-clear callback; map clears should emit `clear_scene`).
 - Engine clear path: `clearScene` and the `clear_scene` event case in `handleRuntimeEvent`.
-- Player movement reconciliation is handled by `recordPlayerMovement` and the player position update branch.
+- Player movement reconciliation is handled by `recordPlayerMovement` in `src/game/engine/world/player-movement.ts` and the engine's player position event branch. Level snapshots belong to `world/level-terrain-cache.ts`; visual movement transitions belong to `world/entity-movement.ts`.
 
 ## Sanity Checklist For Agents
 
@@ -287,3 +318,4 @@ Detailed movement and cursor flow reference: `.agents/rules/movement-flow.md`.
 - If changing broker behavior, ensure no callback bypasses `requestInputCode(...)` for key-consuming waits.
 - If changing tile logic, verify player tracking, map refresh, and tile reveal behavior.
 - If changing status updates, verify flush-trigger ordering and reconnect snapshot consistency.
+- Run `npm run check:tsc` and relevant tests. Engine regression coverage lives in `src/game/engine/input/input-lifecycle.test.ts`, `src/game/engine/world/world-state.test.ts`, and `src/game/engine/rendering/rendering-resources.test.ts`. Browser checks are still needed for visible rendering, device interaction and complete teardown/restart.

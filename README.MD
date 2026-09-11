@@ -99,6 +99,8 @@ Launch it from your Home Screen for a web app fullscreen experience.
 ## Scripts
 
 - `npm run dev` - Start Vite dev server.
+- `npm run check:tsc` - Check TypeScript and subsystem contracts without building.
+- `npm test` - Run regression tests, including engine input, world state, and rendering resources.
 - `npm run build` - Build production bundles.
 - `npm run build:electron` - Build bundles with Electron-safe relative asset paths.
 - `npm run preview` - Preview production build locally.
@@ -132,14 +134,37 @@ Launch it from your Home Screen for a web app fullscreen experience.
 
 ## Architecture
 
-- Main app bootstrap/debug helpers: `src/app.ts`
-- React entry: `src/main.tsx`
-- React UI shell: `src/ui/App.tsx`
-- 3D engine and client-side interaction: `src/game/Nethack3DEngine.ts`
-- Glyph catalog + behavior rules: `src/game/glyphs/*`
-- Runtime worker bridge: `src/runtime/WorkerRuntimeBridge.ts`
-- Worker runtime host: `src/runtime/runtime-worker.ts`
-- NetHack callback adapter/state machine: `src/runtime/LocalNetHackRuntime.ts`
+[src/main.tsx](src/main.tsx) mounts the React app. [App.tsx](src/ui/App.tsx) creates the engine and UI adapter. [Nethack3DEngine.ts](src/game/Nethack3DEngine.ts) coordinates startup, runtime events, frame updates, options, and disposal, and preserves the public controller API used by the UI.
+
+Rendering, input, camera, world presentation, menus, audio, and diagnostics live in focused classes under [src/game/engine/](src/game/engine/README.md). Each subsystem owns its state and declares the specific members it uses from neighboring systems. NetHack's authoritative game state and rules continue to run in WASM inside the worker.
+
+```mermaid
+flowchart LR
+  UI[React UI] -->|controller calls| Engine[Engine coordinator]
+  Engine --> Systems[Engine subsystems]
+  Systems -->|commands| Bridge[WorkerRuntimeBridge]
+  Bridge --> Worker[Worker / LocalNetHackRuntime / WASM]
+  Worker -->|runtime events| Bridge
+  Bridge -->|runtime events| Engine
+  Engine -->|UI adapter and store| UI
+  Systems -->|UI adapter and store| UI
+```
+
+| Area | Entry point |
+| --- | --- |
+| Engine composition and dependencies | [create-engine-systems.ts](src/game/engine/create-engine-systems.ts) |
+| Rendering and visual effects | [rendering/](src/game/engine/rendering/), [effects/](src/game/engine/effects/) |
+| Commands, devices, and camera | [input/](src/game/engine/input/), [camera/](src/game/engine/camera/) |
+| Terrain caches, tile updates, and entity movement | [world/](src/game/engine/world/) |
+| Menus, minimap, and status presentation | [ui/](src/game/engine/ui/) |
+| Sound, haptics, and developer panels | [audio/](src/game/engine/audio/), [diagnostics/](src/game/engine/diagnostics/) |
+| React state bridge | [engineUiAdapter.ts](src/state/engineUiAdapter.ts), [gameStore.ts](src/state/gameStore.ts) |
+| Worker transport and host | [WorkerRuntimeBridge.ts](src/runtime/WorkerRuntimeBridge.ts), [runtime-worker.ts](src/runtime/runtime-worker.ts) |
+| NetHack callbacks and input waits | [LocalNetHackRuntime.ts](src/runtime/LocalNetHackRuntime.ts), [RuntimeInputBroker.ts](src/runtime/input/RuntimeInputBroker.ts) |
+| Glyph classification and fallback catalogs | [glyphs/](src/game/glyphs/) |
+| Browser debug helpers | [app.ts](src/app.ts) |
+
+For a task-to-file map and ownership rules, start with the [engine guide](src/game/engine/README.md). The [world/runtime flow guide](docs/engine-world-runtime.md) covers map updates, under-player items, level transitions, and movement. Contributor and agent references include the [project structure](.agents/rules/project-structure.md), [code hotspots](.agents/rules/logic-hotspots.md), [movement and input flow](.agents/rules/movement-flow.md), and [WASM pointer troubleshooting](docs/pointer-abi-troubleshooting.md).
 
 ## Credits
 
