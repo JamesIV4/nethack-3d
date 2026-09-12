@@ -715,6 +715,13 @@ export class PositionSelection {
       return false;
     }
 
+    return this.handleFarLookPositionTileSelection(target.x, target.y, source);
+  }
+
+  /** Shared by screen pointers and a native Quest ray resolved to a map tile. */
+  handleFarLookPositionTileSelection(x: number, y: number, source: string): boolean {
+    if (!this.isFarLookPositionInputMode() || !Number.isInteger(x) || !Number.isInteger(y)) return false;
+    const target = { x, y };
     if (this.isPositionCursorAtTile(target.x, target.y)) {
       this.dependencies.engineMessages.logClickLookTileDebug(source, target.x, target.y);
       this.dependencies.inputCommands.sendMouseInput(target.x, target.y, 0);

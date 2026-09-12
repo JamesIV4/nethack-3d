@@ -15,6 +15,11 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 
 - `index.html`: Vite HTML entry point.
 - `src/main.tsx`: React app bootstrap and engine mount.
+- `quest/`: isolated Meta Spatial SDK APK with a floating WebView UI and native stereo geometry in Windowed MR and Immersive modes. `QuestWebBridge` owns origin-scoped scene packet assembly; `stereo/` owns native render resources and clipping.
+- `src/quest/native/`: native message transport, UI transparency and gated game commands. `engine/rendering/quest-scene-export*` mirrors resolved Three resources after engine visual updates; it does not duplicate runtime/glyph logic. See [stereo architecture](../../docs/quest-stereo-vr.md).
+- `quest-wired.html`, `src/quest/wired-viewer/`, and `scripts/quest/wired/`: PCVR development adapter that streams an isolated Electron document into a WebXR panel; it does not change the bundled APK architecture.
+- `quest-ui-probe.html` and `src/quest/ui-probe/`: standalone React interaction fixture using real UI components, with no NetHack runtime boot.
+- `scripts/quest/`: Quest-specific generated asset staging and regression checks; `build:quest` uses a separate Vite entry/output. See [Quest plan](../../docs/quest-vr-plan.md).
 - `src/app.ts`: debug helper registration.
 - `src/ui/App.tsx`: React entry point and app composition.
 - `src/ui/app/`: feature hooks, components and helpers, grouped into startup, settings, controller, menus, inventory, status, scores, tilesets, updates and shared presentation. See the [UI ownership map](../../src/ui/README.md#code-hotspots).

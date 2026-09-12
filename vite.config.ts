@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { defineConfig, type ViteDevServer } from "vite";
+import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import react from "@vitejs/plugin-react";
 import {
   TILESET_MANIFEST_SOURCE_DIRS,
@@ -113,6 +113,7 @@ function tilesetManifestPlugin() {
 
 const isGitHubActions = process.env.GITHUB_ACTIONS === "true";
 const isElectronBuild = process.env.BUILD_TARGET === "electron";
+const isQuestBuild = process.env.VITE_DEPLOY_TARGET === "quest";
 const enableCrossOriginIsolation =
   process.env.NH3D_ENABLE_CROSS_ORIGIN_ISOLATION === "true";
 const wasm367RuntimeBuildJsPath = resolvePublicAssetPath("nethack-367.js");
@@ -209,8 +210,46 @@ const bundledClientUpdateState = (() => {
 
 const devSessionTag = String(Date.now());
 
+// The native Quest proof serves a complete local HTTPS origin. Keep its HTML
+// offline and its output separate from the Capacitor/desktop release assets.
+function questBundlePlugin(): Plugin {
+  return {
+    name: "quest-bundled-ui-proof",
+    transformIndexHtml(html) {
+      return html.replace(
+        /<link\b[^>]*href=["']https:\/\/fonts\.(?:googleapis|gstatic)\.com[^"']*["'][^>]*>/gi,
+        "",
+      );
+    },
+    generateBundle() {
+      this.emitFile({
+        type: "asset",
+        fileName: "quest-build.json",
+        source: JSON.stringify({
+          target: "quest-ui-proof",
+          version: projectVersion,
+          commit: resolvedBuildCommitSha,
+          base: "/",
+          entry: "quest-ui-probe.html",
+        }, null, 2),
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [tilesetManifestPlugin(), react()],
+  plugins: [tilesetManifestPlugin(), react(), ...(isQuestBuild ? [questBundlePlugin()] : [])],
+  ...(isQuestBuild ? {
+    build: {
+      outDir: "dist-quest",
+      rollupOptions: {
+        input: {
+          game: path.resolve(process.cwd(), "index.html"),
+          probe: path.resolve(process.cwd(), "quest-ui-probe.html"),
+        },
+      },
+    },
+  } : {}),
   define: {
     "import.meta.env.VITE_NH3D_APP_VERSION": JSON.stringify(projectVersion),
     "import.meta.env.VITE_NH3D_BUILD_COMMIT_SHA": JSON.stringify(
@@ -256,7 +295,7 @@ export default defineConfig({
     "import.meta.env.VITE_NH3D_WASM_SLASHEM_HAS_CHECKPOINT_RESUME_BRIDGE":
       JSON.stringify(slashemHasCheckpointResumeBridge),
   },
-  base: isElectronBuild ? "./" : isGitHubActions ? "/nethack-3d/" : "/",
+  base: isQuestBuild ? "/" : isElectronBuild ? "./" : isGitHubActions ? "/nethack-3d/" : "/",
   server: {
     allowedHosts: true,
     ...(enableCrossOriginIsolation

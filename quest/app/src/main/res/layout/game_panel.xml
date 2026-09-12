@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@android:color/transparent">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="64dp"
+        android:gravity="center_vertical" android:paddingHorizontal="12dp"
+        android:orientation="horizontal" android:background="#EE10151C">
+        <Button android:id="@+id/open_probe" android:layout_width="100dp" android:layout_height="56dp" android:text="@string/probe_button" />
+        <Button android:id="@+id/open_game" android:layout_width="120dp" android:layout_height="56dp" android:text="@string/game_button" />
+        <Button android:id="@+id/reload_page" android:layout_width="100dp" android:layout_height="56dp" android:text="@string/reload_button" />
+        <Button android:id="@+id/mode_flat" android:layout_width="155dp" android:layout_height="56dp" android:text="@string/flat_mode" />
+        <Button android:id="@+id/mode_windowed" android:layout_width="170dp" android:layout_height="56dp" android:text="@string/windowed_mode" />
+        <Button android:id="@+id/mode_immersive" android:layout_width="170dp" android:layout_height="56dp" android:text="@string/immersive_mode" />
+        <Button android:id="@+id/recenter_view" android:layout_width="150dp" android:layout_height="56dp" android:text="@string/recenter_button" />
+        <TextView android:id="@+id/page_status" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:paddingStart="16dp" android:paddingEnd="8dp"
+            android:textColor="#E8EDF5" android:textSize="18sp" android:text="@string/panel_status" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/navigation_confirmation" android:layout_width="match_parent" android:layout_height="64dp"
+        android:gravity="center_vertical" android:paddingHorizontal="12dp" android:orientation="horizontal"
+        android:background="#40341F" android:visibility="gone">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="@string/confirm_navigation_message" android:textColor="#FFFFFF" android:textSize="18sp" />
+        <Button android:id="@+id/confirm_navigation" android:layout_width="160dp" android:layout_height="56dp" android:text="@string/continue_button" />
+        <Button android:id="@+id/cancel_navigation" android:layout_width="160dp" android:layout_height="56dp" android:text="@android:string/cancel" />
+    </LinearLayout>
+    <WebView android:id="@+id/game_webview" android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:focusable="true" android:focusableInTouchMode="true" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="64dp" android:gravity="center_vertical"
+        android:paddingHorizontal="12dp" android:orientation="horizontal" android:background="#EE10151C">
+        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="@string/map_move" android:textColor="#E8EDF5" android:textSize="18sp" />
+        <Button android:id="@+id/move_nw" android:layout_width="82dp" android:layout_height="56dp" android:text="NW" />
+        <Button android:id="@+id/move_n" android:layout_width="82dp" android:layout_height="56dp" android:text="N" />
+        <Button android:id="@+id/move_ne" android:layout_width="82dp" android:layout_height="56dp" android:text="NE" />
+        <Button android:id="@+id/move_w" android:layout_width="82dp" android:layout_height="56dp" android:text="W" />
+        <Button android:id="@+id/move_e" android:layout_width="82dp" android:layout_height="56dp" android:text="E" />
+        <Button android:id="@+id/move_sw" android:layout_width="82dp" android:layout_height="56dp" android:text="SW" />
+        <Button android:id="@+id/move_s" android:layout_width="82dp" android:layout_height="56dp" android:text="S" />
+        <Button android:id="@+id/move_se" android:layout_width="82dp" android:layout_height="56dp" android:text="SE" />
+        <Button android:id="@+id/game_wait" android:layout_width="110dp" android:layout_height="56dp" android:text="@string/wait_button" />
+        <Button android:id="@+id/game_inventory" android:layout_width="145dp" android:layout_height="56dp" android:text="@string/inventory_button" />
+        <Button android:id="@+id/game_escape" android:layout_width="110dp" android:layout_height="56dp" android:text="@string/back_button" />
+        <Button android:id="@+id/game_confirm" android:layout_width="125dp" android:layout_height="56dp" android:text="@string/confirm_button" />
+    </LinearLayout>
+</LinearLayout>

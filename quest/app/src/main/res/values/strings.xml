@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NetHack 3D VR</string>
+    <string name="probe_button">UI test</string>
+    <string name="game_button">Game</string>
+    <string name="reload_button">Reload</string>
+    <string name="panel_status">Windowed · Mixed reality</string>
+    <string name="flat_mode">Flat (original)</string>
+    <string name="windowed_mode">Windowed</string>
+    <string name="immersive_mode">Immersive VR</string>
+    <string name="recenter_button">Recenter</string>
+    <string name="map_move">Map move</string>
+    <string name="wait_button">Wait</string>
+    <string name="inventory_button">Inventory</string>
+    <string name="back_button">Back</string>
+    <string name="confirm_button">Confirm</string>
+    <string name="confirm_navigation_message">Save your game before leaving. An unsaved session may be lost.</string>
+    <string name="continue_button">Continue</string>
+</resources>

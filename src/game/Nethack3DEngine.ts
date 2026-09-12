@@ -96,6 +96,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       // the option-change path never fires; initialize it directly.
       this.systems.terminalRendering.enterTerminalDisplayMode();
     }
+    this.systems.questSceneExport.start();
   }
 
   private initThreeJS(): void {
@@ -1532,6 +1533,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
     this.systems.engineState.disposed = true;
+    this.systems.questSceneExport.dispose();
     this.systems.minimap.setTerminalGutterMinimapState(false, false);
 
     if (this.systems.engineState.animationFrameId !== null) {
@@ -1681,6 +1683,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.engineState.lastFrameTimeMs = timeMs;
     const deltaSeconds = Math.max(0, Math.min(rawDeltaMs, 250)) / 1000;
 
+    this.systems.questSceneExport.syncPlayMode();
     this.systems.pointerLock.syncFpsPointerLockForUiState(false);
     this.systems.controllerGameplay.updateControllerInput(deltaSeconds);
     this.systems.entityMovement.updateEntityMoveTransitions();
@@ -1714,6 +1717,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.vultureWalls.updateVultureDoorPlaneRenderOrdering();
     this.systems.vultureWalls.updateIronBarsWallPlaneVisibility();
     this.systems.camera.compensateTerminalWorldSpriteAspect();
+    this.systems.questSceneExport.update(timeMs);
+    if (this.systems.questSceneExport.usesNativeRenderer()) return;
     const shouldCollectFpsDebugStats = this.systems.fpsDiagnostics.fpsDebugDisplayVisible;
     const renderStartedAtMs = shouldCollectFpsDebugStats
       ? performance.now()
@@ -1916,6 +1921,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
   public closeInfoMenuDialog(): void {
     return this.systems.promptDialogs.closeInfoMenuDialog();
+  }
+
+  public activateQuestTile(x: number, y: number): boolean {
+    return this.systems.mouseInput.activateQuestTile(x, y);
   }
 
   public sendInput(

@@ -1,5 +1,11 @@
 node_modules/
 dist/
+dist-quest/
+quest/.gradle/
+quest/.kotlin/
+quest/build/
+quest/app/build/
+quest/local.properties
 release/
 third_party/
 android/.gradle/
@@ -7,3 +13,5 @@ android/build/
 android/app/build/
 android/local.properties
 build/linux-libs/
+
+.wired-dev/

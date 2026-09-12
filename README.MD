@@ -92,6 +92,8 @@ Launch it from your Home Screen for a web app fullscreen experience.
 
 ## Run Locally
 
+An experimental, fully bundled Quest UI proof and the staged VR port design are documented in [Quest VR implementation plan](docs/quest-vr-plan.md). The Quest app now includes [Windowed MR and Immersive stereo modes](docs/quest-stereo-vr.md) with the existing HTML UI in a floating panel; the new stereo renderer awaits device validation. For PC-rendered headset testing without APK rebuilds, use [wired VR development](docs/quest-wired-development.md) (`npm run quest:wired`).
+
 1. `npm i`
 2. `npm run dev`
 3. Open `http://localhost:5173/`

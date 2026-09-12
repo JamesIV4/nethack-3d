@@ -118,6 +118,7 @@ export interface MouseInputDependencies {
   readonly positionSelection: Pick<
     PositionSelection,
     "handleFarLookPositionPointerSelection"
+    | "handleFarLookPositionTileSelection"
     | "isFarLookPositionInputMode"
     | "positionCursor"
     | "positionInputModeActive"
@@ -323,16 +324,34 @@ export class MouseInput {
       return false;
     }
 
-    if (event.button === 0 && !this.dependencies.playerMovement.hasPlayerMovedOnce) {
+    return this.activateMapTileTarget(target, event.button, "mouse-primary");
+  }
+
+  /** Native rays arrive as tiles; the ordinary UI/prompt gates still apply. */
+  activateQuestTile(x: number, y: number): boolean {
+    if (!Number.isInteger(x) || !Number.isInteger(y) ||
+        !this.dependencies.engineState.session || this.dependencies.promptDialogs.isUiInputBlocked() ||
+        this.dependencies.promptDialogs.isAnyModalVisible() || this.dependencies.questionMenus.isInQuestion ||
+        this.dependencies.directionPrompts.isInDirectionQuestion || this.dependencies.extendedCommands.metaCommandModeActive) {
+      return false;
+    }
+    const tile = this.dependencies.tileRendering.tileMap.get(x + "," + y);
+    if (!tile || !tile.visible) return false;
+    if (this.dependencies.positionSelection.handleFarLookPositionTileSelection(x, y, "quest-ray")) return true;
+    return this.activateMapTileTarget({ x, y }, 0, "quest-ray");
+  }
+
+  private activateMapTileTarget(target: { x: number; y: number }, button: number, source: string): boolean {
+    if (button === 0 && !this.dependencies.playerMovement.hasPlayerMovedOnce) {
       this.dependencies.movementInput.lastMovementInputAtMs = Date.now();
     }
 
-    if (event.button === 0) {
+    if (button === 0) {
       this.dependencies.combatAttribution.updateDirectionalAttackContextFromTarget(target.x, target.y);
       this.dependencies.combatAttribution.setPendingPointerAttackTargetFromTile(target.x, target.y);
     }
-    this.dependencies.engineMessages.logClickLookTileDebug("mouse-primary", target.x, target.y);
-    this.dependencies.inputCommands.sendMouseInput(target.x, target.y, event.button);
+    this.dependencies.engineMessages.logClickLookTileDebug(source, target.x, target.y);
+    this.dependencies.inputCommands.sendMouseInput(target.x, target.y, button);
     return true;
   }
 

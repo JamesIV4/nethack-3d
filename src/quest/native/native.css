@@ -1,0 +1,13 @@
+/* Preserve the mounted UI and source scene; native stereo replaces only pixels
+   from the flat dungeon canvas after the first scene is accepted by Android. */
+:root.nh3d-quest-stereo-active,
+:root.nh3d-quest-stereo-active body,
+:root.nh3d-quest-stereo-active #root,
+:root.nh3d-quest-stereo-active .nh3d-canvas-root {
+  /* The engine sets an inline background on its mount; it must not mask native geometry. */
+  background: transparent !important;
+}
+:root.nh3d-quest-stereo-active .nh3d-canvas-root > canvas {
+  visibility: hidden;
+  pointer-events: none;
+}

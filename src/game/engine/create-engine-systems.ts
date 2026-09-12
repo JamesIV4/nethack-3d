@@ -16,6 +16,7 @@ import { HeldWeaponAnimationDebug } from "./diagnostics/held-weapon-animation-de
 import { VultureProjectionDebug } from "./diagnostics/vulture-projection-debug";
 import { Lighting } from "./rendering/lighting";
 import { RenderPipeline } from "./rendering/render-pipeline";
+import { QuestSceneExport } from "./rendering/quest-scene-export-system";
 import { BloodGround } from "./effects/blood-ground";
 import { TilesetAssets } from "./rendering/tileset-assets";
 import { VultureProjection } from "./rendering/vulture-projection";
@@ -75,6 +76,7 @@ export interface EngineSystems {
   readonly vultureProjectionDebug: VultureProjectionDebug;
   readonly lighting: Lighting;
   readonly renderPipeline: RenderPipeline;
+  readonly questSceneExport: QuestSceneExport;
   readonly bloodGround: BloodGround;
   readonly tilesetAssets: TilesetAssets;
   readonly vultureProjection: VultureProjection;
@@ -855,7 +857,17 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get renderPipeline() { return renderPipeline; },
     get tileRendering() { return tileRendering; },
   });
+  const questSceneExport = new QuestSceneExport({
+    coordinator,
+    get camera() { return camera; },
+    get engineState() { return engineState; },
+    get lighting() { return lighting; },
+    get playerMovement() { return playerMovement; },
+    get renderPipeline() { return renderPipeline; },
+    get terminalRendering() { return terminalRendering; },
+  });
   return {
+    questSceneExport,
     levelTerrainCache,
     darkCorridorInference,
     minimap,
