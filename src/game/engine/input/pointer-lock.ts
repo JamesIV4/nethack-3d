@@ -112,6 +112,7 @@ export class PointerLock {
   }
 
   syncFpsPointerLockForUiState(tryAcquire: boolean): void {
+    if (document.documentElement.classList.contains("nh3d-webxr-active")) return;
     if (!this.dependencies.movementInput.isFpsMode()) {
       return;
     }

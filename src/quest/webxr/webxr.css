@@ -1,0 +1,11 @@
+:root.nh3d-webxr-active,
+:root.nh3d-webxr-active body,
+:root.nh3d-webxr-active #root,
+:root.nh3d-webxr-active .nh3d-canvas-root {
+  background: transparent !important;
+}
+:root.nh3d-webxr-active .nh3d-canvas-root > canvas {
+  visibility: hidden;
+  pointer-events: none;
+}
+:root.nh3d-webxr-active .nh3d-fps-crosshair { display: none; }

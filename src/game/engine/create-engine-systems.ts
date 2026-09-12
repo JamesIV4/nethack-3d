@@ -16,6 +16,7 @@ import { HeldWeaponAnimationDebug } from "./diagnostics/held-weapon-animation-de
 import { VultureProjectionDebug } from "./diagnostics/vulture-projection-debug";
 import { Lighting } from "./rendering/lighting";
 import { RenderPipeline } from "./rendering/render-pipeline";
+import { WebXrPresentation } from "./rendering/webxr-presentation";
 import { QuestSceneExport } from "./rendering/quest-scene-export-system";
 import { BloodGround } from "./effects/blood-ground";
 import { TilesetAssets } from "./rendering/tileset-assets";
@@ -77,6 +78,7 @@ export interface EngineSystems {
   readonly lighting: Lighting;
   readonly renderPipeline: RenderPipeline;
   readonly questSceneExport: QuestSceneExport;
+  readonly webXrPresentation: WebXrPresentation;
   readonly bloodGround: BloodGround;
   readonly tilesetAssets: TilesetAssets;
   readonly vultureProjection: VultureProjection;
@@ -857,6 +859,13 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get renderPipeline() { return renderPipeline; },
     get tileRendering() { return tileRendering; },
   });
+  const webXrPresentation = new WebXrPresentation({
+    get camera() { return camera; },
+    get engineState() { return engineState; },
+    get playerMovement() { return playerMovement; },
+    get renderPipeline() { return renderPipeline; },
+    get heldWeapon() { return heldWeapon; },
+  });
   const questSceneExport = new QuestSceneExport({
     coordinator,
     get camera() { return camera; },
@@ -868,6 +877,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
   });
   return {
     questSceneExport,
+    webXrPresentation,
     levelTerrainCache,
     darkCorridorInference,
     minimap,

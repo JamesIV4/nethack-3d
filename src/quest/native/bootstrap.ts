@@ -14,7 +14,7 @@ function editable(element: Element | null): boolean {
     (element.isContentEditable || element.matches("input:not([type=button]):not([type=submit]):not([type=checkbox]):not([type=radio]):not([type=range]), textarea, select"));
 }
 
-function dispatchQuestKey(key: string): void {
+export function dispatchQuestKey(key: string): void {
   const target = document.activeElement instanceof HTMLElement ? document.activeElement : document.body;
   const down = new KeyboardEvent("keydown", { key, code: key === " " ? "Space" : key, bubbles: true, cancelable: true });
   target.dispatchEvent(down);

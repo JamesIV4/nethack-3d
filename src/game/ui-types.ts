@@ -289,6 +289,7 @@ export type TilesetWeaponSpriteFlipXByTileset = Record<string, boolean>;
 export type Nh3dClientOptions = {
   locale: SupportedLocale;
   fpsMode: boolean;
+  vrPassthrough: boolean;
   fpsFov: number;
   fpsLookSensitivityX: number;
   fpsLookSensitivityY: number;
@@ -443,6 +444,7 @@ const isMobile = window.matchMedia("(pointer: coarse)");
 export const defaultNh3dClientOptions: Nh3dClientOptions = {
   locale: resolveSystemLocale(),
   fpsMode: false,
+  vrPassthrough: false,
   fpsFov: isMobilePortrait.matches ? 95 : 62,
   fpsLookSensitivityX: isMobile.matches ? 1.5 : 1,
   fpsLookSensitivityY: isMobile.matches ? 1.5 : 1,
@@ -1133,6 +1135,7 @@ export function normalizeNh3dClientOptions(
         : resolveDefaultNh3dTilesetWeaponSpriteFlipX(tilesetPath);
   return {
     locale,
+    vrPassthrough: typeof overrides?.vrPassthrough === "boolean" ? overrides.vrPassthrough : false,
     fpsMode: constrainFpsModeForTilesetMode(
       typeof overrides?.fpsMode === "boolean"
         ? overrides.fpsMode

@@ -1,3 +1,4 @@
+import { QuestWebXrButton } from "../../../quest/webxr/QuestWebXrControls";
 import type { Nh3dClientOptions, InventoryDialogState, Nethack3DEngineController } from "../../../game/ui-types";
 import type * as React from "react";
 import {
@@ -37,6 +38,7 @@ export function DesktopActions({
   return (
     isDesktopGameRunning && !clientOptions.controllerEnabled ? (
       <div className="nh3d-desktop-bottom-actions">
+        <QuestWebXrButton />
         {wizardCommandsSupported ? (
           <button
             className={`nh3d-desktop-bottom-button${isWizardCommandsVisible ? " is-active" : ""

@@ -1,5 +1,7 @@
 # Wired headset development
 
+> For the new direct Three.js renderer and live HTML-pane proof, see [quest-webxr-runtime.md](quest-webxr-runtime.md). This document describes the earlier experiment.
+
 Use this workflow for **PC-rendered VR through Quest Link or a compatible OpenXR headset/runtime**. It runs the existing HTML UI on the PC and needs no APK rebuild for web changes. The standalone Quest project is still the final packaged target; the wired preview does not validate Android WebView performance or Quest's native keyboard.
 
 ## Run

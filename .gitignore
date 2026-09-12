@@ -15,3 +15,6 @@ android/local.properties
 build/linux-libs/
 
 .wired-dev/
+
+# Pinned WebXR runtime checkout and native build dependencies
+quest/runtime/

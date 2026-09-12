@@ -174,3 +174,16 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 - Generated runtime catalogs (fallback/reference data): `src/game/glyphs/glyph-catalog.367.generated.ts`, `src/game/glyphs/glyph-catalog.5.generated.ts`, `src/game/glyphs/glyph-catalog.slashem.generated.ts`, `src/game/tilesets.generated.ts`, `src/game/vulture/vulture-monster-keys.367.generated.ts`.
 - Update flow: `src/update/*` plus the UI in `src/ui/app/updates/`.
 - Startup options and checkpoint recovery: `src/runtime/startup-init-options.ts`, `src/runtime/runtime-capabilities.ts`, and `src/storage/client-options-storage.ts`.
+
+
+## Direct Quest WebXR proof
+
+- `src/game/engine/rendering/webxr-presentation.ts` and `webxr-rig.ts`: original Three.js scene rendered through WebXR; camera-space conversion, tabletop/FPS placement, lifecycle and restoration.
+- `src/quest/webxr/`: in-game XR entry/settings, controller routing, and the wired HTML pane.
+- `scripts/quest/webxr/`: isolated Chrome wired host, pinned browser/host source patches, and standalone runtime preparation.
+- `quest/webxr/host/`: bundled asset host code injected into the owned Wolvic checkout.
+- `quest/runtime/`: ignored external runtime checkout and native build dependencies.
+- `BuildQuestWebXrApk.bat`: separate fully bundled WebXR proof workflow; dependency preflight precedes build work.
+- `docs/quest-webxr-runtime.md`: authoritative proof setup and validation limits. The earlier Meta Spatial scene mirror is not the architecture for new VR world work.
+
+The engine uses `renderer.setAnimationLoop` for both regular browser and WebXR frames. Keep XR session setup after engine assembly/UI initialization, and keep the source world/materials intact. The HTML compositor is the host-specific integration; do not reintroduce a native reconstruction of Three.js geometry.

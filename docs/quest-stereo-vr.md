@@ -1,5 +1,7 @@
 # Quest stereo VR
 
+> For the new direct Three.js renderer and live HTML-pane proof, see [quest-webxr-runtime.md](quest-webxr-runtime.md). This document describes the earlier experiment.
+
 The user confirmed that the standalone APK UI test works on the headset. The next APK adds native stereo dungeon geometry while retaining that same WebView UI and authoritative NetHack worker. The stereo implementation is new and still needs an APK build and headset validation.
 
 ## Rendering repair (0.2.1)

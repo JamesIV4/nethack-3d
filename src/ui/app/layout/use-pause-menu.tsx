@@ -1,3 +1,4 @@
+import { QuestWebXrButton } from "../../../quest/webxr/QuestWebXrControls";
 import AnimatedDialog from "../../modals/AnimatedDialog";
 import type * as React from "react";
 import {
@@ -106,6 +107,7 @@ export function usePauseMenu(dependencies: UsePauseMenuDependencies) {
                 >
                   {t.dialogs.pauseMenu.resume}
                 </button>
+                <QuestWebXrButton className="nh3d-choice-button" />
                 <button
                   className="nh3d-choice-button"
                   onClick={openClientOptionsDialog}

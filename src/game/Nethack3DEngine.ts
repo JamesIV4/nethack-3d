@@ -97,6 +97,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.systems.terminalRendering.enterTerminalDisplayMode();
     }
     this.systems.questSceneExport.start();
+    this.systems.webXrPresentation.start();
   }
 
   private initThreeJS(): void {
@@ -251,7 +252,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     );
 
     // Start render loop
-    this.animate();
+    this.systems.renderPipeline.renderer.setAnimationLoop(this.systems.engineState.animateFrameCallback);
   }
 
   private applyPlayMode(nextPlayMode: PlayMode): void {
@@ -1533,6 +1534,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
     this.systems.engineState.disposed = true;
+    this.systems.renderPipeline.renderer.setAnimationLoop(null);
+    this.systems.webXrPresentation.dispose();
     this.systems.questSceneExport.dispose();
     this.systems.minimap.setTerminalGutterMinimapState(false, false);
 
@@ -1674,8 +1677,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (this.systems.engineState.disposed) {
       return;
     }
-    this.systems.engineState.animationFrameId = requestAnimationFrame(this.systems.engineState.animateFrameCallback);
-    if (this.systems.fpsDiagnostics.shouldSkipFrameForFpsDebugOverride(timeMs)) {
+    if (!this.systems.webXrPresentation.active && this.systems.fpsDiagnostics.shouldSkipFrameForFpsDebugOverride(timeMs)) {
       return;
     }
     const rawDeltaMs =
@@ -1684,11 +1686,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const deltaSeconds = Math.max(0, Math.min(rawDeltaMs, 250)) / 1000;
 
     this.systems.questSceneExport.syncPlayMode();
+    this.systems.webXrPresentation.updateCamera();
+    this.systems.webXrPresentation.updateInput(timeMs);
     this.systems.pointerLock.syncFpsPointerLockForUiState(false);
     this.systems.controllerGameplay.updateControllerInput(deltaSeconds);
     this.systems.entityMovement.updateEntityMoveTransitions();
     this.systems.camera.updateCameraPanInertia(deltaSeconds);
-    this.systems.camera.updateCamera(deltaSeconds);
+    if (!this.systems.webXrPresentation.updateCamera()) this.systems.camera.updateCamera(deltaSeconds);
     this.systems.promptDialogs.maybeRequestPendingStartupInventoryRefresh();
     this.systems.heldWeapon.syncFpsHeldWeaponSprite(deltaSeconds);
     this.systems.entityBillboards.updateMonsterBillboardPitchLockState();
@@ -1717,6 +1721,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.vultureWalls.updateVultureDoorPlaneRenderOrdering();
     this.systems.vultureWalls.updateIronBarsWallPlaneVisibility();
     this.systems.camera.compensateTerminalWorldSpriteAspect();
+    if (this.systems.webXrPresentation.render()) return;
     this.systems.questSceneExport.update(timeMs);
     if (this.systems.questSceneExport.usesNativeRenderer()) return;
     const shouldCollectFpsDebugStats = this.systems.fpsDiagnostics.fpsDebugDisplayVisible;

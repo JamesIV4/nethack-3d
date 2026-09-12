@@ -1,5 +1,7 @@
 # Quest VR
 
+> The new direct Three.js WebXR proof is documented in [quest-webxr-runtime.md](../docs/quest-webxr-runtime.md). Use `quest:webxr:wired` for that test path. This document describes the earlier Meta Spatial experiment.
+
 This isolated Android application hosts the bundled game in a WebView on a native immersive compositor panel. Start with [the implementation plan and headset acceptance checklist](../docs/quest-vr-plan.md). The game now opens first. The toolbar switches between Windowed MR and Immersive VR while preserving the running game. See [stereo modes and validation](../docs/quest-stereo-vr.md); the original UI probe remains available under UI test.
 
 The app is `com.nethack3d.quest.uiproof`, labeled **NetHack 3D VR**. Its game assets come only from `app/build/generated/gameAssets/game/`, populated by the repository's Quest staging script. The manifest removes the Internet permission, and both normal WebView requests and service-worker requests resolve against the APK through `BundledGameContent`. Its HTTPS asset origin is virtual; there is no HTTP server or remote game host.

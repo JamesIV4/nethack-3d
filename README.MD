@@ -1,5 +1,7 @@
 # NetHack 3D
 
+Quest VR development: the [direct Three.js WebXR runtime proof](docs/quest-webxr-runtime.md) uses the original game renderer with a floating HTML UI. Run `npm.cmd run quest:webxr:wired` to test with Quest Link; the standalone host has additional runtime prerequisites.
+
 NetHack 3D lets you play classic NetHack in a fully interactive 3D dungeon.
 
 Play in browser: https://jamesiv4.github.io/nethack-3d/

@@ -122,6 +122,12 @@ export const clientOptionsConfig: ClientOption[] = [
     type: "boolean",
   },
   {
+    key: "vrPassthrough",
+    label: "Mixed reality in VR",
+    description: "Show your room around the board or dungeon. Takes effect the next time you enter VR.",
+    type: "boolean",
+  },
+  {
     key: "fpsFlattenEntityBillboards",
     label: t.clientOptions.config.fpsFlattenEntityBillboards.label,
     description: t.clientOptions.config.fpsFlattenEntityBillboards.description,

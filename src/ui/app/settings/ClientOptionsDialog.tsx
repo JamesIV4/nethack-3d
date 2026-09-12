@@ -1,3 +1,5 @@
+import { QuestWebXrSettings } from "../../../quest/webxr/QuestWebXrControls";
+import { getWebXrState } from "../../../quest/webxr/presentation";
 import { ClientOptionsUpdates } from "./ClientOptionsUpdates";
 import { ClientOptionToggleControl } from "./ClientOptionToggleControl";
 import { ClientOptionSelectControl } from "./ClientOptionSelectControl";
@@ -219,7 +221,9 @@ export function ClientOptionsDialog({
                 checkForUpdatesFromOptions={checkForUpdatesFromOptions}
                 openGitHubReleases={openGitHubReleases}
               />) : null}
+              {selectedClientOptionsTab.id === "display" ? <QuestWebXrSettings /> : null}
               {visibleClientOptions.map((option) => {
+                if (option.key === "vrPassthrough" && !getWebXrState().host) return null;
                 if (option.developerOnly && !showDeveloperClientSettings) {
                   return null;
                 }

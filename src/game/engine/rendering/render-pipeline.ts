@@ -77,6 +77,7 @@ export class RenderPipeline {
   };
 
   updateRendererResolution(): void {
+    if (this.renderer.xr.isPresenting) return;
     const viewport = this.getRendererViewportSize();
     const pixelRatio = THREE.MathUtils.clamp(
       window.devicePixelRatio || 1,

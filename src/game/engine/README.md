@@ -94,3 +94,12 @@ This directory contains the browser engine's state and presentation logic. It do
 - For behavior changes, exercise the affected browser flow: movement and player rendering, inventory/direction prompts, far-look enter/exit, relevant display modes, and cleanup/restart.
 
 Follow the repository's [agent guidance](../../../.agents/rules/AGENTS.md); agents do not run build or packaging validation unless explicitly requested.
+
+
+## Direct WebXR runtime proof
+
+The engine frame is scheduled through Three.js `renderer.setAnimationLoop`, with `null` on disposal. In normal play it runs at the browser cadence; in WebXR it uses headset frame timing. `WebXrPresentation` starts after engine/UI initialization. It transforms tracked cameras into the original game coordinate system, supplies the tracked pose to existing billboard/aim/light systems, and renders the same scene directly. It does not invoke the native scene exporter.
+
+The first-person option remains authoritative. Tabletop bounds use GPU clipping planes, while first-person rendering surrounds the player. The subsystem owns its tracking rig, board surface, controllers, session cleanup and restoration of flat camera/clear state. Its scene additions are separate from tile-owned resources cleared on level changes.
+
+`src/quest/webxr/` owns in-game VR controls, controller command routing and the wired-only HTML capture pane. The standalone host integration is a pinned Wolvic/Chromium patch under `scripts/quest/webxr/` and `quest/webxr/`; the checkout/build dependencies under `quest/runtime/` are ignored. Read [the runtime proof guide](../../../docs/quest-webxr-runtime.md) before changing rendering or compositor ownership. The legacy Meta Spatial exporter remains an earlier experiment.
