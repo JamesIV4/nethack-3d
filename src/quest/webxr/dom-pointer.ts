@@ -1,4 +1,4 @@
-const controls = "button,a[href],input,textarea,select,label,summary,canvas,[tabindex]:not([tabindex='-1']),[role=button],[role=slider],[contenteditable=true],[data-xr-ui]";
+const controls = "button,a[href],input,textarea,select,label,summary,canvas,#stats-bar,#game-log,[tabindex]:not([tabindex='-1']),[role=button],[role=slider],[contenteditable=true],[data-xr-ui]";
 const surfaces = ".nh3d-dialog.is-visible,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible";
 
 export function uiHitRectangles(): number[] {

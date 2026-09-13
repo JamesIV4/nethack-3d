@@ -328,15 +328,25 @@ export class MouseInput {
   }
 
   /** Native rays arrive as tiles; the ordinary UI/prompt gates still apply. */
-  activateQuestTile(x: number, y: number): boolean {
+  activateQuestTile(x: number, y: number, secondary = false): boolean {
     if (!Number.isInteger(x) || !Number.isInteger(y) ||
         !this.dependencies.engineState.session || this.dependencies.promptDialogs.isUiInputBlocked() ||
         this.dependencies.promptDialogs.isAnyModalVisible() || this.dependencies.questionMenus.isInQuestion ||
         this.dependencies.directionPrompts.isInDirectionQuestion || this.dependencies.extendedCommands.metaCommandModeActive) {
       return false;
     }
+    if (secondary && this.dependencies.positionSelection.positionInputModeActive) return false;
+    if (secondary && this.dependencies.movementInput.isFpsMode()) {
+      if (this.dependencies.tileContextActions.fpsCrosshairContextMenuOpen) this.dependencies.tileContextActions.closeFpsCrosshairContextMenu(true);
+      else this.dependencies.tileContextActions.openFpsCrosshairContextMenu();
+      return true;
+    }
     const tile = this.dependencies.tileRendering.tileMap.get(x + "," + y);
     if (!tile || !tile.visible) return false;
+    if (secondary) {
+      this.dependencies.tileContextActions.openNormalTileContextMenuAtTarget({ key: `${x},${y}`, x, y, mesh: tile });
+      return true;
+    }
     if (this.dependencies.positionSelection.handleFarLookPositionTileSelection(x, y, "quest-ray")) return true;
     return this.activateMapTileTarget({ x, y }, 0, "quest-ray");
   }

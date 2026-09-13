@@ -1934,8 +1934,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
     return this.systems.promptDialogs.closeInfoMenuDialog();
   }
 
-  public activateQuestTile(x: number, y: number): boolean {
-    return this.systems.mouseInput.activateQuestTile(x, y);
+  public activateQuestTile(x: number, y: number, secondary = false): boolean {
+    return this.systems.mouseInput.activateQuestTile(x, y, secondary);
+  }
+  public runQuestDirection(direction: string): void {
+    this.systems.inputCommands.sendForcedDirectionalInput(direction);
   }
 
   public sendInput(

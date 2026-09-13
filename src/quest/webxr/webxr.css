@@ -9,6 +9,15 @@
   pointer-events: none;
 }
 :root.nh3d-webxr-active .nh3d-fps-crosshair { display: none; }
+:root.nh3d-webxr-active .floating-message-container,
+:root.nh3d-webxr-active .nh3d-mobile-log-collapsed {
+  left: 0;
+  right: auto;
+  width: 32vw;
+  max-width: 32vw;
+  transform: none;
+}
+:root.nh3d-webxr-active .floating-message-text { max-width: 100%; }
 .nh3d-xr-pointer {
   position: fixed;
   z-index: 2147483647;

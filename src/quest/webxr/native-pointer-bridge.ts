@@ -1,11 +1,16 @@
 import * as THREE from "three";
 import { uiHitRectangles } from "./dom-pointer";
+import { tableUiPanes, type UiPane } from "./table-ui-layout";
 
 let nextAnchor = 0;
 /** Sends UI regions and hit distances only. Wolvic owns pointer rendering and HTML input. */
 export class NativePointerBridge {
   private revision = ++nextAnchor;
   private rects: number[] = [];
+  private panes: UiPane[] = [];
+  private firstPerson = false;
+  private pitch = Math.PI / 4;
+  private boardY = -0.65;
   private dirty = true;
   private pending = false;
   private disposed = false;
@@ -21,6 +26,10 @@ export class NativePointerBridge {
     document.addEventListener("scroll", this.resized, { capture: true, signal: this.abort.signal });
   }
   recenter(): void { this.revision = ++nextAnchor; }
+  setBoard(firstPerson: boolean, pitch: number, boardY: number): void {
+    if (this.firstPerson !== firstPerson) this.dirty = true;
+    this.firstPerson = firstPerson; this.pitch = pitch; this.boardY = boardY;
+  }
   hit(hand: XRHandedness, ray: THREE.Ray, point: THREE.Vector3 | null, normal: THREE.Vector3, aim: THREE.Matrix4): void {
     const index = hand === "left" ? 0 : hand === "right" ? 4 : -1;
     if (index < 0) return;
@@ -32,11 +41,12 @@ export class NativePointerBridge {
   forget(hand: XRHandedness): void { if (hand === "left") this.hits[0] = -1; if (hand === "right") this.hits[4] = -1; }
   update(time: number): void {
     if (this.pending || this.disposed || time - this.lastSend < 1000 / 30) return;
-    if (this.dirty) { this.rects = uiHitRectangles(); this.dirty = false; }
-    const body = JSON.stringify([this.revision, this.rects.length / 4, ...this.hits, ...this.rects]);
+    if (this.dirty) { this.rects = uiHitRectangles(); this.panes = tableUiPanes(this.firstPerson, this.rects); this.dirty = false; }
+    const body = JSON.stringify([this.revision, this.rects.length / 4, ...this.hits,
+      this.firstPerson ? 1 : 0, this.pitch, this.boardY, this.panes.length, ...this.rects, ...this.panes.flat()]);
     if (body === this.lastBody) return;
     this.pending = true; this.lastSend = time;
-    void fetch("/__xr/native-pointer", { method: "POST", headers: { "Content-Type": "application/json" }, body, signal: this.abort.signal })
+    void fetch("/__xr/table-ui", { method: "POST", headers: { "Content-Type": "application/json" }, body, signal: this.abort.signal })
       .then((response) => { if (!response.ok) throw new Error("Native pointer bridge: " + response.status); this.lastBody = body; })
       .catch((error) => { if (!this.disposed) console.warn(error); })
       .finally(() => { this.pending = false; });

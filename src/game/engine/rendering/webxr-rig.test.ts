@@ -9,6 +9,17 @@ function near(actual: THREE.Vector3, expected: THREE.Vector3): void {
   expect(actual.distanceTo(expected)).toBeLessThan(0.00001);
 }
 describe("direct WebXR tracking rig", () => {
+  it("snap-turns right by 45 degrees without translating a room-scale viewer", () => {
+    const viewer = anchor.clone().add(new THREE.Vector3(0.3, 0, 0.2));
+    const before = createTrackingToGame("first-person", player, anchor, heading, 1, 0.62);
+    const rotated = new THREE.Vector3(anchor.x - viewer.x, 0, anchor.z - viewer.z)
+      .applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 4);
+    const nextAnchor = new THREE.Vector3(viewer.x + rotated.x, anchor.y, viewer.z + rotated.z);
+    const after = createTrackingToGame("first-person", player, nextAnchor, heading, 1, 0.62, 0, Math.PI / 4);
+    near(viewer.clone().applyMatrix4(before.matrix), viewer.clone().applyMatrix4(after.matrix));
+    const facing = new THREE.Vector3(0, 0, -1).transformDirection(after.matrix);
+    expect(facing.x).toBeCloseTo(Math.SQRT1_2); expect(facing.y).toBeCloseTo(Math.SQRT1_2);
+  });
   it("raises the far edge of the board at a 45 degree pitch", () => {
     const rig = createTrackingToGame("tabletop", player, anchor, heading, 1, 0.62, Math.PI / 4);
     const world = rig.matrix.clone().invert();

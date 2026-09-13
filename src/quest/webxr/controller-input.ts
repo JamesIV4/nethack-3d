@@ -5,6 +5,7 @@ import { routeQuestCommand, type QuestNativeCommand } from "../native/input";
 import type { HtmlUiPanel, UiHit } from "./html-ui-panel";
 import type { BoardTilt } from "./board-tilt";
 import { withoutWorldClipping } from "./overlay-material";
+import { SnapTurnLatch, WorldClickGesture } from "./controller-gestures";
 
 function command(value: QuestNativeCommand): void {
   routeQuestCommand(value, useGameStore.getState(), {
@@ -38,25 +39,32 @@ interface PointerState {
   capture: "ui" | "tilt" | "world" | null;
   ui: UiHit | null; ring: THREE.Vector3 | null; world: THREE.Intersection | null;
   buttons: boolean[];
+  gesture: WorldClickGesture;
+  pressedTile: { x: number; y: number } | null;
 }
 export class WebXrControllerInput {
   private readonly pointers = new Map<XRInputSource, PointerState>();
   private nextId = 1;
   private nextMove = 0;
+  private readonly snap = new SnapTurnLatch();
+  private clock = 0;
   private readonly caster = new THREE.Raycaster();
   private readonly pickCamera = new THREE.PerspectiveCamera();
   private readonly inverse = new THREE.Matrix4();
   private readonly selectStart = (event: XRInputSourceEvent): void => {
+    this.clock = performance.now();
     const state = this.state(event.inputSource);
     this.refresh(state, event.frame); state.trigger = true; this.pressState(state);
   };
   private readonly selectEnd = (event: XRInputSourceEvent): void => {
+    this.clock = performance.now();
     const state = this.pointers.get(event.inputSource);
     if (state) { this.refresh(state, event.frame); state.trigger = false; this.pressState(state); }
   };
   constructor(private readonly session: XRSession, private readonly renderer: THREE.WebGLRenderer,
     private readonly scene: THREE.Scene, private readonly root: THREE.Group, private readonly tileSize: number,
-    private readonly panel: () => HtmlUiPanel | null, private readonly tilt: BoardTilt) {
+    private readonly panel: () => HtmlUiPanel | null, private readonly tilt: BoardTilt,
+    private readonly onSnapTurn: (direction: -1 | 1) => void = () => {}) {
     if (!panel()?.native) {
       session.addEventListener("selectstart", this.selectStart);
       session.addEventListener("selectend", this.selectEnd);
@@ -74,7 +82,7 @@ export class WebXrControllerInput {
       this.root.add(line, circle);
     }
     state = { source, id: this.nextId++, ray: new THREE.Ray(), line, circle, trigger: false, a: false,
-      down: false, tracked: false, capture: null, ui: null, ring: null, world: null, buttons: [] };
+      down: false, tracked: false, capture: null, ui: null, ring: null, world: null, buttons: [], gesture: new WorldClickGesture(), pressedTile: null };
     this.pointers.set(source, state);
     return state;
   }
@@ -137,28 +145,38 @@ export class WebXrControllerInput {
     if (!down) {
       if (state.capture === "ui") this.panel()?.release(state.source, state.ui);
       if (state.capture === "tilt") this.tilt.end(state.source);
+      if (state.capture === "world") {
+        const click = state.gesture.release(this.clock);
+        if (click) this.worldClick(state, click === "secondary");
+      }
       state.capture = null; return;
     }
     if (!state.tracked) return;
     if (state.ui) { state.capture = "ui"; this.panel()?.press(state.source, state.ui, state.id); return; }
     // A world press has the same focus transition as clicking outside an HTML control.
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    if (state.source.handedness === "left") { state.capture = "world"; return; }
     if (state.ring) { state.capture = "tilt"; this.tilt.begin(state.source, state.ray); return; }
     state.capture = "world";
     // A remains the normal confirm key when the UI or tilt handle does not own it.
     if (state.a && !state.trigger) { command({ type: "key", key: "Enter" }); return; }
     const hit = state.world;
-    if (!hit) return;
     let tile: { x: number; y: number } | null = null;
-    for (let object: THREE.Object3D | null = hit.object; object; object = object.parent) {
+    for (let object: THREE.Object3D | null = hit?.object ?? null; object; object = object.parent) {
       if (Number.isSafeInteger(object.userData.tileX) && Number.isSafeInteger(object.userData.tileY)) {
         tile = { x: object.userData.tileX as number, y: object.userData.tileY as number }; break;
       }
     }
-    tile ??= { x: Math.round(hit.point.x / this.tileSize), y: Math.round(-hit.point.y / this.tileSize) };
-    command({ type: "tile", ...tile });
+    if (hit) tile ??= { x: Math.round(hit.point.x / this.tileSize), y: Math.round(-hit.point.y / this.tileSize) };
+    state.pressedTile = tile;
+    state.gesture.press(this.clock);
+  }
+  private worldClick(state: PointerState, secondary: boolean): void {
+    if (!state.pressedTile && !secondary) return;
+    command({ type: "tile", ...(state.pressedTile ?? { x: 0, y: 0 }), ...(secondary ? { secondary: true } : {}) });
   }
   update(time: number, forward: THREE.Vector3 | null): void {
+    this.clock = time;
     const frame = this.renderer.xr.getFrame();
     if (this.session.visibilityState !== "visible" || !frame) {
       for (const state of this.pointers.values()) {
@@ -169,6 +187,11 @@ export class WebXrControllerInput {
       return;
     }
     const active = new Set(this.session.inputSources);
+    const right = Array.from(active).find(source => source.handedness === "right");
+    const game = useGameStore.getState();
+    const turningAllowed = !!forward && !game.loadingVisible && !game.uiBlockingVisible && !game.textInput && !game.question && !game.infoMenu && !game.inventory.visible && !document.querySelector(".nh3d-dialog.is-visible,.nh3d-mobile-actions-sheet");
+    const turn = this.snap.update(right?.gamepad?.axes[2] ?? right?.gamepad?.axes[0] ?? 0, turningAllowed);
+    if (turn) this.onSnapTurn(turn);
     for (const [source, state] of this.pointers) if (!active.has(source)) this.remove(state);
     for (const source of this.session.inputSources) {
       const state = this.state(source);
@@ -179,10 +202,11 @@ export class WebXrControllerInput {
       // Keep the release state authoritative even if a runtime drops selectend.
       if (pad) state.trigger = !!buttons[0];
       state.a = source.handedness === "right" && !!buttons[4]; this.pressState(state);
+      if (state.capture === "world" && state.down && state.gesture.update(time)) this.worldClick(state, true);
       if (state.ui || state.capture === "ui" || state.capture === "tilt") continue;
       if (source.handedness === "left" && pad) {
         const direction = xrStickDirection(pad.axes[2] ?? pad.axes[0] ?? 0, pad.axes[3] ?? pad.axes[1] ?? 0, forward);
-        if (direction && time >= this.nextMove) { command({ type: "move", ...direction }); this.nextMove = time + 180; }
+        if (direction && time >= this.nextMove) { command({ type: "move", ...direction, run: state.trigger }); this.nextMove = time + 180; }
         else if (!direction) this.nextMove = 0;
         if (buttons[4] && !prior[4]) command({ type: "inventory" });
       }
@@ -191,6 +215,7 @@ export class WebXrControllerInput {
   }
   private cancel(state: PointerState): void {
     this.panel()?.forget(state.source); this.tilt.end(state.source);
+    state.gesture.cancel(); state.pressedTile = null;
     state.trigger = state.a = state.down = false; state.capture = null; state.ui = null; state.ring = null; state.world = null;
   }
   private remove(state: PointerState): void {

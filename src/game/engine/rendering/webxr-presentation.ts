@@ -48,6 +48,7 @@ export class WebXrPresentation {
   private previousClearAlpha = 1;
   private savedCamera: { position: THREE.Vector3; quaternion: THREE.Quaternion; yaw: number; pitch: number; mode: string } | null = null;
   private lastRigKey = "";
+  private viewYaw = 0;
   private needsRecenter = true;
   private host = false;
   private nativeHost = false;
@@ -148,7 +149,7 @@ export class WebXrPresentation {
       if (!this.started || this.session !== session) return;
       this.htmlPanel = new HtmlUiPanel(this.trackingRoot, this.nativeHost);
       this.input = new WebXrControllerInput(session, renderer, this.dependencies.renderPipeline.scene,
-        this.trackingRoot, TILE_SIZE, () => this.htmlPanel, this.tilt);
+        this.trackingRoot, TILE_SIZE, () => this.htmlPanel, this.tilt, direction => this.snapTurn(direction));
       this.needsRecenter = true;
       this.lastRigKey = "";
       document.documentElement.classList.add("nh3d-webxr-active");
@@ -196,6 +197,21 @@ export class WebXrPresentation {
 
   get active(): boolean { return this.session !== null && this.dependencies.renderPipeline.renderer.xr.isPresenting; }
 
+  private snapTurn(direction: -1 | 1): void {
+    if (!this.active || this.dependencies.engineState.playMode !== "fps") return;
+    const xr = this.dependencies.renderPipeline.renderer.xr;
+    const reference = xr.getReferenceSpace();
+    const pose = reference && xr.getFrame()?.getViewerPose(reference);
+    if (!pose) return;
+    const angle = direction * Math.PI / 4;
+    const pivot = new THREE.Vector3(pose.transform.position.x, 0, pose.transform.position.z);
+    const offset = new THREE.Vector3(this.anchor.x, 0, this.anchor.z).sub(pivot)
+      .applyAxisAngle(new THREE.Vector3(0, 1, 0), angle).add(pivot);
+    this.anchor.x = offset.x; this.anchor.z = offset.z;
+    this.viewYaw += angle; this.lastRigKey = "";
+    this.updateCamera();
+  }
+
   updateCamera(): boolean {
     if (!this.active) return false;
     const renderer = this.dependencies.renderPipeline.renderer;
@@ -204,6 +220,7 @@ export class WebXrPresentation {
     const pose = referenceSpace && xr.getFrame()?.getViewerPose(referenceSpace);
     if (!pose) return true;
     if (this.needsRecenter) {
+      this.viewYaw = 0;
       const { position, orientation } = pose.transform;
       this.anchor.set(position.x, position.y > 0.35 ? position.y : 1.6, position.z);
       this.orientation.set(orientation.x, orientation.y, orientation.z, orientation.w);
@@ -215,16 +232,17 @@ export class WebXrPresentation {
     const player = this.dependencies.playerMovement.playerPos;
     this.position.set(player.x * TILE_SIZE, -player.y * TILE_SIZE, 0);
     const firstPerson = this.dependencies.engineState.playMode === "fps";
-    const key = [player.x, player.y, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch].join(":");
+    const key = [player.x, player.y, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw].join(":");
     if (key !== this.lastRigKey) {
       const rig = createTrackingToGame(firstPerson ? "first-person" : "tabletop", this.position, this.anchor,
-        this.heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch);
+        this.heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw);
       rig.matrix.decompose(this.trackingRoot.position, this.trackingRoot.quaternion, this.trackingRoot.scale);
       this.trackingRoot.updateMatrixWorld(true);
       this.board.quaternion.copy(this.heading).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.tilt.pitch));
       this.board.position.copy(rig.tabletop).add(new THREE.Vector3(0, -0.027, 0).applyQuaternion(this.board.quaternion));
       this.board.visible = !firstPerson;
       this.tilt.place(rig.tabletop, this.heading, !firstPerson);
+      this.htmlPanel?.nativePointer?.setBoard(firstPerson, this.tilt.pitch, rig.tabletop.y - this.anchor.y);
       renderer.clippingPlanes = firstPerson ? [] : tabletopClippingPlanes(this.position, TILE_SIZE);
       this.dependencies.renderPipeline.scene.background = this.session?.environmentBlendMode === "opaque"
         ? new THREE.Color(0x101720) : null;

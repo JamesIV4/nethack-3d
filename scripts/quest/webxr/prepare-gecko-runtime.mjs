@@ -6,6 +6,7 @@ import { patchRuntime, runtimePaths, replaceOnce, WOLVIC_REVISION } from "./runt
 import { readGeckoArtifact, PAINT_PREFERENCE } from "./gecko-artifact.mjs";
 import { patchHostInteraction } from "./patch-host-interaction.mjs";
 import { patchWolvicPointer } from "./patch-wolvic-pointer.mjs";
+import { patchTableUi } from "./patch-table-ui.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const checkout = path.join(root, "quest/runtime/wolvic");
@@ -126,7 +127,7 @@ configurations.configureEach {
     }
 }
 android.defaultConfig {
-    versionName = "0.3.5-native-pointer"
+    versionName = "0.3.6-table-ui"
     resValue "string", "app_name", "NetHack 3D VR"
 }
 `);
@@ -152,4 +153,5 @@ writeFileSync(path.join(checkout, "local.properties"), "sdk.dir=" + sdk.replaceA
 writeFileSync(path.join(checkout, "user.properties"), "useStaticVersionCode=true\nuseDebugSigningOnRelease=true\n");
 patchHostInteraction(checkout);
 patchWolvicPointer(checkout);
+patchTableUi(checkout);
 console.log("Prepared standalone WebXR host with patched GeckoView and its matching v19 native ABI.");

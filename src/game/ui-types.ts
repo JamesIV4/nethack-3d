@@ -1377,7 +1377,8 @@ export interface Nethack3DEngineUIAdapter {
 export interface Nethack3DEngineController {
   dispose(): void;
   sendInput(input: string): void;
-  activateQuestTile(x: number, y: number): boolean;
+  activateQuestTile(x: number, y: number, secondary?: boolean): boolean;
+  runQuestDirection(direction: string): void;
   chooseDirection(directionKey: string): void;
   confirmActiveDirectionQuestion(): void;
   chooseQuestionChoice(choice: string): void;

@@ -2,7 +2,7 @@
 
 The Quest path renders the original game scene with Three.js WebXR. The native host supplies headset tracking and composites the live HTML UI over the stereo eye images. It does not export world meshes or recreate the dungeon in another renderer.
 
-Version `0.3.5-native-pointer` uses Wolvic's native pointer and UI input before and during gameplay. Three.js supplies world hit distances and normals, and renders the original game scene. The pane is world-anchored over the board. Gecko has an opt-in document transparency patch in addition to its live-painting patch. The host and browser runtime build, and source/browser checks pass; physical headset alpha and interaction alignment still need validation.
+Version `0.3.6-table-ui` splits the live HTML surface into tabletop edge panes: status at the far edge, left/right UI outside the matching edges, and bottom actions near the player. All panes share one browser texture, DOM and game instance. Modal dialogs use a center pane; first-person mode retains one anchored pane. First-person right-stick deflections snap-turn 45 degrees, LT + left stick uses the existing run mechanic, and holding RT opens the existing right-click/context action.
 
 ## Build the standalone APK
 
@@ -15,7 +15,7 @@ npm.cmd run quest:webxr:apk
 
 Sideload `quest/build/outputs/apk/nethack3d-webxr-proof-debug.apk` with Meta Quest Developer Hub. The build verifies its package ID, version, bundled NetHack runtimes, required Gecko permissions, and the custom HTML painting code and preference before copying it to that location. `quest:apk` still builds the earlier Meta Spatial experiment.
 
-The current versioned copy is `quest/build/outputs/apk/nethack3d-webxr-0.3.5-native-pointer-debug.apk`. The publisher verifies that `libxul.so` matches the staged custom Gecko binary byte for byte and prints the APK's SHA256 on every build. Sideload this copy with Meta Quest Developer Hub.
+The current versioned copy is `quest/build/outputs/apk/nethack3d-webxr-0.3.6-table-ui-debug.apk`. The publisher verifies that `libxul.so` matches the staged custom Gecko binary byte for byte and prints the APK's SHA256 on every build. Sideload this copy with Meta Quest Developer Hub.
 
 The package ID is `com.nethack3d.quest.webxrproof`, separate from the earlier app and its saves. The host serves only its bundled assets at `http://127.0.0.1:18973`. It does not depend on Quest Browser or a remote game server. A cold launch and game creation in airplane mode remain acceptance checks.
 
@@ -72,11 +72,12 @@ Leave Mixed reality in VR off for initial tests. That option requests `immersive
 
 Initial XR controls:
 
-- Trigger/pinch: click UI, grab the tilt ring, or select a game tile through transparent UI space.
-- Left stick: move; first-person movement follows tracked head direction.
+- RT: tap to select a world tile; hold for 450 ms to invoke the existing right-click/context action without an extra primary click. UI clicks and drags remain native. RT on the pitch ring grabs it.
+- Left stick: move; hold LT while moving to run through the existing run-command path. First-person movement follows the tracked head and snap-turn direction.
 - Left primary face button: inventory.
 - Right A: click the pointed UI control or grab the tilt ring; otherwise confirm.
 - Right B: back.
+- First-person right stick: 45-degree snap turns, with neutral rearming between turns. Turns pivot around the current head position.
 - Board ring: hold trigger or A and rotate around the ring on the board side to adjust pitch from 0 to 81 degrees. The default is 45 degrees, with the far edge raised. The ring radius is 18 cm, lies in the side plane around the pitch axis, and is 80% transparent when idle.
 
 Controller commands reuse the game's loading, dialog, inventory, direction, and position-selection gates. The page publishes normalized hit regions for controls, modal bodies, and UI canvases. Wolvic hit-tests them and sends its normal native mouse/touch/scroll events to Gecko. Transparent regions pass through to the game world. Native popups and the keyboard retain Wolvic input handling. The flat controller poller is suspended during XR to prevent duplicate button actions. Controller loss cancels captured UI/tilt interactions.
@@ -95,9 +96,9 @@ The world stays in its original +Z-up coordinates. An inverse tracking rig trans
 
 The native host keeps the page compositor running and composites it over the original WebXR eye images. Gecko's document canvas background and paint backstop honor `dom.vr.webxr.transparent-document`; setting only the compositor clear color was insufficient. Both transparency and continued HTML painting are opt-in preferences enabled by this host.
 
-`NativePointerBridge` sends a bounded snapshot through `/__xr/native-pointer`: an explicit recenter revision, normalized UI rectangles, and each hand's hit distance and aim-relative normal. It sends no game geometry or images. There is at most one request in flight, capped at 30 Hz; unchanged state is not resent. Wolvic uses its current tracked aim to draw one native beam and pointer for both UI and world hits. The APK creates no Three.js laser or DOM cursor and does not synthesize UI clicks.
+`NativePointerBridge` sends a bounded snapshot through `/__xr/table-ui`: an explicit recenter revision, normalized UI rectangles, and each hand's hit distance and aim-relative normal. It sends no game geometry or images. There is at most one request in flight, capped at 30 Hz; unchanged state is not resent. Wolvic uses its current tracked aim to draw one native beam and pointer for both UI and world hits. The APK creates no Three.js laser or DOM cursor and does not synthesize UI clicks.
 
-Wolvic anchors the 3 by 1.875 metre pane once on entry or explicit recenter, 1.45 metres ahead and 20 cm below the head, aligned with yaw. It applies the same transform to page and native UI widgets and uses it for hit testing. Looking around does not move the anchor. UI-captured trigger/A presses are masked from the WebXR gamepad; world drags stay captured through release. Back and non-click buttons remain available to the game. Grip/aim transforms agree between the native pointer and WebXR raycast. The wired Chrome path retains its own HTML capture/pointer transport.
+Wolvic anchors the central UI frame once on entry or explicit recenter, 1.45 metres ahead and 20 cm below the head, aligned with yaw. It applies the same transform to page and native UI widgets and uses it for hit testing. Looking around does not move the anchor. UI-captured trigger/A presses are masked from the WebXR gamepad; world drags stay captured through release. Back and non-click buttons remain available to the game. Grip/aim transforms agree between the native pointer and WebXR raycast. The wired Chrome path retains its own HTML capture/pointer transport.
 
 The existing world canvas is removed from HTML composition before requesting XR and restored only after the renderer finishes its session-end handlers. Cleanup is scoped to its session so an older callback cannot alter a new session. Native exit does not resume/recreate a page surface that entry kept alive. During XR, the HTML canvas mount is transparent. That same canvas renders into the XR eye targets. React, forms, dialogs, inventory, and game event handling remain mounted in the original page.
 
@@ -117,6 +118,16 @@ node scripts/quest/webxr/device-rdp.mjs
 
 The hardware acceptance pass should cover both views, movement and tile refresh, inventory and direction prompts, UI scrolling/text input, repeated enter/exit, recentering, suspend/resume, and offline cold launch. The custom runtime must demonstrate changing HTML pixels throughout an immersive session before the frozen-pane fix is considered proven.
 
-The current pass has 24 focused regression tests. A Chrome integration fixture verifies native-only pointer ownership, absence of synthetic native UI clicks or Three.js laser geometry, UI hit regions, world hit metadata, original game actions, bounded transport, and stable anchoring until explicit recenter. A real WebGL check also reproduces the old marker disappearing under a transparent floor and verifies the corrected draw ordering. The host Java/C++ integration and APK compile successfully. Headset testing must still confirm alpha composition, pose alignment, native form/keyboard behavior, and drag ergonomics.
+The current pass has 45 focused regression tests, including run/prompt routing, tap-versus-hold behavior, context-menu reuse, snap-turn latching and room-scale pivot preservation. A Chrome integration fixture verifies native-only pointer ownership, absence of synthetic native UI clicks or Three.js laser geometry, UI hit regions, world hit metadata, original game actions, bounded transport, and stable anchoring until explicit recenter. A real WebGL check also reproduces the old marker disappearing under a transparent floor and verifies the corrected draw ordering. The host Java/C++ integration and APK compile successfully. Headset testing must still confirm alpha composition, pose alignment, native form/keyboard behavior, and drag ergonomics.
 
 Performance is not yet established. Desktop postprocessing is bypassed in XR, and the flat held-weapon overlay is hidden pending a proper XR presentation. Standalone MR remains unfinished.
+
+## Tabletop UI panes
+
+`table-ui-layout.ts` groups existing visible HUD components into normalized source crops. Messages are kept in the left source region to prevent overlap with the status and right action regions. Unexpected popovers or overlapping layouts fall back to one center pane so controls remain accessible. The UI remains mounted once; only its presentation changes.
+
+`GameUiPanels.h`, installed by `patch-table-ui.mjs`, creates at most five native quads sharing the focused window's live texture. Texture coordinates and geometry update only when crop bounds or texture size changes. Pane transforms follow the same board height and pitch as the game. Native ray picking maps a cropped pane hit back into the original full-page pixel coordinates, preserving Wolvic's UI input and drag capture. The original full-window quad is hidden while those crops draw.
+
+The versioned snapshot contains the recenter revision, hit-region count, per-hand hit distance/normal, view mode, board pitch/height, pane count, hit regions and source crops. The receiver bounds counts, coordinates and payload size. No world geometry is transferred.
+
+The new layout and controller feel still require headset validation. The source tests and browser layout checks do not establish physical readability or comfort. Wired Chrome currently retains its full-page UI preview; the edge-pane compositor is in the standalone native host.

@@ -11,6 +11,7 @@ export function createTrackingToGame(
   mode: XrViewMode, player: THREE.Vector3, anchor: THREE.Vector3,
   heading: THREE.Quaternion, tileSize: number, eyeHeight: number,
   pitch = 0,
+  viewYaw = 0,
 ): { matrix: THREE.Matrix4; tabletop: THREE.Vector3; scale: number } {
   const scale = mode === "first-person"
     ? THREE.MathUtils.clamp(anchor.y / eyeHeight, 1 / tileSize, 3.5 / tileSize)
@@ -19,6 +20,7 @@ export function createTrackingToGame(
     .applyQuaternion(heading).add(new THREE.Vector3(anchor.x, 0, anchor.z));
   const center = mode === "first-person" ? new THREE.Vector3(anchor.x, 0, anchor.z) : tabletop;
   const rotation = heading.clone();
+  if (mode === "first-person") rotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), viewYaw));
   if (mode === "tabletop") rotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch));
   rotation.multiply(sourceToTrackingRotation);
   const translation = center.clone().sub(player.clone().multiplyScalar(scale).applyQuaternion(rotation));

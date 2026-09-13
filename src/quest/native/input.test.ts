@@ -12,6 +12,21 @@ function fixture() {
 }
 
 describe("native Quest input", () => {
+  it("uses the existing run action and leaves direction prompts unmodified", () => {
+    const f = fixture(), run = vi.fn();
+    f.state.engineController!.runQuestDirection = run;
+    expect(routeQuestCommand({ type: "move", dx: 1, dy: 0, run: true }, f.state, f.ui).accepted).toBe(true);
+    expect(run).toHaveBeenCalledExactlyOnceWith("6");
+    f.state.directionQuestion = "Where?";
+    routeQuestCommand({ type: "move", dx: 0, dy: -1, run: true }, f.state, f.ui);
+    expect(run).toHaveBeenCalledOnce(); expect(f.controller.chooseDirection).toHaveBeenCalledWith("8");
+  });
+  it("routes a secondary tile action without issuing a primary click", () => {
+    const f = fixture();
+    routeQuestCommand({ type: "tile", x: 4, y: 6, secondary: true }, f.state, f.ui);
+    expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(4, 6, true);
+    expect(parseQuestCommand({ type: "move", dx: 1, dy: 0, run: "yes" })).toBeNull();
+  });
   it("rejects unsupported, malformed, and unbounded commands", () => {
     for (const value of [null, [], { type: "move", dx: 0, dy: 0 }, { type: "move", dx: 2, dy: 0 },
       { type: "tile", x: Infinity, y: 1 }, { type: "tile", x: 1.5, y: 1 }, { type: "tile", x: -1, y: 1 },

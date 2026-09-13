@@ -1,14 +1,14 @@
 import type { Nethack3DEngineController } from "../../game/ui-types";
 
 export type QuestNativeCommand =
-  | { type: "move"; dx: number; dy: number }
-  | { type: "tile"; x: number; y: number }
+  | { type: "move"; dx: number; dy: number; run?: boolean }
+  | { type: "tile"; x: number; y: number; secondary?: boolean }
   | { type: "key"; key: string }
   | { type: "inventory" }
   | { type: "wait" };
 export type QuestCommandResult = { accepted: boolean; reason?: string };
 export interface QuestInputState {
-  engineController: Pick<Nethack3DEngineController, "sendInput" | "chooseDirection" | "toggleInventoryDialog" | "activateQuestTile"> | null;
+  engineController: (Pick<Nethack3DEngineController, "sendInput" | "chooseDirection" | "toggleInventoryDialog" | "activateQuestTile"> & Partial<Pick<Nethack3DEngineController, "runQuestDirection">>) | null;
   loadingVisible: boolean;
   uiBlockingVisible: boolean;
   connectionState: string;
@@ -35,17 +35,19 @@ export function parseQuestCommand(value: unknown): QuestNativeCommand | null {
   if (command.type === "key" && Object.keys(command).length === 2 && typeof command.key === "string" && keys.has(command.key)) {
     return { type: "key", key: command.key };
   }
-  if (command.type === "move" && Object.keys(command).length === 3 &&
+  if (command.type === "move" && Object.keys(command).every(key => ["type", "dx", "dy", "run"].includes(key)) &&
+      (command.run === undefined || typeof command.run === "boolean") &&
       Number.isInteger(command.dx) && Number.isInteger(command.dy) &&
       Math.abs(command.dx as number) <= 1 && Math.abs(command.dy as number) <= 1 &&
       (command.dx !== 0 || command.dy !== 0)) {
-    return { type: "move", dx: command.dx as number, dy: command.dy as number };
+    return { type: "move", dx: command.dx as number, dy: command.dy as number, ...(command.run !== undefined ? { run: command.run as boolean } : {}) };
   }
-  if (command.type === "tile" && Object.keys(command).length === 3 &&
+  if (command.type === "tile" && Object.keys(command).every(key => ["type", "x", "y", "secondary"].includes(key)) &&
+      (command.secondary === undefined || typeof command.secondary === "boolean") &&
       Number.isInteger(command.x) && Number.isInteger(command.y) &&
       (command.x as number) >= 0 && (command.x as number) <= 255 &&
       (command.y as number) >= 0 && (command.y as number) <= 255) {
-    return { type: "tile", x: command.x as number, y: command.y as number };
+    return { type: "tile", x: command.x as number, y: command.y as number, ...(command.secondary !== undefined ? { secondary: command.secondary as boolean } : {}) };
   }
   return null;
 }
@@ -82,9 +84,14 @@ export function routeQuestCommand(command: QuestNativeCommand, state: QuestInput
   if (command.type === "move") {
     const key = questDirectionKey(command.dx, command.dy, state.numberPadModeEnabled);
     if (state.directionQuestion) controller.chooseDirection(key);
+    else if (command.run && !state.positionInputActive) {
+      if (!controller.runQuestDirection) return deny("Running is not available in this host.");
+      controller.runQuestDirection(key);
+    }
     else controller.sendInput(state.numberPadModeEnabled ? `Numpad${key}` : key);
     return { accepted: true };
   }
   if (state.directionQuestion) return deny("Choose a direction on the controls.");
-  return controller.activateQuestTile(command.x, command.y) ? { accepted: true } : deny("This tile cannot be selected now.");
+  const accepted = command.secondary ? controller.activateQuestTile(command.x, command.y, true) : controller.activateQuestTile(command.x, command.y);
+  return accepted ? { accepted: true } : deny("This tile cannot be selected now.");
 }

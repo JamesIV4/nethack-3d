@@ -15,7 +15,8 @@ function mouseFixture() {
     extendedCommands: { metaCommandModeActive: false },
     tileRendering: { tileMap: new Map([["12,8", tile]]) },
     positionSelection: { handleFarLookPositionTileSelection: farLook },
-    playerMovement: { hasPlayerMovedOnce: false }, movementInput: { lastMovementInputAtMs: 0 },
+    playerMovement: { hasPlayerMovedOnce: false }, movementInput: { lastMovementInputAtMs: 0, isFpsMode: () => false },
+    tileContextActions: { fpsCrosshairContextMenuOpen: false, openFpsCrosshairContextMenu: vi.fn(), closeFpsCrosshairContextMenu: vi.fn(), openNormalTileContextMenuAtTarget: vi.fn() },
     combatAttribution: {
       updateDirectionalAttackContextFromTarget: vi.fn(() => events.push("direction")),
       setPendingPointerAttackTargetFromTile: vi.fn(() => events.push("target")),
@@ -28,6 +29,18 @@ function mouseFixture() {
 }
 
 describe("native Quest map ray input", () => {
+  it("uses existing tabletop and FPS context menus for secondary activation", () => {
+    const f = mouseFixture();
+    expect(f.mouse.activateQuestTile(12, 8, true)).toBe(true);
+    expect(f.dependencies.tileContextActions.openNormalTileContextMenuAtTarget).toHaveBeenCalledWith({ key: "12,8", x: 12, y: 8, mesh: f.tile });
+    expect(f.sendMouseInput).not.toHaveBeenCalled();
+    f.dependencies.movementInput.isFpsMode = () => true;
+    expect(f.mouse.activateQuestTile(0, 0, true)).toBe(true);
+    expect(f.dependencies.tileContextActions.openFpsCrosshairContextMenu).toHaveBeenCalledOnce();
+    f.dependencies.tileContextActions.fpsCrosshairContextMenuOpen = true;
+    f.mouse.activateQuestTile(0, 0, true);
+    expect(f.dependencies.tileContextActions.closeFpsCrosshairContextMenu).toHaveBeenCalledWith(true);
+  });
   it("preserves pointer attack attribution before the normal mouse command", () => {
     const f = mouseFixture();
     expect(f.mouse.activateQuestTile(12, 8)).toBe(true);
