@@ -1723,7 +1723,11 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.vultureWalls.updateVultureDoorPlaneRenderOrdering();
     this.systems.vultureWalls.updateIronBarsWallPlaneVisibility();
     this.systems.camera.compensateTerminalWorldSpriteAspect();
-    if (this.systems.webXrPresentation.render()) return;
+    const xrCamera = this.systems.webXrPresentation.prepareRender();
+    if (xrCamera) {
+      this.systems.renderPipeline.renderer.render(this.systems.renderPipeline.scene, xrCamera);
+      return;
+    }
     this.systems.questSceneExport.update(timeMs);
     if (this.systems.questSceneExport.usesNativeRenderer()) return;
     const shouldCollectFpsDebugStats = this.systems.fpsDiagnostics.fpsDebugDisplayVisible;

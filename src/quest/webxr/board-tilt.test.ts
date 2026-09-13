@@ -2,6 +2,12 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { BoardTilt } from "./board-tilt";
 
+function aim(mesh: THREE.Object3D, angle: number, radius = 0.18): THREE.Ray {
+  const normal = new THREE.Vector3(0, 0, 1).applyQuaternion(mesh.quaternion);
+  const point = new THREE.Vector3(radius * Math.cos(angle), radius * Math.sin(angle), 0).applyQuaternion(mesh.quaternion).add(mesh.position);
+  return new THREE.Ray(point.add(normal), normal.negate());
+}
+
 describe("board pitch handle", () => {
   it("provides a hit on empty board space at the separated backing surface", () => {
     const control = new BoardTilt(new THREE.Group());
@@ -18,29 +24,31 @@ describe("board pitch handle", () => {
     const root = new THREE.Group(), control = new BoardTilt(root);
     const source = {} as XRInputSource;
     control.place(new THREE.Vector3(0, 1, -1.5), new THREE.Quaternion(), true);
-    const ray = new THREE.Ray(new THREE.Vector3(1.62, 1.05, 0), new THREE.Vector3(0, 0, -1));
+    const mesh = root.children[0] as THREE.Mesh<THREE.TorusGeometry, THREE.MeshBasicMaterial>;
+    const ray = aim(mesh, 0);
     expect(control.pitch).toBeCloseTo(Math.PI / 4);
     expect(control.hit(ray)).not.toBeNull();
-    const mesh = root.children[0] as THREE.Mesh<THREE.TorusGeometry, THREE.MeshBasicMaterial>;
+    expect(mesh.geometry.parameters.radius).toBe(0.18);
+    expect(new THREE.Vector3(0, 0, 1).applyQuaternion(mesh.quaternion).distanceTo(new THREE.Vector3(1, 0, 0))).toBeLessThan(0.00001);
     expect(mesh.material.opacity).toBe(0.2);
     control.hover(source, true); expect(mesh.material.opacity).toBe(0.9);
     control.begin(source, ray);
-    ray.origin.y += 0.2; control.move(source, ray);
+    control.move(source, aim(mesh, 0.3));
     expect(control.pitch).toBeGreaterThan(Math.PI / 4);
     control.end(source);
     const stopped = control.pitch;
-    ray.origin.y += 0.2; control.move(source, ray);
+    control.move(source, aim(mesh, 0.6));
     expect(control.pitch).toBe(stopped); expect(mesh.material.opacity).toBe(0.2);
     control.dispose(); expect(root.children).toHaveLength(0);
   });
   it("ignores the ring hole and prevents pitch from overturning", () => {
-    const control = new BoardTilt(new THREE.Group());
+    const root = new THREE.Group(), control = new BoardTilt(root);
     const source = {} as XRInputSource;
     control.place(new THREE.Vector3(0, 1, -1.5), new THREE.Quaternion(), true);
-    const ray = new THREE.Ray(new THREE.Vector3(1.53, 1.05, 0), new THREE.Vector3(0, 0, -1));
+    const ray = aim(root.children[0], 0, 0);
     expect(control.hit(ray)).toBeNull();
-    ray.origin.x += 0.09; control.begin(source, ray);
-    ray.origin.y = 20; control.move(source, ray);
+    control.begin(source, aim(root.children[0], 0));
+    control.move(source, aim(root.children[0], 2));
     expect(control.pitch).toBeCloseTo(Math.PI * 0.45);
     control.place(new THREE.Vector3(), new THREE.Quaternion(), false);
     expect(control.hit(ray)).toBeNull();

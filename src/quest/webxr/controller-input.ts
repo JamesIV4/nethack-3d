@@ -32,8 +32,8 @@ export function xrStickDirection(x: number, y: number, forward: THREE.Vector3 | 
 }
 interface PointerState {
   source: XRInputSource; id: number; ray: THREE.Ray;
-  line: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
-  circle: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
+  line: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial> | null;
+  circle: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial> | null;
   trigger: boolean; a: boolean; down: boolean; tracked: boolean;
   capture: "ui" | "tilt" | "world" | null;
   ui: UiHit | null; ring: THREE.Vector3 | null; world: THREE.Intersection | null;
@@ -57,18 +57,22 @@ export class WebXrControllerInput {
   constructor(private readonly session: XRSession, private readonly renderer: THREE.WebGLRenderer,
     private readonly scene: THREE.Scene, private readonly root: THREE.Group, private readonly tileSize: number,
     private readonly panel: () => HtmlUiPanel | null, private readonly tilt: BoardTilt) {
-    session.addEventListener("selectstart", this.selectStart);
-    session.addEventListener("selectend", this.selectEnd);
+    if (!panel()?.native) {
+      session.addEventListener("selectstart", this.selectStart);
+      session.addEventListener("selectend", this.selectEnd);
+    }
   }
   private state(source: XRInputSource): PointerState {
     let state = this.pointers.get(source);
     if (state) return state;
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+    const line = this.panel()?.native ? null : new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
       withoutWorldClipping(new THREE.LineBasicMaterial({ color: 0x78d5ff, transparent: true, opacity: 0.7, depthTest: false, depthWrite: false, toneMapped: false })));
-    const circle = new THREE.Mesh(new THREE.RingGeometry(0.006, 0.01, 24),
-      withoutWorldClipping(new THREE.MeshBasicMaterial({ color: 0x78d5ff, side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false })));
-    line.renderOrder = circle.renderOrder = 20000; line.frustumCulled = false;
-    this.root.add(line, circle);
+    const circle = this.panel()?.native ? null : new THREE.Mesh(new THREE.RingGeometry(0.006, 0.01, 24),
+      withoutWorldClipping(new THREE.MeshBasicMaterial({ color: 0x78d5ff, transparent: true, side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false })));
+    if (line && circle) {
+      line.renderOrder = circle.renderOrder = 20000; line.frustumCulled = false;
+      this.root.add(line, circle);
+    }
     state = { source, id: this.nextId++, ray: new THREE.Ray(), line, circle, trigger: false, a: false,
       down: false, tracked: false, capture: null, ui: null, ring: null, world: null, buttons: [] };
     this.pointers.set(source, state);
@@ -78,7 +82,8 @@ export class WebXrControllerInput {
     const reference = this.renderer.xr.getReferenceSpace();
     const pose = reference && frame.getPose(state.source.targetRaySpace, reference);
     state.tracked = !!pose;
-    state.line.visible = !!pose; state.circle.visible = false;
+    if (state.line) state.line.visible = !!pose;
+    if (state.circle) state.circle.visible = false;
     if (!pose) { this.cancel(state); return; }
     const transform = new THREE.Matrix4().fromArray(pose.transform.matrix);
     state.ray.origin.setFromMatrixPosition(transform);
@@ -114,6 +119,8 @@ export class WebXrControllerInput {
       }
     }
     const end = point ?? state.ray.at(5, new THREE.Vector3());
+    this.panel()?.nativePointer?.hit(state.source.handedness, state.ray, point, normal, transform);
+    if (!state.line || !state.circle) return;
     const positions = state.line.geometry.getAttribute("position") as THREE.BufferAttribute;
     positions.setXYZ(0, state.ray.origin.x, state.ray.origin.y, state.ray.origin.z);
     positions.setXYZ(1, end.x, end.y, end.z); positions.needsUpdate = true;
@@ -134,6 +141,8 @@ export class WebXrControllerInput {
     }
     if (!state.tracked) return;
     if (state.ui) { state.capture = "ui"; this.panel()?.press(state.source, state.ui, state.id); return; }
+    // A world press has the same focus transition as clicking outside an HTML control.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     if (state.ring) { state.capture = "tilt"; this.tilt.begin(state.source, state.ray); return; }
     state.capture = "world";
     // A remains the normal confirm key when the UI or tilt handle does not own it.
@@ -152,7 +161,11 @@ export class WebXrControllerInput {
   update(time: number, forward: THREE.Vector3 | null): void {
     const frame = this.renderer.xr.getFrame();
     if (this.session.visibilityState !== "visible" || !frame) {
-      for (const state of this.pointers.values()) { this.cancel(state); state.line.visible = state.circle.visible = false; }
+      for (const state of this.pointers.values()) {
+        this.cancel(state);
+        if (state.line) state.line.visible = false;
+        if (state.circle) state.circle.visible = false;
+      }
       return;
     }
     const active = new Set(this.session.inputSources);
@@ -163,6 +176,8 @@ export class WebXrControllerInput {
       const pad = source.gamepad;
       const buttons = pad?.buttons.map((button) => button.pressed) ?? [];
       const prior = state.buttons; state.buttons = buttons;
+      // Keep the release state authoritative even if a runtime drops selectend.
+      if (pad) state.trigger = !!buttons[0];
       state.a = source.handedness === "right" && !!buttons[4]; this.pressState(state);
       if (state.ui || state.capture === "ui" || state.capture === "tilt") continue;
       if (source.handedness === "left" && pad) {
@@ -179,8 +194,9 @@ export class WebXrControllerInput {
     state.trigger = state.a = state.down = false; state.capture = null; state.ui = null; state.ring = null; state.world = null;
   }
   private remove(state: PointerState): void {
-    this.cancel(state); this.root.remove(state.line, state.circle);
-    state.line.geometry.dispose(); state.line.material.dispose(); state.circle.geometry.dispose(); state.circle.material.dispose();
+    this.cancel(state);
+    if (state.line) { this.root.remove(state.line); state.line.geometry.dispose(); state.line.material.dispose(); }
+    if (state.circle) { this.root.remove(state.circle); state.circle.geometry.dispose(); state.circle.material.dispose(); }
     this.pointers.delete(state.source);
   }
   dispose(): void {

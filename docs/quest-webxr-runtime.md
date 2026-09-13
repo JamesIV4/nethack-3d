@@ -2,7 +2,7 @@
 
 The Quest path renders the original game scene with Three.js WebXR. The native host supplies headset tracking and composites the live HTML UI over the stereo eye images. It does not export world meshes or recreate the dungeon in another renderer.
 
-Version `0.3.2-live-ui` rendered the world and live HTML on Quest 3. Version `0.3.3-ui-controls` adds transparent compositor clearing, a larger eye-level pane, controller lasers and hit circles, DOM-based UI/world routing, and a draggable board-pitch ring. The APK builds and browser interaction checks pass; the new placement, transparency, and controller feel still need headset validation.
+Version `0.3.5-native-pointer` uses Wolvic's native pointer and UI input before and during gameplay. Three.js supplies world hit distances and normals, and renders the original game scene. The pane is world-anchored over the board. Gecko has an opt-in document transparency patch in addition to its live-painting patch. The host and browser runtime build, and source/browser checks pass; physical headset alpha and interaction alignment still need validation.
 
 ## Build the standalone APK
 
@@ -15,7 +15,7 @@ npm.cmd run quest:webxr:apk
 
 Sideload `quest/build/outputs/apk/nethack3d-webxr-proof-debug.apk` with Meta Quest Developer Hub. The build verifies its package ID, version, bundled NetHack runtimes, required Gecko permissions, and the custom HTML painting code and preference before copying it to that location. `quest:apk` still builds the earlier Meta Spatial experiment.
 
-The current versioned copy is `quest/build/outputs/apk/nethack3d-webxr-0.3.3-ui-controls-debug.apk`. The publisher verifies that `libxul.so` matches the staged custom Gecko binary byte for byte and prints the APK's SHA256 on every build. Sideload this copy with Meta Quest Developer Hub.
+The current versioned copy is `quest/build/outputs/apk/nethack3d-webxr-0.3.5-native-pointer-debug.apk`. The publisher verifies that `libxul.so` matches the staged custom Gecko binary byte for byte and prints the APK's SHA256 on every build. Sideload this copy with Meta Quest Developer Hub.
 
 The package ID is `com.nethack3d.quest.webxrproof`, separate from the earlier app and its saves. The host serves only its bundled assets at `http://127.0.0.1:18973`. It does not depend on Quest Browser or a remote game server. A cold launch and game creation in airplane mode remain acceptance checks.
 
@@ -77,13 +77,13 @@ Initial XR controls:
 - Left primary face button: inventory.
 - Right A: click the pointed UI control or grab the tilt ring; otherwise confirm.
 - Right B: back.
-- Board ring: hold trigger or A and drag vertically to adjust pitch from 0 to 81 degrees. The default is 45 degrees, with the far edge raised. The ring is 80% transparent when idle.
+- Board ring: hold trigger or A and rotate around the ring on the board side to adjust pitch from 0 to 81 degrees. The default is 45 degrees, with the far edge raised. The ring radius is 18 cm, lies in the side plane around the pitch axis, and is 80% transparent when idle.
 
-Controller commands reuse the game's loading, dialog, inventory, direction, and position-selection gates. The page hit-tests controls and modal bodies against its live DOM; the rest of the pane passes through to the world. The flat controller poller is suspended during XR to prevent duplicate button actions. Controller loss cancels captured UI/tilt interactions.
+Controller commands reuse the game's loading, dialog, inventory, direction, and position-selection gates. The page publishes normalized hit regions for controls, modal bodies, and UI canvases. Wolvic hit-tests them and sends its normal native mouse/touch/scroll events to Gecko. Transparent regions pass through to the game world. Native popups and the keyboard retain Wolvic input handling. The flat controller poller is suspended during XR to prevent duplicate button actions. Controller loss cancels captured UI/tilt interactions.
 
 ## Design and ownership
 
-`WebXrPresentation` participates in the engine's existing `renderer.setAnimationLoop`. It renders the original scene through Three's [WebXRManager](https://threejs.org/docs/pages/WebXRManager.html), bypassing desktop postprocessing and the legacy native scene exporter while in XR.
+`WebXrPresentation` participates in the engine's existing `renderer.setAnimationLoop`. It supplies the XR camera to the original engine render dispatch, which draws the same scene through Three's [WebXRManager](https://threejs.org/docs/pages/WebXRManager.html), bypassing desktop postprocessing and the legacy native scene exporter while in XR.
 
 The world stays in its original +Z-up coordinates. An inverse tracking rig transforms headset and controller poses into game coordinates, preserving world-coordinate shader assumptions and geometry identities.
 
@@ -93,11 +93,13 @@ The world stays in its original +Z-up coordinates. An inverse tracking rig trans
 - `ScaledCameraSprites` extends existing sprite shader hooks to include the camera's uniform view scale, so sprites and mesh tiles keep the same physical proportions.
 - `gameFrameTime` uses the page performance clock in XR because this Gecko revision [timestamps XR frames relative to session creation](https://github.com/mozilla-firefox/firefox/blob/dc6d11938934f4490158a1334dda9d143dffab46/dom/vr/XRSession.cpp). Effects continue to use the same clock as their creation timestamps.
 
-The native host keeps the page compositor running, presents WebXR eye images, then composites the live page. Gecko's compositor clear color is explicitly transparent. `HtmlUiPanel` defines a 3 by 1.875 metre pane, 1.45 metres ahead and 5 cm below the recentered head. It sends its tracking-space matrix and width through the same-origin, bounded `/__xr/pane` endpoint. The host reads this immutable pose through JNI and applies it while drawing the page, restoring its ordinary window transform afterward.
+The native host keeps the page compositor running and composites it over the original WebXR eye images. Gecko's document canvas background and paint backstop honor `dom.vr.webxr.transparent-document`; setting only the compositor clear color was insufficient. Both transparency and continued HTML painting are opt-in preferences enabled by this host.
 
-`controller-input.ts` owns both controllers' rays, surface-normal hit rings, and trigger/A capture. `dom-pointer.ts` dispatches pointer/click events into the existing DOM and supports range dragging. UI hit circles are drawn in the DOM so opaque controls cannot cover them. World circles and lasers render with Three.js. `BoardTilt` owns ring picking and drag state. `HtmlUiPanel` also retains the wired capture transport; there is no separate wired input implementation.
+`NativePointerBridge` sends a bounded snapshot through `/__xr/native-pointer`: an explicit recenter revision, normalized UI rectangles, and each hand's hit distance and aim-relative normal. It sends no game geometry or images. There is at most one request in flight, capped at 30 Hz; unchanged state is not resent. Wolvic uses its current tracked aim to draw one native beam and pointer for both UI and world hits. The APK creates no Three.js laser or DOM cursor and does not synthesize UI clicks.
 
-During XR, the HTML canvas mount is transparent and the desktop WebGL canvas is hidden from page composition. That same canvas renders into the XR eye targets. React, forms, dialogs, inventory, and game event handling remain mounted in the original page.
+Wolvic anchors the 3 by 1.875 metre pane once on entry or explicit recenter, 1.45 metres ahead and 20 cm below the head, aligned with yaw. It applies the same transform to page and native UI widgets and uses it for hit testing. Looking around does not move the anchor. UI-captured trigger/A presses are masked from the WebXR gamepad; world drags stay captured through release. Back and non-click buttons remain available to the game. Grip/aim transforms agree between the native pointer and WebXR raycast. The wired Chrome path retains its own HTML capture/pointer transport.
+
+The existing world canvas is removed from HTML composition before requesting XR and restored only after the renderer finishes its session-end handlers. Cleanup is scoped to its session so an older callback cannot alter a new session. Native exit does not resume/recreate a page surface that entry kept alive. During XR, the HTML canvas mount is transparent. That same canvas renders into the XR eye targets. React, forms, dialogs, inventory, and game event handling remain mounted in the original page.
 
 ## Validation and remaining work
 
@@ -115,6 +117,6 @@ node scripts/quest/webxr/device-rdp.mjs
 
 The hardware acceptance pass should cover both views, movement and tile refresh, inventory and direction prompts, UI scrolling/text input, repeated enter/exit, recentering, suspend/resume, and offline cold launch. The custom runtime must demonstrate changing HTML pixels throughout an immersive session before the frozen-pane fix is considered proven.
 
-The current pass has 21 focused regression tests plus a Chrome interaction check covering React button clicks via trigger/A, range dragging, transparent pass-through, world and empty-board laser endpoints, controller disconnection, and tilt dragging. A real WebGL check confirms that dungeon clipping preserves the support, lasers and hit circles. The host Java/C++ integration and APK compile successfully. Headset testing must still confirm alpha composition, pose alignment, native form/keyboard behavior, and drag ergonomics.
+The current pass has 24 focused regression tests. A Chrome integration fixture verifies native-only pointer ownership, absence of synthetic native UI clicks or Three.js laser geometry, UI hit regions, world hit metadata, original game actions, bounded transport, and stable anchoring until explicit recenter. A real WebGL check also reproduces the old marker disappearing under a transparent floor and verifies the corrected draw ordering. The host Java/C++ integration and APK compile successfully. Headset testing must still confirm alpha composition, pose alignment, native form/keyboard behavior, and drag ergonomics.
 
 Performance is not yet established. Desktop postprocessing is bypassed in XR, and the flat held-weapon overlay is hidden pending a proper XR presentation. Standalone MR remains unfinished.

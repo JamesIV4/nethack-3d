@@ -22,6 +22,8 @@ with zipfile.ZipFile(aar) as archive:
     library = archive.read("jni/arm64-v8a/libxul.so")
     if b"dom.vr.webxr.paint-document" not in library:
         raise SystemExit("GeckoView binary is missing the HTML painting patch")
+    if b"dom.vr.webxr.transparent-document" not in library:
+        raise SystemExit("GeckoView binary is missing document transparency")
     library_hash = hashlib.sha256(library).hexdigest()
 del library
 version = aar.parent.name
@@ -43,6 +45,7 @@ receipt = {
     "schema": 1,
     "revision": revision,
     "paintDocument": True,
+    "transparentDocument": True,
     "patchSha256": hashlib.sha256(Path(__file__).with_name("patch-gecko-paint.py").read_bytes()).hexdigest(),
     "coordinate": "org.mozilla.geckoview:" + module + ":" + version,
     "aar": (relative / aar.name).as_posix(),

@@ -1,5 +1,26 @@
-const controls = "button,a[href],input,textarea,select,label,[role=button],[role=slider],[contenteditable=true],[data-xr-ui]";
+const controls = "button,a[href],input,textarea,select,label,summary,canvas,[tabindex]:not([tabindex='-1']),[role=button],[role=slider],[contenteditable=true],[data-xr-ui]";
 const surfaces = ".nh3d-dialog.is-visible,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible";
+
+export function uiHitRectangles(): number[] {
+  const regions: number[][] = [];
+  for (const element of document.querySelectorAll<HTMLElement>(surfaces + "," + controls)) {
+    const style = getComputedStyle(element);
+    if (element.closest("[inert],[aria-hidden=true]") || style.visibility !== "visible" || style.pointerEvents === "none" || Number(style.opacity) === 0) continue;
+    const bounds = element.getBoundingClientRect();
+    let left = Math.max(0, bounds.left), top = Math.max(0, bounds.top), right = Math.min(innerWidth, bounds.right), bottom = Math.min(innerHeight, bounds.bottom);
+    for (let parent = element.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+      const css = getComputedStyle(parent), clip = parent.getBoundingClientRect();
+      if (/hidden|clip|scroll|auto/.test(css.overflowX)) { left = Math.max(left, clip.left); right = Math.min(right, clip.right); }
+      if (/hidden|clip|scroll|auto/.test(css.overflowY)) { top = Math.max(top, clip.top); bottom = Math.min(bottom, clip.bottom); }
+    }
+    if (right <= left || bottom <= top) continue;
+    const rect = [left / innerWidth, top / innerHeight, right / innerWidth, bottom / innerHeight];
+    if (regions.some((r) => r[0] <= rect[0] && r[1] <= rect[1] && r[2] >= rect[2] && r[3] >= rect[3])) continue;
+    regions.push(rect);
+    if (regions.length > 128) return [0, 0, 1, 1];
+  }
+  return regions.flat();
+}
 
 export function pickUiTarget(x: number, y: number): HTMLElement | null {
   for (const element of document.elementsFromPoint(x, y)) {

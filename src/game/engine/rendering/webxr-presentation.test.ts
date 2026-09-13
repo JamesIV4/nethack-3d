@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { WebXrPresentation, type WebXrPresentationDependencies } from "./webxr-presentation";
 import { getWebXrState, toggleWebXr } from "../../../quest/webxr/presentation";
 vi.mock("../../../quest/webxr/controller-input", () => ({ WebXrControllerInput: class { update() {} dispose() {} } }));
-vi.mock("../../../quest/webxr/html-ui-panel", () => ({ HtmlUiPanel: class { recenter() {} update() {} dispose() {} } }));
+vi.mock("../../../quest/webxr/html-ui-panel", () => ({ HtmlUiPanel: class { recenter() {} followViewer() {} update() {} dispose() {} } }));
 afterEach(() => vi.unstubAllGlobals());
 
 function fixture(native = false) {
@@ -20,7 +20,15 @@ function fixture(native = false) {
   const scene = new THREE.Scene();
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
   scene.add(mesh);
+  const styleValues = new Map<string, string>([["display", "block"]]);
+  const style = {
+    getPropertyValue: (key: string) => styleValues.get(key) ?? "",
+    getPropertyPriority: () => "",
+    setProperty: (key: string, value: string) => { styleValues.set(key, value); },
+    removeProperty: (key: string) => { styleValues.delete(key); },
+  };
   const renderer = {
+    domElement: { style },
     render: vi.fn(), clippingPlanes: [] as THREE.Plane[],
     getClearColor: (value: THREE.Color) => value.set(0x123456), getClearAlpha: () => 1, setClearColor: vi.fn(),
     xr: {
@@ -40,20 +48,70 @@ function fixture(native = false) {
     heldWeapon: { fpsHeldWeaponMesh: null },
   } as unknown as WebXrPresentationDependencies;
   const presentation = new WebXrPresentation(deps);
-  return { presentation, deps, renderer, scene, mesh, classes, session, requestSession };
+  return { presentation, deps, renderer, scene, mesh, classes, session, requestSession, styleValues,
+    frame: () => { const camera = presentation.prepareRender(); if (camera) renderer.render(scene, camera); return !!camera; } };
 }
 describe("Three.js owns the Quest world", () => {
+  it("restores the flat canvas after the renderer's session-end handlers finish", async () => {
+    const f = fixture();
+    f.presentation.start(); await Promise.resolve(); await toggleWebXr();
+    let rendererEndObserved = false;
+    f.session.addEventListener("end", () => {
+      rendererEndObserved = true;
+      expect(f.styleValues.get("display")).toBe("none");
+    });
+    await toggleWebXr();
+    expect(rendererEndObserved).toBe(true);
+    expect(f.styleValues.get("display")).toBe("block");
+    f.presentation.dispose();
+  });
+  it("ignores an old session's delayed cleanup after a new session starts", async () => {
+    const f = fixture();
+    const listen = vi.spyOn(f.session, "addEventListener");
+    f.presentation.start(); await Promise.resolve(); await toggleWebXr();
+    const oldEnd = listen.mock.calls.find(([type]) => type === "end")![1] as EventListener;
+    await toggleWebXr();
+    const next = Object.assign(new EventTarget(), { environmentBlendMode: "opaque", end: async () => {} });
+    f.requestSession.mockResolvedValueOnce(next);
+    await toggleWebXr();
+    oldEnd(new Event("end")); await Promise.resolve();
+    expect(f.presentation.active).toBe(true);
+    expect(f.styleValues.get("display")).toBe("none");
+    f.presentation.dispose();
+  });
+  it("uses one scene and canvas through repeated XR entry, hiding it before each request", async () => {
+    const f = fixture();
+    const geometry = f.mesh.geometry, material = f.mesh.material;
+    f.requestSession.mockImplementation(async () => {
+      expect(f.styleValues.get("display")).toBe("none");
+      expect(f.classes.has("nh3d-webxr-active")).toBe(true);
+      return f.session;
+    });
+    f.presentation.start(); await Promise.resolve();
+    for (let i = 0; i < 3; i++) {
+      await toggleWebXr(); f.presentation.updateCamera();
+      const calls = f.renderer.render.mock.calls.length;
+      expect(f.presentation.prepareRender()).not.toBeNull();
+      expect(f.renderer.render.mock.calls).toHaveLength(calls);
+      f.frame(); expect(f.renderer.render.mock.calls).toHaveLength(calls + 1);
+      expect(f.mesh.geometry).toBe(geometry); expect(f.mesh.material).toBe(material);
+      await toggleWebXr();
+      expect(f.scene.children).toEqual([f.mesh]);
+      expect(f.styleValues.get("display")).toBe("block");
+    }
+    f.presentation.dispose();
+  });
   it("renders the original scene/materials in both modes and restores normal rendering on exit", async () => {
     const f = fixture();
     const geometry = f.mesh.geometry, material = f.mesh.material, matrix = f.mesh.matrix.clone();
     f.presentation.start(); await Promise.resolve(); await toggleWebXr();
     expect(f.requestSession).toHaveBeenCalledWith("immersive-vr", { requiredFeatures: ["local-floor"] });
     expect(f.presentation.updateCamera()).toBe(true);
-    expect(f.presentation.render()).toBe(true);
+    expect(f.frame()).toBe(true);
     expect(f.renderer.render.mock.calls[0][0]).toBe(f.scene);
     expect(f.renderer.clippingPlanes).toHaveLength(4);
     f.deps.engineState.playMode = "fps";
-    f.presentation.updateCamera(); f.presentation.render();
+    f.presentation.updateCamera(); f.frame();
     expect(f.renderer.clippingPlanes).toHaveLength(0);
     expect(f.mesh.geometry).toBe(geometry); expect(f.mesh.material).toBe(material); expect(f.mesh.matrix.equals(matrix)).toBe(true);
     await toggleWebXr();
@@ -68,7 +126,7 @@ describe("Three.js owns the Quest world", () => {
     f.requestSession.mockRejectedValue(new Error("Permission denied"));
     f.presentation.start(); await Promise.resolve(); await toggleWebXr();
     expect(getWebXrState()).toMatchObject({ active: false, busy: false, error: "Permission denied" });
-    expect(f.classes.size).toBe(0); expect(f.presentation.render()).toBe(false);
+    expect(f.classes.size).toBe(0); expect(f.frame()).toBe(false);
     f.presentation.dispose();
   });
   it("requests AR explicitly and clears alpha for mixed reality", async () => {

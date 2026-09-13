@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { ScaledCameraSprites } from "./scaled-camera-sprites";
+import { XrCanvasPresentation } from "./xr-canvas-presentation";
 import { HtmlUiPanel } from "../../../quest/webxr/html-ui-panel";
 import { BoardTilt } from "../../../quest/webxr/board-tilt";
 import { withoutWorldClipping } from "../../../quest/webxr/overlay-material";
@@ -26,6 +27,8 @@ export class WebXrPresentation {
   private session: XRSession | null = null;
   private started = false;
   private entering = false;
+  private endListener: (() => void) | null = null;
+  private canvasPresentation: XrCanvasPresentation | null = null;
   private unregister: (() => void) | null = null;
   private readonly scaledSprites = new ScaledCameraSprites();
   private readonly trackingRoot = new THREE.Group();
@@ -116,6 +119,9 @@ export class WebXrPresentation {
     if (this.session || this.entering || !navigator.xr || !this.host) return;
     const renderer = this.dependencies.renderPipeline.renderer;
     this.entering = true;
+    this.canvasPresentation ??= new XrCanvasPresentation(renderer.domElement);
+    this.canvasPresentation.enter();
+    document.documentElement.classList.add("nh3d-webxr-active");
     let session: XRSession | null = null;
     try {
       const mode = this.dependencies.engineState.clientOptions.vrPassthrough ? "immersive-ar" : "immersive-vr";
@@ -123,7 +129,11 @@ export class WebXrPresentation {
       session = await navigator.xr.requestSession(mode, { requiredFeatures: ["local-floor"] });
       if (!this.started) { await session.end(); return; }
       this.session = session;
-      session.addEventListener("end", this.ended);
+      const currentSession = session;
+      this.endListener = () => queueMicrotask(() => {
+        if (this.session === currentSession) this.ended();
+      });
+      session.addEventListener("end", this.endListener);
       const gameCamera = this.dependencies.camera.camera;
       this.savedCamera = { position: gameCamera.position.clone(), quaternion: gameCamera.quaternion.clone(),
         yaw: this.dependencies.camera.cameraYaw, pitch: this.dependencies.camera.cameraPitch, mode: this.dependencies.engineState.playMode };
@@ -145,6 +155,7 @@ export class WebXrPresentation {
       updateWebXrState({ active: true, error: "" });
     } catch (error) {
       if (session) { await session.end().catch(() => {}); if (this.session === session) this.ended(); }
+      else { this.canvasPresentation.exit(); document.documentElement.classList.remove("nh3d-webxr-active"); }
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(this.dependencies.engineState.clientOptions.vrPassthrough
         ? "Could not enter mixed reality. Turn off Mixed reality in VR to test an opaque VR session. " + detail : detail);
@@ -152,7 +163,8 @@ export class WebXrPresentation {
   }
 
   private readonly ended = (): void => {
-    this.session?.removeEventListener("end", this.ended);
+    if (this.endListener) this.session?.removeEventListener("end", this.endListener);
+    this.endListener = null;
     this.session = null;
     this.input?.dispose(); this.input = null;
     this.htmlPanel?.dispose(); this.htmlPanel = null;
@@ -177,6 +189,7 @@ export class WebXrPresentation {
     }
     this.board.visible = false;
     this.tilt.cancel();
+    this.canvasPresentation?.exit();
     document.documentElement.classList.remove("nh3d-webxr-active");
     updateWebXrState({ active: false });
   };
@@ -236,14 +249,13 @@ export class WebXrPresentation {
     if (this.active) this.input?.update(time, this.dependencies.engineState.playMode === "fps" ? this.forward : null);
   }
 
-  render(): boolean {
-    if (!this.active) return false;
+  prepareRender(): THREE.Camera | null {
+    if (!this.active) return null;
     this.htmlPanel?.update(performance.now());
     this.scaledSprites.prepare(this.dependencies.renderPipeline.scene);
     // The screen-space held weapon is not an XR hand/controller prop.
     if (this.dependencies.heldWeapon.fpsHeldWeaponMesh) this.dependencies.heldWeapon.fpsHeldWeaponMesh.visible = false;
-    this.dependencies.renderPipeline.renderer.render(this.dependencies.renderPipeline.scene, this.xrCamera);
-    return true;
+    return this.xrCamera;
   }
 
   dispose(): void {
@@ -252,6 +264,8 @@ export class WebXrPresentation {
     this.unregister?.(); this.unregister = null;
     const session = this.session;
     if (session) { this.ended(); void session.end().catch(() => {}); }
+    this.canvasPresentation?.exit();
+    if (this.host) document.documentElement.classList.remove("nh3d-webxr-active");
     this.board.geometry.dispose(); this.board.material.dispose();
     this.tilt.dispose();
   }

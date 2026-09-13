@@ -16,6 +16,8 @@ public final class BundledGameServer {
     private static ExecutorService workers;
     private static volatile float[] uiPose;
     public static float[] getUiPose() { return uiPose; }
+    private static volatile float[] pointerState;
+    public static float[] getPointerState() { return pointerState; }
     private BundledGameServer() {}
 
     public static synchronized void start(Context context) {
@@ -51,6 +53,7 @@ public final class BundledGameServer {
         try { if (listener != null) listener.close(); } catch (IOException ignored) {}
         listener = null;
         uiPose = null;
+        pointerState = null;
         if (workers != null) workers.shutdownNow();
         workers = null;
     }
@@ -79,7 +82,7 @@ public final class BundledGameServer {
             if (!host.equals("127.0.0.1:18973")) { status(socket, 403, "Forbidden"); return; }
             String path = new URI(parts[1]).getPath();
             if (parts[0].equals("POST")) {
-                if (!"/__xr/pane".equals(path) || !ORIGIN.equals(origin) || contentLength < 1 || contentLength > 2048) {
+                if (!"/__xr/native-pointer".equals(path) || !ORIGIN.equals(origin) || contentLength < 1 || contentLength > 16384) {
                     status(socket, 403, "Forbidden"); return;
                 }
                 char[] body = new char[contentLength];
@@ -90,14 +93,16 @@ public final class BundledGameServer {
                     offset += read;
                 }
                 JSONArray values = new JSONArray(new String(body));
-                if (values.length() != 17) throw new IOException("Invalid pane pose");
-                float[] pose = new float[17];
+                int count = values.getInt(1);
+                if (count < 0 || count > 128 || values.length() != 10 + count * 4) throw new IOException("Invalid pointer snapshot");
+                float[] pose = new float[values.length()];
                 for (int i = 0; i < pose.length; i++) {
                     pose[i] = (float)values.getDouble(i);
                     if (!Float.isFinite(pose[i]) || Math.abs(pose[i]) > 10000) throw new IOException("Invalid pane coordinate");
                 }
-                if (pose[16] < 0.5f || pose[16] > 5.0f) throw new IOException("Invalid pane width");
-                uiPose = pose;
+                for (int i = 10; i < pose.length; i++) if (pose[i] < 0 || pose[i] > 1) throw new IOException("Invalid UI region");
+                if (pose[2] < -1 || pose[2] > 100 || pose[6] < -1 || pose[6] > 100) throw new IOException("Invalid pointer distance");
+                pointerState = pose;
                 status(socket, 204, "No Content"); return;
             }
             if (path == null || !path.startsWith("/") || path.contains("\\") || path.indexOf('\0') >= 0) {

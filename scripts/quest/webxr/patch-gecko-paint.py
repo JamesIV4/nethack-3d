@@ -24,3 +24,16 @@ if marker not in source:
         source = source.replace(include, include + '\n#include "mozilla/Preferences.h"')
     target.write_text(source)
 print("Gecko HTML painting patch applied at " + str(target))
+target = root / "layout/base/PresShell.cpp"
+source = target.read_text()
+marker = "dom.vr.webxr.transparent-document"
+if marker not in source:
+    for signature, result in [
+        ("bool PresShell::IsTransparentContainerElement() const {", "true"),
+        ("nscolor PresShell::ComputeBackstopColor(nsIFrame* aDisplayRoot) {", "NS_RGBA(0, 0, 0, 0)"),
+    ]:
+        if source.count(signature) != 1:
+            raise SystemExit("Gecko document background implementation changed")
+        source = source.replace(signature, signature + '\n#ifdef MOZ_WIDGET_ANDROID\n  if (Preferences::GetBool("' + marker + '", false)) {\n    return ' + result + ';\n  }\n#endif')
+    target.write_text(source)
+print("Gecko transparent document patch applied at " + str(target))

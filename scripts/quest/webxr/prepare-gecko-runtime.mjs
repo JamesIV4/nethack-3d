@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { patchRuntime, runtimePaths, replaceOnce, WOLVIC_REVISION } from "./runtime-patch.mjs";
 import { readGeckoArtifact, PAINT_PREFERENCE } from "./gecko-artifact.mjs";
 import { patchHostInteraction } from "./patch-host-interaction.mjs";
+import { patchWolvicPointer } from "./patch-wolvic-pointer.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const checkout = path.join(root, "quest/runtime/wolvic");
@@ -125,12 +126,16 @@ configurations.configureEach {
     }
 }
 android.defaultConfig {
-    versionName = "0.3.3-ui-controls"
+    versionName = "0.3.5-native-pointer"
     resValue "string", "app_name", "NetHack 3D VR"
 }
 `);
 const prefsPath = path.join(checkout, "app/src/main/res/raw/fxr_config.yaml");
 let prefs = readFileSync(prefsPath, "utf8");
+if (!prefs.includes("dom.vr.webxr.transparent-document: true")) {
+  prefs = prefs.replace(/prefs:\r?\n/, "prefs:\n  dom.vr.webxr.transparent-document: true\n");
+  writeFileSync(prefsPath, prefs);
+}
 if (!prefs.includes(PAINT_PREFERENCE + ": true")) {
   prefs = prefs.replace("prefs:\n", "prefs:\n  " + PAINT_PREFERENCE + ": true\n")
     .replace("prefs:\r\n", "prefs:\r\n  " + PAINT_PREFERENCE + ": true\r\n");
@@ -146,4 +151,5 @@ cpSync(platform, path.join(checkout, "third_party/OVRPlatformSDK"), { recursive:
 writeFileSync(path.join(checkout, "local.properties"), "sdk.dir=" + sdk.replaceAll("\\", "/").replaceAll(":", "\\:") + "\n");
 writeFileSync(path.join(checkout, "user.properties"), "useStaticVersionCode=true\nuseDebugSigningOnRelease=true\n");
 patchHostInteraction(checkout);
+patchWolvicPointer(checkout);
 console.log("Prepared standalone WebXR host with patched GeckoView and its matching v19 native ABI.");

@@ -40,7 +40,10 @@ bool crow::VRBrowser::GetGameUiPose(float aPose[17]) {
     .replace("controller.widget ? 0 : controller.immersiveTouchedState", "controller.immersiveTouchedState")
     .replace("controller.widget ? 0.0f : controller.immersiveTriggerValues[j]", "controller.immersiveTriggerValues[j]"));
   edit("app/src/main/cpp/BrowserWorld.cpp", (source) => {
-    if (source.includes("NH3D shared pane pose")) return source;
+    if (source.includes("NH3D unified Wolvic pointer")) return source;
+    if (source.includes("NH3D shared pane pose")) return source.replace(
+      "widget->SetTransform(vrb::Matrix::FromColumnMajor(pose).PostMultiply(",
+      "widget->SetTransform(m.device->GetHeadTransform().PostMultiply(vrb::Matrix::FromColumnMajor(pose)).PostMultiply(");
     source = replaceOnce(source, `    // NH3D: keep pointer interaction with the live HTML pane during WebXR.
     bool relayoutGamePane = false;
     m.UpdateControllers(relayoutGamePane);
@@ -60,7 +63,7 @@ bool crow::VRBrowser::GetGameUiPose(float aPose[17]) {
     widget->GetWorldSize(width, height);
     saved.push_back({widget, widget->GetTransform()});
     const float scale = pose[16] / width;
-    widget->SetTransform(vrb::Matrix::FromColumnMajor(pose).PostMultiply(
+    widget->SetTransform(m.device->GetHeadTransform().PostMultiply(vrb::Matrix::FromColumnMajor(pose)).PostMultiply(
         vrb::Matrix::Identity().Scale(vrb::Vector(scale, scale, scale))));
   }
   const CameraPtr camera = aEye == device::Eye::Left ? m.leftCamera : m.rightCamera;
@@ -74,5 +77,16 @@ bool crow::VRBrowser::GetGameUiPose(float aPose[17]) {
   for (const auto& pane : saved) {
     pane.widget->SetTransform(pane.transform);
   }` + source.slice(end);
+  });
+  edit("app/src/common/shared/com/igalia/wolvic/VRBrowserActivity.java", (source) => {
+    if (source.includes("NH3D keeps the same page surface across XR transitions")) return source;
+    return replaceOnce(source, "        // Show the window in front of you when you exit immersive mode.",
+      `        // NH3D keeps the same page surface across XR transitions.
+        if (BuildConfig.NH3D_GAME_HOST) {
+            if (aCallback != 0) queueRunnable(() -> runCallbackNative(aCallback));
+            return;
+        }
+
+        // Show the window in front of you when you exit immersive mode.`, "balanced page compositor lifecycle");
   });
 }

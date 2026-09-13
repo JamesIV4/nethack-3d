@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { dragRange, pickUiTarget, pointerEvent } from "./dom-pointer";
 import { withoutWorldClipping } from "./overlay-material";
+import { NativePointerBridge } from "./native-pointer-bridge";
 
 export interface UiHit { point: THREE.Vector3; distance: number; x: number; y: number; target: HTMLElement }
 export const UI_WIDTH = 3;
@@ -9,22 +10,24 @@ export const UI_DISTANCE = 1.45;
 
 /** One DOM owns both the native GPU pane and the wired development capture. */
 export class HtmlUiPanel {
+  readonly nativePointer: NativePointerBridge | null;
   private readonly matrix = new THREE.Matrix4();
   private readonly inverse = new THREE.Matrix4();
   private readonly cursors = new Map<XRInputSource, HTMLDivElement>();
   private readonly hovered = new Map<XRInputSource, UiHit>();
   private pressed: { source: XRInputSource; hit: UiHit; id: number } | null = null;
-  private sequence: Promise<unknown> = Promise.resolve();
   private ready = false;
   private disposed = false;
   private lastCapture = -Infinity;
   private pending = false;
+  private readonly anchorOffset = new THREE.Matrix4().makeTranslation(0, -0.20, -UI_DISTANCE);
   private readonly mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> | null;
   private readonly canvas: HTMLCanvasElement | null;
   private readonly texture: THREE.CanvasTexture | null;
   private readonly token = new URLSearchParams(location.hash.slice(1)).get("token");
 
-  constructor(private readonly root: THREE.Group, private readonly native: boolean) {
+  constructor(private readonly root: THREE.Group, readonly native: boolean) {
+    this.nativePointer = native ? new NativePointerBridge() : null;
     this.canvas = native ? null : Object.assign(document.createElement("canvas"), { width: 1600, height: 1000 });
     this.texture = this.canvas ? new THREE.CanvasTexture(this.canvas) : null;
     if (this.texture) {
@@ -37,19 +40,11 @@ export class HtmlUiPanel {
   }
 
   recenter(anchor: THREE.Vector3, heading: THREE.Quaternion): void {
-    const center = new THREE.Vector3(0, -0.05, -UI_DISTANCE).applyQuaternion(heading).add(anchor);
-    this.matrix.compose(center, heading, new THREE.Vector3(1, 1, 1));
+    if (this.nativePointer) { this.nativePointer.recenter(); return; }
+    this.matrix.compose(anchor, heading, new THREE.Vector3(1, 1, 1)).multiply(this.anchorOffset);
     this.inverse.copy(this.matrix).invert();
-    if (this.mesh) { this.mesh.position.copy(center); this.mesh.quaternion.copy(heading); }
-    if (!this.native) { this.ready = true; return; }
-    const body = JSON.stringify([...this.matrix.elements, UI_WIDTH]);
-    this.ready = false;
-    this.sequence = this.sequence.catch(() => {}).then(async () => {
-      if (this.disposed) return;
-      const response = await fetch("/__xr/pane", { method: "POST", headers: { "Content-Type": "application/json" }, body });
-      if (!response.ok) throw new Error("Cannot position VR UI pane: " + response.status);
-      this.ready = !this.disposed;
-    }).catch((error) => console.error(error));
+    if (this.mesh) this.matrix.decompose(this.mesh.position, this.mesh.quaternion, this.mesh.scale);
+    this.ready = true;
   }
 
   private coordinates(ray: THREE.Ray, outside = false): Omit<UiHit, "target"> | null {
@@ -67,12 +62,14 @@ export class HtmlUiPanel {
   }
 
   hit(ray: THREE.Ray): UiHit | null {
+    if (this.native) return null;
     const hit = this.coordinates(ray);
     const target = hit && pickUiTarget(hit.x, hit.y);
     return hit && target ? { ...hit, target } : null;
   }
 
   hover(source: XRInputSource, hit: UiHit | null, ray: THREE.Ray, id: number): void {
+    if (this.native) return;
     let cursor = this.cursors.get(source);
     if (!cursor) {
       cursor = document.createElement("div"); cursor.className = "nh3d-xr-pointer";
@@ -97,6 +94,7 @@ export class HtmlUiPanel {
   }
 
   press(source: XRInputSource, hit: UiHit, id: number): void {
+    if (this.native) return;
     if (this.pressed) return;
     this.pressed = { source, hit, id };
     pointerEvent(hit.target, "down", hit.x, hit.y, id, true);
@@ -113,11 +111,13 @@ export class HtmlUiPanel {
   }
 
   forget(source: XRInputSource): void {
+    this.nativePointer?.forget(source.handedness);
     this.release(source, null, true);
     this.cursors.get(source)?.remove(); this.cursors.delete(source); this.hovered.delete(source);
   }
 
   update(time: number): void {
+    if (this.nativePointer) { this.nativePointer.update(time); return; }
     if (!this.canvas || this.pending || this.disposed || time - this.lastCapture < 100) return;
     this.pending = true; this.lastCapture = time;
     void fetch("/__xr/frame", { headers: { Authorization: "Bearer " + this.token }, cache: "no-store" })
@@ -134,6 +134,7 @@ export class HtmlUiPanel {
 
   dispose(): void {
     this.disposed = true;
+    this.nativePointer?.dispose();
     for (const source of this.cursors.keys()) this.forget(source);
     if (this.mesh) { this.root.remove(this.mesh); this.mesh.geometry.dispose(); this.mesh.material.dispose(); }
     this.texture?.dispose();
