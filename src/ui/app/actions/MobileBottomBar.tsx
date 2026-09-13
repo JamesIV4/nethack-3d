@@ -1,3 +1,4 @@
+import { QuestWebXrButton } from "../../../quest/webxr/QuestWebXrControls";
 import type { Nh3dClientOptions, InventoryDialogState, Nethack3DEngineController } from "../../../game/ui-types";
 import type * as React from "react";
 import type {
@@ -42,6 +43,7 @@ export function MobileBottomBar({
   return (
     mobileTouchUiVisible ? (
       <div className="nh3d-mobile-bottom-bar">
+        <QuestWebXrButton className="nh3d-mobile-bottom-button" />
         <button
           className={`nh3d-mobile-bottom-button${isCharacterSheetVisible ? " is-active" : ""
             }`}

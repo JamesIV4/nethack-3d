@@ -41,7 +41,7 @@ try {
   const hello = await receive((message) => message.from === "root");
   send({ to: "root", type: "listTabs" });
   const list = await receive((message) => Array.isArray(message.tabs) || message.error);
-  if (process.argv[2] !== "--eval-file") {
+  if (process.argv[2] !== "--eval-file" && process.argv[2] !== "--console") {
     console.log(JSON.stringify({ hello, list }, null, 2));
   } else {
     const tab = list.tabs?.find((entry) => entry.url?.startsWith("http://127.0.0.1:18973/"));
@@ -52,12 +52,18 @@ try {
     const form = target.frame ?? target.target;
     const consoleActor = form.consoleActor;
     if (!consoleActor) throw new Error("No console actor: " + JSON.stringify(target));
+    if (process.argv[2] === "--console") {
+      send({ to: consoleActor, type: "getCachedMessages", messageTypes: ["PageError", "ConsoleAPI"] });
+      const cached = await receive((message) => message.from === consoleActor && (message.messages || message.error));
+      console.log(JSON.stringify(cached, null, 2));
+    } else {
     const expression = readFileSync(process.argv[3], "utf8");
     send({ to: consoleActor, type: "evaluateJSAsync", text: expression, options: {} });
     const started = await receive((message) => message.from === consoleActor && (message.resultID || message.error));
     if (started.error) throw new Error(JSON.stringify(started));
     const result = await receive((message) => message.type === "evaluationResult" && message.resultID === started.resultID);
     console.log(JSON.stringify(result, null, 2));
+    }
   }
 } finally {
   connection?.destroy();

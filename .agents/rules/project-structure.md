@@ -179,8 +179,9 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 ## Direct Quest WebXR proof
 
 - `src/game/engine/rendering/webxr-presentation.ts` and `webxr-rig.ts`: original Three.js scene rendered through WebXR; camera-space conversion, tabletop/FPS placement, lifecycle and restoration.
+- `src/game/engine/rendering/scaled-camera-sprites.ts` and `frame-time.ts`: sprite view-scale correction and the common game-effect clock during XR.
 - `src/quest/webxr/`: in-game XR entry/settings, controller routing, and the wired HTML pane.
-- `scripts/quest/webxr/`: isolated Chrome wired host, pinned browser/host source patches, and standalone runtime preparation.
+- `scripts/quest/webxr/`: isolated Chrome wired host, pinned Wolvic/Gecko patches, custom GeckoView build and Maven staging, and verified standalone APK packaging.
 - `quest/webxr/host/`: bundled asset host code injected into the owned Wolvic checkout.
 - `quest/runtime/`: ignored external runtime checkout and native build dependencies.
 - `BuildQuestWebXrApk.bat`: separate fully bundled WebXR proof workflow; dependency preflight precedes build work.

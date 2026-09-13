@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { gameFrameTime } from "./engine/rendering/frame-time";
 import { WebHaptics } from "web-haptics";
 import { WorkerRuntimeBridge } from "../runtime";
 import type { RuntimeEvent } from "../runtime";
@@ -1673,7 +1674,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.applyClientOptions(options);
   }
 
-  private animate(timeMs: number = performance.now()): void {
+  private animate(animationTime: number = performance.now()): void {
+    const timeMs = gameFrameTime(animationTime, this.systems.renderPipeline.renderer.xr.isPresenting, performance.now());
     if (this.systems.engineState.disposed) {
       return;
     }

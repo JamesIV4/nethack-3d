@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { ScaledCameraSprites } from "./scaled-camera-sprites";
 import { WiredHtmlPanel } from "../../../quest/webxr/wired-html-panel";
 import { WebXrControllerInput } from "../../../quest/webxr/controller-input";
 import { TILE_SIZE } from "../../constants";
@@ -8,7 +9,7 @@ import type { PlayerMovement } from "../world/player-movement";
 import type { RenderPipeline } from "./render-pipeline";
 import type { HeldWeapon } from "./held-weapon";
 import { createTrackingToGame, tabletopClippingPlanes } from "./webxr-rig";
-import { registerWebXrOwner, updateWebXrState } from "../../../quest/webxr/presentation";
+import { enterWebXr, registerWebXrOwner, updateWebXrState } from "../../../quest/webxr/presentation";
 
 export interface WebXrPresentationDependencies {
   readonly camera: Pick<Camera, "camera" | "cameraYaw" | "cameraPitch" | "firstPersonEyeHeight" | "applyStandardCameraPresetForTopDownModes">;
@@ -24,6 +25,7 @@ export class WebXrPresentation {
   private started = false;
   private entering = false;
   private unregister: (() => void) | null = null;
+  private readonly scaledSprites = new ScaledCameraSprites();
   private readonly trackingRoot = new THREE.Group();
   private readonly xrCamera = new THREE.PerspectiveCamera(75, 1, 0.03, 150);
   private readonly anchor = new THREE.Vector3(0, 1.6, 0);
@@ -43,6 +45,11 @@ export class WebXrPresentation {
   private lastRigKey = "";
   private needsRecenter = true;
   private host = false;
+  private nativeHost = false;
+  private autoEntryAttempted = false;
+  private availabilityPending = false;
+  private xrAvailable = false;
+  private readonly lifecycle = new AbortController();
   private wired = false;
   private htmlPanel: WiredHtmlPanel | null = null;
   private input: WebXrControllerInput | null = null;
@@ -57,7 +64,8 @@ export class WebXrPresentation {
     if (this.started) return;
     this.started = true;
     const host = new URLSearchParams(location.search).get("xrHost");
-    this.host = host === "native" || host === "wired";
+    this.nativeHost = host === "native" || location.origin === "http://127.0.0.1:18973";
+    this.host = this.nativeHost || host === "wired";
     this.wired = host === "wired";
     // Only expose entry where a live HTML UI compositor is available.
     if (!this.host) return;
@@ -66,15 +74,40 @@ export class WebXrPresentation {
     this.unregister = registerWebXrOwner({
       enter: () => this.enter(), exit: async () => { await this.session?.end(); }, recenter: () => { this.needsRecenter = true; },
     });
-    updateWebXrState({ host: true });
+    updateWebXrState({ host: true, available: false, error: "" });
     if (!navigator.xr) {
       updateWebXrState({ available: false, error: "This host does not expose WebXR. Use the WebXR runtime build." });
       return;
     }
-    void navigator.xr.isSessionSupported("immersive-vr").then((available) => {
-      if (this.started) updateWebXrState({ available, error: available ? "" : "No active XR headset/runtime was found." });
-    }).catch((error: unknown) => { if (this.started) updateWebXrState({ error: String(error) }); });
+    navigator.xr.addEventListener("devicechange", this.refreshAvailability, { signal: this.lifecycle.signal });
+    document.addEventListener("visibilitychange", this.refreshAvailability, { signal: this.lifecycle.signal });
+    document.addEventListener("pointerup", this.tryAutomaticEntry, { capture: true, signal: this.lifecycle.signal });
+    document.addEventListener("keydown", this.tryAutomaticEntry, { capture: true, signal: this.lifecycle.signal });
+    void this.refreshAvailability();
   }
+
+  private readonly refreshAvailability = async (): Promise<void> => {
+    if (!this.started || !navigator.xr || this.availabilityPending) return;
+    this.availabilityPending = true;
+    try {
+      const available = await navigator.xr.isSessionSupported("immersive-vr");
+      if (!this.started) return;
+      this.xrAvailable = available;
+      updateWebXrState({ available, error: available ? "" : "No active XR headset/runtime was found." });
+      this.tryAutomaticEntry();
+    } catch (error) {
+      if (this.started) updateWebXrState({ error: String(error) });
+    } finally { this.availabilityPending = false; }
+  };
+
+  private readonly tryAutomaticEntry = (): void => {
+    if (!this.started || !this.nativeHost || !this.xrAvailable || this.autoEntryAttempted ||
+        document.visibilityState === "hidden" || navigator.userActivation?.isActive === false) return;
+    // Use the normal Start/Resume interaction's transient activation. If startup
+    // outlasts it, the next ordinary game interaction completes entry.
+    this.autoEntryAttempted = true;
+    void enterWebXr();
+  };
 
   private async enter(): Promise<void> {
     if (this.session || this.entering || !navigator.xr || !this.host) return;
@@ -200,6 +233,7 @@ export class WebXrPresentation {
   render(): boolean {
     if (!this.active) return false;
     this.htmlPanel?.update(performance.now());
+    this.scaledSprites.prepare(this.dependencies.renderPipeline.scene);
     // The screen-space held weapon is not an XR hand/controller prop.
     if (this.dependencies.heldWeapon.fpsHeldWeaponMesh) this.dependencies.heldWeapon.fpsHeldWeaponMesh.visible = false;
     this.dependencies.renderPipeline.renderer.render(this.dependencies.renderPipeline.scene, this.xrCamera);
@@ -208,6 +242,7 @@ export class WebXrPresentation {
 
   dispose(): void {
     this.started = false;
+    this.lifecycle.abort();
     this.unregister?.(); this.unregister = null;
     const session = this.session;
     if (session) { this.ended(); void session.end().catch(() => {}); }

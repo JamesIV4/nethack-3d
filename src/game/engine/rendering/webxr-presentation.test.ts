@@ -6,17 +6,17 @@ vi.mock("../../../quest/webxr/controller-input", () => ({ WebXrControllerInput: 
 vi.mock("../../../quest/webxr/wired-html-panel", () => ({ WiredHtmlPanel: class { recenter() {} update() {} dispose() {} } }));
 afterEach(() => vi.unstubAllGlobals());
 
-function fixture() {
+function fixture(native = false) {
   const classes = new Set<string>();
-  vi.stubGlobal("document", { exitPointerLock: vi.fn(), documentElement: { classList: {
+  vi.stubGlobal("document", Object.assign(new EventTarget(), { visibilityState: "visible", exitPointerLock: vi.fn(), documentElement: { classList: {
     add: (value: string) => classes.add(value), remove: (value: string) => classes.delete(value),
-  } } });
-  vi.stubGlobal("location", new URL("http://127.0.0.1/?xrHost=native"));
+  } } }));
+  vi.stubGlobal("location", new URL(native ? "http://127.0.0.1:18973/" : "http://127.0.0.1/?xrHost=wired"));
   const session = new EventTarget() as EventTarget & { end: () => Promise<void>; environmentBlendMode: string };
   session.environmentBlendMode = "opaque";
   session.end = async () => { renderer.xr.isPresenting = false; session.dispatchEvent(new Event("end")); };
   const requestSession = vi.fn(async () => session);
-  vi.stubGlobal("navigator", { xr: { isSessionSupported: async () => true, requestSession } });
+  vi.stubGlobal("navigator", { userActivation: { isActive: true }, xr: Object.assign(new EventTarget(), { isSessionSupported: async () => true, requestSession }) });
   const scene = new THREE.Scene();
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
   scene.add(mesh);
@@ -89,5 +89,39 @@ describe("Three.js owns the Quest world", () => {
     expect(end).toHaveBeenCalledTimes(1);
     expect(f.scene.children).toEqual([f.mesh]);
     expect(f.classes.size).toBe(0);
+  });
+
+  it("enters VR from native game startup without changing the tabletop preference", async () => {
+    const f = fixture(true);
+    f.presentation.start();
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    expect(f.requestSession).toHaveBeenCalledTimes(1);
+    expect(f.presentation.active).toBe(true);
+    expect(f.deps.engineState.playMode).toBe("normal");
+    await toggleWebXr();
+    document.dispatchEvent(new Event("pointerup"));
+    await Promise.resolve();
+    expect(f.requestSession).toHaveBeenCalledTimes(1);
+    expect(f.presentation.active).toBe(false);
+    f.presentation.dispose();
+  });
+  it("waits for normal user activation when startup outlasts the Start interaction", async () => {
+    const f = fixture(true);
+    Object.assign(navigator.userActivation, { isActive: false });
+    f.presentation.start();
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+    expect(f.requestSession).not.toHaveBeenCalled();
+    Object.assign(navigator.userActivation, { isActive: true });
+    document.dispatchEvent(new Event("pointerup"));
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    expect(f.presentation.active).toBe(true);
+    f.presentation.dispose();
+  });
+  it("keeps wired browser entry under the normal Enter VR button", async () => {
+    const f = fixture();
+    f.presentation.start();
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+    expect(f.requestSession).not.toHaveBeenCalled();
+    f.presentation.dispose();
   });
 });
