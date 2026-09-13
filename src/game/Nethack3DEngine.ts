@@ -1691,7 +1691,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.webXrPresentation.updateCamera();
     this.systems.webXrPresentation.updateInput(timeMs);
     this.systems.pointerLock.syncFpsPointerLockForUiState(false);
-    this.systems.controllerGameplay.updateControllerInput(deltaSeconds);
+    this.systems.controllerGameplay.updateControllerInput(deltaSeconds, !this.systems.webXrPresentation.active);
     this.systems.entityMovement.updateEntityMoveTransitions();
     this.systems.camera.updateCameraPanInertia(deltaSeconds);
     if (!this.systems.webXrPresentation.updateCamera()) this.systems.camera.updateCamera(deltaSeconds);

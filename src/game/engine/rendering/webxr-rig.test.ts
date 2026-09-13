@@ -9,6 +9,18 @@ function near(actual: THREE.Vector3, expected: THREE.Vector3): void {
   expect(actual.distanceTo(expected)).toBeLessThan(0.00001);
 }
 describe("direct WebXR tracking rig", () => {
+  it("raises the far edge of the board at a 45 degree pitch", () => {
+    const rig = createTrackingToGame("tabletop", player, anchor, heading, 1, 0.62, Math.PI / 4);
+    const world = rig.matrix.clone().invert();
+    const far = player.clone().add(new THREE.Vector3(0, 1, 0)).applyMatrix4(world).sub(rig.tabletop);
+    const nearEdge = player.clone().add(new THREE.Vector3(0, -1, 0)).applyMatrix4(world).sub(rig.tabletop);
+    expect(far.y).toBeCloseTo(0.11 / Math.sqrt(2));
+    expect(nearEdge.y).toBeCloseTo(-0.11 / Math.sqrt(2));
+    expect(far.z).toBeLessThan(0);
+    const normal = new THREE.Vector3(0, 0, 1).transformDirection(world);
+    const backingTop = rig.tabletop.clone().addScaledVector(normal, -0.002);
+    expect(rig.tabletop.clone().sub(backingTop).dot(normal)).toBeCloseTo(0.002);
+  });
   it("places the FPS player at the real floor below the recentered head", () => {
     const rig = createTrackingToGame("first-person", player, anchor, heading, 1, 0.62);
     const gameToTracking = rig.matrix.clone().invert();

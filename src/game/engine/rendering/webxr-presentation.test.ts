@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { WebXrPresentation, type WebXrPresentationDependencies } from "./webxr-presentation";
 import { getWebXrState, toggleWebXr } from "../../../quest/webxr/presentation";
 vi.mock("../../../quest/webxr/controller-input", () => ({ WebXrControllerInput: class { update() {} dispose() {} } }));
-vi.mock("../../../quest/webxr/wired-html-panel", () => ({ WiredHtmlPanel: class { recenter() {} update() {} dispose() {} } }));
+vi.mock("../../../quest/webxr/html-ui-panel", () => ({ HtmlUiPanel: class { recenter() {} update() {} dispose() {} } }));
 afterEach(() => vi.unstubAllGlobals());
 
 function fixture(native = false) {

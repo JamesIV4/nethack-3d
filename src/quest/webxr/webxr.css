@@ -9,3 +9,16 @@
   pointer-events: none;
 }
 :root.nh3d-webxr-active .nh3d-fps-crosshair { display: none; }
+.nh3d-xr-pointer {
+  position: fixed;
+  z-index: 2147483647;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #78d5ff;
+  border-radius: 50%;
+  background: #78d5ff44;
+  box-shadow: 0 0 2px #001722;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.nh3d-xr-pointer[hidden] { display: none; }

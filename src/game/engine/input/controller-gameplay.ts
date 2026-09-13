@@ -1460,9 +1460,9 @@ export class ControllerGameplay {
     }
   }
 
-  updateControllerInput(deltaSeconds: number): void {
+  updateControllerInput(deltaSeconds: number, enabled = true): void {
     if (
-      this.dependencies.engineState.clientOptions.controllerEnabled !== true
+      !enabled || this.dependencies.engineState.clientOptions.controllerEnabled !== true
     ) {
       this.controllerPreviousActionState =
         createControllerBooleanActionMap(false);

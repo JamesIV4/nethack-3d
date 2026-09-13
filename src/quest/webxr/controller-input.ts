@@ -2,7 +2,9 @@ import * as THREE from "three";
 import { useGameStore } from "../../state/gameStore";
 import { dispatchQuestKey } from "../native/bootstrap";
 import { routeQuestCommand, type QuestNativeCommand } from "../native/input";
-import type { WiredHtmlPanel } from "./wired-html-panel";
+import type { HtmlUiPanel, UiHit } from "./html-ui-panel";
+import type { BoardTilt } from "./board-tilt";
+import { withoutWorldClipping } from "./overlay-material";
 
 function command(value: QuestNativeCommand): void {
   routeQuestCommand(value, useGameStore.getState(), {
@@ -28,30 +30,115 @@ export function xrStickDirection(x: number, y: number, forward: THREE.Vector3 | 
   const angle = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * Math.PI / 4;
   return { dx: Math.round(Math.cos(angle)) as -1 | 0 | 1, dy: Math.round(Math.sin(angle)) as -1 | 0 | 1 };
 }
+interface PointerState {
+  source: XRInputSource; id: number; ray: THREE.Ray;
+  line: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
+  circle: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
+  trigger: boolean; a: boolean; down: boolean; tracked: boolean;
+  capture: "ui" | "tilt" | "world" | null;
+  ui: UiHit | null; ring: THREE.Vector3 | null; world: THREE.Intersection | null;
+  buttons: boolean[];
+}
 export class WebXrControllerInput {
-  private readonly previous = new Map<XRInputSource, boolean[]>();
+  private readonly pointers = new Map<XRInputSource, PointerState>();
+  private nextId = 1;
   private nextMove = 0;
-  private readonly rays: { controller: THREE.Group; line: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial> }[] = [];
-  private readonly ray = new THREE.Raycaster();
-  private readonly matrix = new THREE.Matrix4();
-  private readonly position = new THREE.Vector3();
-  private readonly direction = new THREE.Vector3();
-  private readonly rotation = new THREE.Quaternion();
+  private readonly caster = new THREE.Raycaster();
+  private readonly pickCamera = new THREE.PerspectiveCamera();
+  private readonly inverse = new THREE.Matrix4();
   private readonly selectStart = (event: XRInputSourceEvent): void => {
-    if (this.panel()?.selectStart(event)) return;
+    const state = this.state(event.inputSource);
+    this.refresh(state, event.frame); state.trigger = true; this.pressState(state);
+  };
+  private readonly selectEnd = (event: XRInputSourceEvent): void => {
+    const state = this.pointers.get(event.inputSource);
+    if (state) { this.refresh(state, event.frame); state.trigger = false; this.pressState(state); }
+  };
+  constructor(private readonly session: XRSession, private readonly renderer: THREE.WebGLRenderer,
+    private readonly scene: THREE.Scene, private readonly root: THREE.Group, private readonly tileSize: number,
+    private readonly panel: () => HtmlUiPanel | null, private readonly tilt: BoardTilt) {
+    session.addEventListener("selectstart", this.selectStart);
+    session.addEventListener("selectend", this.selectEnd);
+  }
+  private state(source: XRInputSource): PointerState {
+    let state = this.pointers.get(source);
+    if (state) return state;
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      withoutWorldClipping(new THREE.LineBasicMaterial({ color: 0x78d5ff, transparent: true, opacity: 0.7, depthTest: false, depthWrite: false, toneMapped: false })));
+    const circle = new THREE.Mesh(new THREE.RingGeometry(0.006, 0.01, 24),
+      withoutWorldClipping(new THREE.MeshBasicMaterial({ color: 0x78d5ff, side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false })));
+    line.renderOrder = circle.renderOrder = 20000; line.frustumCulled = false;
+    this.root.add(line, circle);
+    state = { source, id: this.nextId++, ray: new THREE.Ray(), line, circle, trigger: false, a: false,
+      down: false, tracked: false, capture: null, ui: null, ring: null, world: null, buttons: [] };
+    this.pointers.set(source, state);
+    return state;
+  }
+  private refresh(state: PointerState, frame: XRFrame): void {
     const reference = this.renderer.xr.getReferenceSpace();
-    const pose = reference && event.frame.getPose(event.inputSource.targetRaySpace, reference);
-    if (!pose) return;
-    this.matrix.fromArray(pose.transform.matrix).premultiply(this.root.matrixWorld);
-    this.position.setFromMatrixPosition(this.matrix);
-    this.rotation.setFromRotationMatrix(new THREE.Matrix4().extractRotation(this.matrix));
-    this.direction.set(0, 0, -1).applyQuaternion(this.rotation);
-    this.ray.set(this.position, this.direction);
-    const roots = this.scene.children.filter((child) => child !== this.root);
-    const hit = this.ray.intersectObjects(roots, true).find((entry) => {
-      for (let parent: THREE.Object3D | null = entry.object; parent; parent = parent.parent) if (!parent.visible) return false;
-      return this.renderer.clippingPlanes.every((plane) => plane.distanceToPoint(entry.point) >= 0);
-    });
+    const pose = reference && frame.getPose(state.source.targetRaySpace, reference);
+    state.tracked = !!pose;
+    state.line.visible = !!pose; state.circle.visible = false;
+    if (!pose) { this.cancel(state); return; }
+    const transform = new THREE.Matrix4().fromArray(pose.transform.matrix);
+    state.ray.origin.setFromMatrixPosition(transform);
+    state.ray.direction.set(0, 0, -1).transformDirection(transform);
+    state.ui = this.panel()?.hit(state.ray) ?? null;
+    this.panel()?.hover(state.source, state.ui, state.ray, state.id);
+    state.ring = state.ui ? null : this.tilt.hit(state.ray);
+    this.tilt.hover(state.source, !!state.ring);
+    if (state.capture === "tilt") this.tilt.move(state.source, state.ray);
+    state.world = null;
+    let point = state.ui?.point ?? state.ring;
+    let normal = state.ray.direction.clone().negate();
+    if (!point) {
+      this.root.updateWorldMatrix(true, false);
+      this.inverse.copy(this.root.matrixWorld).invert();
+      const worldRay = state.ray.clone().applyMatrix4(this.root.matrixWorld);
+      this.caster.ray.copy(worldRay);
+      const tracked = this.renderer.xr.getCamera();
+      tracked.matrixWorld.decompose(this.pickCamera.position, this.pickCamera.quaternion, new THREE.Vector3());
+      this.pickCamera.updateMatrixWorld(true); this.caster.camera = this.pickCamera;
+      state.world = this.caster.intersectObjects(this.scene.children.filter((child) => child !== this.root), true).find((hit) => {
+        for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
+        return this.renderer.clippingPlanes.every((plane) => plane.distanceToPoint(hit.point) >= 0);
+      }) ?? null;
+      if (state.world) {
+        point = state.world.point.clone().applyMatrix4(this.inverse);
+        if (state.world.face) normal.copy(state.world.face.normal)
+          .applyNormalMatrix(new THREE.Matrix3().getNormalMatrix(state.world.object.matrixWorld)).transformDirection(this.inverse);
+      }
+      const support = this.tilt.surfaceHit(state.ray);
+      if (support && (!point || support.point.distanceToSquared(state.ray.origin) < point.distanceToSquared(state.ray.origin))) {
+        point = support.point; normal = support.normal; state.world = null;
+      }
+    }
+    const end = point ?? state.ray.at(5, new THREE.Vector3());
+    const positions = state.line.geometry.getAttribute("position") as THREE.BufferAttribute;
+    positions.setXYZ(0, state.ray.origin.x, state.ray.origin.y, state.ray.origin.z);
+    positions.setXYZ(1, end.x, end.y, end.z); positions.needsUpdate = true;
+    state.circle.visible = !!point && !state.ui;
+    if (point) {
+      state.circle.position.copy(point).addScaledVector(normal, 0.001);
+      state.circle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+    }
+  }
+  private pressState(state: PointerState): void {
+    const down = state.trigger || state.a;
+    if (down === state.down) return;
+    state.down = down;
+    if (!down) {
+      if (state.capture === "ui") this.panel()?.release(state.source, state.ui);
+      if (state.capture === "tilt") this.tilt.end(state.source);
+      state.capture = null; return;
+    }
+    if (!state.tracked) return;
+    if (state.ui) { state.capture = "ui"; this.panel()?.press(state.source, state.ui, state.id); return; }
+    if (state.ring) { state.capture = "tilt"; this.tilt.begin(state.source, state.ray); return; }
+    state.capture = "world";
+    // A remains the normal confirm key when the UI or tilt handle does not own it.
+    if (state.a && !state.trigger) { command({ type: "key", key: "Enter" }); return; }
+    const hit = state.world;
     if (!hit) return;
     let tile: { x: number; y: number } | null = null;
     for (let object: THREE.Object3D | null = hit.object; object; object = object.parent) {
@@ -61,54 +148,43 @@ export class WebXrControllerInput {
     }
     tile ??= { x: Math.round(hit.point.x / this.tileSize), y: Math.round(-hit.point.y / this.tileSize) };
     command({ type: "tile", ...tile });
-  };
-  private readonly selectEnd = (event: XRInputSourceEvent): void => { this.panel()?.selectEnd(event); };
-  constructor(
-    private readonly session: XRSession, private readonly renderer: THREE.WebGLRenderer,
-    private readonly scene: THREE.Scene, private readonly root: THREE.Group, private readonly tileSize: number,
-    private readonly panel: () => WiredHtmlPanel | null,
-  ) {
-    if (panel()) for (let index = 0; index < 2; index++) {
-      const controller = renderer.xr.getController(index);
-      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(), new THREE.Vector3(0, 0, -3),
-      ]), new THREE.LineBasicMaterial({ color: 0x78d5ff, transparent: true, opacity: 0.7 }));
-      controller.add(line); root.add(controller); this.rays.push({ controller, line });
-    }
-    session.addEventListener("selectstart", this.selectStart);
-    session.addEventListener("selectend", this.selectEnd);
   }
   update(time: number, forward: THREE.Vector3 | null): void {
     const frame = this.renderer.xr.getFrame();
-    if (this.session.visibilityState !== "visible" || !frame) return;
+    if (this.session.visibilityState !== "visible" || !frame) {
+      for (const state of this.pointers.values()) { this.cancel(state); state.line.visible = state.circle.visible = false; }
+      return;
+    }
     const active = new Set(this.session.inputSources);
-    for (const source of this.previous.keys()) if (!active.has(source)) this.previous.delete(source);
+    for (const [source, state] of this.pointers) if (!active.has(source)) this.remove(state);
     for (const source of this.session.inputSources) {
+      const state = this.state(source);
+      this.refresh(state, frame);
       const pad = source.gamepad;
-      if (!pad) continue;
-      const prior = this.previous.get(source) ?? [];
-      const buttons = pad.buttons.map((button) => button.pressed);
-      this.previous.set(source, buttons);
-      if (this.panel()?.owns(source, frame)) continue;
-      if (source.handedness === "left") {
+      const buttons = pad?.buttons.map((button) => button.pressed) ?? [];
+      const prior = state.buttons; state.buttons = buttons;
+      state.a = source.handedness === "right" && !!buttons[4]; this.pressState(state);
+      if (state.ui || state.capture === "ui" || state.capture === "tilt") continue;
+      if (source.handedness === "left" && pad) {
         const direction = xrStickDirection(pad.axes[2] ?? pad.axes[0] ?? 0, pad.axes[3] ?? pad.axes[1] ?? 0, forward);
         if (direction && time >= this.nextMove) { command({ type: "move", ...direction }); this.nextMove = time + 180; }
         else if (!direction) this.nextMove = 0;
         if (buttons[4] && !prior[4]) command({ type: "inventory" });
       }
-      if (source.handedness === "right") {
-        if (buttons[4] && !prior[4]) command({ type: "key", key: "Enter" });
-        if (buttons[5] && !prior[5]) command({ type: "key", key: "Escape" });
-      }
+      if (source.handedness === "right" && buttons[5] && !prior[5]) command({ type: "key", key: "Escape" });
     }
   }
+  private cancel(state: PointerState): void {
+    this.panel()?.forget(state.source); this.tilt.end(state.source);
+    state.trigger = state.a = state.down = false; state.capture = null; state.ui = null; state.ring = null; state.world = null;
+  }
+  private remove(state: PointerState): void {
+    this.cancel(state); this.root.remove(state.line, state.circle);
+    state.line.geometry.dispose(); state.line.material.dispose(); state.circle.geometry.dispose(); state.circle.material.dispose();
+    this.pointers.delete(state.source);
+  }
   dispose(): void {
-    this.session.removeEventListener("selectstart", this.selectStart);
-    this.session.removeEventListener("selectend", this.selectEnd);
-    this.previous.clear();
-    for (const { controller, line } of this.rays) {
-      this.root.remove(controller); controller.remove(line); line.geometry.dispose(); line.material.dispose();
-    }
-    this.rays.length = 0;
+    this.session.removeEventListener("selectstart", this.selectStart); this.session.removeEventListener("selectend", this.selectEnd);
+    for (const state of this.pointers.values()) this.remove(state);
   }
 }

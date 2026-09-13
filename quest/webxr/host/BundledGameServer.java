@@ -7,12 +7,15 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
+import org.json.JSONArray;
 
 /** A fixed loopback origin for the bundled game, workers and persistent saves. */
 public final class BundledGameServer {
     public static final String ORIGIN = "http://127.0.0.1:18973";
     private static ServerSocket listener;
     private static ExecutorService workers;
+    private static volatile float[] uiPose;
+    public static float[] getUiPose() { return uiPose; }
     private BundledGameServer() {}
 
     public static synchronized void start(Context context) {
@@ -47,6 +50,7 @@ public final class BundledGameServer {
     public static synchronized void stop() {
         try { if (listener != null) listener.close(); } catch (IOException ignored) {}
         listener = null;
+        uiPose = null;
         if (workers != null) workers.shutdownNow();
         workers = null;
     }
@@ -58,18 +62,44 @@ public final class BundledGameServer {
             String request = line(reader);
             if (request == null) return;
             String[] parts = request.split(" ");
-            if (parts.length != 3 || !(parts[0].equals("GET") || parts[0].equals("HEAD"))) {
+            if (parts.length != 3 || !(parts[0].equals("GET") || parts[0].equals("HEAD") || parts[0].equals("POST"))) {
                 status(socket, 405, "Method Not Allowed"); return;
             }
             String host = "", header;
+            String origin = "";
+            int contentLength = 0;
             int headerCount = 0;
             while ((header = line(reader)) != null && !header.isEmpty()) {
                 if (++headerCount > 64) throw new IOException("Too many headers");
                 int colon = header.indexOf(':');
                 if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("Host")) host = header.substring(colon + 1).trim();
+                if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("Origin")) origin = header.substring(colon + 1).trim();
+                if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("Content-Length")) contentLength = Integer.parseInt(header.substring(colon + 1).trim());
             }
             if (!host.equals("127.0.0.1:18973")) { status(socket, 403, "Forbidden"); return; }
             String path = new URI(parts[1]).getPath();
+            if (parts[0].equals("POST")) {
+                if (!"/__xr/pane".equals(path) || !ORIGIN.equals(origin) || contentLength < 1 || contentLength > 2048) {
+                    status(socket, 403, "Forbidden"); return;
+                }
+                char[] body = new char[contentLength];
+                int offset = 0;
+                while (offset < body.length) {
+                    int read = reader.read(body, offset, body.length - offset);
+                    if (read < 0) throw new IOException("Incomplete pane pose");
+                    offset += read;
+                }
+                JSONArray values = new JSONArray(new String(body));
+                if (values.length() != 17) throw new IOException("Invalid pane pose");
+                float[] pose = new float[17];
+                for (int i = 0; i < pose.length; i++) {
+                    pose[i] = (float)values.getDouble(i);
+                    if (!Float.isFinite(pose[i]) || Math.abs(pose[i]) > 10000) throw new IOException("Invalid pane coordinate");
+                }
+                if (pose[16] < 0.5f || pose[16] > 5.0f) throw new IOException("Invalid pane width");
+                uiPose = pose;
+                status(socket, 204, "No Content"); return;
+            }
             if (path == null || !path.startsWith("/") || path.contains("\\") || path.indexOf('\0') >= 0) {
                 status(socket, 400, "Bad Request"); return;
             }

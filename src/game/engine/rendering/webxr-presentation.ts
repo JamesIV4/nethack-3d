@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { ScaledCameraSprites } from "./scaled-camera-sprites";
-import { WiredHtmlPanel } from "../../../quest/webxr/wired-html-panel";
+import { HtmlUiPanel } from "../../../quest/webxr/html-ui-panel";
+import { BoardTilt } from "../../../quest/webxr/board-tilt";
+import { withoutWorldClipping } from "../../../quest/webxr/overlay-material";
 import { WebXrControllerInput } from "../../../quest/webxr/controller-input";
 import { TILE_SIZE } from "../../constants";
 import type { Camera } from "../camera/camera";
@@ -35,7 +37,7 @@ export class WebXrPresentation {
   private readonly forward = new THREE.Vector3();
   private readonly board = new THREE.Mesh(
     new THREE.BoxGeometry(2.8, 0.05, 1.9),
-    new THREE.MeshBasicMaterial({ color: 0x17212c }),
+    withoutWorldClipping(new THREE.MeshBasicMaterial({ color: 0x17212c })),
   );
   private previousClipPlanes: THREE.Plane[] = [];
   private previousBackground: THREE.Scene["background"] = null;
@@ -51,7 +53,8 @@ export class WebXrPresentation {
   private xrAvailable = false;
   private readonly lifecycle = new AbortController();
   private wired = false;
-  private htmlPanel: WiredHtmlPanel | null = null;
+  private htmlPanel: HtmlUiPanel | null = null;
+  private readonly tilt = new BoardTilt(this.trackingRoot);
   private input: WebXrControllerInput | null = null;
 
   constructor(private readonly dependencies: WebXrPresentationDependencies) {
@@ -133,9 +136,9 @@ export class WebXrPresentation {
       document.exitPointerLock?.();
       await renderer.xr.setSession(session);
       if (!this.started || this.session !== session) return;
-      if (this.wired) this.htmlPanel = new WiredHtmlPanel(this.trackingRoot, renderer);
+      this.htmlPanel = new HtmlUiPanel(this.trackingRoot, this.nativeHost);
       this.input = new WebXrControllerInput(session, renderer, this.dependencies.renderPipeline.scene,
-        this.trackingRoot, TILE_SIZE, () => this.htmlPanel);
+        this.trackingRoot, TILE_SIZE, () => this.htmlPanel, this.tilt);
       this.needsRecenter = true;
       this.lastRigKey = "";
       document.documentElement.classList.add("nh3d-webxr-active");
@@ -173,6 +176,7 @@ export class WebXrPresentation {
       this.savedCamera = null;
     }
     this.board.visible = false;
+    this.tilt.cancel();
     document.documentElement.classList.remove("nh3d-webxr-active");
     updateWebXrState({ active: false });
   };
@@ -198,14 +202,16 @@ export class WebXrPresentation {
     const player = this.dependencies.playerMovement.playerPos;
     this.position.set(player.x * TILE_SIZE, -player.y * TILE_SIZE, 0);
     const firstPerson = this.dependencies.engineState.playMode === "fps";
-    const key = [player.x, player.y, firstPerson, this.dependencies.camera.firstPersonEyeHeight].join(":");
+    const key = [player.x, player.y, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch].join(":");
     if (key !== this.lastRigKey) {
       const rig = createTrackingToGame(firstPerson ? "first-person" : "tabletop", this.position, this.anchor,
-        this.heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight);
+        this.heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch);
       rig.matrix.decompose(this.trackingRoot.position, this.trackingRoot.quaternion, this.trackingRoot.scale);
       this.trackingRoot.updateMatrixWorld(true);
-      this.board.position.copy(rig.tabletop); this.board.position.y -= 0.025;
-      this.board.quaternion.copy(this.heading); this.board.visible = !firstPerson;
+      this.board.quaternion.copy(this.heading).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.tilt.pitch));
+      this.board.position.copy(rig.tabletop).add(new THREE.Vector3(0, -0.027, 0).applyQuaternion(this.board.quaternion));
+      this.board.visible = !firstPerson;
+      this.tilt.place(rig.tabletop, this.heading, !firstPerson);
       renderer.clippingPlanes = firstPerson ? [] : tabletopClippingPlanes(this.position, TILE_SIZE);
       this.dependencies.renderPipeline.scene.background = this.session?.environmentBlendMode === "opaque"
         ? new THREE.Color(0x101720) : null;
@@ -247,5 +253,6 @@ export class WebXrPresentation {
     const session = this.session;
     if (session) { this.ended(); void session.end().catch(() => {}); }
     this.board.geometry.dispose(); this.board.material.dispose();
+    this.tilt.dispose();
   }
 }

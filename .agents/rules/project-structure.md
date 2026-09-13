@@ -181,6 +181,8 @@ This is a living steering doc. Update it whenever architecture, file ownership, 
 - `src/game/engine/rendering/webxr-presentation.ts` and `webxr-rig.ts`: original Three.js scene rendered through WebXR; camera-space conversion, tabletop/FPS placement, lifecycle and restoration.
 - `src/game/engine/rendering/scaled-camera-sprites.ts` and `frame-time.ts`: sprite view-scale correction and the common game-effect clock during XR.
 - `src/quest/webxr/`: in-game XR entry/settings, controller routing, and the wired HTML pane.
+- `src/quest/webxr/html-ui-panel.ts` and `dom-pointer.ts`: shared tracking-space pane and live DOM picking/capture for native and wired VR. The native host consumes the same pose through the bounded `/__xr/pane` endpoint.
+- `src/quest/webxr/board-tilt.ts` and `overlay-material.ts`: board pitch handle, backing-surface picking, and exemption of tracking-space UI/pointers from dungeon clipping.
 - `scripts/quest/webxr/`: isolated Chrome wired host, pinned Wolvic/Gecko patches, custom GeckoView build and Maven staging, and verified standalone APK packaging.
 - `quest/webxr/host/`: bundled asset host code injected into the owned Wolvic checkout.
 - `quest/runtime/`: ignored external runtime checkout and native build dependencies.

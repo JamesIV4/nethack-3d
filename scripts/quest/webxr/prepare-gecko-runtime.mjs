@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { patchRuntime, runtimePaths, replaceOnce, WOLVIC_REVISION } from "./runtime-patch.mjs";
 import { readGeckoArtifact, PAINT_PREFERENCE } from "./gecko-artifact.mjs";
+import { patchHostInteraction } from "./patch-host-interaction.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const checkout = path.join(root, "quest/runtime/wolvic");
@@ -124,7 +125,7 @@ configurations.configureEach {
     }
 }
 android.defaultConfig {
-    versionName = "0.3.2-live-ui"
+    versionName = "0.3.3-ui-controls"
     resValue "string", "app_name", "NetHack 3D VR"
 }
 `);
@@ -144,4 +145,5 @@ cpSync(path.join(root, "quest/webxr/host/BundledGameServer.java"), path.join(che
 cpSync(platform, path.join(checkout, "third_party/OVRPlatformSDK"), { recursive: true });
 writeFileSync(path.join(checkout, "local.properties"), "sdk.dir=" + sdk.replaceAll("\\", "/").replaceAll(":", "\\:") + "\n");
 writeFileSync(path.join(checkout, "user.properties"), "useStaticVersionCode=true\nuseDebugSigningOnRelease=true\n");
+patchHostInteraction(checkout);
 console.log("Prepared standalone WebXR host with patched GeckoView and its matching v19 native ABI.");
