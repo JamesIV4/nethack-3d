@@ -4,6 +4,8 @@
 #include "vrb/Group.h"
 #include "vrb/Transform.h"
 #include "vrb/TextureSurface.h"
+#include "vrb/Color.h"
+#include "vrb/RenderState.h"
 #include <array>
 #include <unordered_map>
 #include <vector>
@@ -30,11 +32,11 @@ class GameUiPanels {
   bool Owns(const WidgetPtr& widget) const { return window == widget && !panes.empty(); }
   void Update(const WidgetPtr& source, const std::vector<float>& state,
               const vrb::Matrix& board, const vrb::Matrix& center) {
-    if (state.size() < 14 || !source || !source->GetSurfaceTexture()) { panes.clear(); return; }
+    if (state.size() < 18 || !source || !source->GetSurfaceTexture()) { panes.clear(); return; }
     window = source;
     source->GetSurfaceTextureSize(textureWidth, textureHeight);
     if (textureWidth <= 0 || textureHeight <= 0) { panes.clear(); return; }
-    const size_t start = 14 + size_t(state[1]) * 4;
+    const size_t start = 18 + size_t(state[1]) * 4;
     const size_t count = size_t(state[13]);
     if (count > 5 || state.size() != start + count * 5) { panes.clear(); return; }
     panes.resize(count);
@@ -50,6 +52,11 @@ class GameUiPanels {
         p.crop = crop; p.width = width; p.height = height;
         p.texture = source->GetSurfaceTexture(); p.textureWidth = textureWidth; p.textureHeight = textureHeight;
         p.quad->SetTexture(p.texture, textureWidth, textureHeight);
+        // SetTexture only binds the surface; unlike Widget::UpdateSurface it
+        // does not create a shader. Match the browser's textured-quad setup.
+        p.quad->SetMaterial(vrb::Color(0.4f, 0.4f, 0.4f), vrb::Color(1, 1, 1), vrb::Color(0, 0, 0), 0);
+        p.quad->GetRenderState()->SetTintColor(vrb::Color(1, 1, 1, 1));
+        p.quad->UpdateProgram("");
         p.quad->SetTextureRect(device::EyeRect(crop[0], crop[1], crop[2]-crop[0], crop[3]-crop[1]));
       }
       p.id = int(state[at]);
@@ -82,7 +89,7 @@ class GameUiPanels {
       const float x = p.crop[0] + u * (p.crop[2] - p.crop[0]);
       const float y = p.crop[1] + v * (p.crop[3] - p.crop[1]);
       bool interactive = captured;
-      for (size_t i = 14; !interactive && i + 3 < 14 + size_t(state[1]) * 4; i += 4)
+      for (size_t i = 18; !interactive && i + 3 < 18 + size_t(state[1]) * 4; i += 4)
         interactive = x >= state[i] && y >= state[i+1] && x <= state[i+2] && y <= state[i+3];
       if (!interactive) continue;
       const auto hit = p.pose.MultiplyPosition(local);

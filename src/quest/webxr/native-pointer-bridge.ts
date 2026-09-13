@@ -11,6 +11,7 @@ export class NativePointerBridge {
   private firstPerson = false;
   private pitch = Math.PI / 4;
   private boardY = -0.65;
+  private anchor = [0, 1.6, 0, 0];
   private dirty = true;
   private pending = false;
   private disposed = false;
@@ -21,11 +22,15 @@ export class NativePointerBridge {
   private readonly observer = new MutationObserver(() => { this.dirty = true; });
   private readonly resized = (): void => { this.dirty = true; };
   constructor() {
-    this.observer.observe(document.body, { subtree: true, childList: true, attributes: true });
+    this.observer.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
     window.addEventListener("resize", this.resized, { signal: this.abort.signal });
     document.addEventListener("scroll", this.resized, { capture: true, signal: this.abort.signal });
   }
-  recenter(): void { this.revision = ++nextAnchor; }
+  recenter(position: THREE.Vector3, heading: THREE.Quaternion): void {
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(heading);
+    this.anchor = [position.x, position.y, position.z, Math.atan2(-forward.x, -forward.z)];
+    this.revision = ++nextAnchor;
+  }
   setBoard(firstPerson: boolean, pitch: number, boardY: number): void {
     if (this.firstPerson !== firstPerson) this.dirty = true;
     this.firstPerson = firstPerson; this.pitch = pitch; this.boardY = boardY;
@@ -43,7 +48,7 @@ export class NativePointerBridge {
     if (this.pending || this.disposed || time - this.lastSend < 1000 / 30) return;
     if (this.dirty) { this.rects = uiHitRectangles(); this.panes = tableUiPanes(this.firstPerson, this.rects); this.dirty = false; }
     const body = JSON.stringify([this.revision, this.rects.length / 4, ...this.hits,
-      this.firstPerson ? 1 : 0, this.pitch, this.boardY, this.panes.length, ...this.rects, ...this.panes.flat()]);
+      this.firstPerson ? 1 : 0, this.pitch, this.boardY, this.panes.length, ...this.anchor, ...this.rects, ...this.panes.flat()]);
     if (body === this.lastBody) return;
     this.pending = true; this.lastSend = time;
     void fetch("/__xr/table-ui", { method: "POST", headers: { "Content-Type": "application/json" }, body, signal: this.abort.signal })

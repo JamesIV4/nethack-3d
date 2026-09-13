@@ -17,7 +17,7 @@ void crow::Quad::SetTextureRect(const device::EyeRect& r) {
   m.geometry->UpdateBuffers();
 }
 `);
-  edit("app/src/main/cpp/VRBrowser.cpp", s => s.replace("length >= 10 && length <= 522", "length >= 14 && length <= 551"));
+  edit("app/src/main/cpp/VRBrowser.cpp", s => s.replace("length >= 10 && length <= 522", "length >= 18 && length <= 555"));
   edit("app/src/main/cpp/ExternalVR.cpp", s => {
     if (!s.includes("gameUiEffectiveMask")) s = s.replace("    immersiveController.buttonPressed =", `    const uint64_t gameUiEffectiveMask = controller.leftHanded ? gameUiButtonMask & ~(uint64_t(1) << device::kImmersiveButtonTrigger) : gameUiButtonMask;
     immersiveController.buttonPressed =`);

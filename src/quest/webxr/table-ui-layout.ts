@@ -16,18 +16,17 @@ function bounds(selector: string): [number, number, number, number] | null {
 
 export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles()): UiPane[] {
   if (firstPerson) return [[4, 0, 0, 1, 1]];
-  const modal = bounds(".nh3d-dialog.is-visible,.nh3d-mobile-actions-sheet,.nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=menu]");
-  if (modal) return [[4, ...modal]];
+  let modal = bounds(".nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,.nh3d-mobile-actions-sheet,.nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=menu]");
   const selectors = ["#stats-bar", ".top-left-ui,.nh3d-mobile-log-collapsed,.floating-message-container", ".nh3d-minimap,.nh3d-mobile-bottom-bar", ".nh3d-desktop-bottom-actions,.nh3d-map-move-controls"];
   const panes: UiPane[] = [];
   selectors.forEach((selector, id) => { const rect = bounds(selector); if (rect) panes.push([id, ...rect]); });
-  for (let i = 0; i < panes.length; i++) for (let j = i + 1; j < panes.length; j++) {
-    const a = panes[i], b = panes[j];
-    if (Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > 0.002 && Math.min(a[4], b[4]) - Math.max(a[2], b[2]) > 0.002) return [[4, 0, 0, 1, 1]];
-  }
-  // Preserve unfamiliar popovers instead of clipping controls out of a crop.
+  // Unknown controls get their own floating crop. Never move the edge HUD to
+  // the modal pane just because a context menu opens in the same document.
   for (let i = 0; i < hitRects.length; i += 4) {
-    if (!panes.some((p) => p[1] <= hitRects[i] + 0.002 && p[2] <= hitRects[i + 1] + 0.002 && p[3] >= hitRects[i + 2] - 0.002 && p[4] >= hitRects[i + 3] - 0.002)) return [[4, 0, 0, 1, 1]];
+    if (panes.some((p) => p[1] <= hitRects[i] + 0.002 && p[2] <= hitRects[i + 1] + 0.002 && p[3] >= hitRects[i + 2] - 0.002 && p[4] >= hitRects[i + 3] - 0.002)) continue;
+    modal = modal ? [Math.min(modal[0], hitRects[i]), Math.min(modal[1], hitRects[i+1]),
+      Math.max(modal[2], hitRects[i+2]), Math.max(modal[3], hitRects[i+3])] : hitRects.slice(i, i+4) as [number, number, number, number];
   }
+  if (modal) panes.push([4, ...modal]);
   return panes.length ? panes : [[4, 0, 0, 1, 1]];
 }

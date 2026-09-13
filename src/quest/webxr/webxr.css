@@ -18,6 +18,25 @@
   transform: none;
 }
 :root.nh3d-webxr-active .floating-message-text { max-width: 100%; }
+/* Reserve the center of the shared texture for the independent floating pane. */
+:root.nh3d-webxr-active .nh3d-context-menu.is-visible,
+:root.nh3d-webxr-active .nh3d-dialog.is-visible {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 36vw !important;
+  min-width: 0 !important;
+  max-width: 36vw !important;
+  max-height: 72vh !important;
+  box-sizing: border-box;
+  overflow: auto;
+  margin: 0 !important;
+  transform: translate(-50%, -50%) !important;
+  animation: none !important;
+  transition: none !important;
+}
 .nh3d-xr-pointer {
   position: fixed;
   z-index: 2147483647;

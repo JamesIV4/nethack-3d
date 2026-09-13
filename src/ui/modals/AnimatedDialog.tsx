@@ -64,9 +64,8 @@ const AnimatedDialog = forwardRef<HTMLDivElement, AnimatedDialogProps>(
     const disableAnimations =
       disableAnimationsProp ||
       (typeof document !== "undefined" &&
-        document.documentElement.classList.contains(
-          "nh3d-disable-animated-transitions",
-        ));
+        (document.documentElement.classList.contains("nh3d-disable-animated-transitions") ||
+          document.documentElement.classList.contains("nh3d-webxr-active")));
     const [shouldRender, setShouldRender] = useState(open);
     const [isExiting, setIsExiting] = useState(false);
     const [renderedChildren, setRenderedChildren] = useState(children);

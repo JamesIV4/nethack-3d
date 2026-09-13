@@ -10,7 +10,7 @@ export function readGeckoArtifact(directory) {
   let receipt;
   try { receipt = JSON.parse(readFileSync(path.join(directory, "nh3d-gecko-runtime.json"), "utf8")); }
   catch { throw new Error("Patched GeckoView is missing. Run scripts/quest/webxr/build-gecko-runtime.sh in Linux/WSL first."); }
-  if (receipt.schema !== 1 || receipt.revision !== GECKO_REVISION || receipt.paintDocument !== true || receipt.transparentDocument !== true ||
+  if (receipt.schema !== 1 || receipt.revision !== GECKO_REVISION || receipt.paintDocument !== true || receipt.transparentDocument !== true || receipt.compositeDocument !== true ||
       !/^org\.mozilla\.geckoview:geckoview-default-omni:[\w.-]+$/.test(receipt.coordinate)) {
     throw new Error("Unexpected GeckoView artifact metadata.");
   }

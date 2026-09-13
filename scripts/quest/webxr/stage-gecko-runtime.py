@@ -24,6 +24,8 @@ with zipfile.ZipFile(aar) as archive:
         raise SystemExit("GeckoView binary is missing the HTML painting patch")
     if b"dom.vr.webxr.transparent-document" not in library:
         raise SystemExit("GeckoView binary is missing document transparency")
+    if b"dom.vr.webxr.composite-document" not in library:
+        raise SystemExit("GeckoView binary is missing immersive HTML composition")
     library_hash = hashlib.sha256(library).hexdigest()
 del library
 version = aar.parent.name
@@ -46,6 +48,7 @@ receipt = {
     "revision": revision,
     "paintDocument": True,
     "transparentDocument": True,
+    "compositeDocument": True,
     "patchSha256": hashlib.sha256(Path(__file__).with_name("patch-gecko-paint.py").read_bytes()).hexdigest(),
     "coordinate": "org.mozilla.geckoview:" + module + ":" + version,
     "aar": (relative / aar.name).as_posix(),

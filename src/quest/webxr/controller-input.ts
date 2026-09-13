@@ -1,14 +1,14 @@
 import * as THREE from "three";
 import { useGameStore } from "../../state/gameStore";
 import { dispatchQuestKey } from "../native/bootstrap";
-import { routeQuestCommand, type QuestNativeCommand } from "../native/input";
+import { routeQuestCommand, type QuestNativeCommand, type QuestCommandResult } from "../native/input";
 import type { HtmlUiPanel, UiHit } from "./html-ui-panel";
 import type { BoardTilt } from "./board-tilt";
 import { withoutWorldClipping } from "./overlay-material";
 import { SnapTurnLatch, WorldClickGesture } from "./controller-gestures";
 
-function command(value: QuestNativeCommand): void {
-  routeQuestCommand(value, useGameStore.getState(), {
+function command(value: QuestNativeCommand): QuestCommandResult {
+  return routeQuestCommand(value, useGameStore.getState(), {
     hasBlockingOverlay: Boolean(document.querySelector(
       ".nh3d-dialog.is-visible:not(#direction-dialog):not(#inventory-dialog), .nh3d-mobile-actions-sheet, .nh3d-wizard-commands-sheet.is-visible",
     )),
@@ -48,6 +48,13 @@ export class WebXrControllerInput {
   private nextMove = 0;
   private readonly snap = new SnapTurnLatch();
   private clock = 0;
+  // One bounded record lets wired debugging distinguish a missing button from
+  // a command rejected by an active prompt, without logging every XR frame.
+  readonly diagnostics: { command: QuestNativeCommand; result: QuestCommandResult; time: number }[] = [];
+  private command(value: QuestNativeCommand): void {
+    this.diagnostics.push({ command: value, result: command(value), time: this.clock });
+    if (this.diagnostics.length > 16) this.diagnostics.shift();
+  }
   private readonly caster = new THREE.Raycaster();
   private readonly pickCamera = new THREE.PerspectiveCamera();
   private readonly inverse = new THREE.Matrix4();
@@ -159,7 +166,7 @@ export class WebXrControllerInput {
     if (state.ring) { state.capture = "tilt"; this.tilt.begin(state.source, state.ray); return; }
     state.capture = "world";
     // A remains the normal confirm key when the UI or tilt handle does not own it.
-    if (state.a && !state.trigger) { command({ type: "key", key: "Enter" }); return; }
+    if (state.a && !state.trigger) { this.command({ type: "key", key: "Enter" }); return; }
     const hit = state.world;
     let tile: { x: number; y: number } | null = null;
     for (let object: THREE.Object3D | null = hit?.object ?? null; object; object = object.parent) {
@@ -173,7 +180,7 @@ export class WebXrControllerInput {
   }
   private worldClick(state: PointerState, secondary: boolean): void {
     if (!state.pressedTile && !secondary) return;
-    command({ type: "tile", ...(state.pressedTile ?? { x: 0, y: 0 }), ...(secondary ? { secondary: true } : {}) });
+    this.command({ type: "tile", ...(state.pressedTile ?? { x: 0, y: 0 }), ...(secondary ? { secondary: true } : {}) });
   }
   update(time: number, forward: THREE.Vector3 | null): void {
     this.clock = time;
@@ -206,11 +213,11 @@ export class WebXrControllerInput {
       if (state.ui || state.capture === "ui" || state.capture === "tilt") continue;
       if (source.handedness === "left" && pad) {
         const direction = xrStickDirection(pad.axes[2] ?? pad.axes[0] ?? 0, pad.axes[3] ?? pad.axes[1] ?? 0, forward);
-        if (direction && time >= this.nextMove) { command({ type: "move", ...direction, run: state.trigger }); this.nextMove = time + 180; }
+        if (direction && time >= this.nextMove) { this.command({ type: "move", ...direction, run: state.trigger }); this.nextMove = time + 180; }
         else if (!direction) this.nextMove = 0;
-        if (buttons[4] && !prior[4]) command({ type: "inventory" });
+        if (buttons[4] && !prior[4]) this.command({ type: "inventory" });
       }
-      if (source.handedness === "right" && buttons[5] && !prior[5]) command({ type: "key", key: "Escape" });
+      if (source.handedness === "right" && buttons[5] && !prior[5]) this.command({ type: "key", key: "Escape" });
     }
   }
   private cancel(state: PointerState): void {

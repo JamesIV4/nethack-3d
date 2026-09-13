@@ -40,7 +40,7 @@ export class HtmlUiPanel {
   }
 
   recenter(anchor: THREE.Vector3, heading: THREE.Quaternion): void {
-    if (this.nativePointer) { this.nativePointer.recenter(); return; }
+    if (this.nativePointer) { this.nativePointer.recenter(anchor, heading); return; }
     this.matrix.compose(anchor, heading, new THREE.Vector3(1, 1, 1)).multiply(this.anchorOffset);
     this.inverse.copy(this.matrix).invert();
     if (this.mesh) this.matrix.decompose(this.mesh.position, this.mesh.quaternion, this.mesh.scale);
