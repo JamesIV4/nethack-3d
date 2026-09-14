@@ -41,6 +41,7 @@ interface PointerState {
   buttons: boolean[];
   gesture: WorldClickGesture;
   pressedTile: { x: number; y: number } | null;
+  contextHeight: number;
 }
 export class WebXrControllerInput {
   private readonly pointers = new Map<XRInputSource, PointerState>();
@@ -89,7 +90,7 @@ export class WebXrControllerInput {
       this.root.add(line, circle);
     }
     state = { source, id: this.nextId++, ray: new THREE.Ray(), line, circle, trigger: false, a: false,
-      down: false, tracked: false, capture: null, ui: null, ring: null, world: null, buttons: [], gesture: new WorldClickGesture(), pressedTile: null };
+      down: false, tracked: false, capture: null, ui: null, ring: null, world: null, buttons: [], gesture: new WorldClickGesture(), pressedTile: null, contextHeight: 0 };
     this.pointers.set(source, state);
     return state;
   }
@@ -176,10 +177,13 @@ export class WebXrControllerInput {
     }
     if (hit) tile ??= { x: Math.round(hit.point.x / this.tileSize), y: Math.round(-hit.point.y / this.tileSize) };
     state.pressedTile = tile;
+    state.contextHeight = hit?.point.z ?? 0;
     state.gesture.press(this.clock);
   }
   private worldClick(state: PointerState, secondary: boolean): void {
     if (!state.pressedTile && !secondary) return;
+    if (secondary && state.pressedTile) this.panel()?.nativePointer?.setContextTarget(
+      new THREE.Vector3(state.pressedTile.x * this.tileSize, -state.pressedTile.y * this.tileSize, state.contextHeight));
     this.command({ type: "tile", ...(state.pressedTile ?? { x: 0, y: 0 }), ...(secondary ? { secondary: true } : {}) });
   }
   update(time: number, forward: THREE.Vector3 | null): void {

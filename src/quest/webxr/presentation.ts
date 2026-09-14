@@ -1,10 +1,10 @@
 export type WebXrState = Readonly<{
-  available: boolean; active: boolean; busy: boolean; error: string; host: boolean;
+  available: boolean; active: boolean; busy: boolean; error: string; host: boolean; renderResolution: string;
 }>;
 type Owner = { enter: () => Promise<void>; exit: () => Promise<void>; recenter: () => void };
 const listeners = new Set<() => void>();
 let owner: Owner | null = null;
-let state: WebXrState = Object.freeze({ available: false, active: false, busy: false, error: "", host: false });
+let state: WebXrState = Object.freeze({ available: false, active: false, busy: false, error: "", host: false, renderResolution: "" });
 export function getWebXrState(): WebXrState { return state; }
 export function subscribeWebXr(listener: () => void): () => void { listeners.add(listener); return () => { listeners.delete(listener); }; }
 export function updateWebXrState(update: Partial<WebXrState>): void {

@@ -1,4 +1,7 @@
 import * as THREE from "three";
+import { createElement } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { TableControls } from "./TableControls";
 import { dragRange, pickUiTarget, pointerEvent } from "./dom-pointer";
 import { withoutWorldClipping } from "./overlay-material";
 import { NativePointerBridge } from "./native-pointer-bridge";
@@ -10,6 +13,8 @@ export const UI_DISTANCE = 1.45;
 
 /** One DOM owns both the native GPU pane and the wired development capture. */
 export class HtmlUiPanel {
+  private readonly controlsNode = document.createElement("div");
+  private readonly controlsRoot: Root;
   readonly nativePointer: NativePointerBridge | null;
   private readonly matrix = new THREE.Matrix4();
   private readonly inverse = new THREE.Matrix4();
@@ -27,6 +32,9 @@ export class HtmlUiPanel {
   private readonly token = new URLSearchParams(location.hash.slice(1)).get("token");
 
   constructor(private readonly root: THREE.Group, readonly native: boolean) {
+    document.body.append(this.controlsNode);
+    this.controlsRoot = createRoot(this.controlsNode);
+    this.controlsRoot.render(createElement(TableControls));
     this.nativePointer = native ? new NativePointerBridge() : null;
     this.canvas = native ? null : Object.assign(document.createElement("canvas"), { width: 1600, height: 1000 });
     this.texture = this.canvas ? new THREE.CanvasTexture(this.canvas) : null;
@@ -133,6 +141,7 @@ export class HtmlUiPanel {
   }
 
   dispose(): void {
+    this.controlsRoot.unmount(); this.controlsNode.remove();
     this.disposed = true;
     this.nativePointer?.dispose();
     for (const source of this.cursors.keys()) this.forget(source);

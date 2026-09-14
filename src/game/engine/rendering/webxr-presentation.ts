@@ -13,6 +13,7 @@ import type { RenderPipeline } from "./render-pipeline";
 import type { HeldWeapon } from "./held-weapon";
 import { createTrackingToGame, tabletopClippingPlanes } from "./webxr-rig";
 import { enterWebXr, registerWebXrOwner, updateWebXrState } from "../../../quest/webxr/presentation";
+import { getXrSettings } from "../../../quest/webxr/settings";
 
 export interface WebXrPresentationDependencies {
   readonly camera: Pick<Camera, "camera" | "cameraYaw" | "cameraPitch" | "firstPersonEyeHeight" | "applyStandardCameraPresetForTopDownModes">;
@@ -145,8 +146,11 @@ export class WebXrPresentation {
       renderer.setClearColor(0x000000, mode === "immersive-ar" ? 0 : 1);
       this.dependencies.renderPipeline.scene.add(this.trackingRoot);
       document.exitPointerLock?.();
+      renderer.xr.setFramebufferScaleFactor(getXrSettings().resolution);
       await renderer.xr.setSession(session);
       if (!this.started || this.session !== session) return;
+      const layer = session.renderState?.baseLayer;
+      if (layer) updateWebXrState({ renderResolution: `${Math.floor(layer.framebufferWidth / 2)} × ${layer.framebufferHeight} pixels per eye` });
       this.htmlPanel = new HtmlUiPanel(this.trackingRoot, this.nativeHost);
       this.input = new WebXrControllerInput(session, renderer, this.dependencies.renderPipeline.scene,
         this.trackingRoot, TILE_SIZE, () => this.htmlPanel, this.tilt, direction => this.snapTurn(direction));
@@ -164,6 +168,8 @@ export class WebXrPresentation {
   }
 
   private readonly ended = (): void => {
+    this.scaledSprites.disable();
+    document.documentElement.classList.remove("nh3d-xr-first-person");
     if (this.endListener) this.session?.removeEventListener("end", this.endListener);
     this.endListener = null;
     this.session = null;
@@ -232,20 +238,23 @@ export class WebXrPresentation {
     const player = this.dependencies.playerMovement.playerPos;
     this.position.set(player.x * TILE_SIZE, -player.y * TILE_SIZE, 0);
     const firstPerson = this.dependencies.engineState.playMode === "fps";
-    const key = [player.x, player.y, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw].join(":");
+    const settings = getXrSettings();
+    document.documentElement.classList.toggle("nh3d-xr-first-person", firstPerson);
+    const key = [player.x, player.y, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.area, settings.scale].join(":");
     if (key !== this.lastRigKey) {
       const rig = createTrackingToGame(firstPerson ? "first-person" : "tabletop", this.position, this.anchor,
-        this.heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw);
+        this.heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.scale);
       rig.matrix.decompose(this.trackingRoot.position, this.trackingRoot.quaternion, this.trackingRoot.scale);
       this.trackingRoot.updateMatrixWorld(true);
       this.board.quaternion.copy(this.heading).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.tilt.pitch));
-      this.board.position.copy(rig.tabletop).add(new THREE.Vector3(0, -0.027, 0).applyQuaternion(this.board.quaternion));
+      this.board.scale.set(settings.area * settings.scale, settings.scale, settings.area * settings.scale);
+      this.board.position.copy(rig.tabletop).add(new THREE.Vector3(0, -0.027 * settings.scale, 0).applyQuaternion(this.board.quaternion));
       this.board.visible = !firstPerson;
-      this.tilt.place(rig.tabletop, this.heading, !firstPerson);
+      this.tilt.place(rig.tabletop, this.heading, !firstPerson, settings.area, settings.scale);
       this.htmlPanel?.nativePointer?.setBoard(firstPerson, this.tilt.pitch, rig.tabletop.y - this.anchor.y);
-      renderer.clippingPlanes = firstPerson ? [] : tabletopClippingPlanes(this.position, TILE_SIZE);
+      renderer.clippingPlanes = firstPerson ? [] : tabletopClippingPlanes(this.position, TILE_SIZE, settings.area);
       this.dependencies.renderPipeline.scene.background = this.session?.environmentBlendMode === "opaque"
-        ? new THREE.Color(0x101720) : null;
+        ? new THREE.Color(0x000000) : null;
       this.lastRigKey = key;
     }
     xr.updateCamera(this.xrCamera);
@@ -269,8 +278,9 @@ export class WebXrPresentation {
 
   prepareRender(): THREE.Camera | null {
     if (!this.active) return null;
+    this.htmlPanel?.nativePointer?.setWorldTransform(this.trackingRoot.matrixWorld.clone().invert());
     this.htmlPanel?.update(performance.now());
-    this.scaledSprites.prepare(this.dependencies.renderPipeline.scene);
+    this.scaledSprites.prepare(this.dependencies.renderPipeline.scene, this.dependencies.renderPipeline.renderer.xr.getCamera());
     // The screen-space held weapon is not an XR hand/controller prop.
     if (this.dependencies.heldWeapon.fpsHeldWeaponMesh) this.dependencies.heldWeapon.fpsHeldWeaponMesh.visible = false;
     return this.xrCamera;

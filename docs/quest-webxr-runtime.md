@@ -139,3 +139,7 @@ The snapshot has an 18-float header: recenter revision, hit-region count, two pe
 The new layout and controller feel still require headset validation. The source tests and browser layout checks do not establish physical readability or comfort. Wired Chrome currently retains its full-page UI preview; the edge-pane compositor is in the standalone native host.
 
 The 0.3.8 APK builds and passes packaged-library hash and preference checks. Browser integration checks cover a separate quick-action crop, unchanged edge panes, the exact game anchor in the bridge, real modal CSS, and closing without animation events. Headset confirmation of live composition and frame alignment is still pending.
+
+## 0.3.9 presentation controls
+
+See [the eleven-item polish checklist](quest-vr-polish.md) for current startup, pane placement, resolution, table sizing, sprite-facing behavior, and validation. This revision extends the transport to a 24-float header and seven panes, with the minimap and table controls independent of the action strip. It reuses the 0.3.8 Gecko runtime.

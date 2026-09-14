@@ -10,33 +10,37 @@ export class BoardTilt {
   private readonly surface = new THREE.Matrix4();
   private drag: { source: XRInputSource; inverse: THREE.Matrix4; angle: number; pitch: number } | null = null;
   private readonly hovered = new Set<XRInputSource>();
+  private area = 1;
 
   constructor(private readonly root: THREE.Group) {
     this.handle.name = "Board pitch handle"; this.handle.renderOrder = 9999; this.handle.visible = false;
     root.add(this.handle);
   }
-  place(center: THREE.Vector3, heading: THREE.Quaternion, visible: boolean): void {
+  place(center: THREE.Vector3, heading: THREE.Quaternion, visible: boolean, area = 1, scale = 1): void {
+    this.area = area;
+    this.handle.scale.setScalar(scale);
     this.handle.visible = visible;
     const boardRotation = heading.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.pitch));
-    this.handle.position.set(1.425, -0.025, 0).applyQuaternion(boardRotation).add(center);
+    this.handle.position.set(1.425 * area * scale, -0.025 * scale, 0).applyQuaternion(boardRotation).add(center);
     this.handle.quaternion.copy(boardRotation).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2));
-    this.surface.compose(center, boardRotation, new THREE.Vector3(1, 1, 1));
+    this.surface.compose(center, boardRotation, new THREE.Vector3(scale, scale, scale));
     if (!this.drag) this.plane.setFromNormalAndCoplanarPoint(new THREE.Vector3(1, 0, 0).applyQuaternion(heading), this.handle.position);
     if (!visible) this.cancel();
   }
   hit(ray: THREE.Ray): THREE.Vector3 | null {
     if (!this.handle.visible) return null;
     // Raycast in tracking metres, independently of the inverse game-camera scale.
-    const localRay = ray.clone().applyMatrix4(new THREE.Matrix4().compose(this.handle.position, this.handle.quaternion, new THREE.Vector3(1, 1, 1)).invert());
+    const transform = new THREE.Matrix4().compose(this.handle.position, this.handle.quaternion, this.handle.scale);
+    const localRay = ray.clone().applyMatrix4(transform.clone().invert());
     const point = localRay.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), new THREE.Vector3());
     if (!point || Math.abs(Math.hypot(point.x, point.y) - 0.18) > 0.045) return null;
-    return point.applyQuaternion(this.handle.quaternion).add(this.handle.position);
+    return point.applyMatrix4(transform);
   }
   surfaceHit(ray: THREE.Ray): { point: THREE.Vector3; normal: THREE.Vector3 } | null {
     if (!this.handle.visible) return null;
     const local = ray.clone().applyMatrix4(this.surface.clone().invert());
     const point = local.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0.002), new THREE.Vector3());
-    if (!point || Math.abs(point.x) > 1.4 || Math.abs(point.z) > 0.95) return null;
+    if (!point || Math.abs(point.x) > 1.4 * this.area || Math.abs(point.z) > 0.95 * this.area) return null;
     return { point: point.applyMatrix4(this.surface), normal: new THREE.Vector3(0, 1, 0).transformDirection(this.surface) };
   }
   hover(source: XRInputSource, over: boolean): void {

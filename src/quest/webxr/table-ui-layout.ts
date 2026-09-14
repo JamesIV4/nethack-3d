@@ -17,9 +17,12 @@ function bounds(selector: string): [number, number, number, number] | null {
 export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles()): UiPane[] {
   if (firstPerson) return [[4, 0, 0, 1, 1]];
   let modal = bounds(".nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,.nh3d-mobile-actions-sheet,.nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=menu]");
-  const selectors = ["#stats-bar", ".top-left-ui,.nh3d-mobile-log-collapsed,.floating-message-container", ".nh3d-minimap,.nh3d-mobile-bottom-bar", ".nh3d-desktop-bottom-actions,.nh3d-map-move-controls"];
+  const selectors = ["#stats-bar", ".top-left-ui,.nh3d-mobile-log-collapsed,.floating-message-container", ".nh3d-mobile-bottom-bar", ".nh3d-desktop-bottom-actions,.nh3d-map-move-controls"];
   const panes: UiPane[] = [];
   selectors.forEach((selector, id) => { const rect = bounds(selector); if (rect) panes.push([id, ...rect]); });
+  for (const [id, selector] of [[5, ".nh3d-minimap"], [6, ".nh3d-xr-table-controls"]] as const) {
+    const rect = bounds(selector); if (rect) panes.push([id, ...rect]);
+  }
   // Unknown controls get their own floating crop. Never move the edge HUD to
   // the modal pane just because a context menu opens in the same document.
   for (let i = 0; i < hitRects.length; i += 4) {

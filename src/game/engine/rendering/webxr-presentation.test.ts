@@ -10,6 +10,7 @@ function fixture(native = false) {
   const classes = new Set<string>();
   vi.stubGlobal("document", Object.assign(new EventTarget(), { visibilityState: "visible", exitPointerLock: vi.fn(), documentElement: { classList: {
     add: (value: string) => classes.add(value), remove: (value: string) => classes.delete(value),
+    toggle: (value: string, enabled: boolean) => enabled ? classes.add(value) : classes.delete(value),
   } } }));
   vi.stubGlobal("location", new URL(native ? "http://127.0.0.1:18973/" : "http://127.0.0.1/?xrHost=wired"));
   const session = new EventTarget() as EventTarget & { end: () => Promise<void>; environmentBlendMode: string };
@@ -32,7 +33,7 @@ function fixture(native = false) {
     render: vi.fn(), clippingPlanes: [] as THREE.Plane[],
     getClearColor: (value: THREE.Color) => value.set(0x123456), getClearAlpha: () => 1, setClearColor: vi.fn(),
     xr: {
-      enabled: false, isPresenting: false, setReferenceSpaceType: vi.fn(),
+      enabled: false, isPresenting: false, setReferenceSpaceType: vi.fn(), setFramebufferScaleFactor: vi.fn(),
       setSession: vi.fn(async () => { renderer.xr.isPresenting = true; }),
       getReferenceSpace: () => ({}),
       getFrame: () => ({ getViewerPose: () => ({ transform: {
@@ -106,6 +107,7 @@ describe("Three.js owns the Quest world", () => {
     const geometry = f.mesh.geometry, material = f.mesh.material, matrix = f.mesh.matrix.clone();
     f.presentation.start(); await Promise.resolve(); await toggleWebXr();
     expect(f.requestSession).toHaveBeenCalledWith("immersive-vr", { requiredFeatures: ["local-floor"] });
+    expect(f.renderer.xr.setFramebufferScaleFactor).toHaveBeenCalledWith(1.5);
     expect(f.presentation.updateCamera()).toBe(true);
     expect(f.frame()).toBe(true);
     expect(f.renderer.render.mock.calls[0][0]).toBe(f.scene);

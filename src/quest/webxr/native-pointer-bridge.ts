@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { uiHitRectangles } from "./dom-pointer";
 import { tableUiPanes, type UiPane } from "./table-ui-layout";
+import { getXrSettings } from "./settings";
 
 let nextAnchor = 0;
 /** Sends UI regions and hit distances only. Wolvic owns pointer rendering and HTML input. */
@@ -12,6 +13,10 @@ export class NativePointerBridge {
   private pitch = Math.PI / 4;
   private boardY = -0.65;
   private anchor = [0, 1.6, 0, 0];
+  private contextPoint: THREE.Vector3 | null = null;
+  private gameToTracking = new THREE.Matrix4();
+  setContextTarget(point: THREE.Vector3): void { this.contextPoint = point; }
+  setWorldTransform(matrix: THREE.Matrix4): void { this.gameToTracking.copy(matrix); }
   private dirty = true;
   private pending = false;
   private disposed = false;
@@ -47,8 +52,12 @@ export class NativePointerBridge {
   update(time: number): void {
     if (this.pending || this.disposed || time - this.lastSend < 1000 / 30) return;
     if (this.dirty) { this.rects = uiHitRectangles(); this.panes = tableUiPanes(this.firstPerson, this.rects); this.dirty = false; }
+    const settings = getXrSettings();
+    const context = !!this.contextPoint && !!document.querySelector(".nh3d-context-menu.is-visible");
+    const point = this.contextPoint?.clone().applyMatrix4(this.gameToTracking) ?? new THREE.Vector3();
     const body = JSON.stringify([this.revision, this.rects.length / 4, ...this.hits,
-      this.firstPerson ? 1 : 0, this.pitch, this.boardY, this.panes.length, ...this.anchor, ...this.rects, ...this.panes.flat()]);
+      this.firstPerson ? 1 : 0, this.pitch, this.boardY, this.panes.length, ...this.anchor,
+      settings.area, settings.scale, context ? 1 : 0, ...point.toArray(), ...this.rects, ...this.panes.flat()]);
     if (body === this.lastBody) return;
     this.pending = true; this.lastSend = time;
     void fetch("/__xr/table-ui", { method: "POST", headers: { "Content-Type": "application/json" }, body, signal: this.abort.signal })

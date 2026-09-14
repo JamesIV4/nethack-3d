@@ -38,3 +38,12 @@ it("refreshes a resized modal crop without changing the edge crops", () => {
 it("retains the single world-anchored HUD in first-person mode", () => {
   fixture(); expect(tableUiPanes(true, [])).toEqual([[4, 0, 0, 1, 1]]);
 });
+it("assigns separate panes to the minimap, actions, and table controls", () => {
+  const f = fixture();
+  f.add(".nh3d-minimap", 1300, 0, 300, 80);
+  f.add(".nh3d-xr-table-controls", 600, 800, 400, 100);
+  const panes = tableUiPanes(false, []);
+  expect(panes.find(p => p[0] === 2)).toEqual([2, .8125, .1, 1, .8]);
+  expect(panes.find(p => p[0] === 5)).toEqual([5, .8125, 0, 1, .08]);
+  expect(panes.find(p => p[0] === 6)).toEqual([6, .375, .8, .625, .9]);
+});

@@ -95,16 +95,17 @@ public final class BundledGameServer {
                 JSONArray values = new JSONArray(new String(body));
                 int count = values.getInt(1);
                 int panels = values.getInt(13);
-                if (count < 0 || count > 128 || panels < 1 || panels > 5 || values.length() != 18 + count * 4 + panels * 5) throw new IOException("Invalid table UI snapshot");
+                if (count < 0 || count > 128 || panels < 1 || panels > 7 || values.length() != 24 + count * 4 + panels * 5) throw new IOException("Invalid table UI snapshot");
                 float[] pose = new float[values.length()];
                 for (int i = 0; i < pose.length; i++) {
                     pose[i] = (float)values.getDouble(i);
                     if (!Float.isFinite(pose[i]) || Math.abs(pose[i]) > 10000) throw new IOException("Invalid pane coordinate");
                 }
+                if (pose[18] < 1 || pose[18] > 2 || pose[19] < .5 || pose[19] > 2 || (pose[20] != 0 && pose[20] != 1)) throw new IOException("Invalid table controls");
                 if ((pose[10] != 0 && pose[10] != 1) || pose[11] < 0 || pose[11] > 1.5 || Math.abs(pose[12]) > 2) throw new IOException("Invalid board placement");
-                for (int i = 18; i < 18 + count * 4; i++) if (pose[i] < 0 || pose[i] > 1) throw new IOException("Invalid UI region");
-                for (int i = 18 + count * 4; i < pose.length; i += 5) {
-                    if (pose[i] < 0 || pose[i] > 4 || pose[i] != (int)pose[i]) throw new IOException("Invalid pane ID");
+                for (int i = 24; i < 24 + count * 4; i++) if (pose[i] < 0 || pose[i] > 1) throw new IOException("Invalid UI region");
+                for (int i = 24 + count * 4; i < pose.length; i += 5) {
+                    if (pose[i] < 0 || pose[i] > 6 || pose[i] != (int)pose[i]) throw new IOException("Invalid pane ID");
                     for (int j = 1; j <= 4; j++) if (pose[i+j] < 0 || pose[i+j] > 1) throw new IOException("Invalid pane crop");
                     if (pose[i+3] <= pose[i+1] || pose[i+4] <= pose[i+2]) throw new IOException("Empty pane crop");
                 }
