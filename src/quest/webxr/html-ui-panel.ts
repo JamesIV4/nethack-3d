@@ -32,6 +32,7 @@ export class HtmlUiPanel {
   private readonly token = new URLSearchParams(location.hash.slice(1)).get("token");
 
   constructor(private readonly root: THREE.Group, readonly native: boolean) {
+    document.documentElement.classList.toggle("nh3d-xr-native-ui", native);
     document.body.append(this.controlsNode);
     this.controlsRoot = createRoot(this.controlsNode);
     this.controlsRoot.render(createElement(TableControls));
@@ -53,6 +54,10 @@ export class HtmlUiPanel {
     this.inverse.copy(this.matrix).invert();
     if (this.mesh) this.matrix.decompose(this.mesh.position, this.mesh.quaternion, this.mesh.scale);
     this.ready = true;
+  }
+  setFirstPersonAnchor(anchor: THREE.Vector3, yaw: number, revision: number): void {
+    if (this.nativePointer) { this.nativePointer.setFirstPersonAnchor(anchor, yaw, revision); return; }
+    this.recenter(anchor, new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw));
   }
 
   private coordinates(ray: THREE.Ray, outside = false): Omit<UiHit, "target"> | null {
@@ -141,6 +146,7 @@ export class HtmlUiPanel {
   }
 
   dispose(): void {
+    document.documentElement.classList.remove("nh3d-xr-native-ui");
     this.controlsRoot.unmount(); this.controlsNode.remove();
     this.disposed = true;
     this.nativePointer?.dispose();

@@ -64,7 +64,7 @@ export interface EntityBillboardsDependencies {
   >;
   readonly renderPipeline: Pick<
     RenderPipeline,
-    "scene"
+    "scene" | "renderer"
   >;
   readonly terminalRendering: Pick<
     TerminalRendering,
@@ -627,7 +627,8 @@ export class EntityBillboards {
       this.dependencies.playerMovement.hasSeenPlayerPosition &&
       tileX === this.dependencies.playerMovement.playerPos.x &&
       tileY === this.dependencies.playerMovement.playerPos.y;
-    const usePlayerCentricFacing =
+    const inVr = this.dependencies.renderPipeline.renderer?.xr.isPresenting === true;
+    const usePlayerCentricFacing = !inVr &&
       this.dependencies.movementInput.isFpsMode() &&
       this.dependencies.playerMovement.hasSeenPlayerPosition &&
       !this.dependencies.positionSelection.isFpsFarLookViewActive();
@@ -678,7 +679,8 @@ export class EntityBillboards {
         0,
       );
       if (this.fpsPitchLockedBillboardForward.lengthSq() < 1e-8) {
-        this.dependencies.camera.camera.getWorldDirection(this.fpsPitchLockedBillboardForward);
+        if (inVr) this.fpsPitchLockedBillboardForward.set(0, -1, 0);
+        else this.dependencies.camera.camera.getWorldDirection(this.fpsPitchLockedBillboardForward);
         this.fpsPitchLockedBillboardForward.z = 0;
       }
     }

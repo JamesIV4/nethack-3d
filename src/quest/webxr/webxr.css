@@ -18,6 +18,12 @@
   transform: none;
 }
 :root.nh3d-webxr-active .floating-message-text { max-width: 100%; }
+:root.nh3d-webxr-active.nh3d-xr-first-person #floating-log-message-layer { top: 50%; }
+:root.nh3d-webxr-active.nh3d-xr-first-person .floating-message-container,
+:root.nh3d-webxr-active.nh3d-xr-first-person .nh3d-mobile-log-collapsed {
+  left: 50%; right: auto; transform: translateX(-50%);
+  text-align: center;
+}
 /* Reserve the center of the shared texture for the independent floating pane. */
 :root.nh3d-webxr-active .nh3d-context-menu.is-visible,
 :root.nh3d-webxr-active .nh3d-dialog.is-visible {
@@ -36,6 +42,11 @@
   transform: translate(-50%, -50%) !important;
   animation: none !important;
   transition: none !important;
+}
+:root.nh3d-webxr-active:not(.nh3d-xr-native-ui) .nh3d-context-menu.is-visible,
+:root.nh3d-webxr-active:not(.nh3d-xr-native-ui) .nh3d-dialog.is-visible {
+  transform-origin: center center !important;
+  transform: translate(-50%, -50%) scale(0.5) !important;
 }
 .nh3d-xr-pointer {
   position: fixed;

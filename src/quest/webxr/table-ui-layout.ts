@@ -15,8 +15,15 @@ function bounds(selector: string): [number, number, number, number] | null {
 }
 
 export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles()): UiPane[] {
-  if (firstPerson) return [[4, 0, 0, 1, 1]];
   let modal = bounds(".nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,.nh3d-mobile-actions-sheet,.nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=menu]");
+  if (firstPerson) {
+    if (!modal) return [[7, 0, 0, 1, 1]];
+    const [left, top, right, bottom] = modal;
+    // Cut the modal out of the HUD surface so it can be drawn at half size
+    // without also leaving a full-size copy in the first-person frame.
+    const hud: UiPane[] = [[7, 0, 0, 1, top], [8, 0, bottom, 1, 1], [9, 0, top, left, bottom], [10, right, top, 1, bottom]];
+    return [...hud.filter(p => p[3] > p[1] && p[4] > p[2]), [4, ...modal]];
+  }
   const selectors = ["#stats-bar", ".top-left-ui,.nh3d-mobile-log-collapsed,.floating-message-container", ".nh3d-mobile-bottom-bar", ".nh3d-desktop-bottom-actions,.nh3d-map-move-controls"];
   const panes: UiPane[] = [];
   selectors.forEach((selector, id) => { const rect = bounds(selector); if (rect) panes.push([id, ...rect]); });

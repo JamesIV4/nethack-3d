@@ -30,3 +30,16 @@ Validation: 57 focused tests; TypeScript check; native C++ and APK builds; brows
 - VR settings report actual pixels per eye. Native logs expose `NH3D resolution limit`, `NH3D resolution: WebXR eye ... -> OpenXR eye ...`, and `NH3D HTML surface` dimensions. APK publication checks that the native resolution code is present.
 
 Validation: 58 focused tests and browser/GPU checks. The connected old app reported DPR 1.25 with a 1920×1200 logical viewport and a 2400×1500 flat canvas; it was outside VR during inspection. Source tracing established both resolution caps. New headset dimensions and visual sharpness still require sideload validation.
+
+## 0.3.11 first-person UI and facing
+
+- The action strip lies parallel to the table at its bottom-right edge, starting below the pitch ring's interaction radius plus a gap. It rotates with the table again.
+- Billboard facing uses the actual XR viewer position transformed into the original game scene. Three.js's stereo-union camera has a backward offset that rotates with the headset; it is retained for rendering/culling but no longer supplies sprite or standing-mesh facing positions. VR standing meshes also avoid orientation-dependent zero-distance fallbacks.
+- Popups and modals have half their previous width and height. First-person HUD crops exclude the original modal rectangle, preventing a second full-size copy. Wired preview uses an equivalent CSS scale.
+- First-person floating messages are centered in the HUD. Tabletop messages retain their left-side layout.
+- `LaggingUiAnchor` holds the first-person frame until yaw exceeds 20 degrees or horizontal translation exceeds 20 cm. It then uses a critically damped exponential response (omega 9), with no pitch/roll or vertical following. Native rendering interpolates between transport updates. The existing native frame distance is retained.
+- Snap turns increment a separate UI recenter revision, immediately centering horizontal position and heading and clearing both smoothing stages. Table anchoring remains independent. Exiting VR clears native follow state.
+
+The transport header is now 29 floats: the prior 24 plus first-person UI anchor X/Y/Z, yaw, and recenter revision. HUD crop IDs 7–10 surround a separate modal ID 4; at most seven panes remain active. `patch-ui-follow.mjs` installs the native changes reproducibly.
+
+Validation: TypeScript, 66 focused tests, native and APK builds, and browser/GPU checks. Tests cover fixed-position headset rotation versus the stereo-union camera, physical head movement, frame-rate-independent following, angle wraparound, horizontal deadzones, snap recentering, modal cutouts, and message centering. Headset comfort and visual placement still require testing.

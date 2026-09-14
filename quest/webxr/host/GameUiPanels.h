@@ -31,12 +31,12 @@ class GameUiPanels {
   explicit GameUiPanels(vrb::CreationContextPtr value) : context(value) {}
   bool Owns(const WidgetPtr& widget) const { return window == widget && !panes.empty(); }
   void Update(const WidgetPtr& source, const std::vector<float>& state,
-              const vrb::Matrix& board, const vrb::Matrix& center, const vrb::Vector& viewer) {
-    if (state.size() < 24 || !source || !source->GetSurfaceTexture()) { panes.clear(); return; }
+              const vrb::Matrix& board, const vrb::Matrix& center, const vrb::Vector& viewer, const vrb::Matrix& hud) {
+    if (state.size() < 29 || !source || !source->GetSurfaceTexture()) { panes.clear(); return; }
     window = source;
     source->GetSurfaceTextureSize(textureWidth, textureHeight);
     if (textureWidth <= 0 || textureHeight <= 0) { panes.clear(); return; }
-    const size_t start = 24 + size_t(state[1]) * 4;
+    const size_t start = 29 + size_t(state[1]) * 4;
     const size_t count = size_t(state[13]);
     if (count > 7 || state.size() != start + count * 5) { panes.clear(); return; }
     const float scale = state[10] == 1 ? 1 : state[19];
@@ -45,8 +45,9 @@ class GameUiPanels {
     for (size_t i = 0; i < count; ++i) {
       auto& p = panes[i]; const size_t at = start + i * 5;
       const std::array<float, 4> crop{state[at+1], state[at+2], state[at+3], state[at+4]};
-      const float width = 3.0f * scale * (crop[2] - crop[0]);
-      const float height = 3.0f * scale * float(textureHeight) / textureWidth * (crop[3] - crop[1]);
+      const float paneScale = int(state[at]) == 4 ? scale * 0.5f : scale;
+      const float width = 3.0f * paneScale * (crop[2] - crop[0]);
+      const float height = 3.0f * paneScale * float(textureHeight) / textureWidth * (crop[3] - crop[1]);
       if (!p.quad) p.quad = Quad::Create(context, width, height);
       if (p.crop != crop || p.width != width || p.height != height || p.texture != source->GetSurfaceTexture() || p.textureWidth != textureWidth || p.textureHeight != textureHeight) {
         p.quad->SetWorldSize(width, height);
@@ -62,7 +63,10 @@ class GameUiPanels {
         p.quad->SetTextureRect(device::EyeRect(crop[0], crop[1], crop[2]-crop[0], crop[3]-crop[1]));
       }
       p.id = int(state[at]);
-      if (p.id == 4) p.pose = state[20] == 1 ? center.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0, height / 2, 0))) : center;
+      if (p.id >= 7) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
+          3.0f * ((crop[0] + crop[2]) / 2 - 0.5f),
+          3.0f * float(textureHeight) / textureWidth * (0.5f - (crop[1] + crop[3]) / 2), 0)));
+      else if (p.id == 4) p.pose = state[20] == 1 ? center.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0, height / 2, 0))) : center;
       else {
         vrb::Vector offset(0, 0.012f * scale, 0);
         if (p.id == 0) offset.z() = -0.99f * extent;
@@ -70,18 +74,9 @@ class GameUiPanels {
         if (p.id == 1) offset.x() = -1.44f * extent - width / 2;
         if (p.id == 2 || p.id == 5) offset.x() = 1.44f * extent + width / 2;
         if (p.id == 5) offset.z() = -0.9f * extent - height / 2;
+        if (p.id == 2) offset.z() = (0.225f + 0.08f) * scale + height / 2;
         p.pose = board.PostMultiply(vrb::Matrix::Translation(offset))
             .PostMultiply(vrb::Matrix::Rotation(vrb::Vector(1,0,0), -vrb::PI_FLOAT / 2));
-        if (p.id == 2) {
-          // Hang the action strip below the tilt ring's lower rim. Keep its
-          // right/left extent outside the board, independent of its height.
-          offset.y() = -0.025f * scale;
-          offset.z() = 0;
-          auto position = board.MultiplyPosition(offset);
-          position.y() -= (0.225f + 0.08f) * scale + height / 2;
-          p.pose = vrb::Matrix::Translation(position)
-              .PostMultiply(vrb::Matrix::Rotation(vrb::Vector(0,1,0), state[17]));
-        }
         if (p.id == 0) {
           // Fixed bottom edge at the table's far side; only pitch follows the viewer.
           const auto anchor = board.MultiplyPosition(offset);
@@ -112,7 +107,7 @@ class GameUiPanels {
       const float x = p.crop[0] + u * (p.crop[2] - p.crop[0]);
       const float y = p.crop[1] + v * (p.crop[3] - p.crop[1]);
       bool interactive = captured;
-      for (size_t i = 24; !interactive && i + 3 < 24 + size_t(state[1]) * 4; i += 4)
+      for (size_t i = 29; !interactive && i + 3 < 29 + size_t(state[1]) * 4; i += 4)
         interactive = x >= state[i] && y >= state[i+1] && x <= state[i+2] && y <= state[i+3];
       if (!interactive) continue;
       const auto hit = p.pose.MultiplyPosition(local);

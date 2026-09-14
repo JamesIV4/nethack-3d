@@ -12,13 +12,15 @@ export class ScaledCameraSprites {
   private readonly raycasts = new WeakSet<THREE.Sprite>();
   private readonly pickCamera = new THREE.PerspectiveCamera();
   private readonly target = new THREE.Vector3();
+  setOrigin(origin: THREE.Vector3): void { this.origin.value.copy(origin); }
   disable(): void { this.enabled.value = false; }
   private readonly installed = new WeakMap<THREE.SpriteMaterial, THREE.Material["onBeforeCompile"]>();
 
-  prepare(scene: THREE.Scene, camera?: THREE.Camera): void {
+  prepare(scene: THREE.Scene, camera?: THREE.Camera, headPosition?: THREE.Vector3): void {
     this.enabled.value = !!camera;
     if (camera) {
-      this.origin.value.setFromMatrixPosition(camera.matrixWorld);
+      if (headPosition) this.setOrigin(headPosition);
+      else this.origin.value.setFromMatrixPosition(camera.matrixWorld);
     }
     scene.traverseVisible((object) => {
       if (object instanceof THREE.Sprite) { this.patch(object.material); this.patchRaycast(object); }

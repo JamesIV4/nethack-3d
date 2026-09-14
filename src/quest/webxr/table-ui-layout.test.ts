@@ -36,7 +36,16 @@ it("refreshes a resized modal crop without changing the edge crops", () => {
   expect(tableUiPanes(false, [])).toEqual([...edges, [4, .3125, .15, .6875, .75]]);
 });
 it("retains the single world-anchored HUD in first-person mode", () => {
-  fixture(); expect(tableUiPanes(true, [])).toEqual([[4, 0, 0, 1, 1]]);
+  fixture(); expect(tableUiPanes(true, [])).toEqual([[7, 0, 0, 1, 1]]);
+});
+it("cuts a first-person modal out of the HUD rather than duplicating it at full size", () => {
+  const f = fixture(); f.add(".nh3d-dialog.is-visible", 400, 200, 800, 600);
+  const panes = tableUiPanes(true, []), modal = panes.find(p => p[0] === 4)!;
+  expect(modal).toEqual([4, .25, .2, .75, .8]);
+  for (const p of panes.filter(p => p[0] !== 4)) {
+    expect(Math.min(p[3], modal[3]) <= Math.max(p[1], modal[1]) || Math.min(p[4], modal[4]) <= Math.max(p[2], modal[2])).toBe(true);
+  }
+  expect(panes.reduce((area,p) => area + (p[3]-p[1])*(p[4]-p[2]), 0)).toBeCloseTo(1);
 });
 it("assigns separate panes to the minimap, actions, and table controls", () => {
   const f = fixture();

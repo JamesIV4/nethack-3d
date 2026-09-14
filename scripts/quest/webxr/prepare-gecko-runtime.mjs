@@ -10,6 +10,7 @@ import { patchTableUi } from "./patch-table-ui.mjs";
 import { patchLiveUi } from "./patch-live-ui.mjs";
 import { patchPolish } from "./patch-polish.mjs";
 import { patchResolution } from "./patch-resolution.mjs";
+import { patchUiFollow } from "./patch-ui-follow.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const checkout = path.join(root, "quest/runtime/wolvic");
@@ -130,7 +131,7 @@ configurations.configureEach {
     }
 }
 android.defaultConfig {
-    versionName = "0.3.10-clarity"
+    versionName = "0.3.11-ui-follow"
     resValue "string", "app_name", "NetHack 3D VR"
 }
 `);
@@ -164,4 +165,5 @@ patchTableUi(checkout);
 patchLiveUi(checkout);
 patchPolish(checkout);
 patchResolution(checkout);
+patchUiFollow(checkout);
 console.log("Prepared standalone WebXR host with patched GeckoView and its matching v19 native ABI.");

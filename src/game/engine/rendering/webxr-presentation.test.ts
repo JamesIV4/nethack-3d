@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { WebXrPresentation, type WebXrPresentationDependencies } from "./webxr-presentation";
 import { getWebXrState, toggleWebXr } from "../../../quest/webxr/presentation";
 vi.mock("../../../quest/webxr/controller-input", () => ({ WebXrControllerInput: class { update() {} dispose() {} } }));
-vi.mock("../../../quest/webxr/html-ui-panel", () => ({ HtmlUiPanel: class { recenter() {} followViewer() {} update() {} dispose() {} } }));
+vi.mock("../../../quest/webxr/html-ui-panel", () => ({ HtmlUiPanel: class { recenter() {} setFirstPersonAnchor = vi.fn(); followViewer() {} update() {} dispose() {} } }));
 afterEach(() => vi.unstubAllGlobals());
 
 function fixture(native = false) {
@@ -53,6 +53,37 @@ function fixture(native = false) {
     frame: () => { const camera = presentation.prepareRender(); if (camera) renderer.render(scene, camera); return !!camera; } };
 }
 describe("Three.js owns the Quest world", () => {
+  it("uses the tracked head position even when head rotation shifts the stereo union camera", async () => {
+    const f = fixture(), union = new THREE.ArrayCamera();
+    const head = { position: { x: 0, y: 1.6, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
+    f.renderer.xr.getFrame = () => ({ getViewerPose: () => ({ transform: head }) });
+    f.renderer.xr.getCamera = () => union;
+    f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
+    const origin = f.deps.camera.camera.position.clone();
+    head.orientation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), 1);
+    union.position.set(.05, 0, .08); union.quaternion.copy(head.orientation as THREE.Quaternion); union.updateMatrixWorld();
+    f.presentation.updateCamera();
+    expect(f.deps.camera.camera.position).toEqual(origin);
+    head.position.x += .1; f.presentation.updateCamera();
+    expect(f.deps.camera.camera.position.distanceTo(origin)).toBeGreaterThan(.01);
+    f.presentation.dispose();
+  });
+  it("snap turning bypasses first-person UI lag and centers its heading immediately", async () => {
+    const f = fixture(); (f.deps.engineState as { playMode: string }).playMode = "fps";
+    const head = { position: { x: 0, y: 1.6, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
+    f.renderer.xr.getFrame = () => ({ getViewerPose: () => ({ transform: head }) });
+    const now = vi.spyOn(performance, "now").mockReturnValue(0);
+    f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
+    const owner = f.presentation as unknown as { htmlPanel: { setFirstPersonAnchor: ReturnType<typeof vi.fn> }; snapTurn(direction: -1 | 1): void };
+    head.orientation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), 1);
+    now.mockReturnValue(10); f.presentation.updateCamera();
+    const previous = owner.htmlPanel.setFirstPersonAnchor.mock.lastCall!;
+    expect(previous[1]).toBeGreaterThan(0); expect(previous[1]).toBeLessThan(1);
+    owner.snapTurn(1);
+    const centered = owner.htmlPanel.setFirstPersonAnchor.mock.lastCall!;
+    expect(centered[1]).toBeCloseTo(1); expect(centered[2]).toBeGreaterThan(previous[2]);
+    f.presentation.dispose(); now.mockRestore();
+  });
   it("restores the flat canvas after the renderer's session-end handlers finish", async () => {
     const f = fixture();
     f.presentation.start(); await Promise.resolve(); await toggleWebXr();

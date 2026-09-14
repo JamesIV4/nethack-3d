@@ -14,6 +14,7 @@ import type { HeldWeapon } from "./held-weapon";
 import { createTrackingToGame, tabletopClippingPlanes } from "./webxr-rig";
 import { enterWebXr, registerWebXrOwner, updateWebXrState } from "../../../quest/webxr/presentation";
 import { getXrSettings } from "../../../quest/webxr/settings";
+import { LaggingUiAnchor } from "../../../quest/webxr/lagging-ui-anchor";
 
 export interface WebXrPresentationDependencies {
   readonly camera: Pick<Camera, "camera" | "cameraYaw" | "cameraPitch" | "firstPersonEyeHeight" | "applyStandardCameraPresetForTopDownModes">;
@@ -39,6 +40,11 @@ export class WebXrPresentation {
   private readonly position = new THREE.Vector3();
   private readonly orientation = new THREE.Quaternion();
   private readonly forward = new THREE.Vector3();
+  private readonly headPosition = new THREE.Vector3();
+  private readonly uiFollow = new LaggingUiAnchor();
+  private uiFirstPerson = false;
+  private uiRecenter = true;
+  private uiRevision = 0;
   private readonly board = new THREE.Mesh(
     new THREE.BoxGeometry(2.8, 0.05, 1.9),
     withoutWorldClipping(new THREE.MeshBasicMaterial({ color: 0x17212c })),
@@ -168,6 +174,7 @@ export class WebXrPresentation {
   }
 
   private readonly ended = (): void => {
+    this.uiFirstPerson = false; this.uiRecenter = true;
     this.scaledSprites.disable();
     document.documentElement.classList.remove("nh3d-xr-first-person");
     if (this.endListener) this.session?.removeEventListener("end", this.endListener);
@@ -215,6 +222,7 @@ export class WebXrPresentation {
       .applyAxisAngle(new THREE.Vector3(0, 1, 0), angle).add(pivot);
     this.anchor.x = offset.x; this.anchor.z = offset.z;
     this.viewYaw += angle; this.lastRigKey = "";
+    this.uiRecenter = true;
     this.updateCamera();
   }
 
@@ -233,11 +241,24 @@ export class WebXrPresentation {
       this.forward.set(0, 0, -1).applyQuaternion(this.orientation);
       this.heading.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(-this.forward.x, -this.forward.z));
       this.htmlPanel?.recenter(this.anchor, this.heading);
+      this.uiRecenter = true;
       this.needsRecenter = false; this.lastRigKey = "";
     }
     const player = this.dependencies.playerMovement.playerPos;
     this.position.set(player.x * TILE_SIZE, -player.y * TILE_SIZE, 0);
     const firstPerson = this.dependencies.engineState.playMode === "fps";
+    if (firstPerson) {
+      const viewer = new THREE.Vector3(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z);
+      const o = pose.transform.orientation;
+      const facing = new THREE.Vector3(0, 0, -1).applyQuaternion(new THREE.Quaternion(o.x, o.y, o.z, o.w));
+      const yaw = Math.hypot(facing.x, facing.z) > .1 ? Math.atan2(-facing.x, -facing.z) : this.uiFollow.yaw, time = performance.now();
+      if (!this.uiFirstPerson || this.uiRecenter) {
+        this.uiFollow.reset(viewer, yaw, time, this.uiFirstPerson); this.uiRevision++;
+      } else this.uiFollow.update(viewer, yaw, time);
+      this.htmlPanel?.setFirstPersonAnchor(this.uiFollow.position, this.uiFollow.yaw, this.uiRevision);
+      this.uiRecenter = false;
+    } else if (this.uiFirstPerson) this.htmlPanel?.recenter(this.anchor, this.heading);
+    this.uiFirstPerson = firstPerson;
     const settings = getXrSettings();
     document.documentElement.classList.toggle("nh3d-xr-first-person", firstPerson);
     const key = [player.x, player.y, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.area, settings.scale].join(":");
@@ -261,7 +282,11 @@ export class WebXrPresentation {
     // Existing billboard, light and aim code sees the actual tracked camera in source world coordinates.
     const tracked = xr.getCamera();
     const camera = this.dependencies.camera.camera;
-    camera.position.setFromMatrixPosition(tracked.matrixWorld);
+    // The stereo union camera shifts backwards along head orientation. It is
+    // useful for culling, but is not the viewer's position for billboard facing.
+    this.headPosition.set(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z).applyMatrix4(this.trackingRoot.matrixWorld);
+    camera.position.copy(this.headPosition);
+    this.scaledSprites.setOrigin(this.headPosition);
     tracked.getWorldQuaternion(camera.quaternion);
     camera.updateMatrixWorld(true);
     this.forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
@@ -280,7 +305,7 @@ export class WebXrPresentation {
     if (!this.active) return null;
     this.htmlPanel?.nativePointer?.setWorldTransform(this.trackingRoot.matrixWorld.clone().invert());
     this.htmlPanel?.update(performance.now());
-    this.scaledSprites.prepare(this.dependencies.renderPipeline.scene, this.dependencies.renderPipeline.renderer.xr.getCamera());
+    this.scaledSprites.prepare(this.dependencies.renderPipeline.scene, this.dependencies.renderPipeline.renderer.xr.getCamera(), this.headPosition);
     // The screen-space held weapon is not an XR hand/controller prop.
     if (this.dependencies.heldWeapon.fpsHeldWeaponMesh) this.dependencies.heldWeapon.fpsHeldWeaponMesh.visible = false;
     return this.xrCamera;

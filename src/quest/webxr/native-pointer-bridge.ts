@@ -13,6 +13,10 @@ export class NativePointerBridge {
   private pitch = Math.PI / 4;
   private boardY = -0.65;
   private anchor = [0, 1.6, 0, 0];
+  private firstPersonAnchor = [0, 1.6, 0, 0, 0];
+  setFirstPersonAnchor(position: THREE.Vector3, yaw: number, revision: number): void {
+    this.firstPersonAnchor = [position.x, position.y, position.z, yaw, revision];
+  }
   private contextPoint: THREE.Vector3 | null = null;
   private gameToTracking = new THREE.Matrix4();
   setContextTarget(point: THREE.Vector3): void { this.contextPoint = point; }
@@ -57,7 +61,7 @@ export class NativePointerBridge {
     const point = this.contextPoint?.clone().applyMatrix4(this.gameToTracking) ?? new THREE.Vector3();
     const body = JSON.stringify([this.revision, this.rects.length / 4, ...this.hits,
       this.firstPerson ? 1 : 0, this.pitch, this.boardY, this.panes.length, ...this.anchor,
-      settings.area, settings.scale, context ? 1 : 0, ...point.toArray(), ...this.rects, ...this.panes.flat()]);
+      settings.area, settings.scale, context ? 1 : 0, ...point.toArray(), ...this.firstPersonAnchor, ...this.rects, ...this.panes.flat()]);
     if (body === this.lastBody) return;
     this.pending = true; this.lastSend = time;
     void fetch("/__xr/table-ui", { method: "POST", headers: { "Content-Type": "application/json" }, body, signal: this.abort.signal })
