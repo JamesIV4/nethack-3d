@@ -1,4 +1,5 @@
 import { createControllerBooleanActionMap } from "../shared/constants";
+import { isGameInputKey } from "../../../runtime/input/keyboard-key";
 import type { AudioHapticsPlatform } from "../audio/audio-haptics-platform";
 import type { Camera } from "../camera/camera";
 import type { ControllerDialogs } from "./controller-dialogs";
@@ -375,6 +376,9 @@ export class KeyboardInput {
   }
 
   handleKeyDown(event: KeyboardEvent): void {
+    if (event.isComposing) {
+      return;
+    }
     if (this.dependencies.promptDialogs.isUiInputBlocked()) {
       event.preventDefault();
       return;
@@ -712,7 +716,7 @@ export class KeyboardInput {
       "F12",
     ];
 
-    if (modifierKeys.indexOf(event.key) !== -1) {
+    if (modifierKeys.indexOf(event.key) !== -1 || !isGameInputKey(event.key)) {
       console.log(`🚫 Filtering out modifier key: ${event.key}`);
       return;
     }

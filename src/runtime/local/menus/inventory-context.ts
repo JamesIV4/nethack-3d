@@ -210,33 +210,8 @@ export class RuntimeInventoryContext {
       };
     }
 
-    const caseInsensitive = menuItems.find(
-      (item) =>
-        item &&
-        !item.isCategory &&
-        typeof item.accelerator === "string" &&
-        item.accelerator.toLowerCase() === accelerator.toLowerCase(),
-    );
-    if (caseInsensitive) {
-      const shouldPreservePendingAction =
-        preserveActionRoute &&
-        this.deps.coordinator.runtimeVersion === "5.0" &&
-        typeof pending.actionId === "string" &&
-        pending.actionId.trim().length > 0;
-      if (!shouldPreservePendingAction) {
-        this.clearPendingInventoryContextSelection(
-          "consumed case-insensitive match",
-        );
-      } else {
-        console.log(
-          "Preserving pending inventory context selection after case-insensitive item match for 5.0 action routing",
-        );
-      }
-      return {
-        menuItem: caseInsensitive,
-        selectionCount: pendingCount > 0 ? pendingCount : undefined,
-      };
-    }
+    // Inventory letters are case-sensitive object identities. A filtered menu
+    // can omit D while still containing d; let the list-everything route find D.
     if (clearOnMiss) {
       this.clearPendingInventoryContextSelection("no matching menu item");
     }

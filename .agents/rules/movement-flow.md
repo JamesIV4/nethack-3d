@@ -71,6 +71,12 @@ It focuses on:
 
 ## Runtime Movement Assumptions
 
+Text dialog responses use the explicit `__TEXT_INPUT__:` command envelope. Browser
+key names such as `AltGraph`, `Dead`, and `Unidentified` must never become queued
+text answers or gameplay commands. Inventory accelerators are case-sensitive:
+`D` and `d` identify different items. If a contextual item is absent from a
+filtered menu, preserve the selection for the full inventory fallback.
+
 Runtime boot config includes:
 
 - `number_pad:1`: can be changed by the user mid-game.

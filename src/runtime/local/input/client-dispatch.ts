@@ -2,6 +2,7 @@
 // Legacy dynamic WASM integration; dependency membership is checked by assembly.
 
 import type { RuntimeCoordinator } from "../runtime-coordinator";
+import { isGameInputKey } from "../../input/keyboard-key";
 import type { RuntimeExtendedCommands } from "./extended-commands";
 import type { RuntimeMouseInput } from "./mouse-poskey";
 import type { RuntimeMenuSelection } from "../menus/selection";
@@ -143,7 +144,6 @@ export interface RuntimeInputDispatchDependencies {
   readonly textInput: Pick<
     RuntimeTextInput,
     "handleTextInputResponse"
-    | "isLiteralTextInput"
     | "isTextInputCommand"
     | "pendingTextRequest"
     | "pendingTextResponses"
@@ -291,6 +291,11 @@ export class RuntimeInputDispatch {
       return;
     }
     if (typeof input !== "string" || input.length === 0) {
+      return;
+    }
+    // Only explicit protocol commands can carry text. Never let DOM key names
+    // queue an answer for a later getlin prompt or mutate an active selection.
+    if (!input.startsWith("__") && !isGameInputKey(input)) {
       return;
     }
     if (input === this.deps.contextualLook.contextualGlanceProbePrefix) {
@@ -534,8 +539,7 @@ export class RuntimeInputDispatch {
       return;
     }
 
-    if (this.deps.textInput.isLiteralTextInput(input)) {
-      this.deps.textInput.handleTextInputResponse(input, source);
+    if (!isGameInputKey(input)) {
       return;
     }
 

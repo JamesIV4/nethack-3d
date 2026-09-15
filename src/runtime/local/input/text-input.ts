@@ -130,61 +130,6 @@ export class RuntimeTextInput {
     return /^[A-Za-z][A-Za-z0-9 _'-]*$/.test(trimmed);
   }
 
-  isLiteralTextInput(input) {
-    if (typeof input !== "string" || input.length <= 1) {
-      return false;
-    }
-    if (this.deps.keyboardInput.isMetaInput(input)) {
-      return false;
-    }
-    if (this.deps.keyboardInput.isCtrlInput(input)) {
-      return false;
-    }
-
-    const nonTextInputs = new Set([
-      "Enter",
-      "Escape",
-      "ArrowLeft",
-      "ArrowRight",
-      "ArrowUp",
-      "ArrowDown",
-      "Home",
-      "End",
-      "PageUp",
-      "PageDown",
-      "Numpad1",
-      "Numpad2",
-      "Numpad3",
-      "Numpad4",
-      "Numpad5",
-      "Numpad6",
-      "Numpad7",
-      "Numpad8",
-      "Numpad9",
-      "NumpadDecimal",
-      "Backspace",
-      "Space",
-      "Spacebar",
-      "Tab",
-      "Insert",
-      "Delete",
-      "F1",
-      "F2",
-      "F3",
-      "F4",
-      "F5",
-      "F6",
-      "F7",
-      "F8",
-      "F9",
-      "F10",
-      "F11",
-      "F12",
-    ]);
-
-    return !nonTextInputs.has(input);
-  }
-
   isTextInputCommand(input) {
     return typeof input === "string" && input.startsWith(this.textInputPrefix);
   }

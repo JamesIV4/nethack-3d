@@ -1615,15 +1615,8 @@ export class QuestionMenus {
       return exact;
     }
 
-    const lower = input.toLowerCase();
-    return (
-      this.activeQuestionMenuItems.find((item) => {
-        if (!item || item.isCategory || typeof item.accelerator !== "string") {
-          return false;
-        }
-        return item.accelerator.toLowerCase() === lower;
-      }) ?? null
-    );
+    // NetHack assigns different objects to lowercase and uppercase letters.
+    return null;
   }
 
   togglePickupSelection(
