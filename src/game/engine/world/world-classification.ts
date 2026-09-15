@@ -261,6 +261,8 @@ export class WorldClassification {
     }
     if (
       behavior.materialKind === "stairs_up" ||
+      (behavior.materialKind === "stairs_down" &&
+        this.dependencies.tilesetAssets.shouldUseVultureTiles()) ||
       behavior.materialKind === "fountain"
     ) {
       return true;

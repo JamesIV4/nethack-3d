@@ -11,6 +11,7 @@ function fixture() {
   audio.messageSoundHooks={playPlayerFootstepSound:sound} as unknown as MessageSoundHooks;
   const commands=Object.create(InputCommands.prototype);
   commands.dependencies={engineState:{session:{sendMouseInput:send}},tileContextActions:{closeAnyTileContextMenu:vi.fn()},audioHapticsPlatform:audio,movementInput:{armPlayerCliparoundInputCooldown:cooldown},darkCorridorInference:{beginDarkCorridorDiscoveryWindowFromPlayerInput:vi.fn()}};
+  commands.dependencies.tilesetAssets = { vultureTilesetTranslator: null };
   return {commands:commands as InputCommands,audio,sound,cooldown,send,deps};
 }
 it("arms laser movement in FPS and plays a footstep only after runtime-confirmed movement", () => {

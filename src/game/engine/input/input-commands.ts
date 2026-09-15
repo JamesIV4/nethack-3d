@@ -145,6 +145,7 @@ export interface InputCommandsDependencies {
   readonly tilesetAssets: Pick<
     TilesetAssets,
     "resolveRuntimeVersion"
+    | "vultureTilesetTranslator"
   >;
   readonly tileUpdates: Pick<
     TileUpdates,
@@ -1133,6 +1134,7 @@ export class InputCommands {
     options: { keepContextMenuOpen?: boolean; delayMs?: number } = {},
   ): void {
     this.dependencies.engineMessages.logNameInputTrace(input);
+    this.dependencies.tilesetAssets.vultureTilesetTranslator?.pauseIdlePreloading();
     this.dependencies.combatAttribution.pendingPointerAttackTargetContext = null;
     if (!options.keepContextMenuOpen) {
       this.dependencies.tileContextActions.closeAnyTileContextMenu(false);
@@ -1301,6 +1303,7 @@ export class InputCommands {
     button: number,
     options: { keepContextMenuOpen?: boolean; allowFpsMovement?: boolean } = {},
   ): void {
+    this.dependencies.tilesetAssets.vultureTilesetTranslator?.pauseIdlePreloading();
     if (!this.dependencies.engineState.session) {
       return;
     }

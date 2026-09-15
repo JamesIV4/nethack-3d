@@ -383,7 +383,9 @@ export class TileRendering {
       isLootLikeCharacter ||
       (this.dependencies.movementInput.isFpsMode() && isAltarOrTombstone) ||
       (useTiles &&
-        (isSink || isFountain || isStairsUp || isAltarOrTombstone || isStatue));
+        (isSink || isFountain || isStairsUp ||
+          (isStairsDown && this.dependencies.tilesetAssets.shouldUseVultureTiles()) ||
+          isAltarOrTombstone || isStatue));
     const shouldUseElevatedBillboard =
       shouldElevateEntity &&
       (useTiles || this.dependencies.movementInput.isFpsMode() || isOverheadAsciiMode);

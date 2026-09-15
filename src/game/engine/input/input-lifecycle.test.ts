@@ -158,6 +158,7 @@ function commandFixture() {
     darkCorridorInference: { shouldEnableBlindDarkCorridorInferenceForInput: () => false, beginDarkCorridorDiscoveryWindowFromPlayerInput: vi.fn() },
     directionPrompts,
     engineMessages: { logNameInputTrace: vi.fn() },
+    tilesetAssets: { vultureTilesetTranslator: null },
     engineState: { session: { sendInput, sendInputSequence } },
     gameOver: { gameOverState: { active: false } },
     movementInput: { isMovementInput: (key: string) => /^[hyn]$/.test(key), isRunMovementInput: () => false, isNumpadRunPrefixInput: () => false, isRunPrefixInput: (key: string) => key === "5", armPlayerCliparoundInputCooldown },

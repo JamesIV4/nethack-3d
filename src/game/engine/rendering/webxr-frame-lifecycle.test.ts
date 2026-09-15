@@ -26,6 +26,7 @@ it("completes the existing first-person step and releases queued tiles before ap
     webXrPresentation: { active: true, updateInput: noop, updateCamera: () => { order.push("XR pose"); return true; }, prepareRender: () => camera.camera },
     renderPipeline: { syncWorldTileScale: () => order.push("world scale"), renderer: { xr: { isPresenting: true }, render: () => order.push("render") }, scene: new THREE.Scene() },
     directionPrompts: { directionPromptOverlay: null, syncDirectionPromptOverlayVisibility: noop },
+    tilesetAssets: { vultureTilesetTranslator: null },
     playerMovement: { playerPos: { x: 2, y: 3 } },
   }, { get: (o,k) => Reflect.get(o,k) ?? new Proxy({}, {get: () => noop}) });
   const engine = Object.create(Nethack3DEngine.prototype) as { systems: unknown; animate: (time: number) => void };

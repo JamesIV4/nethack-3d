@@ -6,6 +6,7 @@ import { getGlyphCatalogEntry, getGlyphCatalogRanges } from "../glyphs/registry"
 import type { NethackRuntimeVersion } from "../../runtime/types";
 import { VULTURE_MONSTER_KEYS_367 } from "./vulture-monster-keys.367.generated";
 import { NETHACK_367_OBJECT_TOKENS } from "./nethack-object-tokens";
+import { VultureIdlePreloader } from "./idle-preloader";
 
 // Vulture's asset names follow 3.6 identities, even when the running game uses
 // 5.0 glyphs (split cmap ranges, added species/objects, and male/female tiles).
@@ -452,6 +453,44 @@ export class VultureTilesetTranslator {
 
   private disposed = false;
 
+  private preloadUrls: string[] = [];
+  private backgroundImage: { url: string; image: HTMLImageElement; demanded: boolean } | null = null;
+  private idlePreloader: VultureIdlePreloader | null = null;
+
+  public pauseIdlePreloading(): void {
+    this.idlePreloader?.pause();
+  }
+
+  public updateIdlePreloading(): void {
+    if (this.disposed || !this.configLoaded || this.preloadUrls.length === 0) return;
+    this.idlePreloader ??= new VultureIdlePreloader(
+      () => this.preloadOneImage(), () => this.cancelBackgroundImage(),
+    );
+    this.idlePreloader.tick();
+  }
+
+  private cancelBackgroundImage(): void {
+    const pending = this.backgroundImage;
+    // A visible sprite can adopt an in-flight preload; never cancel its load.
+    if (!pending || pending.demanded) return;
+    pending.image.onload = pending.image.onerror = null;
+    pending.image.removeAttribute("src");
+    this.imageByUrl.delete(pending.url);
+    this.preloadUrls.push(pending.url);
+    this.backgroundImage = null;
+  }
+
+  private preloadOneImage(): void {
+    if (this.disposed || this.backgroundImage || this.isAssetCompilationInProgress()) return;
+    // Bound even cache-hit scanning so this never monopolizes an idle callback.
+    for (let i = 0; i < 32 && this.preloadUrls.length > 0; i++) {
+      const url = this.preloadUrls.pop()!;
+      if (this.imageByUrl.has(url)) continue;
+      this.getLoadedImage(url, true);
+      return;
+    }
+  }
+
   public readonly nominalTileSize = 112;
 
   private readonly runtimeVersion: NethackRuntimeVersion;
@@ -608,8 +647,9 @@ export class VultureTilesetTranslator {
     if (waitingForConfig) {
       return true;
     }
-    for (const imageState of this.imageByUrl.values()) {
-      if (imageState === "loading") {
+    for (const [url, imageState] of this.imageByUrl) {
+      if (imageState === "loading" &&
+          (this.backgroundImage?.url !== url || this.backgroundImage.demanded)) {
         return true;
       }
     }
@@ -617,6 +657,9 @@ export class VultureTilesetTranslator {
   }
 
   public dispose(): void {
+    this.idlePreloader?.dispose();
+    this.idlePreloader = null;
+    this.preloadUrls = [];
     this.disposed = true;
     this.imageByUrl.clear();
     this.rawEntryByToken.clear();
@@ -855,7 +898,11 @@ export class VultureTilesetTranslator {
     forBillboard: boolean,
   ): void {
     const normalizedSize = clampTileSize(size);
-    context.fillStyle = forBillboard ? "rgba(84, 84, 84, 0.82)" : "#6b736f";
+    if (forBillboard) {
+      context.clearRect(0, 0, normalizedSize, normalizedSize);
+      return;
+    }
+    context.fillStyle = "#6b736f";
     context.fillRect(0, 0, normalizedSize, normalizedSize);
     context.strokeStyle = "rgba(0, 0, 0, 0.32)";
     context.lineWidth = Math.max(1, Math.round(normalizedSize * 0.05));
@@ -873,10 +920,11 @@ export class VultureTilesetTranslator {
     return `${this.dataRootUrl}/${normalizedRelativePath}`;
   }
 
-  private getLoadedImage(url: string): HTMLImageElement | null {
+  private getLoadedImage(url: string, background = false): HTMLImageElement | null {
     if (this.disposed) {
       return null;
     }
+    if (!background && this.backgroundImage?.url === url) this.backgroundImage.demanded = true;
     const cached = this.imageByUrl.get(url);
     if (cached instanceof HTMLImageElement) {
       return cached;
@@ -886,19 +934,26 @@ export class VultureTilesetTranslator {
     }
 
     const image = new Image();
+    if (background) {
+      image.fetchPriority = "low";
+      this.backgroundImage = { url, image, demanded: false };
+    }
     this.imageByUrl.set(url, "loading");
     image.onload = () => {
       if (this.disposed) {
         return;
       }
       this.imageByUrl.set(url, image);
-      this.notifyAssetReady();
+      const shouldNotify = !background || this.backgroundImage?.demanded === true;
+      if (this.backgroundImage?.url === url) this.backgroundImage = null;
+      if (shouldNotify) this.notifyAssetReady();
     };
     image.onerror = () => {
       if (this.disposed) {
         return;
       }
       this.imageByUrl.set(url, null);
+      if (this.backgroundImage?.url === url) this.backgroundImage = null;
     };
     image.src = url;
     return null;
@@ -950,6 +1005,9 @@ export class VultureTilesetTranslator {
       }
       this.parseConfig(configText);
       this.configLoaded = true;
+      this.preloadUrls = Array.from(new Set(Array.from(this.rawEntryByToken.values())
+        .filter(entry => entry.kind === "asset")
+        .map(entry => this.resolveAssetUrl(entry.path))));
       this.configLoadFailed = false;
       this.notifyAssetReady();
     } catch (error) {

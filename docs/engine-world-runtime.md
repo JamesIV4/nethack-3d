@@ -68,6 +68,16 @@ or void, and does not add diagonal refresh dependencies. Vulture asset identitie
 NetHack 5 glyph offsets must be normalized through semantic symbols and tile
 translation before selecting those assets.
 
+Vulture sprite images warm one at a time after 750 ms without input or runtime
+events, using browser idle callbacks with spare time. Keyboard, pointer, touch,
+wheel, controller and submitted game input pause the queue; input cancels a
+background image unless a visible sprite has already adopted that request.
+Background completion does not rebuild scene textures or show the compilation
+indicator. Visible asset requests retain the existing refresh path. Pending
+billboards are transparent instead of showing grey placeholder squares.
+Translator disposal cancels idle callbacks and removes input listeners. Browsers
+without idle callbacks retain on-demand loading.
+
 Vulture treats `S_darkroom` as loss of visibility for a previously observed room,
 not as a terrain replacement. Keep room membership and each coordinate's last
 resolved floor/decor lookup so rugs and neighboring wall styles do not change

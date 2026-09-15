@@ -755,6 +755,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private handleRuntimeEvent(event: RuntimeEvent): void {
+    this.systems.tilesetAssets.vultureTilesetTranslator?.pauseIdlePreloading();
     if (this.systems.engineState.disposed) {
       return;
     }
@@ -1699,6 +1700,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.webXrPresentation.updateInput(timeMs);
     this.systems.pointerLock.syncFpsPointerLockForUiState(false);
     this.systems.controllerGameplay.updateControllerInput(deltaSeconds, !this.systems.webXrPresentation.active);
+    this.systems.tilesetAssets.vultureTilesetTranslator?.updateIdlePreloading();
     this.systems.entityMovement.updateEntityMoveTransitions();
     this.systems.camera.updateCameraPanInertia(deltaSeconds);
     // Preserve step completion and queued tile flushing before applying the XR view.
