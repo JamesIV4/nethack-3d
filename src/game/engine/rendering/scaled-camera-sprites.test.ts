@@ -41,7 +41,7 @@ describe("scaled XR camera rendering", () => {
   it("shares the headset center between eyes and restores flat sprite facing", () => {
     const material = new THREE.SpriteMaterial(), scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera();
     scene.add(new THREE.Sprite(material)); camera.position.set(2, 3, 4); camera.updateMatrixWorld();
-    const patcher = new ScaledCameraSprites(); patcher.prepare(scene, camera);
+    const patcher = new ScaledCameraSprites(); patcher.prepare(scene, camera.position);
     const shader = { vertexShader: THREE.ShaderLib.sprite.vertexShader, uniforms: {} } as Parameters<THREE.Material["onBeforeCompile"]>[0];
     material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
     expect(shader.uniforms.nh3dXrOrigin.value.toArray()).toEqual([2, 3, 4]);
@@ -52,7 +52,7 @@ describe("scaled XR camera rendering", () => {
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial()), scene = new THREE.Scene();
     sprite.position.set(2, 0, 0); scene.add(sprite); scene.updateMatrixWorld(true);
     const camera = new THREE.PerspectiveCamera(); camera.position.z = 3; camera.updateMatrixWorld();
-    const patcher = new ScaledCameraSprites(); patcher.prepare(scene, camera);
+    const patcher = new ScaledCameraSprites(); patcher.prepare(scene, camera.position);
     const raycaster = new THREE.Raycaster(); raycaster.camera = camera;
     const right = new THREE.Vector3(3, 0, 2).normalize();
     const target = sprite.position.clone().addScaledVector(right, .3);
@@ -68,13 +68,27 @@ describe("scaled XR camera rendering", () => {
     sprite.position.set(2, 1, 0); scene.add(sprite); scene.updateMatrixWorld(true);
     const camera = new THREE.PerspectiveCamera(); camera.position.set(0, -3, 2); camera.up.set(0, 0, 1);
     camera.lookAt(sprite.position); camera.updateMatrixWorld();
-    const patcher = new ScaledCameraSprites(); patcher.prepare(scene, camera);
+    const patcher = new ScaledCameraSprites(); patcher.prepare(scene, camera.position);
     const shader = { vertexShader: THREE.ShaderLib.sprite.vertexShader, uniforms: {} } as Parameters<THREE.Material["onBeforeCompile"]>[0];
     sprite.material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
     const caster = new THREE.Raycaster(camera.position, sprite.position.clone().sub(camera.position).normalize()); caster.camera = camera;
     const point = caster.intersectObject(sprite)[0].point.clone();
-    camera.rotateZ(Math.PI / 3); camera.updateMatrixWorld(); patcher.prepare(scene, camera);
+    camera.rotateZ(Math.PI / 3); camera.updateMatrixWorld(); patcher.prepare(scene, camera.position);
     expect(shader.uniforms.nh3dXrUp.value.toArray()).toEqual([0, 0, 1]);
     expect(caster.intersectObject(sprite)[0].point.distanceTo(point)).toBeLessThan(1e-6);
+  });
+  it("locks tabletop yaw, adjusts pitch, and restores material sidedness on exit", () => {
+    const sprite=new THREE.Sprite(new THREE.SpriteMaterial()), scene=new THREE.Scene(); scene.add(sprite); scene.updateMatrixWorld(true);
+    const patcher=new ScaledCameraSprites(), head=new THREE.Vector3(3,-4,5), camera=new THREE.PerspectiveCamera();
+    patcher.prepare(scene,head,true);
+    expect(sprite.material.side).toBe(THREE.DoubleSide);
+    const caster=new THREE.Raycaster(); caster.camera=camera;
+    // Right edges remain parallel to the board's X axis despite lateral leaning.
+    for(const x of [-3,3]) {
+      head.x=x;patcher.prepare(scene,head,true);
+      const point=new THREE.Vector3(.3,0,0);caster.ray.set(head,point.clone().sub(head).normalize());
+      expect(caster.intersectObject(sprite)[0].point.distanceTo(point)).toBeLessThan(1e-6);
+    }
+    patcher.disable(scene); expect(sprite.material.side).toBe(THREE.FrontSide);
   });
 });

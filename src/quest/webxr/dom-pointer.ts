@@ -1,11 +1,12 @@
+import { isVisibleUi } from "./visibility";
 const controls = "button,a[href],input,textarea,select,label,summary,canvas,#stats-bar,#game-log,[tabindex]:not([tabindex='-1']),[role=button],[role=slider],[contenteditable=true],[data-xr-ui]";
-const surfaces = ".nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible";
+const surfaces = ".nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=alertdialog]";
 
 export function uiHitRectangles(): number[] {
   const regions: number[][] = [];
   for (const element of document.querySelectorAll<HTMLElement>(surfaces + "," + controls)) {
     const style = getComputedStyle(element);
-    if (element.closest("[inert],[aria-hidden=true]") || style.visibility !== "visible" || style.pointerEvents === "none" || Number(style.opacity) === 0) continue;
+    if (!isVisibleUi(element) || style.pointerEvents === "none") continue;
     const bounds = element.getBoundingClientRect();
     let left = Math.max(0, bounds.left), top = Math.max(0, bounds.top), right = Math.min(innerWidth, bounds.right), bottom = Math.min(innerHeight, bounds.bottom);
     for (let parent = element.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
@@ -25,7 +26,7 @@ export function uiHitRectangles(): number[] {
 export function pickUiTarget(x: number, y: number): HTMLElement | null {
   for (const element of document.elementsFromPoint(x, y)) {
     const target = element.closest<HTMLElement>(controls) ?? element.closest<HTMLElement>(surfaces);
-    if (!target || target.closest("[inert], [aria-hidden=true]") || getComputedStyle(target).visibility === "hidden") continue;
+    if (!target || !isVisibleUi(target)) continue;
     return target;
   }
   return null;

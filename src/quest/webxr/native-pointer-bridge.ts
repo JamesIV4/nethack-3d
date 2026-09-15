@@ -32,6 +32,7 @@ export class NativePointerBridge {
   private readonly resized = (): void => { this.dirty = true; };
   constructor() {
     this.observer.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
+    this.observer.observe(document.documentElement, { attributes: true });
     window.addEventListener("resize", this.resized, { signal: this.abort.signal });
     document.addEventListener("scroll", this.resized, { capture: true, signal: this.abort.signal });
   }

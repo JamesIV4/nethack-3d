@@ -12,6 +12,7 @@
 
 namespace crow {
 class GameUiPanels {
+  struct Piece { QuadPtr quad; float x = 0, y = 0; };
   struct Pane {
     int id = -1;
     std::array<float, 4> crop{};
@@ -20,6 +21,10 @@ class GameUiPanels {
     int32_t textureWidth = 0, textureHeight = 0;
     vrb::Matrix pose;
     float width = 1, height = 1;
+    bool masked = false;
+    std::array<float, 10> maskKey{};
+    std::vector<Piece> pieces;
+    vrb::TextureSurfacePtr maskTexture;
   };
   vrb::CreationContextPtr context;
   std::vector<Pane> panes;
@@ -27,6 +32,15 @@ class GameUiPanels {
   int32_t textureWidth = 0, textureHeight = 0;
   std::unordered_map<int, int> selected;
   std::unordered_map<int, std::pair<float, float>> pixels;
+  bool hasModal = false;
+  std::array<float, 4> modal{};
+  bool firstPerson = false;
+  vrb::Matrix actionHud;
+  float actionY = -0.85f, actionDepth = 0;
+  int gripOwner = -1;
+  vrb::Matrix gripInverse;
+  vrb::Vector gripStart;
+  float gripStartY = 0, gripStartDepth = 0;
  public:
   explicit GameUiPanels(vrb::CreationContextPtr value) : context(value) {}
   bool Owns(const WidgetPtr& widget) const { return window == widget && !panes.empty(); }
@@ -38,14 +52,21 @@ class GameUiPanels {
     if (textureWidth <= 0 || textureHeight <= 0) { panes.clear(); return; }
     const size_t start = 29 + size_t(state[1]) * 4;
     const size_t count = size_t(state[13]);
-    if (count > 7 || state.size() != start + count * 5) { panes.clear(); return; }
-    const float scale = state[10] == 1 ? 1 : state[19];
-    const float extent = state[18] * scale;
+    if (count > 8 || state.size() != start + count * 5) { panes.clear(); return; }
+    const float worldScale = state[10] == 1 ? 1 : state[19];
+    const float extent = state[18] * worldScale;
+    const float scale = 1; // UI dimensions are independent of game-world scale.
+    firstPerson = state[10] == 1; actionHud = hud;
+    if (!firstPerson) gripOwner = -1;
+    hasModal = false;
+    for (size_t i = start; i < state.size(); i += 5) if (int(state[i]) == 4) {
+      hasModal = true; modal = {state[i+1], state[i+2], state[i+3], state[i+4]};
+    }
     panes.resize(count);
     for (size_t i = 0; i < count; ++i) {
       auto& p = panes[i]; const size_t at = start + i * 5;
       const std::array<float, 4> crop{state[at+1], state[at+2], state[at+3], state[at+4]};
-      const float paneScale = int(state[at]) == 4 ? scale * 0.5f : scale;
+      const float paneScale = scale;
       const float width = 3.0f * paneScale * (crop[2] - crop[0]);
       const float height = 3.0f * paneScale * float(textureHeight) / textureWidth * (crop[3] - crop[1]);
       if (!p.quad) p.quad = Quad::Create(context, width, height);
@@ -63,7 +84,8 @@ class GameUiPanels {
         p.quad->SetTextureRect(device::EyeRect(crop[0], crop[1], crop[2]-crop[0], crop[3]-crop[1]));
       }
       p.id = int(state[at]);
-      if (p.id >= 7) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
+      if (p.id == 2 && firstPerson) p.pose = actionHud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0,actionY,actionDepth)));
+      else if (p.id >= 7) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
           3.0f * ((crop[0] + crop[2]) / 2 - 0.5f),
           3.0f * float(textureHeight) / textureWidth * (0.5f - (crop[1] + crop[3]) / 2), 0)));
       else if (p.id == 4) p.pose = state[20] == 1 ? center.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0, height / 2, 0))) : center;
@@ -72,9 +94,9 @@ class GameUiPanels {
         if (p.id == 0) offset.z() = -0.99f * extent;
         if (p.id == 3 || p.id == 6) offset.z() = 0.99f * extent + height / 2 + (p.id == 6 ? .3f * scale : 0);
         if (p.id == 1) offset.x() = -1.44f * extent - width / 2;
-        if (p.id == 2 || p.id == 5) offset.x() = 1.44f * extent + width / 2;
+        if (p.id == 5) offset.x() = 1.44f * extent + width / 2;
         if (p.id == 5) offset.z() = -0.9f * extent - height / 2;
-        if (p.id == 2) offset.z() = (0.225f + 0.08f) * scale + height / 2;
+        if (p.id == 2) offset.z() = 0.99f * extent - height / 2;
         p.pose = board.PostMultiply(vrb::Matrix::Translation(offset))
             .PostMultiply(vrb::Matrix::Rotation(vrb::Vector(1,0,0), -vrb::PI_FLOAT / 2));
         if (p.id == 0) {
@@ -89,7 +111,64 @@ class GameUiPanels {
         }
       }
       p.quad->GetTransformNode()->SetTransform(p.pose);
+      p.quad->GetRenderState()->SetTintColor(p.id == 2 && gripOwner >= 0 ? vrb::Color(.65f,1,1,1) : vrb::Color(1,1,1,1));
+      UpdateMask(p);
     }
+  }
+ private:
+  void UpdateMask(Pane& p) {
+    const float l = std::max(p.crop[0], modal[0]), t = std::max(p.crop[1], modal[1]);
+    const float r = std::min(p.crop[2], modal[2]), b = std::min(p.crop[3], modal[3]);
+    if (!hasModal || p.id == 4 || r <= l || b <= t) { p.masked = false; p.pieces.clear(); p.maskTexture.reset(); return; }
+    const std::array<float,10> key{p.crop[0],p.crop[1],p.crop[2],p.crop[3],l,t,r,b,p.width,p.height};
+    if (!p.masked || p.maskKey != key || p.maskTexture != p.texture) {
+      p.maskKey = key; p.maskTexture = p.texture; p.pieces.clear();
+      const std::array<std::array<float,4>,4> regions{{
+        {p.crop[0],p.crop[1],p.crop[2],t}, {p.crop[0],b,p.crop[2],p.crop[3]},
+        {p.crop[0],t,l,b}, {r,t,p.crop[2],b}}};
+      for (const auto& c : regions) {
+        if (c[2] <= c[0] || c[3] <= c[1]) continue;
+        const float width = p.width * (c[2]-c[0]) / (p.crop[2]-p.crop[0]);
+        const float height = p.height * (c[3]-c[1]) / (p.crop[3]-p.crop[1]);
+        Piece piece; piece.quad = Quad::Create(context,width,height);
+        piece.x = p.width * (((c[0]+c[2])/2-p.crop[0])/(p.crop[2]-p.crop[0])-.5f);
+        piece.y = p.height * (.5f-((c[1]+c[3])/2-p.crop[1])/(p.crop[3]-p.crop[1]));
+        piece.quad->SetTexture(p.texture, textureWidth, textureHeight);
+        piece.quad->SetMaterial(vrb::Color(.4f,.4f,.4f),vrb::Color(1,1,1),vrb::Color(0,0,0),0);
+        piece.quad->GetRenderState()->SetTintColor(vrb::Color(1,1,1,1));
+        piece.quad->UpdateProgram("");
+        piece.quad->SetTextureRect(device::EyeRect(c[0],c[1],c[2]-c[0],c[3]-c[1]));
+        p.pieces.push_back(piece);
+      }
+    }
+    p.masked = true;
+    for (auto& piece : p.pieces) piece.quad->GetTransformNode()->SetTransform(
+      p.pose.PostMultiply(vrb::Matrix::Translation(vrb::Vector(piece.x,piece.y,0))));
+  }
+ public:
+  void EndGrip(int controller) { if (gripOwner == controller) gripOwner = -1; }
+  bool Grip(int controller, bool pressed, bool wasPressed, const vrb::Vector& hand,
+            const vrb::Vector& rayOrigin, const vrb::Vector& rayDirection) {
+    if (!pressed || !firstPerson || hasModal) { EndGrip(controller); return false; }
+    auto it = std::find_if(panes.begin(),panes.end(),[](const Pane& p){ return p.id == 2; });
+    if (it == panes.end()) { EndGrip(controller); return false; }
+    auto& p = *it;
+    if (gripOwner < 0 && !wasPressed) {
+      const auto inverse = p.pose.AfineInverse();
+      const auto o = inverse.MultiplyPosition(rayOrigin), d = inverse.MultiplyDirection(rayDirection);
+      if (std::fabs(d.z()) < .00001f) return false;
+      const float t = -o.z()/d.z(); const auto hit = o + d*t;
+      if (t < 0 || std::fabs(hit.x()) > p.width/2 || std::fabs(hit.y()) > p.height/2) return false;
+      gripOwner = controller; gripInverse = actionHud.AfineInverse(); gripStart = gripInverse.MultiplyPosition(hand);
+      gripStartY = actionY; gripStartDepth = actionDepth;
+    }
+    if (gripOwner != controller) return false;
+    const auto delta = gripInverse.MultiplyPosition(hand) - gripStart;
+    actionY = std::max(-2.0f,std::min(0.6f,gripStartY + delta.y()));
+    actionDepth = std::max(-1.5f,std::min(0.6f,gripStartDepth + delta.z()));
+    p.pose = actionHud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0,actionY,actionDepth)));
+    p.quad->GetTransformNode()->SetTransform(p.pose); UpdateMask(p);
+    return true;
   }
   bool Hit(int controller, bool captured, const vrb::Vector& origin, const vrb::Vector& direction,
            const std::vector<float>& state, vrb::Vector& point, vrb::Vector& normal, float& distance) {
@@ -106,6 +185,7 @@ class GameUiPanels {
       if (!captured && (u < 0 || u > 1 || v < 0 || v > 1)) continue;
       const float x = p.crop[0] + u * (p.crop[2] - p.crop[0]);
       const float y = p.crop[1] + v * (p.crop[3] - p.crop[1]);
+      if (!captured && p.id != 4 && hasModal && x >= modal[0] && x <= modal[2] && y >= modal[1] && y <= modal[3]) continue;
       bool interactive = captured;
       for (size_t i = 29; !interactive && i + 3 < 29 + size_t(state[1]) * 4; i += 4)
         interactive = x >= state[i] && y >= state[i+1] && x <= state[i+2] && y <= state[i+3];
@@ -123,7 +203,10 @@ class GameUiPanels {
     auto it = pixels.find(controller); if (it != pixels.end()) { x = it->second.first; y = it->second.second; }
   }
   void Cull(vrb::CullVisitor& visitor, vrb::DrawableList& list) {
-    for (const auto& p : panes) p.quad->GetRoot()->Cull(visitor, list);
+    for (const auto& p : panes) {
+      if (p.masked) { for (const auto& piece : p.pieces) piece.quad->GetRoot()->Cull(visitor,list); }
+      else p.quad->GetRoot()->Cull(visitor, list);
+    }
   }
   WidgetPtr Source() const { return panes.empty() ? nullptr : window; }
 };

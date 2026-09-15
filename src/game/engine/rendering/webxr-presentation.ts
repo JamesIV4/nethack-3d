@@ -175,7 +175,7 @@ export class WebXrPresentation {
 
   private readonly ended = (): void => {
     this.uiFirstPerson = false; this.uiRecenter = true;
-    this.scaledSprites.disable();
+    this.scaledSprites.disable(this.dependencies.renderPipeline.scene);
     document.documentElement.classList.remove("nh3d-xr-first-person");
     if (this.endListener) this.session?.removeEventListener("end", this.endListener);
     this.endListener = null;
@@ -287,6 +287,7 @@ export class WebXrPresentation {
     this.headPosition.set(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z).applyMatrix4(this.trackingRoot.matrixWorld);
     camera.position.copy(this.headPosition);
     this.scaledSprites.setOrigin(this.headPosition);
+    this.scaledSprites.setTabletop(!firstPerson);
     tracked.getWorldQuaternion(camera.quaternion);
     camera.updateMatrixWorld(true);
     this.forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
@@ -305,7 +306,7 @@ export class WebXrPresentation {
     if (!this.active) return null;
     this.htmlPanel?.nativePointer?.setWorldTransform(this.trackingRoot.matrixWorld.clone().invert());
     this.htmlPanel?.update(performance.now());
-    this.scaledSprites.prepare(this.dependencies.renderPipeline.scene, this.dependencies.renderPipeline.renderer.xr.getCamera(), this.headPosition);
+    this.scaledSprites.prepare(this.dependencies.renderPipeline.scene, this.headPosition, this.dependencies.engineState.playMode !== "fps");
     // The screen-space held weapon is not an XR hand/controller prop.
     if (this.dependencies.heldWeapon.fpsHeldWeaponMesh) this.dependencies.heldWeapon.fpsHeldWeaponMesh.visible = false;
     return this.xrCamera;

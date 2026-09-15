@@ -75,13 +75,13 @@ describe("Three.js owns the Quest world", () => {
     const now = vi.spyOn(performance, "now").mockReturnValue(0);
     f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
     const owner = f.presentation as unknown as { htmlPanel: { setFirstPersonAnchor: ReturnType<typeof vi.fn> }; snapTurn(direction: -1 | 1): void };
-    head.orientation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), 1);
+    head.orientation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), 2);
     now.mockReturnValue(10); f.presentation.updateCamera();
     const previous = owner.htmlPanel.setFirstPersonAnchor.mock.lastCall!;
-    expect(previous[1]).toBeGreaterThan(0); expect(previous[1]).toBeLessThan(1);
+    expect(previous[1]).toBeGreaterThan(0); expect(previous[1]).toBeLessThan(2);
     owner.snapTurn(1);
     const centered = owner.htmlPanel.setFirstPersonAnchor.mock.lastCall!;
-    expect(centered[1]).toBeCloseTo(1); expect(centered[2]).toBeGreaterThan(previous[2]);
+    expect(centered[1]).toBeCloseTo(2); expect(centered[2]).toBeGreaterThan(previous[2]);
     f.presentation.dispose(); now.mockRestore();
   });
   it("restores the flat canvas after the renderer's session-end handlers finish", async () => {

@@ -9,33 +9,47 @@
   pointer-events: none;
 }
 :root.nh3d-webxr-active .nh3d-fps-crosshair { display: none; }
-:root.nh3d-webxr-active .floating-message-container,
-:root.nh3d-webxr-active .nh3d-mobile-log-collapsed {
-  left: 0;
+:root.nh3d-webxr-active .floating-message-container {
+  left: 50%;
   right: auto;
-  width: 32vw;
-  max-width: 32vw;
-  transform: none;
+  width: 64vw;
+  max-width: 64vw;
+  transform: translateX(-50%);
 }
 :root.nh3d-webxr-active .floating-message-text { max-width: 100%; }
-:root.nh3d-webxr-active.nh3d-xr-first-person #floating-log-message-layer { top: 50%; }
-:root.nh3d-webxr-active.nh3d-xr-first-person .floating-message-container,
-:root.nh3d-webxr-active.nh3d-xr-first-person .nh3d-mobile-log-collapsed {
-  left: 50%; right: auto; transform: translateX(-50%);
-  text-align: center;
+:root.nh3d-webxr-active #floating-log-message-layer {
+  top: 50%; zoom: 0.5;
+  --nh3d-live-log-font-scale: 1;
+}
+:root.nh3d-webxr-active .top-left-ui,
+:root.nh3d-webxr-active .nh3d-mobile-log-collapsed {
+  position: fixed; left: 50%; right: auto; top: 50%; bottom: auto;
+  width: 64vw; max-width: 64vw; transform: translate(-50%, -50%);
+  zoom: 0.5; text-align: center;
+  --nh3d-ui-font-scale: 1; --nh3d-live-log-font-scale: 1;
 }
 /* Reserve the center of the shared texture for the independent floating pane. */
 :root.nh3d-webxr-active .nh3d-context-menu.is-visible,
-:root.nh3d-webxr-active .nh3d-dialog.is-visible {
+:root.nh3d-webxr-active .nh3d-dialog.is-visible,
+:root.nh3d-webxr-active .nh3d-mobile-actions-sheet,
+:root.nh3d-webxr-active .nh3d-wizard-commands-sheet.is-visible,
+:root.nh3d-webxr-active .nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),
+:root.nh3d-webxr-active [role="dialog"],
+:root.nh3d-webxr-active [role="alertdialog"] {
   position: fixed !important;
   left: 50% !important;
   top: 50% !important;
   right: auto !important;
   bottom: auto !important;
-  width: 36vw !important;
+  width: fit-content !important;
   min-width: 0 !important;
-  max-width: 36vw !important;
-  max-height: 72vh !important;
+  /* Scale the complete layout, including hard-coded text, controls and icons.
+     Compensated limits retain a painted cap of 54vw by 72vh. */
+  zoom: 0.5 !important;
+  max-width: 108vw !important;
+  max-height: 144vh !important;
+  --nh3d-ui-font-scale: 1 !important;
+  --nh3d-live-log-font-scale: 1 !important;
   box-sizing: border-box;
   overflow: auto;
   margin: 0 !important;
@@ -46,8 +60,20 @@
 :root.nh3d-webxr-active:not(.nh3d-xr-native-ui) .nh3d-context-menu.is-visible,
 :root.nh3d-webxr-active:not(.nh3d-xr-native-ui) .nh3d-dialog.is-visible {
   transform-origin: center center !important;
-  transform: translate(-50%, -50%) scale(0.5) !important;
+  transform: translate(-50%, -50%) !important;
 }
+/* Nested dialog markup inherits the outer zoom instead of halving twice. */
+:root.nh3d-webxr-active :is(.nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible,[role="dialog"],[role="alertdialog"])
+  :is(.nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,[role="dialog"],[role="alertdialog"]) { zoom: 1 !important; }
+.nh3d-select-backdrop { position: fixed; inset: 0; z-index: 2147483000; }
+.nh3d-select-dialog { z-index: 2147483001; padding: 20px; min-width: 220px; max-height: 80vh; }
+.nh3d-select-dialog h2 { font-size: 18px; margin: 0 0 12px; }
+.nh3d-select-choices { display: flex; flex-direction: column; gap: 4px; overflow: auto; max-height: 55vh; }
+.nh3d-select-choice { min-height: 34px; width: 100%; text-align: left; padding: 7px 12px; }
+.nh3d-select-choice[aria-selected="true"] { border-color: #78d5ff; background: #23465d; }
+.nh3d-select-choice:focus-visible { outline: 2px solid #78d5ff; outline-offset: -2px; }
+.nh3d-select-group { padding: 8px 4px 2px; color: #78d5ff; font-weight: bold; }
+.nh3d-select-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; }
 .nh3d-xr-pointer {
   position: fixed;
   z-index: 2147483647;
@@ -69,7 +95,20 @@
 .nh3d-xr-table-controls label { display: block; }
 .nh3d-xr-table-controls input { width: 100%; }
 :root.nh3d-webxr-active .nh3d-map-move-controls,
-:root.nh3d-webxr-active .nh3d-desktop-bottom-actions { bottom: 130px !important; }
+:root.nh3d-webxr-active .nh3d-desktop-bottom-actions { bottom: 220px !important; }
+:root.nh3d-webxr-active .nh3d-mobile-bottom-bar {
+  position: fixed !important; left: 50% !important; right: auto !important;
+  top: auto !important; bottom: 140px !important;
+  transform: translateX(-50%) !important;
+  width: min(92vw, 1100px) !important; height: auto !important;
+  max-height: none !important; box-sizing: border-box;
+  display: flex !important; flex-direction: row !important; flex-wrap: nowrap;
+  gap: 6px; padding: 6px;
+}
+:root.nh3d-webxr-active .nh3d-mobile-bottom-bar .nh3d-mobile-bottom-button {
+  flex: 1 1 0 !important; width: auto !important; min-width: 0 !important; min-height: 48px;
+}
+:root.nh3d-webxr-active .nh3d-mobile-bottom-bar::after { display: none !important; }
 :root:not(.nh3d-webxr-active) .nh3d-xr-table-controls,
 :root.nh3d-xr-first-person .nh3d-xr-table-controls { display: none; }
 :root.nh3d-webxr-active .nh3d-mobile-bottom-button:not(:disabled):hover,

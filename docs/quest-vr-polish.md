@@ -43,3 +43,43 @@ Validation: 58 focused tests and browser/GPU checks. The connected old app repor
 The transport header is now 29 floats: the prior 24 plus first-person UI anchor X/Y/Z, yaw, and recenter revision. HUD crop IDs 7–10 surround a separate modal ID 4; at most seven panes remain active. `patch-ui-follow.mjs` installs the native changes reproducibly.
 
 Validation: TypeScript, 66 focused tests, native and APK builds, and browser/GPU checks. Tests cover fixed-position headset rotation versus the stereo-union camera, physical head movement, frame-rate-independent following, angle wraparound, horizontal deadzones, snap recentering, modal cutouts, and message centering. Headset comfort and visual placement still require testing.
+
+## 0.3.12 bottom actions and independent UI dimensions
+
+- VR action buttons use a single horizontal row at the bottom of the table, above the existing scale controls. The scale controls retain their edge offset. Flat layout is unchanged.
+- World scale changes the board and game geometry; UI physical dimensions and native browser-popup scale are fixed independently. Panes still follow the table edges as it grows or shrinks. The control is now labelled **World scale**.
+- The final requested modal limits are four times the previous maximum width and twice the maximum height: the source width increases from 36vw to 72vw and the old 0.5 presentation multiplier is removed. The source height limit remains 72vh, producing twice the previous world-space limit without stretching text.
+- Wide modals are masked out of neighboring native UI panes. A pane is split into up to four textured pieces around the covered rectangle; its original pose and coordinate mapping remain intact. This prevents copies of modal content appearing in side or bottom panes.
+- Sprite facing now accepts only a position vector, removing the remaining camera-transform fallback from its API. No headset orientation is supplied to the facing calculation.
+
+`node scripts/quest/webxr/check-sprite-facing.mjs` compares GPU-rendered sprites against an explicitly oriented world-space mesh in both eyes, including the game's lighting hook, ordinary and scaled XR cameras, yaw, and roll. All eight cases match exactly (zero changed pixels); disabling world-space facing reproduces thousands of differing pixels. The installed headset materials also contain the intended shader. This establishes the tested rendering path, but the user's reported headset movement is not yet reproduced: the initial live capture retained a stationary segment, and a movement-triggered capture is pending. Do not treat the headset symptom as resolved based only on these tests.
+
+Validation also covers the horizontal action row, unchanged scale-control position, latest modal limits, flat layout preservation, 66 focused tests, and the native/APK build.
+
+## 0.3.13 pitch-only cards and movable first-person actions
+
+- Modals use `fit-content`, a 54vw maximum width (the requested 3× original cap), and the existing 72vh height cap. Modal-local UI and log font-scale variables override to 0.5. Small content no longer stretches to the maximum width.
+- Tabletop sprite facing locks its yaw to the board's centered direction. Only pitch responds to head position. VR tabletop cards are double-sided so their backs remain visible; original material sidedness returns on exit. Rendering and raycasts share the same pitch-only basis. First-person position-facing behavior remains unchanged.
+- First-person following uses a 90° yaw deadzone. A trigger latches both horizontal position and heading as the new reference immediately, even while animation catches up. Subsequent small movements do not move that target or prevent settling. The existing 20 cm horizontal translation threshold remains; height stays fixed. Snap recenter still bypasses lag.
+- The first-person action row is a separate pane below the upper HUD. Aim at it, hold either controller's grip, and move the hand vertically or push/pull to change depth. Release to leave it in place. Lateral placement remains centered. Position offsets last for the app session and are independent of the upper HUD.
+- Grip ownership suppresses clicks and the owning hand's gameplay axes. It cannot start during an existing trigger/confirm press. Loss of tracking, a modal, or leaving first-person mode releases the grab. Releasing grip while a click button is still held keeps that click suppressed until release.
+
+Validation: 70 focused tests, TypeScript, native/APK compilation, content-driven modal browser checks, and 32 stereo GPU comparisons against explicit pitch-only card meshes, including lateral lean and back views. `check-tabletop-facing.mjs` reproduces the GPU comparison. Native grip input and physical comfort still need headset validation. The wired HTML preview retains its single captured panel; the split movable action row uses the native Quest compositor.
+
+
+## 0.3.14 UI and pointer corrections
+
+- Action-pane crops include CSS box/text shadows, keeping the shadow with the movable bar and excluding it from the first-person upper HUD. The phone safe-area extension is disabled in XR.
+- VR modal roots now halve the entire layout with CSS zoom, including fixed-size text, controls, and icons. Menu/Actions, wizard commands, expanded logs, and semantic dialogs share this rule. Content-driven width and the painted 54vw by 72vh caps remain.
+- Quest flat and immersive modes use an in-document select chooser. It retains the original select and React change handlers, supports disabled options/groups, keyboard navigation, cancellation, focus restoration, and multiple selection. Other browser hosts retain their existing controls.
+- Tabletop logs use a front-facing message crop rather than the table's left edge. Both modes center and halve the floating/collapsed log; desktop log markup also uses the front crop.
+- Native game-window input uses consistent mouse events and primary-button state. Hover acquires focus before pressing; game clicks no longer emit artificial hover exit/enter pairs or another controller's hover exit. Non-game native widgets retain touch routing.
+- Hidden DOM ancestors are excluded from UI hit regions. Immersive rendering and picking exclude legacy flat browser windows, leaving the composited game panes as the browser UI geometry.
+- Wolvic pointer inner and outer radii are halved.
+
+Transport retains the 29-float header, now accepts up to eight panes and 581 floats, and reserves pane 11 for tabletop front messages. `patch-pointer-input.mjs` owns the native input and legacy-window corrections; `form-controls.ts`, `paint-bounds.ts`, and `visibility.ts` own their respective document behavior.
+
+Validation: 72 focused tests, TypeScript, complete APK compilation, original Java event-generator sequence checks, browser checks for controlled React selects and whole-modal geometry, shadow crop exclusion, invisible hit regions, and centered half-size logs. Native patch preparation is idempotent. APK publication verifies package/version, bundled game runtimes, matched patched Gecko, and native resolution markers. Physical first-click activation, placement, and readability still require headset testing; no APK was installed automatically.
+
+Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.14-ui-input-debug.apk`.
+SHA256: `65d4d30b372ab10dae6c6ee8246b858ee984fdafecc884a9412a8a1b2746335b`.

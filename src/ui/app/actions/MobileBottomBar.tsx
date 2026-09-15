@@ -42,7 +42,7 @@ export function MobileBottomBar({
 }: MobileBottomBarProps) {
   return (
     mobileTouchUiVisible ? (
-      <div className="nh3d-mobile-bottom-bar">
+      <div className="nh3d-mobile-bottom-bar" data-xr-ui>
         <QuestWebXrButton className="nh3d-mobile-bottom-button" />
         <button
           className={`nh3d-mobile-bottom-button${isCharacterSheetVisible ? " is-active" : ""
