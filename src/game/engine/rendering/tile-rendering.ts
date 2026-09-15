@@ -18,6 +18,7 @@ import type { EngineState } from "../runtime/engine-state";
 import type { EntityBillboards } from "./entity-billboards";
 import type { FloorOcclusion } from "./floor-occlusion";
 import type { FpsDiagnostics } from "../diagnostics/fps-diagnostics";
+import type { TileFaceTextureRotationDebug } from "../diagnostics/tile-face-texture-rotation-debug";
 import type { GlyphTextures } from "./glyph-textures";
 import type { LevelTerrainCache } from "../world/level-terrain-cache";
 import type { Lighting } from "./lighting";
@@ -114,6 +115,10 @@ export interface TileRenderingDependencies {
     | "terminalRenderOptionStates"
     | "updateTerminalCell"
   >;
+  readonly tileFaceTextureRotationDebug: Pick<
+    TileFaceTextureRotationDebug,
+    "buildVariantKey" | "resolveGeometry"
+  >;
   readonly tileMaterials: Pick<
     TileMaterials,
     "applyGlyphMaterial"
@@ -122,6 +127,7 @@ export interface TileRenderingDependencies {
   readonly tilesetAssets: Pick<
     TilesetAssets,
     "isNh5DarkCorridorWallVariantForLegacyTileset"
+    | "resolveRuntimeVersion"
     | "shouldUseVultureTiles"
   >;
   readonly tileUpdates: Pick<
@@ -956,6 +962,22 @@ export class TileRendering {
         darkCorridorWallCompatibilityActive,
       );
     mesh.userData.tileIndex = tileTextureIndex;
+    const tileFaceTextureVariant =
+      useTiles && !this.dependencies.tilesetAssets.shouldUseVultureTiles()
+        ? this.dependencies.tileFaceTextureRotationDebug.buildVariantKey(
+            this.dependencies.tilesetAssets.resolveRuntimeVersion(),
+            tileTextureIndex,
+          )
+        : null;
+    if (tileFaceTextureVariant) {
+      mesh.userData.tileFaceTextureVariant = tileFaceTextureVariant;
+    } else {
+      delete mesh.userData.tileFaceTextureVariant;
+    }
+    mesh.geometry = this.dependencies.tileFaceTextureRotationDebug.resolveGeometry(
+      geometry,
+      tileFaceTextureVariant,
+    );
     mesh.userData.tileUseBackgroundReferenceTile =
       renderBehavior.useBackgroundReferenceTile === true;
     const shouldCompositeFloorUnderFlatFeatureOnTile =

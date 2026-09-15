@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { TILE_SIZE } from "../../constants";
 import { isTerminalVoidGridTargetAdjacentToPlayer } from "../../terminal/terminal-display";
 import type { Camera } from "../camera/camera";
+import type { TileFaceTextureRotationDebug } from "../diagnostics/tile-face-texture-rotation-debug";
 import type { EngineState } from "../runtime/engine-state";
 import type { EntityBillboards } from "../rendering/entity-billboards";
 import type { PlayerMovement } from "../world/player-movement";
@@ -10,6 +11,7 @@ import type { TerminalRendering } from "../rendering/terminal-rendering";
 import type { TileContextActions } from "../ui/tile-context-actions";
 import type { TileRendering } from "../rendering/tile-rendering";
 import type { TilesetAssets } from "../rendering/tileset-assets";
+import type { TileContextTarget } from "../shared/types";
 
 export interface PointerTargetingDependencies {
   readonly camera: Pick<
@@ -35,6 +37,10 @@ export interface PointerTargetingDependencies {
   readonly terminalRendering: Pick<
     TerminalRendering,
     "isTerminalDisplayMode"
+  >;
+  readonly tileFaceTextureRotationDebug: Pick<
+    TileFaceTextureRotationDebug,
+    "resolveTarget"
   >;
   readonly tileContextActions: Pick<
     TileContextActions,
@@ -79,12 +85,7 @@ export class PointerTargeting {
     alpha: Uint8Array;
   }>();
 
-  getTileUnderFpsCrosshair(): {
-    key: string;
-    x: number;
-    y: number;
-    mesh: THREE.Mesh;
-  } | null {
+  getTileUnderFpsCrosshair(): TileContextTarget | null {
     return this.getTileTargetFromPointerNdc(0, 0, true);
   }
 
@@ -194,12 +195,7 @@ export class PointerTargeting {
     ndcX: number,
     ndcY: number,
     requireMesh: boolean,
-  ): {
-    key: string;
-    x: number;
-    y: number;
-    mesh: THREE.Mesh;
-  } | null {
+  ): TileContextTarget | null {
     const candidates = this.collectVisiblePointerRaycastTargets();
     if (candidates.length === 0) {
       return null;
@@ -252,6 +248,16 @@ export class PointerTargeting {
         continue;
       }
 
+      const clickedWorldFaceNormal = this.getIntersectionWorldFaceNormal(
+        intersection,
+        object,
+      );
+      const faceTextureRotationTarget =
+        this.dependencies.tileFaceTextureRotationDebug.resolveTarget(
+          object,
+          clickedWorldFaceNormal,
+        );
+
       const preferredFloorMesh = this.resolvePreferredTilesModeFloorMeshTarget({
         mesh: object,
         intersection,
@@ -263,7 +269,10 @@ export class PointerTargeting {
       if (!resolvedTarget) {
         continue;
       }
-      return resolvedTarget;
+      return {
+        ...resolvedTarget,
+        faceTextureRotationTarget,
+      };
     }
 
     return null;
@@ -581,6 +590,36 @@ export class PointerTargeting {
       event.clientX,
       event.clientY,
     );
+  }
+
+  resolveTileContextTargetFromClientCoordinates(
+    clientX: number,
+    clientY: number,
+  ): TileContextTarget | null {
+    const canvas = this.dependencies.renderPipeline.renderer.domElement;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      this.pointerNdc.set(
+        ((clientX - rect.left) / rect.width) * 2 - 1,
+        -((clientY - rect.top) / rect.height) * 2 + 1,
+      );
+      const directTarget = this.getTileTargetFromPointerNdc(
+        this.pointerNdc.x,
+        this.pointerNdc.y,
+        true,
+      );
+      if (directTarget) {
+        return directTarget;
+      }
+    }
+
+    const fallback = this.getVisualTargetTileForPointerInputFallback();
+    if (!fallback) {
+      return null;
+    }
+    const key = `${fallback.x},${fallback.y}`;
+    const mesh = this.dependencies.tileRendering.tileMap.get(key);
+    return mesh ? { key, ...fallback, mesh } : null;
   }
 
   shouldSearchAdjacentTerminalVoid(gridTarget: {

@@ -137,7 +137,7 @@ export const startupInitOptionDefinitions: ReadonlyArray<StartupInitOptionDefini
       label: startupStrings.options.tutorial.label,
       description: startupStrings.options.tutorial.description,
       control: "boolean",
-      defaultValue: true,
+      defaultValue: false,
       supportedRuntimeVersions: ["5.0"],
     },
     {
@@ -723,6 +723,12 @@ export function serializeStartupInitOptionTokens(
       values[definition.key],
     );
     if (definition.control === "boolean") {
+      // NetHack 5 treats the positive `tutorial` option as an affirmative
+      // answer, bypassing its prompt. Offering the tutorial means leaving the
+      // option unspecified; only serialize the explicit opt-out.
+      if (definition.key === "tutorial" && normalizedValue) {
+        continue;
+      }
       tokens.push(normalizedValue ? definition.key : `!${definition.key}`);
       continue;
     }
@@ -791,6 +797,11 @@ export function sanitizeStartupInitOptionToken(
   }
   if (definition.control === "boolean") {
     if (separatorIndex >= 0) {
+      return null;
+    }
+    // Never pass the positive form through: it auto-accepts the tutorial
+    // rather than merely allowing NetHack's tutorial prompt to appear.
+    if (definition.key === "tutorial" && !negated) {
       return null;
     }
     return negated ? `!${definition.key}` : definition.key;

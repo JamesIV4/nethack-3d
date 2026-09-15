@@ -72,6 +72,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.audioHapticsPlatform.webHaptics = this.systems.audioHapticsPlatform.shouldInitializeWebHaptics()
       ? new WebHaptics()
       : null;
+    this.systems.tileFaceTextureRotationDebug.initialize();
     this.initThreeJS();
     this.initUI();
     this.connectToRuntime();
@@ -1476,6 +1477,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.tileContextActions.normalTileContextMenuOpen = false;
     this.systems.tileContextActions.normalTileContextSignature = "";
     this.systems.tileContextActions.normalTileContextTarget = null;
+    this.systems.tileContextActions.activeFaceTextureRotationTarget = null;
     this.systems.tileContextActions.selectedContextHighlightTile = null;
     this.systems.tileContextActions.vultureMouseHoverHighlightTile = null;
     this.systems.tileContextActions.fpsCrosshairGlanceCache.clear();
@@ -1538,6 +1540,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.renderPipeline.renderer.setAnimationLoop(null);
     this.systems.webXrPresentation.dispose();
     this.systems.questSceneExport.dispose();
+    this.systems.tileFaceTextureRotationDebug.clearRotatedGeometryCache();
     this.systems.minimap.setTerminalGutterMinimapState(false, false);
 
     if (this.systems.engineState.animationFrameId !== null) {
@@ -1923,6 +1926,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
   public runContextualAction(actionId: string): void {
     return this.systems.inputCommands.runContextualAction(actionId);
+  }
+
+  public rotateActiveTileFaceTexture(): void {
+    this.systems.tileContextActions.rotateActiveFaceTexture();
   }
 
   public repeatLastAction(): void {

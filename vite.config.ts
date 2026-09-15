@@ -1,5 +1,11 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import react from "@vitejs/plugin-react";
@@ -237,8 +243,149 @@ function questBundlePlugin(): Plugin {
   };
 }
 
+const tileFaceTextureRotationFilePath = path.join(
+  process.cwd(),
+  ".wired-dev",
+  "tile-face-texture-rotations.json",
+);
+
+function isLoopbackAddress(rawAddress: string | undefined): boolean {
+  const address = String(rawAddress || "").toLowerCase();
+  return (
+    address === "127.0.0.1" ||
+    address === "::1" ||
+    address === "::ffff:127.0.0.1"
+  );
+}
+
+function normalizeTileFaceTextureRotationPayload(rawPayload: unknown) {
+  const payload =
+    rawPayload && typeof rawPayload === "object" && !Array.isArray(rawPayload)
+      ? (rawPayload as { rotations?: unknown })
+      : {};
+  const rawRotations =
+    payload.rotations &&
+    typeof payload.rotations === "object" &&
+    !Array.isArray(payload.rotations)
+      ? (payload.rotations as Record<string, unknown>)
+      : {};
+  const faceNames = ["east", "west", "north", "south", "top", "bottom"];
+  const rotations: Record<string, Record<string, number>> = {};
+  for (const [variant, rawFaces] of Object.entries(rawRotations).slice(0, 4096)) {
+    if (
+      !/^(?:3\.6\.7|5\.0|slashem):tile:\d+$/.test(variant) ||
+      !rawFaces ||
+      typeof rawFaces !== "object" ||
+      Array.isArray(rawFaces)
+    ) {
+      continue;
+    }
+    const faces: Record<string, number> = {};
+    for (const face of faceNames) {
+      const rawRotation = (rawFaces as Record<string, unknown>)[face];
+      if (
+        typeof rawRotation === "number" &&
+        Number.isFinite(rawRotation) &&
+        [90, 180, 270].includes(rawRotation)
+      ) {
+        faces[face] = rawRotation;
+      }
+    }
+    if (Object.keys(faces).length > 0) {
+      rotations[variant] = faces;
+    }
+  }
+  return { formatVersion: 1, rotations };
+}
+
+function tileFaceTextureRotationStorePlugin(): Plugin {
+  const endpoint = "/__nh3d/tile-face-texture-rotations";
+  return {
+    name: "tile-face-texture-rotation-store",
+    configureServer(server: ViteDevServer) {
+      server.middlewares.use(endpoint, (request, response) => {
+        response.setHeader("Content-Type", "application/json; charset=utf-8");
+        response.setHeader("Cache-Control", "no-store");
+        if (!isLoopbackAddress(request.socket.remoteAddress)) {
+          response.statusCode = 403;
+          response.end(JSON.stringify({ error: "Loopback access required." }));
+          return;
+        }
+        if (request.method === "GET") {
+          try {
+            const payload = existsSync(tileFaceTextureRotationFilePath)
+              ? JSON.parse(readFileSync(tileFaceTextureRotationFilePath, "utf8"))
+              : { formatVersion: 1, rotations: {} };
+            response.statusCode = 200;
+            response.end(
+              JSON.stringify(normalizeTileFaceTextureRotationPayload(payload)),
+            );
+          } catch (error) {
+            response.statusCode = 500;
+            response.end(
+              JSON.stringify({ error: `Failed to read rotations: ${String(error)}` }),
+            );
+          }
+          return;
+        }
+        if (request.method !== "PUT") {
+          response.statusCode = 405;
+          response.setHeader("Allow", "GET, PUT");
+          response.end(JSON.stringify({ error: "Method not allowed." }));
+          return;
+        }
+
+        let body = "";
+        let rejected = false;
+        request.setEncoding("utf8");
+        request.on("data", (chunk: string) => {
+          if (rejected) {
+            return;
+          }
+          body += chunk;
+          if (body.length > 256 * 1024) {
+            rejected = true;
+            response.statusCode = 413;
+            response.end(JSON.stringify({ error: "Payload too large." }));
+          }
+        });
+        request.on("end", () => {
+          if (rejected) {
+            return;
+          }
+          try {
+            const payload = normalizeTileFaceTextureRotationPayload(
+              JSON.parse(body || "{}"),
+            );
+            mkdirSync(path.dirname(tileFaceTextureRotationFilePath), {
+              recursive: true,
+            });
+            writeFileSync(
+              tileFaceTextureRotationFilePath,
+              `${JSON.stringify(payload, null, 2)}\n`,
+              "utf8",
+            );
+            response.statusCode = 200;
+            response.end(JSON.stringify(payload));
+          } catch (error) {
+            response.statusCode = 400;
+            response.end(
+              JSON.stringify({ error: `Invalid rotations: ${String(error)}` }),
+            );
+          }
+        });
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [tilesetManifestPlugin(), react(), ...(isQuestBuild ? [questBundlePlugin()] : [])],
+  plugins: [
+    tilesetManifestPlugin(),
+    tileFaceTextureRotationStorePlugin(),
+    react(),
+    ...(isQuestBuild ? [questBundlePlugin()] : []),
+  ],
   ...(isQuestBuild ? {
     build: {
       outDir: "dist-quest",

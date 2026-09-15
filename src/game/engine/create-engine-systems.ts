@@ -13,6 +13,7 @@ import { PlayerStatus } from "./ui/player-status";
 import { AudioHapticsPlatform } from "./audio/audio-haptics-platform";
 import { FpsDiagnostics } from "./diagnostics/fps-diagnostics";
 import { HeldWeaponAnimationDebug } from "./diagnostics/held-weapon-animation-debug";
+import { TileFaceTextureRotationDebug } from "./diagnostics/tile-face-texture-rotation-debug";
 import { VultureProjectionDebug } from "./diagnostics/vulture-projection-debug";
 import { Lighting } from "./rendering/lighting";
 import { RenderPipeline } from "./rendering/render-pipeline";
@@ -74,6 +75,7 @@ export interface EngineSystems {
   readonly audioHapticsPlatform: AudioHapticsPlatform;
   readonly fpsDiagnostics: FpsDiagnostics;
   readonly heldWeaponAnimationDebug: HeldWeaponAnimationDebug;
+  readonly tileFaceTextureRotationDebug: TileFaceTextureRotationDebug;
   readonly vultureProjectionDebug: VultureProjectionDebug;
   readonly lighting: Lighting;
   readonly renderPipeline: RenderPipeline;
@@ -310,6 +312,9 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get menuPreviews() { return menuPreviews; },
     get movementInput() { return movementInput; },
   });
+  const tileFaceTextureRotationDebug = new TileFaceTextureRotationDebug({
+    get tileUpdates() { return tileUpdates; },
+  });
   const vultureProjectionDebug: VultureProjectionDebug = new VultureProjectionDebug({
     get engineState() { return engineState; },
     get tileUpdates() { return tileUpdates; },
@@ -502,6 +507,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get renderPipeline() { return renderPipeline; },
     get runtimeEntityTracking() { return runtimeEntityTracking; },
     get terminalRendering() { return terminalRendering; },
+    get tileFaceTextureRotationDebug() { return tileFaceTextureRotationDebug; },
     get tileMaterials() { return tileMaterials; },
     get tileUpdates() { return tileUpdates; },
     get tilesetAssets() { return tilesetAssets; },
@@ -710,6 +716,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get playerMovement() { return playerMovement; },
     get renderPipeline() { return renderPipeline; },
     get terminalRendering() { return terminalRendering; },
+    get tileFaceTextureRotationDebug() { return tileFaceTextureRotationDebug; },
     get tileContextActions() { return tileContextActions; },
     get tileRendering() { return tileRendering; },
     get tilesetAssets() { return tilesetAssets; },
@@ -735,6 +742,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get questionMenus() { return questionMenus; },
     get renderPipeline() { return renderPipeline; },
     get terminalRendering() { return terminalRendering; },
+    get tileFaceTextureRotationDebug() { return tileFaceTextureRotationDebug; },
     get tileRendering() { return tileRendering; },
     get tileUpdates() { return tileUpdates; },
     get tilesetAssets() { return tilesetAssets; },
@@ -893,6 +901,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     audioHapticsPlatform,
     fpsDiagnostics,
     heldWeaponAnimationDebug,
+    tileFaceTextureRotationDebug,
     vultureProjectionDebug,
     lighting,
     renderPipeline,

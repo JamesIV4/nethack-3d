@@ -11,7 +11,8 @@ import type {
   FpsCrosshairTargetHint,
   FpsCrosshairGlanceCacheEntry,
   FpsCrosshairGlancePending,
-  TileContextTarget
+  TileContextTarget,
+  TileFaceTextureRotationTarget
 } from "../shared/types";
 import type { AimHighlights } from "./aim-highlights";
 import type { Camera } from "../camera/camera";
@@ -33,6 +34,7 @@ import type { PromptDialogs } from "./prompt-dialogs";
 import type { QuestionMenus } from "./question-menus";
 import type { RenderPipeline } from "../rendering/render-pipeline";
 import type { TerminalRendering } from "../rendering/terminal-rendering";
+import type { TileFaceTextureRotationDebug } from "../diagnostics/tile-face-texture-rotation-debug";
 import type { TileRendering } from "../rendering/tile-rendering";
 import type { TilesetAssets } from "../rendering/tileset-assets";
 import type { TileUpdates } from "../world/tile-updates";
@@ -141,6 +143,10 @@ export interface TileContextActionsDependencies {
     "resolveSlashEmTerminalCmapIndex"
     | "terminalRenderOptionStates"
   >;
+  readonly tileFaceTextureRotationDebug: Pick<
+    TileFaceTextureRotationDebug,
+    "cycleRotation" | "isEnabled"
+  >;
   readonly tileRendering: Pick<
     TileRendering,
     "tileMap"
@@ -176,6 +182,8 @@ export class TileContextActions {
   normalTileContextTarget: TileContextTarget | null = null;
 
   activeContextActionTile: { x: number; y: number } | null = null;
+
+  activeFaceTextureRotationTarget: TileFaceTextureRotationTarget | null = null;
 
   selectedContextHighlightTile: { x: number; y: number } | null = null;
 
@@ -318,6 +326,7 @@ export class TileContextActions {
     }
     this.fpsCrosshairContextSignature = "";
     this.activeContextActionTile = null;
+    this.activeFaceTextureRotationTarget = null;
     this.dependencies.engineState.uiAdapter.setFpsCrosshairContext(null);
   }
 
@@ -339,6 +348,7 @@ export class TileContextActions {
     this.normalTileContextSignature = "";
     this.normalTileContextTarget = null;
     this.activeContextActionTile = null;
+    this.activeFaceTextureRotationTarget = null;
     this.clearContextSelectionHighlight();
     this.dependencies.engineState.uiAdapter.setFpsCrosshairContext(null);
   }
@@ -438,6 +448,7 @@ export class TileContextActions {
     this.fpsCrosshairGlanceIssuedThisOpen = false;
     this.dependencies.inputCommands.clearAutomaticGlancePendingState();
     this.activeContextActionTile = null;
+    this.activeFaceTextureRotationTarget = null;
     this.clearContextSelectionHighlight();
     this.clearFpsCrosshairContextMenu();
     if (restorePointerLock) {
@@ -945,6 +956,7 @@ export class TileContextActions {
     mesh: THREE.Mesh,
     glanceHint: FpsCrosshairTargetHint | null = null,
     glanceText: string | null = null,
+    faceTextureRotationTarget: TileFaceTextureRotationTarget | null = null,
   ): FpsContextAction[] {
     const actions: FpsContextAction[] = [];
     const finalizeActions = (
@@ -968,6 +980,17 @@ export class TileContextActions {
         if (infoAction) {
           actions.push(infoAction);
         }
+      }
+      if (
+        faceTextureRotationTarget &&
+        this.dependencies.tileFaceTextureRotationDebug.isEnabled()
+      ) {
+        actions.push({
+          id: "rotate-face-texture",
+          label: `Debug: Rotate ${faceTextureRotationTarget.face} face 90 degrees`,
+          kind: "debug",
+          value: "rotate-face-texture",
+        });
       }
       return actions;
     };
@@ -1348,6 +1371,7 @@ export class TileContextActions {
       resolved.actionMesh,
       glanceHint,
       glanceEntry?.sourceText ?? null,
+      target.faceTextureRotationTarget ?? null,
     );
     if (actions.length === 0) {
       this.clearFpsCrosshairContextMenu();
@@ -1378,6 +1402,8 @@ export class TileContextActions {
 
     this.fpsCrosshairContextSignature = signature;
     this.activeContextActionTile = { x: target.x, y: target.y };
+    this.activeFaceTextureRotationTarget =
+      target.faceTextureRotationTarget ?? null;
     const state: FpsCrosshairContextState = {
       title,
       tileX: target.x,
@@ -1436,6 +1462,7 @@ export class TileContextActions {
       resolved.actionMesh,
       glanceHint,
       glanceEntry?.sourceText ?? null,
+      target.faceTextureRotationTarget ?? null,
     );
     if (actions.length === 0) {
       this.closeNormalTileContextMenu();
@@ -1480,6 +1507,8 @@ export class TileContextActions {
     }
     this.normalTileContextSignature = signature;
     this.activeContextActionTile = { x: target.x, y: target.y };
+    this.activeFaceTextureRotationTarget =
+      target.faceTextureRotationTarget ?? null;
     this.dependencies.engineState.uiAdapter.setFpsCrosshairContext({
       title,
       tileX: target.x,
@@ -1489,6 +1518,14 @@ export class TileContextActions {
       anchorClientX: anchorX,
       anchorClientY: anchorY,
     });
+  }
+
+  rotateActiveFaceTexture(): void {
+    const target = this.activeFaceTextureRotationTarget;
+    if (!target || !this.dependencies.tileFaceTextureRotationDebug.isEnabled()) {
+      return;
+    }
+    this.dependencies.tileFaceTextureRotationDebug.cycleRotation(target);
   }
 
   updateContextSelectionHighlight(timeMs: number): void {

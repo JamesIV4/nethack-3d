@@ -373,7 +373,28 @@ export type TileContextTarget = {
   x: number;
   y: number;
   mesh: THREE.Mesh;
+  faceTextureRotationTarget?: TileFaceTextureRotationTarget | null;
 };
+
+export type TileFaceTextureSlot =
+  | "east"
+  | "west"
+  | "north"
+  | "south"
+  | "top"
+  | "bottom";
+
+export type TileFaceTextureRotationTarget = {
+  variant: string;
+  tileIndex: number;
+  face: TileFaceTextureSlot;
+  rotationDegrees: number;
+};
+
+export type TileFaceTextureRotationOverrides = Record<
+  string,
+  Partial<Record<TileFaceTextureSlot, number>>
+>;
 
 export type TileContextTouchHoldState = {
   touchId: number;

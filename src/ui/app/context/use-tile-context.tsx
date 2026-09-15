@@ -211,6 +211,10 @@ export function useTileContextActions(dependencies: UseTileContextActionsDepende
     const contextualSubmitDelayMs = 0;
     const autoDirectionFromFpsAim =
       fpsCrosshairContext?.autoDirectionFromFpsAim === true;
+    if (action.kind === "debug") {
+      controller?.rotateActiveTileFaceTexture();
+      return;
+    }
     if (action.kind === "contextual") {
       controller?.runContextualAction(action.value);
       return;

@@ -232,7 +232,7 @@ export type NewGamePromptState = {
 export type FpsContextAction = {
   id: string;
   label: string;
-  kind: "quick" | "extended" | "contextual";
+  kind: "quick" | "extended" | "contextual" | "debug";
   value: string;
 };
 
@@ -1416,6 +1416,7 @@ export interface Nethack3DEngineController {
     },
   ): void;
   runContextualAction(actionId: string): void;
+  rotateActiveTileFaceTexture(): void;
   repeatLastAction(): void;
   setClientOptions(options: Nh3dClientOptions): void;
   closeInventoryDialog(): void;

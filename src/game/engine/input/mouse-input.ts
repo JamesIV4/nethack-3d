@@ -113,7 +113,7 @@ export interface MouseInputDependencies {
     PointerTargeting,
     "getClickedTilePosition"
     | "getGridPositionFromClientCoordinates"
-    | "resolvePointerTargetTileFromClientCoordinates"
+    | "resolveTileContextTargetFromClientCoordinates"
     | "shouldSearchAdjacentTerminalVoid"
   >;
   readonly positionSelection: Pick<
@@ -705,25 +705,16 @@ export class MouseInput {
         this.rightMouseCanOpenContextMenuOnRelease &&
         !this.rightMouseDragExceededDeadzone
       ) {
-        const target = this.dependencies.pointerTargeting.resolvePointerTargetTileFromClientCoordinates(
+        const target = this.dependencies.pointerTargeting.resolveTileContextTargetFromClientCoordinates(
           this.rightMouseDownStartX,
           this.rightMouseDownStartY,
         );
         if (!target) {
           this.dependencies.tileContextActions.closeAnyTileContextMenu(false);
         } else {
-          const key = `${target.x},${target.y}`;
-          const mesh = this.dependencies.tileRendering.tileMap.get(key);
-          if (!mesh) {
-            this.dependencies.tileContextActions.closeAnyTileContextMenu(false);
-          } else {
-            this.dependencies.tileContextActions.openNormalTileContextMenuAtTarget({
-              key,
-              x: target.x,
-              y: target.y,
-              mesh,
-            });
-          }
+          this.dependencies.tileContextActions.openNormalTileContextMenuAtTarget(
+            target,
+          );
         }
         event.preventDefault();
       }

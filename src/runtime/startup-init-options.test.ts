@@ -79,15 +79,16 @@ describe("terminal-friendly startup defaults", () => {
         (definition) => definition.key === "tutorial",
       ),
     ).toBe(false);
+    expect(defaults.tutorial).toBe(false);
     expect(serializeStartupInitOptionTokens(defaults, "5.0")).toContain(
-      "tutorial",
+      "!tutorial",
     );
-    expect(
-      serializeStartupInitOptionTokens(
-        { ...defaults, tutorial: false },
-        "5.0",
-      ),
-    ).toContain("!tutorial");
+    const offeredTutorialTokens = serializeStartupInitOptionTokens(
+      { ...defaults, tutorial: true },
+      "5.0",
+    );
+    expect(offeredTutorialTokens).not.toContain("tutorial");
+    expect(offeredTutorialTokens).not.toContain("!tutorial");
     expect(
       serializeStartupInitOptionTokens(
         { ...defaults, tutorial: false },
@@ -97,6 +98,7 @@ describe("terminal-friendly startup defaults", () => {
     expect(sanitizeStartupInitOptionTokens(["!tutorial"], "5.0")).toEqual([
       "!tutorial",
     ]);
+    expect(sanitizeStartupInitOptionTokens(["tutorial"], "5.0")).toEqual([]);
     expect(
       sanitizeStartupInitOptionTokens(["!tutorial"], "3.6.7"),
     ).toEqual([]);
