@@ -189,6 +189,10 @@ export const en = {
           debug: "Wizard/Debug",
         },
       },
+      pauper: {
+        label: "Pauper Mode",
+        description: "Start a new character without any items. Applies only to new games.",
+      },
       tutorial: {
         label: "Offer Tutorial",
         description:

@@ -198,6 +198,10 @@ export const fr = {
           debug: "Assistant/Debug",
         },
       },
+      pauper: {
+        label: "Mode indigent",
+        description: "Commencez avec un nouveau personnage sans aucun objet. S’applique uniquement aux nouvelles parties.",
+      },
       tutorial: {
         label: "Proposer le tutoriel",
         description:

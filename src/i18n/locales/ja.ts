@@ -191,6 +191,10 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
           debug: "Wizard / Debug",
         },
       },
+      pauper: {
+        label: "無一文モード",
+        description: "アイテムを持たずに新しいキャラクターで開始します。新しいゲームにのみ適用されます。",
+      },
       tutorial: {
         label: "チュートリアルを案内",
         description:

@@ -365,7 +365,10 @@ export class TileUpdates {
               this.dependencies.worldClassification.shouldUseRaisedSpecialTileBillboardInTiles(behavior)) ||
             (this.dependencies.movementInput.isFpsMode() &&
               this.dependencies.worldClassification.isAltarOrTombstoneLikeBehavior(behavior))) &&
-          (this.dependencies.engineState.clientOptions.tilesetMode === "tiles" || this.dependencies.movementInput.isFpsMode()) &&
+          // Match updateTile: overhead 3D ASCII also renders raised entities.
+          (this.dependencies.engineState.clientOptions.tilesetMode === "tiles" ||
+            this.dependencies.engineState.clientOptions.tilesetMode === "ascii" ||
+            this.dependencies.movementInput.isFpsMode()) &&
           !tileRelation.isCurrentPlayerTile) ||
         fpsPlayerTileBillboardBehavior !== null ||
         shouldKeepVisiblePlayerBillboardInFarLook;

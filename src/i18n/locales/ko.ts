@@ -189,6 +189,10 @@ export const ko = {
           debug: "위저드/디버그",
         },
       },
+      pauper: {
+        label: "빈털터리 모드",
+        description: "아무 아이템도 없이 새 캐릭터를 시작합니다. 새 게임에만 적용됩니다.",
+      },
       tutorial: {
         label: "튜토리얼 제공",
         description:

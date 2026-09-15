@@ -196,6 +196,10 @@ export const ptBrOverrides = {
           debug: "Assistente/Depuração",
         },
       },
+      pauper: {
+        label: "Modo indigente",
+        description: "Comece com um novo personagem sem nenhum item. Aplica-se apenas a novos jogos.",
+      },
       tutorial: {
         label: "Oferecer tutorial",
         description:

@@ -118,6 +118,10 @@ export const zhCnOverrides = {
           "选择启动模式。巫师模式是 NetHack 调试模式（`playmode:debug`）。",
         options: { normal: "正常", explore: "探索", debug: "巫师/调试" },
       },
+      pauper: {
+        label: "赤贫模式",
+        description: "新角色开始时不携带任何物品。仅适用于新游戏。",
+      },
       tutorial: {
         label: "提供教程",
         description:

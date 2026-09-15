@@ -199,6 +199,10 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
           debug: "Velho/Debug",
         },
       },
+      pauper: {
+        label: "Köyhäläistila",
+        description: "Aloita uusi hahmo ilman esineitä. Koskee vain uusia pelejä.",
+      },
       tutorial: {
         label: "Tarjoa opastus",
         description:

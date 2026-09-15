@@ -188,6 +188,10 @@ export const ru = {
           debug: "Wizard/Отладка",
         },
       },
+      pauper: {
+        label: "Режим нищего",
+        description: "Начните новым персонажем без предметов. Применяется только к новым играм.",
+      },
       tutorial: {
         label: "Предлагать обучение",
         description:

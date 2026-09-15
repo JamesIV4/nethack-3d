@@ -4,6 +4,7 @@ import {
   createDefaultStartupInitOptionValues,
   getAutomaticRuntimeInitOptionTokens,
   getStartupInitOptionDefinitions,
+  normalizeStartupInitOptionValues,
   sanitizeStartupInitOptionTokens,
   serializeStartupInitOptionTokens,
 } from "./startup-init-options";
@@ -105,5 +106,44 @@ describe("terminal-friendly startup defaults", () => {
     expect(
       sanitizeStartupInitOptionTokens(["!tutorial"], "slashem"),
     ).toEqual([]);
+  });
+});
+
+describe("NetHack 5 pauper startup mode", () => {
+  it("offers a disabled-by-default switch through the startup option definitions", () => {
+    expect(getStartupInitOptionDefinitions("5.0").find(option => option.key === "pauper"))
+      .toMatchObject({ control: "boolean", defaultValue: false });
+    const defaults = createDefaultStartupInitOptionValues();
+    expect(defaults.pauper).toBe(false);
+    expect(serializeStartupInitOptionTokens(defaults, "5.0")).toContain("!pauper");
+  });
+
+  it("preserves the saved toggle through normalization and the runtime token sanitizer", () => {
+    const saved = JSON.parse(JSON.stringify({
+      ...createDefaultStartupInitOptionValues(),
+      pauper: true,
+    }));
+    const restored = normalizeStartupInitOptionValues(saved);
+    const runtimeTokens = sanitizeStartupInitOptionTokens(
+      serializeStartupInitOptionTokens(restored, "5.0"),
+      "5.0",
+    );
+    expect(restored.pauper).toBe(true);
+    expect(runtimeTokens).toContain("pauper");
+    expect(runtimeTokens).not.toContain("!pauper");
+    expect(normalizeStartupInitOptionValues({}).pauper).toBe(false);
+    expect(normalizeStartupInitOptionValues({ pauper: "true" }).pauper).toBe(false);
+  });
+
+  it.each(["3.6.7", "slashem"] as const)("never offers or sends pauper to %s", runtimeVersion => {
+    expect(getStartupInitOptionDefinitions(runtimeVersion).some(option => option.key === "pauper"))
+      .toBe(false);
+    const tokens = serializeStartupInitOptionTokens({
+      ...createDefaultStartupInitOptionValues(),
+      pauper: true,
+    }, runtimeVersion);
+    expect(tokens).not.toContain("pauper");
+    expect(tokens).not.toContain("!pauper");
+    expect(sanitizeStartupInitOptionTokens(["pauper", "!pauper"], runtimeVersion)).toEqual([]);
   });
 });

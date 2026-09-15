@@ -188,6 +188,10 @@ export const esOverrides = {
                     debug: "Asistente/Depuraci\u00F3n",
                 },
             },
+            pauper: {
+              label: "Modo indigente",
+              description: "Empieza con un personaje nuevo sin objetos. Solo se aplica a partidas nuevas.",
+            },
             tutorial: {
                 label: "Ofrecer tutorial",
                 description: "Preguntar si se desea iniciar el tutorial al comenzar una partida nueva. Desactívalo para usar `!tutorial` y empezar a jugar inmediatamente.",

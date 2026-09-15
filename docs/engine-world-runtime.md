@@ -34,6 +34,11 @@ A single `map_glyph` event updates runtime entity tracking, captures level-trans
 
 `TileUpdates` owns `pendingTileUpdates`, the frame-budgeted flush queue, and `tileStateCache`. Before replacing a pending update for the player tile, it lets `WorldClassification` preserve terrain or a flat feature from the superseded payload. Flushes update visual state and finish vacated entity tracking when the flush queue drains, then flush minimap and Vulture reconciliation work.
 
+Duplicate-signature billboard reconciliation must match `TileRendering.updateTile`:
+overhead 3D ASCII entities use raised billboards too. An unchanged player glyph
+after pickup or a terrain change must preserve its existing billboard; the FPS
+player suppression and deferred movement checks still apply.
+
 `player_position` is the authoritative position update. The dispatcher ignores it while position-input mode is active, since a selection cursor must not move the player. It resolves any pending level transition, records movement using the old position, assigns `PlayerMovement.playerPos`, and reconciles queued tile visuals. It then requests dark corridor wall reconciliation and any required player-tile refresh. `map_cursor` supplies prediction hints; it does not replace that authoritative position flow.
 
 Dark corridor walls reconcile from player-position updates rather than ordinary tile flushes, avoiding temporary walls during movement.

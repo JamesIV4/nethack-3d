@@ -197,6 +197,10 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
           debug: "Zauberer/Debug",
         },
       },
+      pauper: {
+        label: "Armenmodus",
+        description: "Beginne mit einem neuen Charakter ohne Gegenstände. Gilt nur für neue Spiele.",
+      },
       tutorial: {
         label: "Tutorial anbieten",
         description:

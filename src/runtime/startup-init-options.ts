@@ -133,6 +133,14 @@ export const startupInitOptionDefinitions: ReadonlyArray<StartupInitOptionDefini
       supportedRuntimeVersions: ["3.6.7", "5.0"],
     },
     {
+      key: "pauper",
+      label: startupStrings.options.pauper.label,
+      description: startupStrings.options.pauper.description,
+      control: "boolean",
+      defaultValue: false,
+      supportedRuntimeVersions: ["5.0"],
+    },
+    {
       key: "tutorial",
       label: startupStrings.options.tutorial.label,
       description: startupStrings.options.tutorial.description,
