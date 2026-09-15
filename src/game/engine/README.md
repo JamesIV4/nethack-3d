@@ -144,3 +144,9 @@ VR input adds 45-degree snap turns about the current head position, LT-modified 
 The shared animation frame always runs `Camera.updateCamera` before applying the final tracked XR pose. This call also completes first-person step transitions and schedules pending tile updates. Do not skip it merely because a headset supplies the view. Billboard, lighting, and remaining scene updates retain their normal order; `WebXrPresentation.prepareRender` applies final XR presentation changes before the original scene is rendered.
 
 `TileUpdates.flushSettledDarkCorridorInference` runs at the shared frame boundary when queued map work and player transitions have finished. Player-position fences drain both a partial batch and newer pending arrivals. Preserve the superseded-payload terrain cache when coalescing those arrivals; do not reconcile inferred walls halfway through a batch or defer late arrivals until another turn.
+
+### VR controller weapons
+
+`quest/webxr/controller-weapons.ts` owns grip-mounted weapon cards and texture disposal; `HeldWeapon` remains the equipment and texture source. `quest/webxr/weapon-gesture.ts` owns strike/recovery recognition. Accepted gestures use the guarded `MouseInput.attackQuestDirection` entry and the existing `InputCommands.sendInputSequence` force-fight path. Attack sequences must not create movement prediction or footsteps. The native host controls controller-model/UI compositing order.
+
+Controller weapon visuals and gesture recognition are currently paused: `WebXrControllerInput` leaves their constructor commented out. The implementation and settings remain for revisit, but the gesture controls are not exposed in the VR options UI.

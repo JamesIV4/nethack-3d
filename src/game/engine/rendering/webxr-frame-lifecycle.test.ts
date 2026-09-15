@@ -3,9 +3,10 @@ import { afterEach, expect, it, vi } from "vitest";
 vi.hoisted(() => { vi.stubGlobal("window", { location: new URL("http://localhost/"), matchMedia: () => ({ matches: false, addEventListener() {} }), localStorage: {getItem: () => null} }); });
 import { Camera, type CameraDependencies } from "../camera/camera";
 vi.mock("../create-engine-systems", () => ({ createEngineSystems: vi.fn() }));
+import { GameOver, type GameOverDependencies } from "../ui/game-over";
 import Nethack3DEngine from "../../Nethack3DEngine";
 afterEach(() => vi.unstubAllGlobals());
-it("completes the existing first-person step and releases queued tiles before applying the XR view", () => {
+it("preserves camera completion and releases postmortem modals in the shared XR frame", () => {
   const callbacks: FrameRequestCallback[] = [];
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { callbacks.push(callback); return callbacks.length; });
   const tiles = { pendingTileUpdates: new Map([["2,3", {}]]), tileFlushScheduled: false, flushPendingTileUpdates: vi.fn() };
@@ -20,7 +21,14 @@ it("completes the existing first-person step and releases queued tiles before ap
   const order: string[] = [], update = camera.updateCamera.bind(camera);
   camera.updateCamera = dt => { order.push("camera lifecycle"); update(dt); };
   const noop = () => undefined;
+  const showQuestion=vi.fn();
+  const gameOver=new GameOver({questionMenus:{isInQuestion:false,showQuestion},directionPrompts:{isInDirectionQuestion:false},promptDialogs:{isInventoryDialogVisible:false}} as unknown as GameOverDependencies);
+  gameOver.armGameOverUiRevealDelay();
+  gameOver.deferredGameOverQuestionState={question:"Identify possessions?",choices:"yn",defaultChoice:"y",menuItems:[]};
+  gameOver.deferredGameOverCompletionState={deathMessage:"Killed by a newt",tombstoneLines:["RIP"],shouldDeferPromptReady:false};
+  gameOver.setGameOverState=vi.fn();
   const systems = new Proxy<Record<string, unknown>>({
+    gameOver,
     engineState: { disposed: false, lastFrameTimeMs: null, clientOptions: { minimap: false } },
     camera: new Proxy(camera, { get: (o,k) => k in o ? Reflect.get(o,k) : noop }),
     webXrPresentation: { active: true, updateInput: noop, updateCamera: () => { order.push("XR pose"); return true; }, prepareRender: () => camera.camera },
@@ -31,6 +39,9 @@ it("completes the existing first-person step and releases queued tiles before ap
   }, { get: (o,k) => Reflect.get(o,k) ?? new Proxy({}, {get: () => noop}) });
   const engine = Object.create(Nethack3DEngine.prototype) as { systems: unknown; animate: (time: number) => void };
   engine.systems = systems; engine.animate(performance.now());
+  expect(gameOver.isGameOverUiRevealBlocked()).toBe(false);
+  expect(showQuestion).toHaveBeenCalledWith("Identify possessions?","yn","y",[]);
+  expect(gameOver.setGameOverState).toHaveBeenCalledWith(true,"Killed by a newt",{promptReady:true,tombstoneLines:["RIP"]});
   expect(camera.fpsStepCameraActive).toBe(false);
   expect(tiles.tileFlushScheduled).toBe(true);
   expect(order).toEqual(["world scale", "XR pose", "camera lifecycle", "XR pose", "render"]);

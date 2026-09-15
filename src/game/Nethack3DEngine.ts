@@ -1694,6 +1694,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.engineState.lastFrameTimeMs = timeMs;
     const deltaSeconds = Math.max(0, Math.min(rawDeltaMs, 250)) / 1000;
 
+    // VR has no flat-canvas acknowledgement click. Present the normal postmortem
+    // dialogs through the existing reveal lifecycle, including when entering VR after death.
+    if (this.systems.webXrPresentation.active) this.systems.gameOver.releaseDeferredGameOverUiReveal();
     this.systems.questSceneExport.syncPlayMode();
     this.systems.renderPipeline.syncWorldTileScale();
     this.systems.webXrPresentation.updateCamera();
@@ -1954,6 +1957,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
   public activateQuestTile(x: number, y: number, secondary = false): boolean {
     return this.systems.mouseInput.activateQuestTile(x, y, secondary);
+  }
+  public attackQuestDirection(dx: number, dy: number, hand: "left" | "right"): boolean {
+    return this.systems.mouseInput.attackQuestDirection(dx, dy, hand);
   }
   public runQuestDirection(direction: string): void {
     this.systems.inputCommands.sendForcedDirectionalInput(direction);

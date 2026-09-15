@@ -1,4 +1,4 @@
-import { OptionLabelWithInfo } from "./OptionLabelWithInfo";
+import { OptionSliderRow } from "./OptionSliderRow";
 import type { ClientOptionsDialogProps } from "./ClientOptionsDialog";
 import type { ClientOptionSlider } from "./types";
 
@@ -69,18 +69,7 @@ export function ClientOptionSliderControl({
                   ? `${Math.round(sliderValue)}ms`
                   : `${Math.round(sliderValue * 100)}%`;
   return (
-    <div
-      className={`nh3d-option-row nh3d-option-row-slider${sliderDisabled ? " nh3d-option-row-mode-inactive" : ""
-        }`}
-      key={option.key}
-    >
-      <div className="nh3d-option-copy">
-        <OptionLabelWithInfo
-          label={option.label}
-          description={option.description}
-        />
-      </div>
-      <div className="nh3d-option-slider-control">
+    <OptionSliderRow label={option.label} description={option.description} valueLabel={sliderLabel} disabled={sliderDisabled}>
         <input
           aria-label={option.label}
           className="nh3d-option-slider"
@@ -132,10 +121,6 @@ export function ClientOptionSliderControl({
           type="range"
           value={sliderValue}
         />
-        <div className="nh3d-option-slider-value">
-          {sliderLabel}
-        </div>
-      </div>
-    </div>
+    </OptionSliderRow>
   );
 }

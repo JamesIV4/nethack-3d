@@ -4,7 +4,7 @@ import path from 'node:path';
 import {build} from 'esbuild';
 const root=process.cwd();
 const css=(await import('sass')).compile('src/styles/app.scss',{logger:{warn(){},debug(){}}}).css+(await import('node:fs')).readFileSync('src/quest/webxr/webxr.css','utf8');
-const fixture=await build({stdin:{resolveDir:root,contents:(await import('node:fs')).readFileSync('scripts/quest/webxr/fixtures/pane-isolation.js','utf8')},bundle:true,format:'iife',write:false,logLevel:'silent'});
+const fixture=await build({stdin:{resolveDir:root,contents:(await import('node:fs')).readFileSync('scripts/quest/webxr/fixtures/pane-isolation.js','utf8')},bundle:true,loader:{'.css':'empty'},format:'iife',write:false,logLevel:'silent'});
 const profile=path.join(root,'.wired-dev/interaction-check');mkdirSync(profile,{recursive:true});
 const chrome=spawn('C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--remote-debugging-pipe','--user-data-dir='+profile,'--no-first-run','--no-default-browser-check','about:blank'],{stdio:['ignore','ignore','ignore','pipe','pipe'],windowsHide:true});
 let serial=0,buffer=Buffer.alloc(0);const pending=new Map();
@@ -12,7 +12,7 @@ function cdp(method,params={},sessionId){return new Promise((resolve,reject)=>{c
 chrome.stdio[4].on('data',chunk=>{buffer=Buffer.concat([buffer,chunk]);let n;while((n=buffer.indexOf(0))>=0){const line=buffer.subarray(0,n);buffer=buffer.subarray(n+1);if(!line.length)continue;const reply=JSON.parse(line.toString());const req=pending.get(reply.id);if(req){pending.delete(reply.id);reply.error?req.reject(new Error(reply.error.message)):req.resolve(reply.result);}}});
 const deadline=setTimeout(()=>{console.error('GPU probe timeout');chrome.kill();process.exitCode=1;},30000);
 try{
-const {targetId}=await cdp('Target.createTarget',{url:'about:blank'});
+const {targetId}=await cdp('Target.createTarget',{url:'about:blank?xrHost=native'});
 const {sessionId}=await cdp('Target.attachToTarget',{targetId,flatten:true});
 for (const [width,height] of [[1600,1000],[1280,800],[800,600]]) {
 await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false},sessionId);

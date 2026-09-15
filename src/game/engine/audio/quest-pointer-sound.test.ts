@@ -30,3 +30,12 @@ it("preserves attack clicks, self-tile actions, secondary clicks, prompt gates a
   f.deps.positionSelection.positionInputModeActive=false;f.deps.engineState.clientOptions.soundEnabled=false;
   f.commands.sendMouseInput(5,5,0,{allowFpsMovement:true});expect(f.audio.pendingPlayerFootstepSoundArmed).toBe(false);
 });
+
+it("force-fight sequences do not predict walking or arm footsteps",()=>{
+ const predict=vi.fn(), footstep=vi.fn(), send=vi.fn();
+ const commands=Object.create(InputCommands.prototype);
+ commands.numberPadModeEnabled=true;
+ commands.dependencies={engineState:{session:{sendInputSequence:send}},combatAttribution:{},tileContextActions:{closeAnyTileContextMenu:vi.fn()},movementInput:{isMovementInput:(input:string)=>input==="6",isRunPrefixInput:()=>false},camera:{},audioHapticsPlatform:{armPendingPlayerFootstepSound:footstep},playerMovement:{setFpsPredictedPlayerTileFromMovementInput:predict},darkCorridorInference:{beginDarkCorridorDiscoveryWindowFromPlayerInput:vi.fn()}};
+ commands.sendInputSequence(["F","6"]);expect(send).toHaveBeenCalledWith(["F","6"],{delayMs:undefined});expect(predict).not.toHaveBeenCalled();expect(footstep).not.toHaveBeenCalled();
+ commands.sendInputSequence(["6","6"]);expect(predict).toHaveBeenCalledWith("6");expect(footstep).toHaveBeenCalledOnce();
+});

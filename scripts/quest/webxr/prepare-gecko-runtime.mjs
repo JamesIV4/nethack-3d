@@ -1,3 +1,4 @@
+import { patchWeaponControls } from "./patch-weapon-controls.mjs";
 import { findAndroidSdk } from "../build-environment.mjs";
 import { patchPaneIsolation } from "./patch-pane-isolation.mjs";
 import { execFileSync } from "node:child_process";
@@ -136,7 +137,7 @@ configurations.configureEach {
     }
 }
 android.defaultConfig {
-    versionName = "0.3.18-ray-audio"
+    versionName = "0.3.21-vr-options"
     resValue "string", "app_name", "NetHack 3D VR"
 }
 `);
@@ -175,4 +176,5 @@ patchUiLayout(checkout);
 patchActionGrip(checkout);
 patchPointerInput(checkout);
 patchPaneIsolation(checkout);
+patchWeaponControls(checkout);
 console.log("Prepared standalone WebXR host with patched GeckoView and its matching v19 native ABI.");

@@ -1,3 +1,4 @@
+import {ControllerWeapons, type QuestWeaponProvider} from "./controller-weapons";
 import * as THREE from "three";
 import { useGameStore } from "../../state/gameStore";
 import { dispatchQuestKey } from "../native/bootstrap";
@@ -42,6 +43,7 @@ interface PointerState {
   gesture: WorldClickGesture;
   pressedTile: { x: number; y: number } | null;
   contextHeight: number;
+  supportPoint?: THREE.Vector3;
 }
 export class WebXrControllerInput {
   private readonly pointers = new Map<XRInputSource, PointerState>();
@@ -49,6 +51,7 @@ export class WebXrControllerInput {
   private nextMove = 0;
   private readonly snap = new SnapTurnLatch();
   private clock = 0;
+  private readonly weapons?: ControllerWeapons;
   // One bounded record lets wired debugging distinguish a missing button from
   // a command rejected by an active prompt, without logging every XR frame.
   readonly diagnostics: { command: QuestNativeCommand; result: QuestCommandResult; time: number }[] = [];
@@ -72,7 +75,10 @@ export class WebXrControllerInput {
   constructor(private readonly session: XRSession, private readonly renderer: THREE.WebGLRenderer,
     private readonly scene: THREE.Scene, private readonly root: THREE.Group, private readonly tileSize: number,
     private readonly panel: () => HtmlUiPanel | null, private readonly tilt: BoardTilt,
-    private readonly onSnapTurn: (direction: -1 | 1) => void = () => {}) {
+    private readonly onSnapTurn: (direction: -1 | 1) => void = () => {}, weaponProvider?: QuestWeaponProvider) {
+    // Paused: controller weapon visuals and swipe/bonk attacks. Keep the
+    // implementation for a later revisit; saved settings cannot enable it.
+    // if (weaponProvider) this.weapons = new ControllerWeapons(root, weaponProvider);
     if (!panel()?.native) {
       session.addEventListener("selectstart", this.selectStart);
       session.addEventListener("selectend", this.selectEnd);
@@ -109,7 +115,7 @@ export class WebXrControllerInput {
     state.ring = state.ui ? null : this.tilt.hit(state.ray);
     this.tilt.hover(state.source, !!state.ring);
     if (state.capture === "tilt") this.tilt.move(state.source, state.ray);
-    state.world = null;
+    state.world = null; state.supportPoint = undefined;
     let point = state.ui?.point ?? state.ring;
     let normal = state.ray.direction.clone().negate();
     if (!point) {
@@ -131,7 +137,7 @@ export class WebXrControllerInput {
       }
       const support = this.tilt.surfaceHit(state.ray);
       if (support && (!point || support.point.distanceToSquared(state.ray.origin) < point.distanceToSquared(state.ray.origin))) {
-        point = support.point; normal = support.normal; state.world = null;
+        point = support.point; normal = support.normal; state.world = null; state.supportPoint = this.scene.worldToLocal(support.point.clone().applyMatrix4(this.root.matrixWorld));
       }
     }
     const end = point ?? state.ray.at(5, new THREE.Vector3());
@@ -177,6 +183,7 @@ export class WebXrControllerInput {
     }
     const logicalHit = hit ? this.scene.worldToLocal(hit.point.clone()) : null;
     if (logicalHit) tile ??= { x: Math.round(logicalHit.x / this.tileSize), y: Math.round(-logicalHit.y / this.tileSize) };
+    if (!tile && state.supportPoint) tile = { x: Math.round(state.supportPoint.x / this.tileSize), y: Math.round(-state.supportPoint.y / this.tileSize) };
     state.pressedTile = tile;
     state.contextHeight = logicalHit?.z ?? 0;
     state.gesture.press(this.clock);
@@ -215,6 +222,16 @@ export class WebXrControllerInput {
       if (pad) state.trigger = !!buttons[0];
       state.a = source.handedness === "right" && !!buttons[4]; this.pressState(state);
       if (state.capture === "world" && state.down && state.gesture.update(time)) this.worldClick(state, true);
+      const reference=this.renderer.xr.getReferenceSpace();
+      const nativeUiBlocked=!!this.panel()?.native && source.gamepad?.buttons[1]?.pressed === true;
+      if(reference)this.weapons?.update(source,frame,reference,!!forward,state.ray.direction,
+        !!state.ui||!!state.ring||!!state.capture||nativeUiBlocked||buttons.some(b=>b)||!!document.querySelector("button:hover,input:hover,select:hover,[role=button]:hover")||!turningAllowed||!!document.querySelector(".nh3d-context-menu.is-visible"),time, aim=>{
+          const gameAim=aim.transformDirection(this.root.matrix);
+          const length=Math.hypot(gameAim.x,gameAim.y);
+          if(length>.1)gameAim.divideScalar(length);else if(forward)gameAim.copy(forward).setZ(0).normalize();
+          const direction=xrStickDirection(gameAim.x,-gameAim.y,null);
+          if(direction&&(source.handedness==='left'||source.handedness==='right'))this.command({type:"attack",...direction,hand:source.handedness});
+        });
       if (state.ui || state.capture === "ui" || state.capture === "tilt") continue;
       if (source.handedness === "left" && pad) {
         const direction = xrStickDirection(pad.axes[2] ?? pad.axes[0] ?? 0, pad.axes[3] ?? pad.axes[1] ?? 0, forward);
@@ -227,11 +244,11 @@ export class WebXrControllerInput {
   }
   private cancel(state: PointerState): void {
     this.panel()?.forget(state.source); this.tilt.end(state.source);
-    state.gesture.cancel(); state.pressedTile = null;
+    state.gesture.cancel(); state.pressedTile = null; this.weapons?.reset(state.source);
     state.trigger = state.a = state.down = false; state.capture = null; state.ui = null; state.ring = null; state.world = null;
   }
   private remove(state: PointerState): void {
-    this.cancel(state);
+    this.cancel(state); this.weapons?.forget(state.source);
     if (state.line) { this.root.remove(state.line); state.line.geometry.dispose(); state.line.material.dispose(); }
     if (state.circle) { this.root.remove(state.circle); state.circle.geometry.dispose(); state.circle.material.dispose(); }
     this.pointers.delete(state.source);

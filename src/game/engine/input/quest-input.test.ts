@@ -16,14 +16,17 @@ function mouseFixture() {
     extendedCommands: { metaCommandModeActive: false },
     tileRendering: { tileMap: new Map([["12,8", tile]]) },
     positionSelection: { handleFarLookPositionTileSelection: farLook },
-    playerMovement: { hasPlayerMovedOnce: false }, movementInput: { lastMovementInputAtMs: 0, isFpsMode: () => false },
+    playerMovement: { hasPlayerMovedOnce: false, playerPos: {x:11,y:8} }, movementInput: { lastMovementInputAtMs: 0, isFpsMode: () => false, resolveDirectionFromDelta: vi.fn(()=>"6") },
+    pointerTargeting: {shouldSearchAdjacentTerminalVoid:()=>false},
+    renderPipeline: {renderer:{xr:{isPresenting:true}}},
+    heldWeapon: {findHeldWeaponInventoryItem:vi.fn(()=>({text:"sword (weapon in hand)"}))},
     tileContextActions: { fpsCrosshairContextMenuOpen: false, openFpsCrosshairContextMenu: vi.fn(), closeFpsCrosshairContextMenu: vi.fn(), openNormalTileContextMenuAtTarget: vi.fn() },
     combatAttribution: {
       updateDirectionalAttackContextFromTarget: vi.fn(() => events.push("direction")),
       setPendingPointerAttackTargetFromTile: vi.fn(() => events.push("target")),
     },
     engineMessages: { logClickLookTileDebug: vi.fn() },
-    inputCommands: { sendMouseInput },
+    inputCommands: { sendMouseInput, sendForcedDirectionalInput:vi.fn(), executeQuickAction:vi.fn(), sendInputSequence:vi.fn(), numberPadModeEnabled:true },
   };
   const mouse = new MouseInput(dependencies as unknown as MouseInputDependencies);
   return { mouse, tile, events, dependencies, sendMouseInput, farLook };
@@ -51,9 +54,28 @@ describe("native Quest map ray input", () => {
     expect(f.dependencies.movementInput.lastMovementInputAtMs).toBeGreaterThan(0);
   });
 
+  it("uses the flat forced-direction fallback when the tabletop has no tile mesh", () => {
+    const f=mouseFixture();expect(f.mouse.activateQuestTile(13,8)).toBe(true);
+    expect(f.dependencies.movementInput.resolveDirectionFromDelta).toHaveBeenCalledWith(2,0);
+    expect(f.dependencies.inputCommands.sendForcedDirectionalInput).toHaveBeenCalledWith("6");
+    expect(f.sendMouseInput).not.toHaveBeenCalled();
+    f.dependencies.movementInput.isFpsMode=()=>true;
+    expect(f.mouse.activateQuestTile(13,8)).toBe(false);
+  });
+  it("issues one normal force-fight sequence from either equipped hand and obeys prompts", () => {
+    const f=mouseFixture();f.dependencies.movementInput.isFpsMode=()=>true;
+    expect(f.mouse.attackQuestDirection(1,0,"left")).toBe(true);
+    expect(f.dependencies.heldWeapon.findHeldWeaponInventoryItem).toHaveBeenCalledWith("left");
+    expect(f.dependencies.inputCommands.sendInputSequence).toHaveBeenCalledWith(["F","6"]);
+    expect(f.mouse.attackQuestDirection(0,-1,"right")).toBe(true);
+    f.dependencies.questionMenus.isInQuestion=true;
+    expect(f.mouse.attackQuestDirection(1,0,"left")).toBe(false);
+    expect(f.mouse.attackQuestDirection(2,0,"right")).toBe(false);
+    expect(f.dependencies.inputCommands.sendInputSequence).toHaveBeenCalledTimes(2);
+  });
   it("rejects hidden/missing tiles and non-integral native ray coordinates", () => {
     const f = mouseFixture();
-    for (const [x, y] of [[13, 8], [12.5, 8], [NaN, 8], [Infinity, 8]]) {
+    for (const [x, y] of [[12.5, 8], [NaN, 8], [Infinity, 8]]) {
       expect(f.mouse.activateQuestTile(x, y)).toBe(false);
     }
     f.tile.visible = false;

@@ -5,10 +5,11 @@ export type QuestNativeCommand =
   | { type: "tile"; x: number; y: number; secondary?: boolean }
   | { type: "key"; key: string }
   | { type: "inventory" }
-  | { type: "wait" };
+  | { type: "wait" }
+  | { type: "attack"; dx: number; dy: number; hand: "left" | "right" };
 export type QuestCommandResult = { accepted: boolean; reason?: string };
 export interface QuestInputState {
-  engineController: (Pick<Nethack3DEngineController, "sendInput" | "chooseDirection" | "toggleInventoryDialog" | "activateQuestTile"> & Partial<Pick<Nethack3DEngineController, "runQuestDirection">>) | null;
+  engineController: (Pick<Nethack3DEngineController, "sendInput" | "chooseDirection" | "toggleInventoryDialog" | "activateQuestTile"> & Partial<Pick<Nethack3DEngineController, "runQuestDirection" | "attackQuestDirection">>) | null;
   loadingVisible: boolean;
   uiBlockingVisible: boolean;
   connectionState: string;
@@ -34,6 +35,11 @@ export function parseQuestCommand(value: unknown): QuestNativeCommand | null {
   if ((command.type === "inventory" || command.type === "wait") && Object.keys(command).length === 1) return { type: command.type };
   if (command.type === "key" && Object.keys(command).length === 2 && typeof command.key === "string" && keys.has(command.key)) {
     return { type: "key", key: command.key };
+  }
+  if (command.type === "attack" && Object.keys(command).every(k=>["type","dx","dy","hand"].includes(k)) &&
+      (command.hand === "left" || command.hand === "right") && Number.isInteger(command.dx) && Number.isInteger(command.dy) &&
+      Math.abs(command.dx as number)<=1 && Math.abs(command.dy as number)<=1 && (command.dx !== 0 || command.dy !== 0)) {
+    return {type:"attack",dx:command.dx as number,dy:command.dy as number,hand:command.hand};
   }
   if (command.type === "move" && Object.keys(command).every(key => ["type", "dx", "dy", "run"].includes(key)) &&
       (command.run === undefined || typeof command.run === "boolean") &&
@@ -80,6 +86,10 @@ export function routeQuestCommand(command: QuestNativeCommand, state: QuestInput
     if (state.directionQuestion || state.positionInputActive) return deny("Finish the active prompt first.");
     controller.sendInput(".");
     return { accepted: true };
+  }
+  if (command.type === "attack") {
+    if (state.directionQuestion || state.positionInputActive) return deny("Finish the active prompt first.");
+    return controller.attackQuestDirection?.(command.dx,command.dy,command.hand) ? {accepted:true} : deny("Attack unavailable.");
   }
   if (command.type === "move") {
     const key = questDirectionKey(command.dx, command.dy, state.numberPadModeEnabled);

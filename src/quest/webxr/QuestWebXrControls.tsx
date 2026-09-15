@@ -1,3 +1,4 @@
+import { OptionSliderRow } from "../../ui/app/settings/OptionSliderRow";
 import { useSyncExternalStore } from "react";
 import { getWebXrState, subscribeWebXr, toggleWebXr, recenterWebXr } from "./presentation";
 import "./webxr.css";
@@ -18,24 +19,32 @@ export function QuestWebXrButton({
   </button>;
 }
 
+const vrSliders = [
+  { key: "area", label: "Tabletop visible area", description: "Increase the map area shown on the table without changing tile size.", min: 1, max: 2 },
+  { key: "scale", label: "VR world scale", description: "Resize the game world without changing the visible map area or UI size.", min: 0.5, max: 2 },
+  { key: "resolution", label: "VR render resolution", description: "Resolution changes apply when you next enter VR.", min: 0.5, max: 2 },
+] as const;
+
 export function QuestWebXrSettings(): JSX.Element | null {
   const settings = useSyncExternalStore(subscribeXrSettings, getXrSettings, getXrSettings);
   const state = useSyncExternalStore(subscribeWebXr, getWebXrState, getWebXrState);
   if (!state.host) return null;
-  return <div className="nh3d-quest-xr-settings">
-    <div className="nh3d-options-group-title">Virtual reality</div>
-    <p>The first-person option below selects the surrounding dungeon. Turn it off for a tabletop board.</p>
-    <label>VR render resolution: {Math.round(settings.resolution * 100)}%
-      <input type="range" min="0.5" max="2" step="0.1" value={settings.resolution}
-        onChange={event => setXrSettings({ resolution: Number(event.target.value) })}/>
-    </label>
-    <p>Resolution changes apply when you next enter VR.</p>
-    {state.renderResolution ? <p>{state.active ? "Current" : "Last VR"} render size: {state.renderResolution}.</p> : null}
+  // Controller weapons and their gesture toggle/sensitivity controls are paused.
+  // Their saved settings and detector implementation remain available for revisit.
+  return <>
+    {vrSliders.map(option => <OptionSliderRow key={option.key} label={option.label}
+      description={option.description + (option.key === "resolution" && state.renderResolution ? ` Current render size: ${state.renderResolution}.` : "")}
+      valueLabel={`${Math.round(settings[option.key] * 100)}%`}>
+      <input aria-label={option.label} className="nh3d-option-slider" type="range"
+        min={option.min} max={option.max} step="0.1" value={settings[option.key]}
+        onInput={event => setXrSettings({ [option.key]: Number(event.currentTarget.value) })}
+        onChange={event => setXrSettings({ [option.key]: Number(event.currentTarget.value) })} />
+    </OptionSliderRow>)}
     <div className="nh3d-menu-actions">
       <QuestWebXrButton className="nh3d-menu-action-button" />
       <button type="button" className="nh3d-menu-action-button" disabled={!state.active}
         onClick={recenterWebXr}>Recenter world</button>
     </div>
     {state.error ? <p role="alert">{state.error}</p> : null}
-  </div>;
+  </>;
 }

@@ -1,3 +1,5 @@
+import type { HeldWeapon } from "../rendering/held-weapon";
+import { questDirectionKey } from "../../../quest/native/input";
 import { isQuestBrowser } from "../../../quest/webxr/host";
 import * as THREE from "three";
 import type { AudioHapticsPlatform } from "../audio/audio-haptics-platform";
@@ -22,6 +24,7 @@ import type { TileContextActions } from "../ui/tile-context-actions";
 import type { TileRendering } from "../rendering/tile-rendering";
 
 export interface MouseInputDependencies {
+  readonly heldWeapon: Pick<HeldWeapon, "findHeldWeaponInventoryItem">;
   readonly audioHapticsPlatform: Pick<
     AudioHapticsPlatform,
     "resumeFmodFromUserGesture"
@@ -89,6 +92,8 @@ export interface MouseInputDependencies {
     | "sendForcedDirectionalInput"
     | "sendInput"
     | "sendMouseInput"
+    | "sendInputSequence"
+    | "numberPadModeEnabled"
     | "submitDirectionAnswer"
   >;
   readonly movementInput: Pick<
@@ -307,17 +312,7 @@ export class MouseInput {
         event.clientY,
       );
       if (gridTarget) {
-        if (this.dependencies.pointerTargeting.shouldSearchAdjacentTerminalVoid(gridTarget)) {
-          this.dependencies.inputCommands.executeQuickAction("search", true);
-          return true;
-        }
-        const dx = gridTarget.x - this.dependencies.playerMovement.playerPos.x;
-        const dy = gridTarget.y - this.dependencies.playerMovement.playerPos.y;
-        const direction = this.dependencies.movementInput.resolveDirectionFromDelta(dx, dy);
-        if (direction) {
-          this.dependencies.inputCommands.sendForcedDirectionalInput(direction);
-          return true;
-        }
+        return this.activateEmptyMapTarget(gridTarget);
       }
       return false;
     }
@@ -326,6 +321,31 @@ export class MouseInput {
     }
 
     return this.activateMapTileTarget(target, event.button, "mouse-primary");
+  }
+
+  private activateEmptyMapTarget(target: { x: number; y: number }): boolean {
+    if (this.dependencies.pointerTargeting.shouldSearchAdjacentTerminalVoid(target)) {
+      this.dependencies.inputCommands.executeQuickAction("search", true); return true;
+    }
+    const direction = this.dependencies.movementInput.resolveDirectionFromDelta(
+      target.x - this.dependencies.playerMovement.playerPos.x, target.y - this.dependencies.playerMovement.playerPos.y);
+    if (!direction) return false;
+    this.dependencies.inputCommands.sendForcedDirectionalInput(direction); return true;
+  }
+
+  attackQuestDirection(dx: number, dy: number, hand: "left" | "right"): boolean {
+    if (!Number.isInteger(dx) || !Number.isInteger(dy) || Math.abs(dx)>1 || Math.abs(dy)>1 || !(dx||dy) ||
+        (hand !== "left" && hand !== "right") || !this.dependencies.renderPipeline.renderer.xr.isPresenting ||
+        !this.dependencies.movementInput.isFpsMode() || !this.dependencies.engineState.session ||
+        this.dependencies.promptDialogs.isUiInputBlocked() || this.dependencies.promptDialogs.isAnyModalVisible() ||
+        this.dependencies.questionMenus.isInQuestion || this.dependencies.directionPrompts.isInDirectionQuestion ||
+        this.dependencies.positionSelection.positionInputModeActive || this.dependencies.extendedCommands.metaCommandModeActive ||
+        !this.dependencies.heldWeapon.findHeldWeaponInventoryItem(hand)) return false;
+    this.dependencies.audioHapticsPlatform.resumeFmodFromUserGesture();
+    const p = this.dependencies.playerMovement.playerPos;
+    this.dependencies.combatAttribution.updateDirectionalAttackContextFromTarget(p.x+dx,p.y+dy);
+    this.dependencies.inputCommands.sendInputSequence(["F",questDirectionKey(dx,dy,this.dependencies.inputCommands.numberPadModeEnabled)]);
+    return true;
   }
 
   /** Native rays arrive as tiles; the ordinary UI/prompt gates still apply. */
@@ -344,7 +364,9 @@ export class MouseInput {
       return true;
     }
     const tile = this.dependencies.tileRendering.tileMap.get(x + "," + y);
-    if (!tile || !tile.visible) return false;
+    if (!tile) return !secondary && !this.dependencies.movementInput.isFpsMode() &&
+      !this.dependencies.positionSelection.positionInputModeActive && this.activateEmptyMapTarget({x,y});
+    if (!tile.visible) return false;
     if (secondary) {
       this.dependencies.tileContextActions.openNormalTileContextMenuAtTarget({ key: `${x},${y}`, x, y, mesh: tile });
       return true;

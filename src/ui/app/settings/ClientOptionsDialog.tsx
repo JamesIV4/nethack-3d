@@ -174,7 +174,7 @@ export function ClientOptionsDialog({
             data-nh3d-overflow-glow-host="parent"
             role="tablist"
           >
-            {clientOptionsTabs.map((tab) => {
+            {clientOptionsTabs.filter(tab => tab.id !== "vr" || getWebXrState().host).map((tab) => {
               const isSelected = tab.id === selectedClientOptionsTab.id;
               return (
                 <button
@@ -221,7 +221,6 @@ export function ClientOptionsDialog({
                 checkForUpdatesFromOptions={checkForUpdatesFromOptions}
                 openGitHubReleases={openGitHubReleases}
               />) : null}
-              {selectedClientOptionsTab.id === "display" ? <QuestWebXrSettings /> : null}
               {visibleClientOptions.map((option) => {
                 if (option.key === "vrPassthrough" && !getWebXrState().host) return null;
                 if (option.developerOnly && !showDeveloperClientSettings) {
@@ -286,6 +285,7 @@ export function ClientOptionsDialog({
                 }
                 return null;
               })}
+              {selectedClientOptionsTab.id === "vr" ? <QuestWebXrSettings /> : null}
               <SoundPackSettings
                 onDialogActionsChange={(actions) => {
                   soundPackDialogActionsRef.current = actions;

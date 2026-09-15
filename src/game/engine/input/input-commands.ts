@@ -1252,8 +1252,9 @@ export class InputCommands {
     const nowMs = Date.now();
     let hasMovementInput = false;
     let firstMovementInput: string | null = null;
+    const isForcedAttack = inputs[0] === "F" || (this.numberPadModeEnabled && inputs[0] === "-");
     for (const input of inputs) {
-      if (this.dependencies.movementInput.isMovementInput(input)) {
+      if (!isForcedAttack && this.dependencies.movementInput.isMovementInput(input)) {
         this.dependencies.camera.lastManualDirectionalInputAtMs = nowMs;
         this.dependencies.camera.fpsAutoMoveDirection = null;
         this.dependencies.camera.fpsAutoTurnTargetYaw = null;

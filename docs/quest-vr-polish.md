@@ -128,3 +128,40 @@ Quest tile activation now resumes the existing audio systems, matching mouse/tou
 
 Validation: eight Quest input/audio tests and TypeScript passed. Coverage includes runtime-confirmed movement, blocked movement, self-tile actions, secondary clicks, prompt gates, sound disabled, and audio-resume routing. Physical audio playback still needs headset verification.
 Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.18.apk`.
+
+
+## 0.3.19 dropdown visibility and game-over modal flow
+
+The in-document select chooser now supplies its own opaque, non-animated visible state. It does not use AnimatedDialog, so the generic modal's initial opacity of zero previously remained in effect when VR disabled its fade-in animation. Its existing foreground stacking and normal modal crop remain intact.
+
+While immersive VR is active, the shared frame releases the existing deferred game-over UI lifecycle. This removes the flat-canvas acknowledgement dependency that laser tile commands cannot satisfy. Postmortem questions, inventory reports, tombstone, and new-game prompts continue through their original UI/state owners and the standard VR modal pane. Flat mode keeps its existing acknowledgement behavior.
+
+Validation: TypeScript and the engine-frame lifecycle regression passed. Browser tests with the actual app CSS verify chooser opacity, topmost pointer targeting, selection/close, and the actual NewGameDialog component's visibility, modal-pane assignment in both views, and button activation at three viewport sizes. Headset validation remains necessary after sideloading.
+Artifact: `quest/build/outputs/apk/nethack3d-webxr.apk` (version `0.3.19-modal-flow`).
+SHA256: `061043f179bf082f7062a58269e1ffc442e7b7c39d64e705bb84957278849a87`.
+
+
+## 0.3.20 controller weapons and gestures
+
+- Empty tabletop support hits now retain a game-grid target and reuse the flat click handler's forced-direction fallback. Existing mesh clicks retain their normal selection/movement behavior. The support-to-grid conversion removes the scene presentation transform.
+- Native controller models draw after the UI in flat and immersive presentation; UI still composites over the game world. Pointer feedback remains last. The UI grip ownership mask keeps squeeze asserted through its release guard so weapon gestures cannot start while a UI drag is still consuming input.
+- `ControllerWeapons` attaches a separate equipped-weapon card to each tracked grip in first-person VR, using the existing HeldWeapon texture/glyph/flip path. Textures update only when equipment or its texture signature changes and are disposed on unequip/session teardown. Alternate weapons marked not wielded are not treated as an equipped off hand.
+- `WeaponGesture` recognizes a follow-through swipe or a shorter strike followed by an abrupt held stop. Motion uses a virtual weapon-tip sample in tracking meters; no enemy geometry contact is required. Gesture aim is latched at the start. UI use, held buttons, grip dragging, modal/prompt state, tracking loss, non-first-person mode, and absent equipment suppress attacks. A quiet recovery and shared cooldown prevent repeated or simultaneous-hand duplicate commands.
+- A gesture from either equipped hand requests the normal force-fight action in that map direction. NetHack remains authoritative over melee range, turn consumption, and which wielded weapons participate in two-weapon combat; this does not silently swap weapons or grant ranged melee damage. See the [NetHack guidebook fight command](https://www.nethack.org/v500/Guidebook.html). Force-fight sequences do not arm walking prediction or footsteps.
+- A host-only VR options tab groups view selection, mixed reality, rendering resolution, table area, world scale, gesture enablement, and shared swipe/bonk sensitivity (0.5 to 2.5, default 1). Higher sensitivity accepts lighter motions. The view checkbox updates the existing shared first-person preference.
+
+Validation: 92 focused tests, TypeScript, native build, APK verification, and browser option-interaction checks passed. Tests cover swipe, bonk, recovery, jitter, tracking discontinuities, blocking, both-hand equipment selection and resource cleanup, empty-table movement, attack routing, and no walking prediction from force-fight. Native patch preparation is repeatable. Physical controller alignment, layering, and gesture comfort still need headset validation and threshold tuning.
+
+Artifact: `quest/build/outputs/apk/nethack3d-webxr.apk` (version `0.3.20-weapon-gestures`).
+SHA256: `892d805441efc861ac64d4a4a295cb9f1e1c51b038ada531739d63ae3a27ff92`.
+
+
+## 0.3.21 pause controller weapons and standardize VR options
+
+Controller weapon rendering and swipe/bonk recognition are paused by commenting out the `ControllerWeapons` construction in `WebXrControllerInput`. The implementation, texture helpers, detector, tests, and saved settings remain for a future revisit. No weapon renderer or detector is created, even when previously saved gesture settings are enabled. Gesture enablement and sensitivity controls are hidden while the feature is paused.
+
+VR settings now use the normal options layout. First-person view is supplied through its existing boolean descriptor and standard toggle control. VR sliders and regular client sliders share `OptionSliderRow`, including the same card, label/info button, range input styling, and value readout. The VR-specific flex/label/range CSS has been removed. Mixed reality and the existing VR entry/recenter actions remain available.
+
+Validation: TypeScript, seven settings/retained-gesture tests, and browser checks at three viewport sizes passed. Browser checks verify standard slider-row classes, value updates, the shared first-person descriptor, and absence of gesture controls.
+Artifact: `quest/build/outputs/apk/nethack3d-webxr.apk` (version `0.3.21-vr-options`).
+SHA256: `e459310c47af3a347c44bb8f59361474a4e8b2a850cee0507d29826f87d0aa12`.

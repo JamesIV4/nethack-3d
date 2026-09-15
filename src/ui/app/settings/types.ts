@@ -101,7 +101,8 @@ export type ClientOptionsTabId =
   | "sound"
   | "combat"
   | "compatibility"
-  | "updates";
+  | "updates"
+  | "vr";
 
 export type ClientOptionsTab = {
   id: ClientOptionsTabId;

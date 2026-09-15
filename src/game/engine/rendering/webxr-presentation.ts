@@ -21,7 +21,7 @@ export interface WebXrPresentationDependencies {
   readonly engineState: Pick<EngineState, "clientOptions" | "playMode" | "disposed">;
   readonly playerMovement: Pick<PlayerMovement, "playerPos">;
   readonly renderPipeline: Pick<RenderPipeline, "renderer" | "scene">;
-  readonly heldWeapon: Pick<HeldWeapon, "fpsHeldWeaponMesh">;
+  readonly heldWeapon: Pick<HeldWeapon, "fpsHeldWeaponMesh" | "resolveFpsHeldWeaponTextureState" | "createQuestWeaponTexture" | "measureTextureOpaqueAspectRatio">;
 }
 
 /** Three.js owns all world pixels. The APK host composites the existing live DOM separately. */
@@ -165,7 +165,7 @@ export class WebXrPresentation {
       if (layer) updateWebXrState({ renderResolution: `${Math.floor(layer.framebufferWidth / 2)} × ${layer.framebufferHeight} pixels per eye` });
       this.htmlPanel = new HtmlUiPanel(this.trackingRoot, this.nativeHost);
       this.input = new WebXrControllerInput(session, renderer, this.dependencies.renderPipeline.scene,
-        this.trackingRoot, TILE_SIZE, () => this.htmlPanel, this.tilt, direction => this.snapTurn(direction));
+        this.trackingRoot, TILE_SIZE, () => this.htmlPanel, this.tilt, direction => this.snapTurn(direction), this.dependencies.heldWeapon);
       this.needsRecenter = true;
       this.lastRigKey = "";
       document.documentElement.classList.add("nh3d-webxr-active");

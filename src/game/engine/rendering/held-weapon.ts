@@ -300,14 +300,18 @@ export class HeldWeapon {
       typeof candidate.text === "string" ? candidate.text.toLowerCase() : "";
     return (
       text.includes("(weapon in hand)") ||
+      text.includes("(weapon in hands)") ||
       text.includes("(weapon in right hand)") ||
       text.includes("(weapon in left hand)")
     );
   }
 
-  findHeldWeaponInventoryItem(): NethackMenuItem | null {
+  findHeldWeaponInventoryItem(hand?: "left" | "right"): NethackMenuItem | null {
     for (const item of this.dependencies.promptDialogs.currentInventory) {
-      if (this.isHeldWeaponInventoryItem(item)) {
+      const text = String(item.text ?? "").toLowerCase();
+      const left = /\((?:weapon in left hand|weapon in other hand|wielded in other hand|off-hand weapon)\)/.test(text);
+      if ((!hand && this.isHeldWeaponInventoryItem(item)) || (hand === "left" && !item.isCategory && left) ||
+          (hand === "right" && this.isHeldWeaponInventoryItem(item) && !left)) {
         return item;
       }
     }
@@ -447,9 +451,9 @@ export class HeldWeapon {
       existingByTileId;
   }
 
-  resolveFpsHeldWeaponTextureState(): FpsHeldWeaponTextureState | null {
+  resolveFpsHeldWeaponTextureState(hand?: "left" | "right"): FpsHeldWeaponTextureState | null {
     const previewTileId =
-      this.getActiveFpsHeldWeaponAnimationDebugPreviewTileId();
+      hand ? null : this.getActiveFpsHeldWeaponAnimationDebugPreviewTileId();
     if (
       !this.dependencies.movementInput.isFpsMode() ||
       (!this.dependencies.engineState.clientOptions.fpsHeldWeaponVisible && previewTileId === null) ||
@@ -459,7 +463,7 @@ export class HeldWeapon {
       return null;
     }
     const item =
-      previewTileId === null ? this.findHeldWeaponInventoryItem() : null;
+      previewTileId === null ? this.findHeldWeaponInventoryItem(hand) : null;
     if (previewTileId === null && !item) {
       return null;
     }
@@ -499,6 +503,12 @@ export class HeldWeapon {
       sourceGlyph,
       signature: `${this.dependencies.engineState.clientOptions.tilesetPath}|rv:${this.dependencies.tilesetAssets.resolveRuntimeVersion()}|ts:${this.dependencies.tilesetAssets.tileSourceSize}|g:${sourceGlyph ?? -1}|ti:${tileIndex ?? -1}|bg:${backgroundRemovalKey}|preview:${previewTileId ?? -1}|fx:${effectiveFlipState.flipX ? 1 : 0}|fy:${effectiveFlipState.flipY ? 1 : 0}|fd:${effectiveFlipState.flipDiagonal ? 1 : 0}`,
     };
+  }
+
+  createQuestWeaponTexture(state: FpsHeldWeaponTextureState): THREE.Texture {
+    return this.createFpsHeldWeaponFlippedTexture(
+      this.dependencies.glyphTextures.createTileTexture(state.tileIndex, 1, true, { sourceGlyph: state.sourceGlyph }),
+      this.resolveFpsHeldWeaponTileFlipState(state.tileIndex >= 0 ? state.tileIndex : null));
   }
 
   measureTextureOpaqueAspectRatio(texture: THREE.Texture): number {

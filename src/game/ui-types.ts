@@ -1385,6 +1385,7 @@ export interface Nethack3DEngineController {
   sendInput(input: string): void;
   activateQuestTile(x: number, y: number, secondary?: boolean): boolean;
   runQuestDirection(direction: string): void;
+  attackQuestDirection(dx: number, dy: number, hand: "left" | "right"): boolean;
   chooseDirection(directionKey: string): void;
   confirmActiveDirectionQuestion(): void;
   chooseQuestionChoice(choice: string): void;

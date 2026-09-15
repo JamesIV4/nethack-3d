@@ -786,6 +786,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get tileRendering() { return tileRendering; },
   });
   const mouseInput: MouseInput = new MouseInput({
+    get heldWeapon() { return heldWeapon; },
     get audioHapticsPlatform() { return audioHapticsPlatform; },
     get camera() { return camera; },
     get combatAttribution() { return combatAttribution; },

@@ -121,12 +121,7 @@ export const clientOptionsConfig: ClientOption[] = [
     description: t.clientOptions.config.fpsMode.description,
     type: "boolean",
   },
-  {
-    key: "vrPassthrough",
-    label: "Mixed reality in VR",
-    description: "Show your room around the board or dungeon. Takes effect the next time you enter VR.",
-    type: "boolean",
-  },
+
   {
     key: "fpsFlattenEntityBillboards",
     label: t.clientOptions.config.fpsFlattenEntityBillboards.label,
@@ -669,11 +664,19 @@ export const clientOptionsConfig: ClientOption[] = [
         .description,
     type: "boolean",
   },
+  { key: "group-vr", label: "Virtual reality", type: "group" },
+  {
+    key: "vrPassthrough",
+    label: "Mixed reality in VR",
+    description: "Show your room around the board or dungeon. Takes effect the next time you enter VR.",
+    type: "boolean",
+  },
 ];
 
 export const clientOptionsDefaultTabId: ClientOptionsTabId = "display";
 
 export const clientOptionsTabs: ClientOptionsTab[] = [
+  { id: "vr", label: "VR", description: "Headset presentation and tabletop settings.", groupKey: "group-vr" },
   {
     id: "display",
     label: t.clientOptions.tabs.display.label,
@@ -729,6 +732,10 @@ export function getClientOptionsForGroup(groupKey: string): ClientOption[] {
     if (currentGroupKey === groupKey) {
       options.push(option);
     }
+  }
+  if (groupKey === "group-vr") {
+    const view = clientOptionsConfig.find(option => option.key === "fpsMode");
+    if (view) options.unshift(view);
   }
   return options;
 }

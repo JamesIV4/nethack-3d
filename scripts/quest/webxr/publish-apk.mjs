@@ -30,7 +30,7 @@ const details = execFileSync(aapt, ["dump", "badging", apk], {
 });
 if (!details.includes("package: name='com.nethack3d.quest.webxrproof'"))
   throw new Error("Incorrect proof package identity.");
-if (!details.includes("versionName='0.3.18-ray-audio'"))
+if (!details.includes("versionName='0.3.21-vr-options'"))
   throw new Error("Unexpected APK version.");
 for (const permission of ["WAKE_LOCK", "FOREGROUND_SERVICE"]) {
   if (!details.includes("name='android.permission." + permission + "'"))
