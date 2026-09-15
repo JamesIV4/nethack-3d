@@ -1,3 +1,4 @@
+import { findAndroidSdk } from "../build-environment.mjs";
 import { execFileSync } from "node:child_process";
 import { readFileSync, mkdirSync, copyFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -8,12 +9,12 @@ import { readGeckoArtifact, PAINT_PREFERENCE } from "./gecko-artifact.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const apk = path.join(root, "quest/runtime/wolvic/app/build/outputs/apk/oculusvrArm64GeckoGeneric/debug/Wolvic-oculusvr-arm64-gecko-generic-debug.apk");
-const sdk = process.env.ANDROID_SDK_ROOT ?? process.env.ANDROID_HOME ?? path.join(process.env.LOCALAPPDATA, "Android/Sdk");
+const sdk = findAndroidSdk({ properties: [path.join(root, "quest/runtime/wolvic/local.properties")] });
 const versions = readdirSync(path.join(sdk, "build-tools")).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
 const aapt = path.join(sdk, "build-tools", versions[0], process.platform === "win32" ? "aapt.exe" : "aapt");
 const details = execFileSync(aapt, ["dump", "badging", apk], { encoding: "utf8", windowsHide: true });
 if (!details.includes("package: name='com.nethack3d.quest.webxrproof'")) throw new Error("Incorrect proof package identity.");
-if (!details.includes("versionName='0.3.15-frame-ui'")) throw new Error("Unexpected APK version.");
+if (!details.includes("versionName='0.3.18-ray-audio'")) throw new Error("Unexpected APK version.");
 for (const permission of ["WAKE_LOCK", "FOREGROUND_SERVICE"]) {
   if (!details.includes("name='android.permission." + permission + "'")) throw new Error("Missing Gecko runtime permission: " + permission);
 }
@@ -48,7 +49,7 @@ if ([...names].filter((name) => name.startsWith("assets/game/") && name.endsWith
 const output = path.join(root, "quest/build/outputs/apk/nethack3d-webxr-proof-debug.apk");
 mkdirSync(path.dirname(output), { recursive: true });
 copyFileSync(apk, output);
-const versionedOutput = path.join(path.dirname(output), "nethack3d-webxr-0.3.15-frame-ui-debug.apk");
+const versionedOutput = path.join(path.dirname(output), "nethack3d-webxr-0.3.18-ray-audio-debug.apk");
 copyFileSync(apk, versionedOutput);
 console.log("Verified standalone APK: " + versionedOutput);
 console.log("Latest APK: " + output);

@@ -134,6 +134,8 @@ export class TileUpdates {
 
   tileFlushScheduled: boolean = false;
 
+  private corridorReconcileAfterTiles = false;
+
   pendingPlayerTileRefreshOnNextPosition: boolean = true;
 
   readonly tileRefreshRetryDelayMs: number = 120;
@@ -261,6 +263,7 @@ export class TileUpdates {
       this.dependencies.worldClassification.seedTerrainCacheFromSupersededPendingUpdate(key, pendingTile, tile);
     }
     this.pendingTileUpdates.set(key, tile);
+    this.corridorReconcileAfterTiles = true;
 
     if (this.tileFlushScheduled) {
       return;
@@ -441,6 +444,18 @@ export class TileUpdates {
   flushPendingTileUpdates(forceFullBatch: boolean = false): void {
     this.tileFlushScheduled = false;
 
+    if (forceFullBatch && this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length && this.pendingTileUpdates.size) {
+      // A player-position fence must include arrivals queued behind a partially
+      // processed batch, with newer payloads replacing older ones for a tile.
+      const merged = new Map(this.pendingTileFlushQueue.slice(this.pendingTileFlushQueueIndex).map(tile => [`${tile.x},${tile.y}`, tile]));
+      for (const [key, tile] of this.pendingTileUpdates) {
+        const previous = merged.get(key);
+        if (previous) this.dependencies.worldClassification.seedTerrainCacheFromSupersededPendingUpdate(key, previous, tile);
+        merged.set(key, tile);
+      }
+      this.pendingTileFlushQueue = [...merged.values()]; this.pendingTileFlushQueueIndex = 0;
+      this.pendingTileUpdates.clear();
+    }
     if (
       this.pendingTileFlushQueueIndex >= this.pendingTileFlushQueue.length &&
       this.pendingTileUpdates.size > 0
@@ -483,8 +498,8 @@ export class TileUpdates {
       this.pendingTileFlushQueueIndex = 0;
       this.dependencies.runtimeEntityTracking.finalizePendingRuntimeMonsterVacatedTracking();
     }
-    // Inferred dark-corridor walls intentionally reconcile from player_position
-    // updates, not tile flushes, to avoid transient wall flashes mid-move.
+    // Late tile arrivals are reconciled at the settled frame boundary below,
+    // never halfway through a batch or during a player movement transition.
     // Flush minimap cells once per tile batch to keep runtime bursts lightweight.
     this.dependencies.minimap.flushPendingMinimapTileUpdates();
     this.dependencies.vultureWalls.flushPendingVultureWallMaterialRefreshes();
@@ -723,6 +738,15 @@ export class TileUpdates {
       }
       this.refreshTileVisualFromStateCache(tileX, tileY);
     }
+  }
+
+  flushSettledDarkCorridorInference(): void {
+    if (!this.corridorReconcileAfterTiles || this.pendingTileUpdates.size ||
+        this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length ||
+        this.dependencies.camera.fpsStepCameraActive ||
+        this.dependencies.entityMovement.activeEntityMoveTransitions.has("player")) return;
+    this.corridorReconcileAfterTiles = false;
+    this.dependencies.darkCorridorInference.requestInferredDarkCorridorWallReconcile({ forceImmediate: true });
   }
 
   flushPendingTileUpdatesForPlayerPositionReconcile(): void {

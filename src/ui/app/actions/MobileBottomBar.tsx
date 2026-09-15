@@ -43,7 +43,7 @@ export function MobileBottomBar({
   return (
     mobileTouchUiVisible ? (
       <div className="nh3d-mobile-bottom-bar" data-xr-ui>
-        <QuestWebXrButton className="nh3d-mobile-bottom-button" />
+        <QuestWebXrButton className="nh3d-mobile-bottom-button" hideWhenActive />
         <button
           className={`nh3d-mobile-bottom-button${isCharacterSheetVisible ? " is-active" : ""
             }`}

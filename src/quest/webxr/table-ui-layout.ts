@@ -13,6 +13,9 @@ function bounds(selector: string, paint = false): [number, number, number, numbe
     left = Math.min(left, box.left); top = Math.min(top, box.top);
     right = Math.max(right, box.right); bottom = Math.max(bottom, box.bottom);
   }
+  // A gutter includes antialiased borders and prevents adjacent crops sampling
+  // a blue edge from this pane through bilinear texture filtering.
+  if (paint && right > left && bottom > top) { left -= 4; top -= 4; right += 4; bottom += 4; }
   left = Math.max(0, left); top = Math.max(0, top); right = Math.min(innerWidth, right); bottom = Math.min(innerHeight, bottom);
   return right > left && bottom > top ? [left / innerWidth, top / innerHeight, right / innerWidth, bottom / innerHeight] : null;
 }

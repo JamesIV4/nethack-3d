@@ -337,6 +337,7 @@ export class MouseInput {
       return false;
     }
     if (secondary && this.dependencies.positionSelection.positionInputModeActive) return false;
+    this.dependencies.audioHapticsPlatform.resumeFmodFromUserGesture();
     if (secondary && this.dependencies.movementInput.isFpsMode()) {
       if (this.dependencies.tileContextActions.fpsCrosshairContextMenuOpen) this.dependencies.tileContextActions.closeFpsCrosshairContextMenu(true);
       else this.dependencies.tileContextActions.openFpsCrosshairContextMenu();
@@ -362,7 +363,9 @@ export class MouseInput {
       this.dependencies.combatAttribution.setPendingPointerAttackTargetFromTile(target.x, target.y);
     }
     this.dependencies.engineMessages.logClickLookTileDebug(source, target.x, target.y);
-    this.dependencies.inputCommands.sendMouseInput(target.x, target.y, button);
+    if (source === "quest-ray") {
+      this.dependencies.inputCommands.sendMouseInput(target.x, target.y, button, { allowFpsMovement: true });
+    } else this.dependencies.inputCommands.sendMouseInput(target.x, target.y, button);
     return true;
   }
 

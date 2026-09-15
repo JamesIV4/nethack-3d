@@ -1,3 +1,4 @@
+import { findAndroidSdk } from "../build-environment.mjs";
 import { patchPaneIsolation } from "./patch-pane-isolation.mjs";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync } from "node:fs";
@@ -19,7 +20,7 @@ import { patchPointerInput } from "./patch-pointer-input.mjs";
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const checkout = path.join(root, "quest/runtime/wolvic");
 const platform = process.env.QUEST_OVR_PLATFORM_SDK ?? path.join(root, "quest/runtime/OVRPlatformSDK");
-const sdk = process.env.ANDROID_SDK_ROOT ?? process.env.ANDROID_HOME ?? path.join(process.env.LOCALAPPDATA ?? "", "Android/Sdk");
+const sdk = findAndroidSdk({ properties: [path.join(root, "quest/runtime/wolvic/local.properties")] });
 const geckoRevision = "dc23a6a0dbc999a0ec38e7ce87f654945568b28b";
 const geckoDirectory = path.resolve(process.env.QUEST_GECKO_DIR ?? path.join(root, "quest/runtime/gecko"));
 if (!existsSync(path.join(platform, "Include/OVR_Platform.h")) ||
@@ -135,7 +136,7 @@ configurations.configureEach {
     }
 }
 android.defaultConfig {
-    versionName = "0.3.15-frame-ui"
+    versionName = "0.3.18-ray-audio"
     resValue "string", "app_name", "NetHack 3D VR"
 }
 `);

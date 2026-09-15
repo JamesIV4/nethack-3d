@@ -1724,6 +1724,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.tileRendering.updateTileRevealFades(timeMs);
     this.systems.vultureWalls.updateVultureDoorPlaneRenderOrdering();
     this.systems.vultureWalls.updateIronBarsWallPlaneVisibility();
+    this.systems.tileUpdates.flushSettledDarkCorridorInference();
     this.systems.camera.compensateTerminalWorldSpriteAspect();
     const xrCamera = this.systems.webXrPresentation.prepareRender();
     if (xrCamera) {

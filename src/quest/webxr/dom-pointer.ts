@@ -4,7 +4,10 @@ const surfaces = ".nh3d-dialog,.nh3d-context-menu,.nh3d-mobile-actions-sheet,.nh
 
 export function uiHitRectangles(): number[] {
   const regions: number[][] = [];
+  const coveredSurfaces = new Set<Element>();
   for (const element of document.querySelectorAll<HTMLElement>(surfaces + "," + controls)) {
+    const surface = element.closest(surfaces);
+    if (surface !== element && surface && coveredSurfaces.has(surface)) continue;
     const style = getComputedStyle(element);
     if (!isVisibleUi(element) || style.pointerEvents === "none") continue;
     const bounds = element.getBoundingClientRect();
@@ -18,6 +21,7 @@ export function uiHitRectangles(): number[] {
     const rect = [left / innerWidth, top / innerHeight, right / innerWidth, bottom / innerHeight];
     if (regions.some((r) => r[0] <= rect[0] && r[1] <= rect[1] && r[2] >= rect[2] && r[3] >= rect[3])) continue;
     regions.push(rect);
+    if (surface === element) coveredSurfaces.add(element);
     if (regions.length > 128) return [0, 0, 1, 1];
   }
   return regions.flat();

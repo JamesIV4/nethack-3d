@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { uiHitRectangles } from "./dom-pointer";
 import { tableUiPanes, type UiPane } from "./table-ui-layout";
 import { getXrSettings } from "./settings";
+import { hasWorldContextAnchor } from "./context-anchor";
 
 let nextAnchor = 0;
 /** Sends UI regions and hit distances only. Wolvic owns pointer rendering and HTML input. */
@@ -58,7 +59,7 @@ export class NativePointerBridge {
     if (this.pending || this.disposed || time - this.lastSend < 1000 / 30) return;
     if (this.dirty) { this.rects = uiHitRectangles(); this.panes = tableUiPanes(this.firstPerson, this.rects); this.dirty = false; }
     const settings = getXrSettings();
-    const context = !!this.contextPoint && !!document.querySelector(".nh3d-context-menu.is-visible");
+    const context = !!this.contextPoint && hasWorldContextAnchor();
     const point = this.contextPoint?.clone().applyMatrix4(this.gameToTracking) ?? new THREE.Vector3();
     const body = JSON.stringify([this.revision, this.rects.length / 4, ...this.hits,
       this.firstPerson ? 1 : 0, this.pitch, this.boardY, this.panes.length, ...this.anchor,

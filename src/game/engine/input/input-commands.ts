@@ -1298,7 +1298,7 @@ export class InputCommands {
     x: number,
     y: number,
     button: number,
-    options: { keepContextMenuOpen?: boolean } = {},
+    options: { keepContextMenuOpen?: boolean; allowFpsMovement?: boolean } = {},
   ): void {
     if (!this.dependencies.engineState.session) {
       return;
@@ -1306,7 +1306,7 @@ export class InputCommands {
     if (!options.keepContextMenuOpen) {
       this.dependencies.tileContextActions.closeAnyTileContextMenu(false);
     }
-    if (this.dependencies.audioHapticsPlatform.shouldArmPlayerFootstepFromMouseInput(x, y, button)) {
+    if (this.dependencies.audioHapticsPlatform.shouldArmPlayerFootstepFromMouseInput(x, y, button, options.allowFpsMovement === true)) {
       this.dependencies.audioHapticsPlatform.armPendingPlayerFootstepSound();
       this.dependencies.movementInput.armPlayerCliparoundInputCooldown();
     }

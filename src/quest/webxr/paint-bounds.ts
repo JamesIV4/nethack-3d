@@ -15,8 +15,12 @@ export function shadowOutsets(shadow: string): [number, number, number, number] 
 }
 export function paintBounds(element: HTMLElement): { left:number; top:number; right:number; bottom:number } {
   const initial=element.getBoundingClientRect();
+  // Clipped containers cannot paint descendant shadows outside their own box.
+  // Avoid walking hundreds of option controls and all their ancestors.
+  const rootStyle = getComputedStyle(element);
+  const clipped = /hidden|clip|auto|scroll/.test(rootStyle.overflowX) && /hidden|clip|auto|scroll/.test(rootStyle.overflowY);
   const result={left:initial.left,top:initial.top,right:initial.right,bottom:initial.bottom};
-  for(const node of [element,...element.querySelectorAll<HTMLElement>("*")]) {
+  for(const node of [element,...(clipped ? [] : element.querySelectorAll<HTMLElement>("*"))]) {
     const style=getComputedStyle(node), rect=node.getBoundingClientRect();
     if(style.display==="none"||style.visibility!=="visible"||Number(style.opacity)===0||rect.width<=0||rect.height<=0) continue;
     const scale=node.offsetWidth>0?rect.width/node.offsetWidth:1;

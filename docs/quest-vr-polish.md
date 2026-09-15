@@ -101,3 +101,35 @@ Live evidence: the gold tile at 67,16 was absent from both the tile mesh and bil
 
 Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.15-frame-ui-debug.apk`.
 SHA256: `fcfc12510dee8d80f06d1e0b6f31ebf4cdf9b32ba007eb02525910dd5f91eaa7`.
+
+
+## 0.3.16 pane controls and settled corridor inference
+
+- Painted pane crops include a four-CSS-pixel gutter. First-person HUD cutouts use the expanded action crop, preventing bilinear sampling and antialiased blue borders from leaking into the stationary HUD.
+- Dialog hit regions cover their controls without repeatedly measuring every descendant. Clipped paint bounds use the container and its own shadows rather than walking descendants that cannot paint outside it. The browser stress fixture with 600 option rows records 71 computed-style reads for a complete pane/hit snapshot.
+- Grip positioning now covers native panes in both tabletop and first-person VR, including dialogs and non-clickable message panes. Height/depth offsets persist for the app session, separately by view mode and logical pane. The four source slices of the first-person upper HUD share one placement and one pitch transform. All pane orientations pitch toward the viewer position, with no viewer-driven roll or lateral facing rotation. Tile-anchored context menus keep their bottom pivot.
+- Ordinary laser hits remain restricted to interactive regions. Grip can also select padding and non-clickable standalone panes; that does not add new invisible trigger-blocking regions. Release, lost tracking, vanished panes, mode changes, and held-click suppression retain the existing grip lifecycle.
+- The player-position tile fence now includes new arrivals behind a partially processed batch. Newer payloads supersede older payloads while preserving their terrain information.
+- Late corridor data receives a reconciliation at the shared settled-frame boundary, after the tile queues and player transitions finish. This removes the need to wait for another player-position event without inferring walls halfway through a move or partial tile batch. The same ordering applies in flat and XR rendering.
+
+Validation: 75 focused tests, TypeScript, native Java event checks, browser crop/isolation and modal measurement checks at three viewport sizes, and the complete native/APK build passed. New scheduling tests cover partial batches, newer payloads, and deferred reconciliation across step/player transitions. Physical pane comfort, final glow removal, options frame time, and corridor presentation still require testing on the new APK.
+
+Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.16-pane-controls-debug.apk`.
+SHA256: `9babb7f024324e0716530956a7e55db0d8cbf51983489d4900a65759e8e157e5`.
+
+
+## 0.3.17 inventory popup anchor
+
+Restrict the native tile-anchor flag to visible world-action menus (`nh3d-tile-context-menu` and `nh3d-fps-crosshair-context`), and suppress it while a regular modal is visible. Inventory context menus previously matched the generic context-menu selector and reused a stored world hit, moving the entire shared inventory crop to the floor. Inventory popups now retain their floating pane and grip offsets. Standalone world menus retain their selected-tile anchor.
+
+Validation: four anchor regression cases, TypeScript, APK build, and package verification passed. Physical headset placement remains to be checked after sideloading.
+Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.17-inventory-anchor-debug.apk`.
+SHA256: `1ca16369d2808bcfed3946b36acfc109c69e5c24ba54dc7b7898d3cb5e08d0f8`.
+
+
+## 0.3.18 laser movement audio
+
+Quest tile activation now resumes the existing audio systems, matching mouse/touch gesture handling. Laser movement explicitly opts into first-person pointer-movement feedback through `InputCommands.sendMouseInput`; ordinary first-person mouse attack clicks retain their previous behavior. The existing audio service arms the footstep and movement cooldown, and the normal runtime player-position event decides whether a step actually occurred. No speculative sound is played on click.
+
+Validation: eight Quest input/audio tests and TypeScript passed. Coverage includes runtime-confirmed movement, blocked movement, self-tile actions, secondary clicks, prompt gates, sound disabled, and audio-resume routing. Physical audio playback still needs headset verification.
+Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.18-ray-audio-debug.apk`.

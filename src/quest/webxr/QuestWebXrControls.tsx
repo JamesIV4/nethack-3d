@@ -3,9 +3,15 @@ import { getWebXrState, subscribeWebXr, toggleWebXr, recenterWebXr } from "./pre
 import "./webxr.css";
 import { getXrSettings, setXrSettings, subscribeXrSettings } from "./settings";
 
-export function QuestWebXrButton({ className = "nh3d-desktop-bottom-button" }: { className?: string }): JSX.Element | null {
+export function QuestWebXrButton({
+  className = "nh3d-desktop-bottom-button",
+  hideWhenActive = false,
+}: {
+  className?: string;
+  hideWhenActive?: boolean;
+}): JSX.Element | null {
   const state = useSyncExternalStore(subscribeWebXr, getWebXrState, getWebXrState);
-  if (!state.host) return null;
+  if (!state.host || (hideWhenActive && state.active)) return null;
   return <button type="button" className={className} disabled={!state.available || state.busy}
     aria-pressed={state.active} onClick={() => { void toggleWebXr(); }}>
     {state.busy ? "Opening VR…" : state.active ? "Exit VR" : "Enter VR"}

@@ -19,7 +19,8 @@ class GameUiPanels {
     QuadPtr quad;
     vrb::TextureSurfacePtr texture;
     int32_t textureWidth = 0, textureHeight = 0;
-    vrb::Matrix pose;
+    vrb::Matrix pose, base, local;
+    int group = -1;
     float width = 1, height = 1;
     bool masked = false;
     std::array<float, 10> maskKey{};
@@ -35,13 +36,12 @@ class GameUiPanels {
   bool hasModal = false;
   std::array<float, 4> modal{};
   bool firstPerson = false;
-  vrb::Matrix actionHud;
-  vrb::Vector actionViewer;
-  float actionY = -0.85f, actionDepth = 0;
-  int gripOwner = -1;
+  vrb::Vector viewerPosition;
+  std::unordered_map<int, vrb::Vector> placements;
+  int gripOwner = -1, gripGroup = -1;
   vrb::Matrix gripInverse;
-  vrb::Vector gripStart;
-  float gripStartY = 0, gripStartDepth = 0;
+  vrb::Vector gripStart, gripPlacement;
+  std::vector<float> hitState;
  public:
   explicit GameUiPanels(vrb::CreationContextPtr value) : context(value) {}
   bool Owns(const WidgetPtr& widget) const { return window == widget && !panes.empty(); }
@@ -57,8 +57,9 @@ class GameUiPanels {
     const float worldScale = state[10] == 1 ? 1 : state[19];
     const float extent = state[18] * worldScale;
     const float scale = 1; // UI dimensions are independent of game-world scale.
-    firstPerson = state[10] == 1; actionHud = hud; actionViewer = viewer;
-    if (!firstPerson) gripOwner = -1;
+    const bool nextFirstPerson = state[10] == 1;
+    if (firstPerson != nextFirstPerson) { gripOwner = -1; gripGroup = -1; }
+    firstPerson = nextFirstPerson; viewerPosition = viewer; hitState = state;
     hasModal = false;
     for (size_t i = start; i < state.size(); i += 5) if (int(state[i]) == 4) {
       hasModal = true; modal = {state[i+1], state[i+2], state[i+3], state[i+4]};
@@ -85,7 +86,7 @@ class GameUiPanels {
         p.quad->SetTextureRect(device::EyeRect(crop[0], crop[1], crop[2]-crop[0], crop[3]-crop[1]));
       }
       p.id = int(state[at]);
-      if (p.id == 2 && firstPerson) p.pose = ActionPose();
+      if (p.id == 2 && firstPerson) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0,-0.85f,0)));
       else if (p.id >= 7) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
           3.0f * ((crop[0] + crop[2]) / 2 - 0.5f),
           3.0f * float(textureHeight) / textureWidth * (0.5f - (crop[1] + crop[3]) / 2), 0)));
@@ -111,16 +112,31 @@ class GameUiPanels {
               .PostMultiply(vrb::Matrix::Translation(vrb::Vector(0,height/2,0)));
         }
       }
-      p.quad->GetTransformNode()->SetTransform(p.pose);
-      p.quad->GetRenderState()->SetTintColor(p.id == 2 && gripOwner >= 0 ? vrb::Color(.65f,1,1,1) : vrb::Color(1,1,1,1));
+      // Source HUD slices are one logical pane, not four independently tilted fragments.
+      const bool hudSlice = p.id >= 7 && p.id <= 10;
+      p.group = (firstPerson ? 16 : 0) + (hudSlice ? 7 : p.id);
+      const auto yaw = firstPerson ? hud : vrb::Matrix::Rotation(vrb::Vector(0,1,0), state[17]);
+      p.base = yaw.Translate(-yaw.GetTranslation());
+      p.base = vrb::Matrix::Translation(hudSlice ? hud.GetTranslation() : p.pose.GetTranslation()).PostMultiply(p.base);
+      p.local = hudSlice ? hud.AfineInverse().PostMultiply(p.pose) : vrb::Matrix::Identity();
+      if (p.id == 4 && state[20] == 1) {
+        p.base = vrb::Matrix::Translation(center.GetTranslation()).PostMultiply(yaw.Translate(-yaw.GetTranslation()));
+        p.local = vrb::Matrix::Translation(vrb::Vector(0,height/2,0));
+      }
+      UpdatePose(p);
       UpdateMask(p);
     }
   }
  private:
-  vrb::Matrix ActionPose() const {
-    const auto pose = actionHud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0,actionY,actionDepth)));
-    const auto toward = pose.AfineInverse().MultiplyPosition(actionViewer);
-    return pose.PostMultiply(vrb::Matrix::Rotation(vrb::Vector(1,0,0), -std::atan2(toward.y(), std::fabs(toward.z()))));
+  void UpdatePose(Pane& p) {
+    const auto placement = placements.find(p.group);
+    const auto offset = placement == placements.end() ? vrb::Vector(0,0,0) : placement->second;
+    const auto anchor = p.base.PostMultiply(vrb::Matrix::Translation(offset));
+    const auto toward = anchor.AfineInverse().MultiplyPosition(viewerPosition);
+    const float pitch = -std::atan2(toward.y(), std::max(.001f, std::fabs(toward.z())));
+    p.pose = anchor.PostMultiply(vrb::Matrix::Rotation(vrb::Vector(1,0,0), pitch)).PostMultiply(p.local);
+    p.quad->GetTransformNode()->SetTransform(p.pose);
+    p.quad->GetRenderState()->SetTintColor(p.group == gripGroup && gripOwner >= 0 ? vrb::Color(.65f,1,1,1) : vrb::Color(1,1,1,1));
   }
   void UpdateMask(Pane& p) {
     const float l = std::max(p.crop[0], modal[0]), t = std::max(p.crop[1], modal[1]);
@@ -152,28 +168,41 @@ class GameUiPanels {
       p.pose.PostMultiply(vrb::Matrix::Translation(vrb::Vector(piece.x,piece.y,0))));
   }
  public:
-  void EndGrip(int controller) { if (gripOwner == controller) gripOwner = -1; }
+  void EndGrip(int controller) { if (gripOwner == controller) { gripOwner = -1; gripGroup = -1; } }
   bool Grip(int controller, bool pressed, bool wasPressed, const vrb::Vector& hand,
             const vrb::Vector& rayOrigin, const vrb::Vector& rayDirection) {
-    if (!pressed || !firstPerson || hasModal) { EndGrip(controller); return false; }
-    auto it = std::find_if(panes.begin(),panes.end(),[](const Pane& p){ return p.id == 2; });
-    if (it == panes.end()) { EndGrip(controller); return false; }
-    auto& p = *it;
+    if (!pressed) { EndGrip(controller); return false; }
     if (gripOwner < 0 && !wasPressed) {
-      const auto inverse = p.pose.AfineInverse();
-      const auto o = inverse.MultiplyPosition(rayOrigin), d = inverse.MultiplyDirection(rayDirection);
-      if (std::fabs(d.z()) < .00001f) return false;
-      const float t = -o.z()/d.z(); const auto hit = o + d*t;
-      if (t < 0 || std::fabs(hit.x()) > p.width/2 || std::fabs(hit.y()) > p.height/2) return false;
-      gripOwner = controller; gripInverse = actionHud.AfineInverse(); gripStart = gripInverse.MultiplyPosition(hand);
-      gripStartY = actionY; gripStartDepth = actionDepth;
+      vrb::Vector point, normal; float distance;
+      bool found = Hit(controller, false, rayOrigin, rayDirection, hitState, point, normal, distance);
+      int id = found ? selected[controller] : -1;
+      // Grip may grab a non-clickable log or pane padding; ordinary laser hits
+      // still use only the interactive regions and pass through empty space.
+      for (const auto& p : panes) {
+        if (p.id >= 7 && p.id <= 10) continue;
+        if (id == 4 && p.id != 4) continue;
+        const auto inverse = p.pose.AfineInverse();
+        const auto o = inverse.MultiplyPosition(rayOrigin), d = inverse.MultiplyDirection(rayDirection);
+        if (std::fabs(d.z()) < .00001f) continue;
+        const float t = -o.z()/d.z(); const auto hit = o+d*t;
+        if (t < 0 || std::fabs(hit.x()) > p.width/2 || std::fabs(hit.y()) > p.height/2) continue;
+        const float length = (p.pose.MultiplyPosition(hit)-rayOrigin).Magnitude();
+        if (length < distance || p.id == 4) { found = true; id = p.id; distance = length; }
+      }
+      if (!found) return false;
+      auto it = std::find_if(panes.begin(), panes.end(), [id](const Pane& p){ return p.id == id; });
+      if (it == panes.end()) return false;
+      gripOwner = controller; gripGroup = it->group;
+      gripInverse = it->base.AfineInverse(); gripStart = gripInverse.MultiplyPosition(hand);
+      gripPlacement = placements.count(gripGroup) ? placements[gripGroup] : vrb::Vector(0,0,0);
     }
     if (gripOwner != controller) return false;
+    if (std::none_of(panes.begin(),panes.end(),[this](const Pane& p){ return p.group == gripGroup; })) { EndGrip(controller); return false; }
     const auto delta = gripInverse.MultiplyPosition(hand) - gripStart;
-    actionY = std::max(-2.0f,std::min(0.6f,gripStartY + delta.y()));
-    actionDepth = std::max(-1.5f,std::min(0.6f,gripStartDepth + delta.z()));
-    p.pose = ActionPose();
-    p.quad->GetTransformNode()->SetTransform(p.pose); UpdateMask(p);
+    placements[gripGroup] = vrb::Vector(0,
+        std::max(-2.0f,std::min(2.0f,gripPlacement.y()+delta.y())),
+        std::max(-2.0f,std::min(1.0f,gripPlacement.z()+delta.z())));
+    for (auto& p : panes) if (p.group == gripGroup) { UpdatePose(p); UpdateMask(p); }
     return true;
   }
   bool Hit(int controller, bool captured, const vrb::Vector& origin, const vrb::Vector& direction,

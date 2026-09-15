@@ -10,6 +10,7 @@ function mouseFixture() {
   const farLook = vi.fn(() => false);
   const dependencies = {
     engineState: { session: {} },
+    audioHapticsPlatform: { resumeFmodFromUserGesture: vi.fn() },
     promptDialogs: { isUiInputBlocked: () => false, isAnyModalVisible: () => false },
     questionMenus: { isInQuestion: false }, directionPrompts: { isInDirectionQuestion: false },
     extendedCommands: { metaCommandModeActive: false },
@@ -45,7 +46,8 @@ describe("native Quest map ray input", () => {
     const f = mouseFixture();
     expect(f.mouse.activateQuestTile(12, 8)).toBe(true);
     expect(f.events).toEqual(["direction", "target", "submit"]);
-    expect(f.sendMouseInput).toHaveBeenCalledExactlyOnceWith(12, 8, 0);
+    expect(f.sendMouseInput).toHaveBeenCalledExactlyOnceWith(12, 8, 0, { allowFpsMovement: true });
+    expect(f.dependencies.audioHapticsPlatform.resumeFmodFromUserGesture).toHaveBeenCalledOnce();
     expect(f.dependencies.movementInput.lastMovementInputAtMs).toBeGreaterThan(0);
   });
 

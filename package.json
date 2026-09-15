@@ -10,8 +10,8 @@
     "quest:dev": "npm run ensure:rollup-native && cross-env VITE_DEPLOY_TARGET=quest vite --host 127.0.0.1",
     "quest:stage": "node scripts/quest/stage-assets.mjs",
     "quest:sync": "npm run build:quest && npm run quest:stage",
-    "quest:apk": "BuildQuestApk.bat",
-    "quest:test": "node --test scripts/quest/stage-assets.test.mjs",
+    "quest:apk": "node scripts/quest/build-apk.mjs --legacy",
+    "quest:test": "node --test scripts/quest/stage-assets.test.mjs scripts/quest/build-environment.test.mjs",
     "quest:wired": "node scripts/quest/wired/launch.mjs",
     "quest:wired:test": "node --test scripts/quest/wired/*.test.mjs",
     "build:electron": "npm run ensure:rollup-native && cross-env BUILD_TARGET=electron VITE_DEPLOY_TARGET=electron vite build",
@@ -52,7 +52,8 @@
     "quest:webxr:wired": "node scripts/quest/webxr/wired-host.mjs",
     "quest:webxr:check": "node scripts/quest/webxr/prepare-gecko-runtime.mjs --check",
     "quest:webxr:prepare": "node scripts/quest/webxr/prepare-gecko-runtime.mjs",
-    "quest:webxr:apk": "BuildQuestWebXrApk.bat"
+    "quest:webxr:publish-apk": "node scripts/quest/webxr/publish-apk.mjs",
+    "quest:webxr:apk": "node scripts/quest/build-apk.mjs"
   },
   "keywords": [],
   "author": "",

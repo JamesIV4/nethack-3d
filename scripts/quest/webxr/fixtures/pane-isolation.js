@@ -6,4 +6,10 @@ const panes=tableUiPanes(false),modal=panes.find(p=>p[0]===4),action=panes.find(
 assert(modal&&action&&controls,'all panes present');assert(modal[4]<action[2],'modal and actions separate');assert(action[4]<controls[2],'actions and scale separate');
 const button=document.querySelector('.nh3d-inventory-drop-type-menu button').getBoundingClientRect();assert(Math.abs(button.width-50)<1,'drop submenu half scale');
 const c=document.querySelector('.nh3d-xr-table-controls').getBoundingClientRect();assert(c.width<240,'scale container fits icons');
-console.log(panes);window.probePromise=Promise.resolve({panes,dropButtonWidth:button.width,scaleWidth:c.width});
+const modalNode=document.querySelector('.nh3d-dialog');
+modalNode.innerHTML=Array.from({length:600},(_,i)=>`<label>Option ${i}<button>Change</button><input type="checkbox"></label>`).join('');
+const originalStyle=window.getComputedStyle;let styleReads=0;
+window.getComputedStyle=(...args)=>{styleReads++;return originalStyle(...args)};
+try { tableUiPanes(false); } finally { window.getComputedStyle=originalStyle; }
+assert(styleReads<180,'modal measurement should not read styles for every covered control');
+window.probePromise=Promise.resolve({panes,dropButtonWidth:button.width,scaleWidth:c.width,largeModalStyleReads:styleReads});

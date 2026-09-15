@@ -6,16 +6,16 @@ Version `0.3.6-table-ui` splits the live HTML surface into tabletop edge panes: 
 
 ## Build the standalone APK
 
-After the patched browser runtime has been built once:
+The APK orchestration uses Node on Windows, macOS, and Linux. The separate patched-Gecko source build still uses Linux/WSL; stage its artifacts before building the APK. After those artifacts have been built once:
 
-```powershell
-npm.cmd run quest:webxr:check
-npm.cmd run quest:webxr:apk
+```sh
+npm run quest:webxr:apk -- --check
+npm run quest:webxr:apk
 ```
 
-Sideload `quest/build/outputs/apk/nethack3d-webxr-proof-debug.apk` with Meta Quest Developer Hub. The build verifies its package ID, version, bundled NetHack runtimes, required Gecko permissions, and the custom HTML painting code and preference before copying it to that location. `quest:apk` still builds the earlier Meta Spatial experiment.
+Sideload `quest/build/outputs/apk/nethack3d-webxr-proof-debug.apk` with Meta Quest Developer Hub. The build verifies its package ID, version, bundled NetHack runtimes, required Gecko permissions, and the custom HTML painting code and preference before copying it to that location. `quest:apk` still builds the earlier Meta Spatial experiment. Both commands use `scripts/quest/build-apk.mjs`; the `.bat` files are optional Windows shortcuts with no build logic. The Node runner invokes the pinned Gradle wrapper through Java directly, without a platform-specific shell.
 
-The current versioned copy is `quest/build/outputs/apk/nethack3d-webxr-0.3.6-table-ui-debug.apk`. The publisher verifies that `libxul.so` matches the staged custom Gecko binary byte for byte and prints the APK's SHA256 on every build. Sideload this copy with Meta Quest Developer Hub.
+The build also produces a versioned copy in `quest/build/outputs/apk/`. The publisher verifies that `libxul.so` matches the staged custom Gecko binary byte for byte and prints the APK's SHA256 on every build. Sideload this copy with Meta Quest Developer Hub.
 
 The package ID is `com.nethack3d.quest.webxrproof`, separate from the earlier app and its saves. The host serves only its bundled assets at `http://127.0.0.1:18973`. It does not depend on Quest Browser or a remote game server. A cold launch and game creation in airplane mode remain acceptance checks.
 
@@ -23,8 +23,8 @@ The app defaults to VR after starting or resuming a game. It uses that normal us
 
 ### Prerequisites
 
-- Android SDK, normally `%LOCALAPPDATA%\Android\Sdk`; `ANDROID_SDK_ROOT` overrides it.
-- Android Studio's bundled JDK 21, or `JAVA_HOME`.
+- Android SDK: `ANDROID_SDK_ROOT` or `ANDROID_HOME`, then the runtime checkout's `local.properties`. Default discovery checks `%LOCALAPPDATA%/Android/Sdk` on Windows, `~/Library/Android/sdk` on macOS, and `~/Android/Sdk` or `~/Android/sdk` on Linux.
+- A compatible JDK (JDK 21 for this runtime). Set `JAVA_HOME`, use Android Studio's bundled JDK at a conventional install location, or supply `java` on PATH. Configure Gradle JVM options in `gradle.properties`.
 - Meta Platform SDK at `quest/runtime/OVRPlatformSDK`, or `QUEST_OVR_PLATFORM_SDK`. It must contain `Include/OVR_Platform.h` and `Android/libs/arm64-v8a/libovrplatformloader.so`.
 - Patched GeckoView at `quest/runtime/gecko`, or `QUEST_GECKO_DIR`. A stock Maven AAR stops HTML painting during immersive VR and cannot be substituted.
 
@@ -53,7 +53,7 @@ Build and packaging logs are in the source's `artifacts/nh3d-build.log` and `art
 
 `patch-gecko-paint.py` changes the [refresh driver's immersive paint guard](https://github.com/mozilla-firefox/firefox/blob/dc6d11938934f4490158a1334dda9d143dffab46/layout/base/nsRefreshDriver.cpp#L2628) to honor `dom.vr.webxr.paint-document`. The preference defaults to false in Gecko and is enabled only in this dedicated host's configuration. The host also keeps its page compositor active and retains the wake-lock and foreground-service permissions required by Gecko's lifecycle callbacks.
 
-The older Chromium preparation scripts remain an alternative experiment. They are not used by `BuildQuestWebXrApk.bat`.
+The older Chromium preparation scripts remain an alternative experiment. They are not used by `npm run quest:webxr:apk`.
 
 ## Test with a wired headset
 

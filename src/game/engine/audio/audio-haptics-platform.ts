@@ -608,10 +608,11 @@ export class AudioHapticsPlatform {
     x: number,
     y: number,
     button: number,
+    allowFpsMovement = false,
   ): boolean {
     if (
       button !== 0 ||
-      this.dependencies.movementInput.isFpsMode() ||
+      (this.dependencies.movementInput.isFpsMode() && !allowFpsMovement) ||
       !this.canArmPendingPlayerFootstepSound()
     ) {
       return false;

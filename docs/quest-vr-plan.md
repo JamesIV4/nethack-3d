@@ -67,7 +67,7 @@ For PC-rendered testing through a USB headset, use the [wired development workfl
 
 The native project pins SDK 0.13.2 from Meta's official current sample rather than mixing sample code with a newer documentation version. Its Android API baseline is 34. Use Android Studio with API 34 installed and Java 17 or a compatible newer JDK. The existing Gradle wrapper is shared only as a launcher; `-p quest` selects the independent project. [Sample versions](https://github.com/meta-quest/Meta-Spatial-SDK-Samples/blob/main/StarterSample/gradle/libs.versions.toml), [sample build](https://github.com/meta-quest/Meta-Spatial-SDK-Samples/blob/main/StarterSample/app/build.gradle.kts).
 
-For a single Windows command, run `npm.cmd run quest:apk` (or `./BuildQuestApk.bat`) from the repository root. It runs the web build/staging and Gradle assembly in order, stops on failure, and prints the sideloadable `quest/app/build/outputs/apk/debug/app-debug.apk` path. Sideload that debug APK with Meta Quest Developer Hub.
+For a platform-independent command, run `npm run quest:apk` from the repository root. It runs the web build/staging and Gradle assembly in order, stops on failure, and prints the sideloadable `quest/app/build/outputs/apk/debug/app-debug.apk` path. Sideload that debug APK with Meta Quest Developer Hub.
 
 The individual steps from the repository root on Windows are:
 

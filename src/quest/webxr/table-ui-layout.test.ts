@@ -20,7 +20,7 @@ afterEach(() => vi.unstubAllGlobals());
 it("keeps all four edge crops unchanged while quick actions open and close", () => {
   const f = fixture(), edges = tableUiPanes(false, []);
   f.add(".nh3d-context-menu", 600, 300, 400, 400);
-  expect(tableUiPanes(false, [])).toEqual([...edges, [4, 0.375, 0.3, 0.625, 0.7]]);
+  expect(tableUiPanes(false, [])).toEqual([...edges, [4, 0.3725, 0.296, 0.6275, 0.704]]);
   f.nodes.delete(".nh3d-context-menu");
   expect(tableUiPanes(false, [])).toEqual(edges);
 });
@@ -33,7 +33,7 @@ it("refreshes a resized modal crop without changing the edge crops", () => {
   f.add(".nh3d-dialog", 500, 200, 600, 500);
   expect(tableUiPanes(false, []).slice(0, 4)).toEqual(edges);
   f.add(".nh3d-dialog", 500, 150, 600, 600);
-  expect(tableUiPanes(false, [])).toEqual([...edges, [4, .3125, .15, .6875, .75]]);
+  expect(tableUiPanes(false, [])).toEqual([...edges, [4, .31, .146, .69, .754]]);
 });
 it("retains the single world-anchored HUD in first-person mode", () => {
   const f=fixture(); f.nodes.delete(".nh3d-mobile-bottom-bar"); f.nodes.delete(".nh3d-desktop-bottom-actions");
@@ -42,7 +42,7 @@ it("retains the single world-anchored HUD in first-person mode", () => {
 it("cuts a first-person modal out of the HUD rather than duplicating it at full size", () => {
   const f = fixture(); f.nodes.delete(".nh3d-mobile-bottom-bar"); f.nodes.delete(".nh3d-desktop-bottom-actions"); f.add(".nh3d-dialog", 400, 200, 800, 600);
   const panes = tableUiPanes(true, []), modal = panes.find(p => p[0] === 4)!;
-  expect(modal).toEqual([4, .25, .2, .75, .8]);
+  expect(modal).toEqual([4, .2475, .196, .7525, .804]);
   for (const p of panes.filter(p => p[0] !== 4)) {
     expect(Math.min(p[3], modal[3]) <= Math.max(p[1], modal[1]) || Math.min(p[4], modal[4]) <= Math.max(p[2], modal[2])).toBe(true);
   }
@@ -53,14 +53,14 @@ it("assigns separate panes to the minimap, actions, and table controls", () => {
   f.add(".nh3d-minimap", 1300, 0, 300, 80);
   f.add(".nh3d-xr-table-controls", 600, 800, 400, 100);
   const panes = tableUiPanes(false, []);
-  expect(panes.find(p => p[0] === 2)).toEqual([2, .8125, .1, 1, .8]);
+  expect(panes.find(p => p[0] === 2)).toEqual([2, .81, .096, 1, .804]);
   expect(panes.find(p => p[0] === 5)).toEqual([5, .8125, 0, 1, .08]);
   expect(panes.find(p => p[0] === 6)).toEqual([6, .375, .8, .625, .9]);
 });
 it("separates first-person actions from the upper HUD without painting a second copy", () => {
   const f=fixture(); f.nodes.delete(".nh3d-desktop-bottom-actions");
   const panes=tableUiPanes(true, []), actions=panes.find(p=>p[0]===2)!;
-  expect(actions).toEqual([2,.8125,.1,1,.8]);
+  expect(actions).toEqual([2,.81,.096,1,.804]);
   for(const p of panes.filter(p=>p[0]>=7)) expect(
     Math.min(p[3],actions[3])<=Math.max(p[1],actions[1]) || Math.min(p[4],actions[4])<=Math.max(p[2],actions[2])
   ).toBe(true);
