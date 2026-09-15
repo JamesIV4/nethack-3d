@@ -81,7 +81,7 @@ The following helpers support those feature owners:
 | Change action-wheel geometry | [controller/action-wheel.ts](app/controller/action-wheel.ts) | Shared slice ordering, label positions and selected index |
 | Change mobile or wizard command catalogs | [menus/mobile-actions.ts](app/menus/mobile-actions.ts), [menus/extended-commands.ts](app/menus/extended-commands.ts) | Runtime command capability checks |
 | Resolve a menu item's tile | [tilesets/menu-glyphs.ts](app/tilesets/menu-glyphs.ts) | Explicit runtime tile/non-tile decisions; do not replace live metadata with catalog guesses |
-| Preview atlas tiles or edit transparency | [tilesets/atlas.ts](app/tilesets/atlas.ts), [TilesetSolidColorPickerDialog.tsx](app/tilesets/TilesetSolidColorPickerDialog.tsx) | Runtime layout translation, atlas dimensions and pixel sampling |
+| Preview atlas tiles or edit transparency | [tilesets/atlas.ts](app/tilesets/atlas.ts), [TilesetSolidColorPickerDialog.tsx](app/tilesets/TilesetSolidColorPickerDialog.tsx) | Runtime layout translation, independent tile width and height, and pixel sampling |
 | Import or label user tilesets | [tilesets/user-tilesets.ts](app/tilesets/user-tilesets.ts), [tilesets/labels.ts](app/tilesets/labels.ts) | User record identities and layout-version labels |
 | Render update release notes | [UpdateReleaseNotesMarkdown.tsx](app/updates/UpdateReleaseNotesMarkdown.tsx) | Release checks remain in [github-version-checker.ts](../update/github-version-checker.ts) |
 | Diagnose overflow glow or platform bridges | [shared/overflow-glow.ts](app/shared/overflow-glow.ts), [shared/platform.ts](app/shared/platform.ts) | Cleanup, DOM host selection and native bridge contracts |

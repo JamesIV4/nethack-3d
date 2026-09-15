@@ -2,6 +2,7 @@ export type StoredUserTilesetRecord = {
   id: string;
   label: string;
   tileSize: number;
+  tileHeight?: number;
   tileLayoutVersion: StoredUserTilesetTileLayoutVersion;
   fileName: string;
   mimeType: string;
@@ -20,6 +21,7 @@ type SaveUserTilesetInput = {
   id?: string;
   label: string;
   tileSize: number;
+  tileHeight?: number;
   tileLayoutVersion?: StoredUserTilesetTileLayoutVersion;
   fileName?: string;
   file: File | Blob;
@@ -107,6 +109,9 @@ function normalizeStoredRecord(raw: unknown): StoredUserTilesetRecord | null {
     id,
     label,
     tileSize,
+    tileHeight: typeof value.tileHeight === "number" && Number.isFinite(value.tileHeight) && value.tileHeight > 0
+      ? Math.trunc(value.tileHeight)
+      : undefined,
     tileLayoutVersion,
     fileName: String(value.fileName || `${label}.png`).trim() || `${label}.png`,
     mimeType: String(value.mimeType || blob.type || "application/octet-stream"),
@@ -176,6 +181,9 @@ export async function saveStoredUserTileset(
       id,
       label,
       tileSize,
+      tileHeight: typeof input.tileHeight === "number" && Number.isFinite(input.tileHeight) && input.tileHeight > 0
+        ? Math.trunc(input.tileHeight)
+        : tileSize,
       tileLayoutVersion,
       fileName: String(
         input.fileName ||

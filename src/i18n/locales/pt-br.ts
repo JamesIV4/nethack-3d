@@ -755,6 +755,10 @@ export const ptBrOverrides = {
             terminal: "Terminal",
           },
         },
+        tilesetUseTileAspectRatio: {
+          label: "Ajustar blocos à proporção dos tiles",
+          description: "Use blocos 3D retangulares quando os tiles não forem quadrados. Desative para manter blocos quadrados.",
+        },
         tilesetPath: {
           label: "Conjunto de tiles",
           description: "Tilesets internos e enviados.",
@@ -1334,6 +1338,11 @@ export const ptBrOverrides = {
         layout5: "Layout do NetHack 5.0",
         tileLayoutDescription:
           "Escolha o layout de índices de tile usado por este atlas enviado.",
+        tileWidth: "Largura do tile (pixels, automática)",
+        tileHeight: "Altura do tile (pixels)",
+        autoTileHeight: "Automática",
+        tileDimensionsDescription: "A largura usa as 40 colunas da imagem. Deixe a altura em branco para detecção automática ou informe a altura de cada tile para uma proporção personalizada.",
+        invalidTileHeight: "A altura do tile deve ser um número inteiro positivo.",
         tileImage: "Imagem do tileset",
         tileImageOptional: "Imagem do tileset (substituição opcional)",
         selectedFile: (fileName: string) => `Selecionado: ${fileName}`,

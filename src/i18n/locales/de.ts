@@ -758,6 +758,10 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
             terminal: "Terminal",
           },
         },
+        tilesetUseTileAspectRatio: {
+          label: "Blöcke an das Seitenverhältnis der Kacheln anpassen",
+          description: "Verwende rechteckige 3D-Blöcke, wenn Kacheln nicht quadratisch sind. Ausschalten für quadratische Blöcke.",
+        },
         tilesetPath: {
           label: "Tileset",
           description: "Integrierte und hochgeladene Tilesets.",
@@ -1331,6 +1335,11 @@ export const deOverrides: LocaleOverrides<TranslationDictionary> = {
         layout5: "NetHack-5.0-Layout",
         tileLayoutDescription:
           "W\u00e4hle das Tile-Index-Layout, das dieser hochgeladene Atlas verwendet.",
+        tileWidth: "Kachelbreite (Pixel, automatisch)",
+        tileHeight: "Kachelhöhe (Pixel)",
+        autoTileHeight: "Automatisch",
+        tileDimensionsDescription: "Die Breite ergibt sich aus den 40 Bildspalten. Höhe leer lassen für automatische Erkennung oder die Höhe jeder Kachel für ein eigenes Seitenverhältnis eingeben.",
+        invalidTileHeight: "Die Kachelhöhe muss eine positive ganze Zahl sein.",
         tileImage: "Tileset-Bild",
         tileImageOptional: "Tileset-Bild (optionaler Ersatz)",
         selectedFile: (fileName: string) => `Ausgew\u00e4hlt: ${fileName}`,

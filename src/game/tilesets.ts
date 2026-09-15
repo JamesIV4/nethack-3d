@@ -29,6 +29,7 @@ export type Nh3dUserTilesetRegistration = {
   readonly id: string;
   readonly label: string;
   readonly tileSize: number;
+  readonly tileHeight?: number;
   readonly tileLayoutVersion?: Nh3dTilesetTileLayoutVersion;
   readonly blob: Blob;
 };
@@ -50,6 +51,7 @@ const vultureNominalTileSize = 112;
 const tilesetBackgroundTilePresetByLabel: Readonly<Record<string, number>> = {
   "Absurdly Evil": 869,
   DawnHack: 869,
+  DuskHack: 850,
   Nevanda: 1476,
   PixelHack: 2304,
   "Vanilla NetHack TIles": 1476,
@@ -59,6 +61,7 @@ const tilesetBackgroundTilePresetByLabel: Readonly<Record<string, number>> = {
 const tilesetSolidChromaKeyPresetByLabel: Readonly<Record<string, string>> = {
   "Absurdly Evil": "#466d6c",
   DawnHack: "#466d6c",
+  DuskHack: "#000000",
   Nevanda: "#466d6c",
   "Nevanda (5.0)": "#466d6c",
   PixelHack: "#83aba2",
@@ -71,6 +74,10 @@ const tilesetAtlasTileColumnsPresetByPath: Readonly<Record<string, number>> = {
   "assets/slashem/Abigaba.bmp": 38,
   "assets/slashem/Absurd.png": 38,
 };
+const geoduckBackgroundTileByPath: Readonly<Record<string, number>> = {
+  "assets/3.6/Geoduck.bmp": 1476,
+  "assets/5.0/Geoduck.bmp": 2304,
+};
 const tilesetWeaponSpriteFlipXPresetByPath: Readonly<Record<string, boolean>> =
   {};
 
@@ -79,6 +86,8 @@ const tilesetWeaponSpriteFlipXPresetByPath: Readonly<Record<string, boolean>> =
 const tilesetBackgroundRemovalModePresetByPath: Readonly<
   Record<string, Nh3dTilesetBackgroundRemovalMode>
 > = {
+  "assets/3.6/Geoduck.bmp": "tile",
+  "assets/5.0/Geoduck.bmp": "tile",
   "assets/slashem/Absurd.png": "none",
   [builtinPixelHackTilesetPath]: "tile",
   "assets/5.0/Nevanda (5.0).png": "solid",
@@ -86,6 +95,7 @@ const tilesetBackgroundRemovalModePresetByPath: Readonly<
   "assets/3.6/Nevanda.png": "solid",
   "assets/3.6/NetHack Modern.bmp": "solid",
   "assets/3.6/DawnHack.bmp": "tile",
+  "assets/3.6/DuskHack.bmp": "solid",
   "assets/3.6/RZTiles.bmp": "tile",
   "assets/3.6/Absurdly Evil.png": "none",
   "assets/3.6/Vanilla NetHack Tiles.png": "solid",
@@ -185,6 +195,31 @@ export function inferNh3dTilesetTileSizeFromAtlasWidth(width: number): number {
   return inferNh3dTilesetTileSizeFromAtlasWidthForPath(width);
 }
 
+/** Cell dimensions, retaining the established square fallback for unknown sheets. */
+export function inferNh3dTilesetTileDimensions(
+  width: number,
+  height: number,
+  path?: string | null,
+  layoutVersion?: Nh3dTilesetTileLayoutVersion,
+): { tileWidth: number; tileHeight: number } {
+  const tileWidth = inferNh3dTilesetTileSizeFromAtlasWidthForPath(width, path);
+  const entry = findNh3dTilesetByPath(path);
+  if (entry?.tileHeight && entry.tileHeight > 0) {
+    return { tileWidth, tileHeight: Math.max(1, Math.round(entry.tileHeight * tileWidth / entry.tileSize)) };
+  }
+  // The author's 3.6 and 5.0 Geoduck sheets (including integer upscales).
+  // An arbitrary atlas does not uniquely determine its row height, so do not
+  // reinterpret other existing square sheets based on divisibility alone.
+  const layout = layoutVersion ?? entry?.tileLayoutVersion;
+  const rows = layout === "5.0" ? [60] : layout === "3.6.7" ? [39] : [39, 60];
+  const scale = tileWidth / 15;
+  if (Number.isInteger(scale) && scale >= 1 &&
+      width === tileWidth * 40 && rows.some(count => height === count * 25 * scale)) {
+    return { tileWidth, tileHeight: 25 * scale };
+  }
+  return { tileWidth, tileHeight: tileWidth };
+}
+
 export function getNh3dTilesetAtlasTileColumns(
   path: string | null | undefined,
 ): number {
@@ -265,6 +300,7 @@ for (const rawEntry of GENERATED_TILESET_MANIFEST) {
     path,
     label: label || path,
     tileSize,
+    tileHeight: rawEntry.tileHeight,
     source: "builtin",
     assetUrl: path,
     tileLayoutVersion,
@@ -370,6 +406,7 @@ export function setNh3dUserTilesets(
       path,
       label,
       tileSize,
+      tileHeight: registration.tileHeight,
       source: "user",
       assetUrl,
       tileLayoutVersion,
@@ -580,6 +617,8 @@ export function resolveDefaultNh3dTilesetBackgroundTileId(
   if (!tileset) {
     return fallbackBackgroundTileId;
   }
+  const geoduckReference = geoduckBackgroundTileByPath[tileset.path];
+  if (geoduckReference !== undefined) return geoduckReference;
   const presetLookupLabel = normalizeTilesetPresetLookupLabel(tileset.label);
   const presetByLabel =
     tileset.source === "builtin"
@@ -642,11 +681,12 @@ export function isNh3dTilesetCombinedBackgroundRemovalForced(
     builtinPixelHackTilesetPath;
 }
 
-// PixelHack uses flat, indexed colors, so the reference-tile removal pass must
+// PixelHack and Geoduck use flat colors, so the reference-tile removal pass must
 // match colors exactly (no tolerance/feathering) to avoid eroding sprite edges.
 export function isNh3dTilesetExactBackgroundRemovalForced(
   path: string | null | undefined,
 ): boolean {
-  return String(findNh3dTilesetByPath(path)?.path || "").trim() ===
-    builtinPixelHackTilesetPath;
+  const tilesetPath = String(findNh3dTilesetByPath(path)?.path || "").trim();
+  return tilesetPath === builtinPixelHackTilesetPath ||
+    geoduckBackgroundTileByPath[tilesetPath] !== undefined;
 }

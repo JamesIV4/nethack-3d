@@ -74,8 +74,10 @@ Launch it from your Home Screen for a web app fullscreen experience.
 - Terminal mode renders the active runtime's exact glyphs, colors, symbol set, and tty highlighting in a sharp, zoomable grid with a dedicated message-log gutter.
 - Native pet, item-pile, and standout highlighting is supported, including an overhead heart marker for pets.
 - Optional smooth creature movement in Tiles and 3D ASCII modes; Terminal mode keeps authentic immediate cell updates.
-- Built-in graphical tilesets: Vulture tiles, Absurdly Evil, DawnHack, NetHack Modern, Nevanda, PixelHack, RZTiles, and Vanilla NetHack Tiles.
+- Built-in graphical tilesets: Vulture tiles, Absurdly Evil, DawnHack, DuskHack, Geoduck, NetHack Modern, Nevanda, PixelHack, RZTiles, and Vanilla NetHack Tiles.
 - Upload and manage your own custom tilesets directly in-game.
+- Geoduck's 15×25 tiles are detected automatically on import, with rectangular tile crops and proportional character sprites.
+- Rectangular tilesets use matching rectangular 3D floor cells by default. Turn off **Match blocks to tile aspect ratio** in Display options for square cells. Custom tilesets can specify their tile height during import.
 - Tileset background removal tools built-in.
 - Dynamic lighting around the player.
 - Full HUD with level, health, power, stats, armor, gold, hunger, experience, time, and dungeon branch and depth.
@@ -177,6 +179,8 @@ For task-to-file maps and ownership rules, start with the [engine guide](src/gam
 
 ## Credits
 
+- DuskHack tiles are by [clownmilk23](https://www.reddit.com/r/nethack/comments/1e3pndu/duskhack_for_nethack_36/), based on initial artwork by DragonDePlatino. See [asset source and attribution](public/assets/DuskHack-CREDITS.txt).
+- Geoduck tiles are by [Robert M. Cook (Geoduck)](http://www.geoduckthings.net/nhack/nhack.html), redistributed with the author's permission and credit. See [asset sources and permission](public/assets/Geoduck-CREDITS.txt).
 - NetHack 3.6.7 to 5.0 tile-order translation logic is adapted from [`horlogeislux/tileto370`](https://github.com/horlogeislux/tileto370) (MIT License).
 
 ## GitHub Pages Deploy

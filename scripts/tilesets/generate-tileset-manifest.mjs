@@ -45,6 +45,11 @@ const tilesetAtlasTileColumnsPresetByPath = {
   "assets/slashem/Absurd.png": 38,
 };
 
+const tilesetTileHeightPresetByPath = {
+  "assets/3.6/Geoduck.bmp": 25,
+  "assets/5.0/Geoduck.bmp": 25,
+};
+
 function inferTileSizeFromFileName(fileName) {
   const name = parse(fileName).name;
   const numericTokens = name.match(/\d{1,3}/g) ?? [];
@@ -224,6 +229,8 @@ function buildManifestSource() {
         label: toDisplayLabel(fileName),
         path: assetPath,
         tileSize: inferTileSizeFromFile(filePath, assetPath),
+        ...(tilesetTileHeightPresetByPath[assetPath]
+          ? { tileHeight: tilesetTileHeightPresetByPath[assetPath] } : {}),
         tileLayoutVersion: source.tileLayoutVersion,
       };
     }),
@@ -239,6 +246,7 @@ export type GeneratedTilesetManifestEntry = {
   readonly label: string;
   readonly path: string;
   readonly tileSize: number;
+  readonly tileHeight?: number;
   readonly tileLayoutVersion: "slashem" | "3.4.3" | "3.6.7" | "5.0";
 };
 

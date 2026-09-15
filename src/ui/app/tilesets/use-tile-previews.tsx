@@ -105,6 +105,8 @@ export function useTilePreviews(dependencies: UseTilePreviewsDependencies) {
         tileAtlasState.tileSourceSize,
         tileAtlasState.columns,
         tileAtlasState.rows,
+        undefined,
+        tileAtlasState.tileSourceHeight,
       );
       if (!dataUrl) {
         continue;
@@ -119,6 +121,7 @@ export function useTilePreviews(dependencies: UseTilePreviewsDependencies) {
     tileAtlasState.rows,
     tileAtlasState.tileCount,
     tileAtlasState.tileSourceSize,
+    tileAtlasState.tileSourceHeight,
   ]);
 
   const tilePreviewDataUrlById = useMemo(() => {
@@ -149,6 +152,7 @@ export function useTilePreviews(dependencies: UseTilePreviewsDependencies) {
             clientOptions.tilesetBackgroundTileId,
             tileAtlasState.columns,
             tileAtlasState.rows,
+            tileAtlasState.tileSourceHeight,
           )
           : null,
     };
@@ -160,6 +164,7 @@ export function useTilePreviews(dependencies: UseTilePreviewsDependencies) {
         tileAtlasState.columns,
         tileAtlasState.rows,
         tilePreviewBackgroundRemoval,
+        tileAtlasState.tileSourceHeight,
       );
       if (!dataUrl) {
         continue;
@@ -179,6 +184,7 @@ export function useTilePreviews(dependencies: UseTilePreviewsDependencies) {
     tileAtlasState.rows,
     tileAtlasState.tileCount,
     tileAtlasState.tileSourceSize,
+    tileAtlasState.tileSourceHeight,
     tilePreviewDataUrlByIdRaw,
   ]);
 

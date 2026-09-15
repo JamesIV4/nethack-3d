@@ -55,6 +55,22 @@ The [world/runtime flow guide](../../../docs/engine-world-runtime.md) traces map
 
 ## Ownership and dependencies
 
+Atlas cell width remains `TilesetAssets.tileSourceSize`; height is
+`tileSourceHeight`. Rectangle-aware sampling, background masks, and legacy
+layout conversion must use both. Square tiles retain identical dimensions.
+Non-Vulture tile sprites preserve the source aspect ratio while the logical
+dungeon grid and movement coordinates remain unchanged.
+
+`tilesetUseTileAspectRatio` defaults on. `RenderPipeline.syncWorldTileScale`
+scales presentation X by `tileSourceSize / tileSourceHeight`, creating rectangular
+floor cells without changing wall height or logical tile coordinates. Camera
+smoothing continues on the logical camera; `getActiveCamera` supplies a separate
+orthonormal presentation camera. World-point picking converts back to logical
+coordinates. Sprites, camera-attached artwork, direction labels and lighting
+compensate at this boundary. XR rigs cancel the parent transform with a full
+matrix; native scene frames carry optional `worldScaleX` (default 1) for picking
+and lighting. Keep runtime input and tile-cache ordering independent of this scale.
+
 Each class owns its fields and resources. For example, `PlayerMovement` owns `playerPos`, `QuestionMenus` owns question selections and counts, and `EngineState` owns client options and lifecycle state. Cross-subsystem state remains shared by reference through declared dependencies; extraction does not make the gameplay domains independent.
 
 `shared/types.ts` describes internal state shapes and `shared/constants.ts` contains shared values/helpers. The external UI/controller contract remains in `src/game/ui-types.ts`; worker command/event envelopes remain in `src/runtime/types.ts`. Changing one contract does not implicitly update the others.

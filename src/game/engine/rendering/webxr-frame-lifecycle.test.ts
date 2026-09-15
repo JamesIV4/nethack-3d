@@ -10,6 +10,7 @@ it("completes the existing first-person step and releases queued tiles before ap
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { callbacks.push(callback); return callbacks.length; });
   const tiles = { pendingTileUpdates: new Map([["2,3", {}]]), tileFlushScheduled: false, flushPendingTileUpdates: vi.fn() };
   const camera = new Camera({
+    tilesetAssets: { getWorldTileScaleX: () => 1 },
     movementInput: { isFpsMode: () => true }, terminalRendering: { isTerminalDisplayMode: () => false },
     playerMovement: { playerPos: { x: 2, y: 3 } },
     positionSelection: { positionInputModeActive: false, isFpsFarLookViewActive: () => false }, tileUpdates: tiles,
@@ -23,7 +24,7 @@ it("completes the existing first-person step and releases queued tiles before ap
     engineState: { disposed: false, lastFrameTimeMs: null, clientOptions: { minimap: false } },
     camera: new Proxy(camera, { get: (o,k) => k in o ? Reflect.get(o,k) : noop }),
     webXrPresentation: { active: true, updateInput: noop, updateCamera: () => { order.push("XR pose"); return true; }, prepareRender: () => camera.camera },
-    renderPipeline: { renderer: { xr: { isPresenting: true }, render: () => order.push("render") }, scene: new THREE.Scene() },
+    renderPipeline: { syncWorldTileScale: () => order.push("world scale"), renderer: { xr: { isPresenting: true }, render: () => order.push("render") }, scene: new THREE.Scene() },
     directionPrompts: { directionPromptOverlay: null, syncDirectionPromptOverlayVisibility: noop },
     playerMovement: { playerPos: { x: 2, y: 3 } },
   }, { get: (o,k) => Reflect.get(o,k) ?? new Proxy({}, {get: () => noop}) });
@@ -31,7 +32,7 @@ it("completes the existing first-person step and releases queued tiles before ap
   engine.systems = systems; engine.animate(performance.now());
   expect(camera.fpsStepCameraActive).toBe(false);
   expect(tiles.tileFlushScheduled).toBe(true);
-  expect(order).toEqual(["XR pose", "camera lifecycle", "XR pose", "render"]);
+  expect(order).toEqual(["world scale", "XR pose", "camera lifecycle", "XR pose", "render"]);
   callbacks.forEach(callback => callback(performance.now()));
   expect(tiles.flushPendingTileUpdates).toHaveBeenCalledOnce();
 });

@@ -6,7 +6,7 @@ import type {
 } from "../../../game/ui-types";
 import {
   getNh3dTilesetAtlasTileColumns,
-  inferNh3dTilesetTileSizeFromAtlasWidthForPath,
+  inferNh3dTilesetTileDimensions,
   resolveNh3dTilesetAssetUrl,
   type Nh3dTilesetEntry
 } from "../../../game/tilesets";
@@ -66,19 +66,21 @@ export function useTilesetAtlasEffects(dependencies: UseTilesetAtlasEffectsDepen
         return;
       }
       const naturalWidth = Math.max(0, Math.trunc(atlasImage.naturalWidth));
-      const tileSourceSize = inferNh3dTilesetTileSizeFromAtlasWidthForPath(
+      const height = Math.max(0, Math.trunc(atlasImage.naturalHeight));
+      const { tileWidth: tileSourceSize, tileHeight: tileSourceHeight } = inferNh3dTilesetTileDimensions(
         naturalWidth,
+        height,
         selectedTilesetEntry.path,
       );
-      const height = Math.max(0, Math.trunc(atlasImage.naturalHeight));
       const columns = getNh3dTilesetAtlasTileColumns(selectedTilesetEntry.path);
-      const rows = Math.max(0, Math.floor(height / tileSourceSize));
+      const rows = Math.max(0, Math.floor(height / tileSourceHeight));
       const tileCount = columns > 0 && rows > 0 ? columns * rows : 0;
       setTileAtlasState({
         tilesetPath: selectedTilesetEntry.path,
         loaded: tileCount > 0,
         failed: tileCount <= 0,
         tileSourceSize,
+        tileSourceHeight,
         columns,
         rows,
         tileCount,
@@ -138,21 +140,23 @@ export function useTilesetAtlasEffects(dependencies: UseTilesetAtlasEffectsDepen
         return;
       }
       const naturalWidth = Math.max(0, Math.trunc(atlasImage.naturalWidth));
-      const tileSourceSize = inferNh3dTilesetTileSizeFromAtlasWidthForPath(
+      const height = Math.max(0, Math.trunc(atlasImage.naturalHeight));
+      const { tileWidth: tileSourceSize, tileHeight: tileSourceHeight } = inferNh3dTilesetTileDimensions(
         naturalWidth,
+        height,
         selectedTilesetManagerEditEntry.path,
       );
-      const height = Math.max(0, Math.trunc(atlasImage.naturalHeight));
       const columns = getNh3dTilesetAtlasTileColumns(
         selectedTilesetManagerEditEntry.path,
       );
-      const rows = Math.max(0, Math.floor(height / tileSourceSize));
+      const rows = Math.max(0, Math.floor(height / tileSourceHeight));
       const tileCount = columns > 0 && rows > 0 ? columns * rows : 0;
       setTilesetManagerAtlasState({
         tilesetPath: selectedTilesetManagerEditEntry.path,
         loaded: tileCount > 0,
         failed: tileCount <= 0,
         tileSourceSize,
+        tileSourceHeight,
         columns,
         rows,
         tileCount,

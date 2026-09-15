@@ -53,6 +53,7 @@ export interface PointerTargetingDependencies {
   readonly tilesetAssets: Pick<
     TilesetAssets,
     "shouldUseVultureTiles"
+    | "getWorldTileScaleX"
   >;
 }
 
@@ -382,7 +383,7 @@ export class PointerTargeting {
       wallTileTarget.x,
       wallTileTarget.y,
       {
-        worldX: params.intersection.point.x,
+        worldX: params.intersection.point.x / this.dependencies.tilesetAssets.getWorldTileScaleX(),
         worldY: params.intersection.point.y,
       },
     );
@@ -578,7 +579,7 @@ export class PointerTargeting {
     }
 
     return {
-      x: this.pointerIntersection.x / TILE_SIZE,
+      x: this.pointerIntersection.x / (TILE_SIZE * this.dependencies.tilesetAssets.getWorldTileScaleX()),
       y: -this.pointerIntersection.y / TILE_SIZE,
     };
   }

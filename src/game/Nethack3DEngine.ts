@@ -454,6 +454,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const fpsHeldWeaponSpriteFlipXChanged =
       previous.fpsHeldWeaponSpriteFlipX !== normalized.fpsHeldWeaponSpriteFlipX;
     const tilesetModeChanged = previous.tilesetMode !== normalized.tilesetMode;
+    const tilesetAspectChanged = previous.tilesetUseTileAspectRatio !== normalized.tilesetUseTileAspectRatio;
     const animatedMovementChanged =
       previous.animatedMovement !== normalized.animatedMovement;
     const asciiColorModeChanged =
@@ -472,6 +473,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       previous.snapCameraYawToNearest45 !== normalized.snapCameraYawToNearest45;
 
     this.systems.engineState.clientOptions = normalized;
+    this.systems.renderPipeline.syncWorldTileScale();
     this.systems.lighting.vignetteUniforms.uBloodGroundStrength.value =
       normalized.bloodStrength;
     if (cameraYawSnapChanged && !normalized.snapCameraYawToNearest45) {
@@ -538,6 +540,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         this.systems.tilesetAssets.loadedTilesetSourceAtlasImage ??
           this.systems.tilesetAssets.resolveTilesetAtlasImageSource(),
         this.systems.tilesetAssets.tileSourceSize,
+        this.systems.tilesetAssets.tileSourceHeight,
       );
     }
     if (
@@ -574,7 +577,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.systems.tilesetAssets.invalidateTilesetDependentCaches();
       this.systems.tileUpdates.refreshTilesFromStateCache();
     }
-    if (fpsFlattenEntityBillboardsChanged && !tilesetModeChanged) {
+    if ((fpsFlattenEntityBillboardsChanged || tilesetAspectChanged) && !tilesetModeChanged) {
       this.systems.tileUpdates.refreshTilesFromStateCache();
     }
     if (showItemsUnderPlayerInOverheadTilesModeChanged) {
@@ -1691,6 +1694,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     const deltaSeconds = Math.max(0, Math.min(rawDeltaMs, 250)) / 1000;
 
     this.systems.questSceneExport.syncPlayMode();
+    this.systems.renderPipeline.syncWorldTileScale();
     this.systems.webXrPresentation.updateCamera();
     this.systems.webXrPresentation.updateInput(timeMs);
     this.systems.pointerLock.syncFpsPointerLockForUiState(false);
@@ -1708,6 +1712,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.systems.camera.getActiveCamera(),
       this.systems.playerMovement.playerPos.x,
       this.systems.playerMovement.playerPos.y,
+      this.systems.tilesetAssets.getWorldTileScaleX(),
     );
     this.systems.lighting.updateFpsPlayerLightPosition();
     this.systems.tileContextActions.updateFpsCrosshairContextMenu();
@@ -1753,6 +1758,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
     if (this.systems.renderPipeline.composer) {
+      this.systems.renderPipeline.syncPresentationCamera();
       this.systems.renderPipeline.updateTaaState();
       this.systems.renderPipeline.composer.render(deltaSeconds);
       if (shouldCollectFpsDebugStats) {
@@ -1763,7 +1769,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       }
       return;
     }
-    this.systems.renderPipeline.renderer.render(this.systems.renderPipeline.scene, this.systems.camera.camera);
+    this.systems.renderPipeline.renderer.render(this.systems.renderPipeline.scene, this.systems.camera.getActiveCamera());
     if (shouldCollectFpsDebugStats) {
       this.systems.fpsDiagnostics.updateFpsDebugDisplay(
         rawDeltaMs,

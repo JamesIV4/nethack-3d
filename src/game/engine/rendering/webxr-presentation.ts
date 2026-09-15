@@ -41,6 +41,9 @@ export class WebXrPresentation {
   private readonly orientation = new THREE.Quaternion();
   private readonly forward = new THREE.Vector3();
   private readonly headPosition = new THREE.Vector3();
+  private readonly sceneInverse = new THREE.Matrix4();
+  private readonly cameraBasis = new THREE.Matrix4();
+  private readonly logicalUp = new THREE.Vector3();
   private readonly uiFollow = new LaggingUiAnchor();
   private uiFirstPerson = false;
   private uiRecenter = true;
@@ -70,6 +73,9 @@ export class WebXrPresentation {
 
   constructor(private readonly dependencies: WebXrPresentationDependencies) {
     this.trackingRoot.name = "WebXR tracking space";
+    // The inverse of a scaled parent combined with a rotated rig can contain
+    // shear. Keep its exact matrix instead of decomposing it into local TRS.
+    this.trackingRoot.matrixAutoUpdate = false;
     this.trackingRoot.add(this.xrCamera, this.board);
     this.board.visible = false;
   }
@@ -245,7 +251,11 @@ export class WebXrPresentation {
       this.needsRecenter = false; this.lastRigKey = "";
     }
     const player = this.dependencies.playerMovement.playerPos;
+    const scene = this.dependencies.renderPipeline.scene;
+    scene.updateWorldMatrix(true, false);
+    this.sceneInverse.copy(scene.matrixWorld).invert();
     this.position.set(player.x * TILE_SIZE, -player.y * TILE_SIZE, 0);
+    this.position.applyMatrix4(scene.matrixWorld);
     const firstPerson = this.dependencies.engineState.playMode === "fps";
     if (firstPerson) {
       const viewer = new THREE.Vector3(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z);
@@ -261,11 +271,11 @@ export class WebXrPresentation {
     this.uiFirstPerson = firstPerson;
     const settings = getXrSettings();
     document.documentElement.classList.toggle("nh3d-xr-first-person", firstPerson);
-    const key = [player.x, player.y, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.area, settings.scale].join(":");
+    const key = [player.x, player.y, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.area, settings.scale, ...scene.matrixWorld.elements].join(":");
     if (key !== this.lastRigKey) {
       const rig = createTrackingToGame(firstPerson ? "first-person" : "tabletop", this.position, this.anchor,
         this.heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.scale);
-      rig.matrix.decompose(this.trackingRoot.position, this.trackingRoot.quaternion, this.trackingRoot.scale);
+      this.trackingRoot.matrix.multiplyMatrices(this.sceneInverse, rig.matrix);
       this.trackingRoot.updateMatrixWorld(true);
       this.board.quaternion.copy(this.heading).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.tilt.pitch));
       this.board.scale.set(settings.area * settings.scale, settings.scale, settings.area * settings.scale);
@@ -279,16 +289,23 @@ export class WebXrPresentation {
       this.lastRigKey = key;
     }
     xr.updateCamera(this.xrCamera);
-    // Existing billboard, light and aim code sees the actual tracked camera in source world coordinates.
+    // Engine aim/billboards use logical coordinates; rendered sprite shaders
+    // and controller rays use the physical scene coordinates.
     const tracked = xr.getCamera();
     const camera = this.dependencies.camera.camera;
     // The stereo union camera shifts backwards along head orientation. It is
     // useful for culling, but is not the viewer's position for billboard facing.
     this.headPosition.set(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z).applyMatrix4(this.trackingRoot.matrixWorld);
-    camera.position.copy(this.headPosition);
+    camera.position.copy(this.headPosition).applyMatrix4(this.sceneInverse);
     this.scaledSprites.setOrigin(this.headPosition);
     this.scaledSprites.setTabletop(!firstPerson);
     tracked.getWorldQuaternion(camera.quaternion);
+    if (scene.scale.x !== 1 || scene.scale.y !== 1 || scene.scale.z !== 1) {
+      this.forward.set(0, 0, -1).applyQuaternion(camera.quaternion).transformDirection(this.sceneInverse);
+      this.logicalUp.set(0, 1, 0).applyQuaternion(camera.quaternion).transformDirection(this.sceneInverse);
+      this.cameraBasis.lookAt(new THREE.Vector3(), this.forward, this.logicalUp);
+      camera.quaternion.setFromRotationMatrix(this.cameraBasis);
+    }
     camera.updateMatrixWorld(true);
     this.forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     if (firstPerson) {

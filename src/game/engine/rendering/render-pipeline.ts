@@ -10,11 +10,13 @@ import type { Camera } from "../camera/camera";
 import type { EngineState } from "../runtime/engine-state";
 import type { HeldWeaponAnimationDebug } from "../diagnostics/held-weapon-animation-debug";
 import type { Minimap } from "../ui/minimap";
+import type { TilesetAssets } from "./tileset-assets";
 
 export interface RenderPipelineDependencies {
   readonly camera: Pick<
     Camera,
     "camera"
+    | "getActiveCamera"
     | "recenterCameraOnPlayerIfNeeded"
   >;
   readonly engineState: Pick<
@@ -31,6 +33,7 @@ export interface RenderPipelineDependencies {
     Minimap,
     "scheduleMinimapActionRailOverlapSync"
   >;
+  readonly tilesetAssets: Pick<TilesetAssets, "getWorldTileScaleX">;
 }
 
 /** Three.js renderer, viewport resolution and antialiasing postprocessing */
@@ -48,6 +51,21 @@ export class RenderPipeline {
   toneAdjustPass: ShaderPass | null = null;
 
   scene!: THREE.Scene;
+  private renderPass: RenderPass | null = null;
+
+  syncWorldTileScale(): void {
+    const scaleX = this.dependencies.tilesetAssets.getWorldTileScaleX();
+    if (this.scene && this.scene.scale.x !== scaleX) {
+      this.scene.scale.x = scaleX;
+      this.scene.updateMatrixWorld(true);
+    }
+  }
+
+  syncPresentationCamera(): void {
+    const camera = this.dependencies.camera.getActiveCamera();
+    if (this.renderPass) this.renderPass.camera = camera;
+    if (this.taaRenderPass) this.taaRenderPass.camera = camera;
+  }
 
   readonly maxRendererPixelRatio: number = 2;
 
@@ -128,20 +146,20 @@ export class RenderPipeline {
     this.fxaaPass = null;
     this.toneAdjustPass = null;
     this.composer = null;
+    this.renderPass = null;
   }
 
   initAntialiasingPipeline(): void {
     this.disposeAntialiasingPipeline();
     const composer = new EffectComposer(this.renderer);
-    composer.addPass(
-      new RenderPass(
+    this.renderPass = new RenderPass(
         this.scene,
         this.dependencies.camera.camera,
         undefined,
         new THREE.Color(0x000000),
         0,
-      ),
-    );
+      );
+    composer.addPass(this.renderPass);
     if (this.dependencies.engineState.clientOptions.antialiasing === "taa") {
       const taaRenderPass = new TAARenderPass(this.scene, this.dependencies.camera.camera);
       taaRenderPass.sampleLevel = this.desktopTaaSampleLevel;

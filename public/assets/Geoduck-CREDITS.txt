@@ -1,0 +1,30 @@
+Geoduck WinHack Tile Set
+Author: Robert M. Cook (Geoduck)
+Official page: http://www.geoduckthings.net/nhack/nhack.html
+Retrieved: 2026-09-15
+Source page copyright notice: 2026 Robert M. Cook.
+
+Redistribution permission
+-------------------------
+The official page's CONTACT INFO section states:
+"I officially give my permission to post the relevant .bmps elsewhere, as long as I get all the credit, fame and glory."
+
+These original BMP files are redistributed with credit under that permission.
+The source page does not name a standard software or Creative Commons license.
+The original author remains responsible for official updates.
+
+Original assets (unchanged bytes)
+--------------------------------
+3.6/Geoduck.bmp
+  Original: http://www.geoduckthings.net/nhack/geoduck25x15-2025.bmp
+  Author-designated target: NetHack 3.6.7 / recent pre-5.0 versions
+  Image: 600 x 975 pixels; cells: 15 wide x 25 high; grid: 40 columns x 39 rows
+  SHA-256: 3feeeed6d82ca7935c0d79308957d0836e76115f4191984182949bf0ae6a8edb
+
+5.0/Geoduck.bmp
+  Original: http://www.geoduckthings.net/nhack/geoduck25x15-2026.bmp
+  Author-designated target: NetHack 5.0.0 (Geoduck version 7, April 13, 2026)
+  Image: 600 x 1500 pixels; cells: 15 wide x 25 high; grid: 40 columns x 60 rows
+  SHA-256: 8be40c664afc81e8f3a40644210a48e434889e821abb1504cd9dad4674d73c3e
+
+The two versions use different tile orders and are not interchangeable.

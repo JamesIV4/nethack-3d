@@ -34,7 +34,8 @@ import type {
 import {
   appendUserTilesetNameSuffix,
   defaultUserTilesetTileLayoutVersion,
-  inferTilesetTileSizeFromBlob,
+  inferTilesetTileDimensionsFromBlob,
+  resolveUserTilesetTileHeight,
   normalizeUserTilesetTileSizes,
   stripUserTilesetNameSuffix,
   toUserTilesetRegistrations
@@ -84,6 +85,9 @@ export interface UseTilesetManagerActionsDependencies {
   readonly controller: Nethack3DEngineController | null;
   readonly tilesetManagerFile: File | null;
   readonly tilesetManagerTileLayoutVersion: StoredUserTilesetTileLayoutVersion;
+  readonly tilesetManagerTileHeight: string;
+  readonly setTilesetManagerTileHeight: React.Dispatch<React.SetStateAction<string>>;
+  readonly setTilesetManagerTileDimensions: React.Dispatch<React.SetStateAction<{ tileWidth: number; tileHeight: number } | null>>;
   readonly tilesetManagerInNewMode: boolean;
   readonly selectedTilesetManagerEditUserRecord: StoredUserTilesetRecord | null;
 }
@@ -121,6 +125,9 @@ export function useTilesetManagerActions(dependencies: UseTilesetManagerActionsD
     controller,
     tilesetManagerFile,
     tilesetManagerTileLayoutVersion,
+    tilesetManagerTileHeight,
+    setTilesetManagerTileHeight,
+    setTilesetManagerTileDimensions,
     tilesetManagerInNewMode,
     selectedTilesetManagerEditUserRecord,
   } = dependencies;
@@ -168,6 +175,8 @@ export function useTilesetManagerActions(dependencies: UseTilesetManagerActionsD
     setTilesetManagerMode("new");
     setTilesetManagerEditPath("");
     setTilesetManagerName("");
+    setTilesetManagerTileHeight("");
+    setTilesetManagerTileDimensions(null);
     setTilesetManagerTileLayoutVersion(
       activeRuntimeVersion === "slashem"
         ? "slashem"
@@ -191,6 +200,8 @@ export function useTilesetManagerActions(dependencies: UseTilesetManagerActionsD
       return;
     }
     const userRecord = userTilesetRecordByPath.get(tilesetPath);
+    setTilesetManagerTileHeight(userRecord ? String(userRecord.tileHeight ?? userRecord.tileSize) : "");
+    setTilesetManagerTileDimensions({ tileWidth: tilesetEntry.tileSize, tileHeight: tilesetEntry.tileHeight ?? tilesetEntry.tileSize });
     const currentEditPath = String(tilesetManagerEditPath || "").trim();
     setTilesetManagerMode("edit");
     setTilesetManagerEditPath(tilesetPath);
@@ -256,6 +267,8 @@ export function useTilesetManagerActions(dependencies: UseTilesetManagerActionsD
   ): void => {
     const file = event.target.files?.[0] ?? null;
     setTilesetManagerFile(file);
+    setTilesetManagerTileHeight("");
+    setTilesetManagerTileDimensions(null);
     if (!file) {
       return;
     }
@@ -373,10 +386,11 @@ export function useTilesetManagerActions(dependencies: UseTilesetManagerActionsD
     setTilesetManagerError("");
     try {
       if (tilesetManagerInNewMode) {
-        const tileSize = await inferTilesetTileSizeFromBlob(file as File);
+        const dimensions = await inferTilesetTileDimensionsFromBlob(file as File, tileLayoutVersion);
         const savedRecord = await saveStoredUserTileset({
           label: userLabel,
-          tileSize,
+          tileSize: dimensions.tileWidth,
+          tileHeight: resolveUserTilesetTileHeight(tilesetManagerTileHeight, dimensions.tileHeight),
           tileLayoutVersion,
           fileName: (file as File).name,
           file: file as File,
@@ -389,13 +403,12 @@ export function useTilesetManagerActions(dependencies: UseTilesetManagerActionsD
         const nextFileName = file
           ? file.name
           : selectedTilesetManagerEditUserRecord.fileName;
-        const nextTileSize = file
-          ? await inferTilesetTileSizeFromBlob(file)
-          : selectedTilesetManagerEditUserRecord.tileSize;
-        await saveStoredUserTileset({
+        const dimensions = await inferTilesetTileDimensionsFromBlob(nextFile, tileLayoutVersion);
+        const savedRecord = await saveStoredUserTileset({
           id: selectedTilesetManagerEditUserRecord.id,
           label: userLabel,
-          tileSize: nextTileSize,
+          tileSize: dimensions.tileWidth,
+          tileHeight: resolveUserTilesetTileHeight(tilesetManagerTileHeight, dimensions.tileHeight),
           tileLayoutVersion,
           fileName: nextFileName,
           file: nextFile,
@@ -404,6 +417,7 @@ export function useTilesetManagerActions(dependencies: UseTilesetManagerActionsD
         openTilesetManagerEditor(
           getNh3dUserTilesetPath(selectedTilesetManagerEditUserRecord.id),
         );
+        setTilesetManagerTileHeight(String(savedRecord.tileHeight ?? savedRecord.tileSize));
         setTilesetManagerName(label);
       }
       saveTilesetManagerSettingsDraft();
@@ -415,6 +429,22 @@ export function useTilesetManagerActions(dependencies: UseTilesetManagerActionsD
       setTilesetManagerBusy(false);
     }
   };
+
+  useEffect(() => {
+    const sourceBlob = tilesetManagerFile ?? selectedTilesetManagerEditUserRecord?.blob;
+    if (!sourceBlob) {
+      return;
+    }
+    let disposed = false;
+    inferTilesetTileDimensionsFromBlob(sourceBlob, tilesetManagerTileLayoutVersion)
+      .then(dimensions => {
+        if (!disposed) setTilesetManagerTileDimensions(dimensions);
+      })
+      .catch(() => {
+        if (!disposed) setTilesetManagerTileDimensions(null);
+      });
+    return () => { disposed = true; };
+  }, [tilesetManagerFile, selectedTilesetManagerEditUserRecord?.blob, tilesetManagerTileLayoutVersion, setTilesetManagerTileDimensions]);
 
   useEffect(() => {
     refreshUserTilesetCatalog(true).catch((error) => {

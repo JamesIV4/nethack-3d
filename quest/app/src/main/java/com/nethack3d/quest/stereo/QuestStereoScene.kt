@@ -65,6 +65,7 @@ class QuestStereoScene(
     private var camera = CameraResource(Float3(0f, -20f, 15f), floatArrayOf(0f, 0f, 0f, 1f))
     private var player = Float3(0f, 0f, 0f)
     private var tileSize = 1f
+    private var worldScaleX = 1f
     private var sourceEyeHeight = SOURCE_EYE_HEIGHT_TILES
     private var lighting: JSONObject? = null
     private var session: String? = null
@@ -158,15 +159,18 @@ class QuestStereoScene(
         val nextPlayer = frame.getJSONArray("player").float3()
         val nextTileSize = frame.optDouble("tileSize", 1.0).toFloat()
         require(nextTileSize.isFinite() && nextTileSize > 0f)
+        val nextWorldScaleX = frame.optDouble("worldScaleX", 1.0).toFloat()
+        require(nextWorldScaleX.isFinite() && nextWorldScaleX > 0f)
         val nextEyeHeight = frame.optDouble("eyeHeight", (nextTileSize * SOURCE_EYE_HEIGHT_TILES).toDouble()).toFloat()
         require(nextEyeHeight.isFinite() && nextEyeHeight > 0f)
         val cameraChanged = nextCamera.position != camera.position || !nextCamera.quaternion.contentEquals(camera.quaternion)
         val nextLighting = frame.optJSONObject("lighting")
-        val lightingChanged = nextLighting?.toString() != lighting?.toString()
+        val lightingChanged = nextLighting?.toString() != lighting?.toString() || nextWorldScaleX != worldScaleX
         val previousScale = immersiveScale()
         camera = nextCamera
         player = nextPlayer
         tileSize = nextTileSize
+        worldScaleX = nextWorldScaleX
         sourceEyeHeight = nextEyeHeight
         lighting = nextLighting
         val previousCommonPose = commonPose.copy()
@@ -456,7 +460,7 @@ class QuestStereoScene(
                 local.x / windowScale, local.y / windowScale, -(local.z - windowDepthOffset) / windowScale,
             ))
         }
-        return intArrayOf((world.x / tileSize).roundToInt(), (-world.y / tileSize).roundToInt())
+        return intArrayOf((world.x / (tileSize * worldScaleX)).roundToInt(), (-world.y / tileSize).roundToInt())
     }
 
     private fun lightingBrightness(point: Float3): Float {
@@ -464,7 +468,7 @@ class QuestStereoScene(
         val center = descriptor.optJSONArray("center") ?: return 1f
         val radius = descriptor.optDouble("radius", 0.0).toFloat()
         if (radius <= 0f) return 1f
-        val dx = point.x - center.optDouble(0, 0.0).toFloat()
+        val dx = point.x / worldScaleX - center.optDouble(0, 0.0).toFloat()
         val dy = point.y - center.optDouble(1, 0.0).toFloat()
         val distance = kotlin.math.sqrt(dx * dx + dy * dy)
         val falloff = descriptor.optDouble("falloffPower", 1.0).toFloat().coerceAtLeast(0.01f) /

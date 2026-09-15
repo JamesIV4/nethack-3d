@@ -155,6 +155,7 @@ export interface TileContextActionsDependencies {
     TilesetAssets,
     "resolveRuntimeVersion"
     | "shouldUseVultureTiles"
+    | "getWorldTileScaleX"
   >;
   readonly tileUpdates: Pick<
     TileUpdates,
@@ -935,7 +936,7 @@ export class TileContextActions {
     const z =
       target.mesh?.userData?.isWall === true ? WALL_HEIGHT + 0.04 : 0.04;
     const world = new THREE.Vector3(
-      target.x * TILE_SIZE,
+      target.x * TILE_SIZE * this.dependencies.tilesetAssets.getWorldTileScaleX(),
       -target.y * TILE_SIZE,
       z,
     );

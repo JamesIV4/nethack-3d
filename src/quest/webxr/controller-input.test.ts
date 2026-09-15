@@ -31,11 +31,27 @@ function fixture() {
   const tilt = { hit: () => null, hover: vi.fn(), surfaceHit: () => null, end: vi.fn() };
   const input = new WebXrControllerInput(session as unknown as XRSession, renderer as unknown as THREE.WebGLRenderer,
     scene, root, 1, () => panel as unknown as HtmlUiPanel, tilt as unknown as BoardTilt);
-  return { input, left, right, controller, session };
+  return { input, left, right, controller, session, scene, root, tile, pose, panel };
 }
 afterEach(() => vi.unstubAllGlobals());
 
 describe("WebXR trigger to game command integration", () => {
+  it("converts physical rectangular-cell hits back to logical tile coordinates", () => {
+    const f = fixture();
+    f.scene.scale.x = 0.6;
+    f.root.scale.x = 1 / 0.6;
+    f.tile.position.set(4, -6, 0);
+    f.tile.userData = {};
+    f.pose.makeTranslation(4 * 0.6, -6, 1);
+    f.scene.updateMatrixWorld(true);
+    const context = vi.fn();
+    Object.assign(f.panel, { nativePointer: { hit: vi.fn(), setContextTarget: context } });
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(0, null);
+    f.input.update(450, null);
+    expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(4, 6, true);
+    expect(context).toHaveBeenCalledExactlyOnceWith(new THREE.Vector3(2.4, -6, 0));
+    f.input.dispose();
+  });
   it("uses LT as the run modifier and resumes walking when it is released", () => {
     const f = fixture();
     f.left.gamepad.buttons[0].pressed = true;

@@ -320,6 +320,9 @@ export class DirectionPromptOverlay {
   >();
   private readonly raycastTargets: THREE.Mesh[] = [];
   private readonly cameraRightScratch = new THREE.Vector3();
+  private readonly billboardWorldPosition = new THREE.Vector3();
+  private readonly billboardUnitScale = new THREE.Vector3(1, 1, 1);
+  private readonly billboardInverseWorldScale = new THREE.Matrix4();
   private textures: DirectionPromptOverlayTextures | null = null;
   private textureLoadPromise: Promise<void> | null = null;
   private textureLoadFailureCount = 0;
@@ -390,7 +393,7 @@ export class DirectionPromptOverlay {
     this.applyVisualState();
   }
 
-  public update(camera: THREE.Camera, playerX: number, playerY: number): void {
+  public update(camera: THREE.Camera, playerX: number, playerY: number, horizontalWorldScale = 1): void {
     if (this.visible && this.textures === null && this.textureLoadPromise === null) {
       void this.ensureTexturesLoaded();
     }
@@ -440,6 +443,23 @@ export class DirectionPromptOverlay {
       directionPromptOverlayBillboardAnchorZ,
     );
     this.billboardButtonGroup.quaternion.copy(camera.quaternion);
+    if (horizontalWorldScale !== 1) {
+      // Ground arrows follow the rectangular grid. Screen-facing labels retain
+      // their shape and physical side offset under the scaled world parent.
+      this.billboardWorldPosition.set(
+        baseX * horizontalWorldScale + (anchorX - baseX),
+        anchorY,
+        directionPromptOverlayBillboardAnchorZ,
+      );
+      this.billboardButtonGroup.matrixAutoUpdate = false;
+      this.billboardButtonGroup.matrix.compose(
+        this.billboardWorldPosition, camera.quaternion, this.billboardUnitScale,
+      ).premultiply(this.billboardInverseWorldScale.makeScale(1 / horizontalWorldScale, 1, 1));
+      this.billboardButtonGroup.matrixWorldNeedsUpdate = true;
+    } else {
+      this.billboardButtonGroup.matrixAutoUpdate = true;
+      this.billboardButtonGroup.scale.set(1, 1, 1);
+    }
 
     for (const spec of directionPromptOverlayBillboardSpecs) {
       const button = this.buttons.get(spec.id);

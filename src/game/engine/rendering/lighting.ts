@@ -69,6 +69,9 @@ export class Lighting {
   }
 
   updateLightingCenter(deltaSeconds: number): void {
+    // World geometry is scaled for rectangular tiles; light distances remain
+    // measured in logical game tiles, just like player/camera coordinates.
+    this.vignetteUniforms.uWorldTileScaleX.value = this.dependencies.renderPipeline.scene.scale.x;
     if (this.dependencies.movementInput.isFpsMode()) {
       // In FPS mode, keep the vignette centered on the camera/player position in world space.
       // (World space in this renderer uses X/Y as the horizontal plane.)
@@ -209,6 +212,7 @@ export class Lighting {
   vignetteUniforms = {
     uLightingCenter: { value: new THREE.Vector3(0, 0, 0) },
     uLightingRadius: { value: 20.0 * TILE_SIZE },
+    uWorldTileScaleX: { value: 1 },
     uFalloffPower: { value: 1.08 },
     uMaxDarkAlpha: { value: this.lightingVignetteMaxDarkAlpha },
     uIsFpsMode: { value: false },
@@ -239,12 +243,13 @@ export class Lighting {
       : "";
     // Force Three.js to compile a unique shader for this patch
     material.customProgramCacheKey = () =>
-      `vignette_patch_v9${shaderKeySuffix}${bloodGroundGuardKeySuffix}`;
+      `vignette_patch_v10${shaderKeySuffix}${bloodGroundGuardKeySuffix}`;
 
     material.onBeforeCompile = (shader) => {
       // Bind our class-level uniforms to this specific shader
       shader.uniforms.uLightingCenter = this.vignetteUniforms.uLightingCenter;
       shader.uniforms.uLightingRadius = this.vignetteUniforms.uLightingRadius;
+      shader.uniforms.uWorldTileScaleX = this.vignetteUniforms.uWorldTileScaleX;
       shader.uniforms.uFalloffPower = this.vignetteUniforms.uFalloffPower;
       shader.uniforms.uMaxDarkAlpha = this.vignetteUniforms.uMaxDarkAlpha;
       shader.uniforms.uIsFpsMode = this.vignetteUniforms.uIsFpsMode;
@@ -774,6 +779,7 @@ export class Lighting {
       shader.fragmentShader = `
         uniform vec3 uLightingCenter;
         uniform float uLightingRadius;
+        uniform float uWorldTileScaleX;
         uniform float uFalloffPower;
         uniform float uMaxDarkAlpha;
         uniform bool uIsFpsMode;
@@ -793,7 +799,8 @@ export class Lighting {
 
         // Apply vignette in both normal and FPS modes.
         float radius = uIsFpsMode ? (uLightingRadius) : uLightingRadius;
-        float dist = distance(vWorldPos.xy, uLightingCenter.xy);
+        vec2 logicalWorldPosition = vec2(vWorldPos.x / max(uWorldTileScaleX, 0.000001), vWorldPos.y);
+        float dist = distance(logicalWorldPosition, uLightingCenter.xy);
         float t = clamp(dist / radius, 0.0, 1.0);
         float effectiveFalloff = uIsFpsMode ? (uFalloffPower / 2.0) : uFalloffPower;
         float alpha = pow(t, effectiveFalloff) * uMaxDarkAlpha;

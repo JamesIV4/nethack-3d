@@ -719,6 +719,10 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
             classic: "クラシック",
           },
         },
+        tilesetUseTileAspectRatio: {
+          label: "ブロックをタイルの縦横比に合わせる",
+          description: "タイルが正方形でない場合、3Dブロックを長方形にします。オフにすると正方形のブロックを使用します。",
+        },
         tilesetPath: {
           label: "タイルセット",
           description: "組み込みタイルセットとアップロード済みタイルセットです。",
@@ -1262,6 +1266,11 @@ export const jaOverrides: LocaleOverrides<TranslationDictionary> = {
         layout5: "NetHack 5.0 レイアウト",
         tileLayoutDescription:
           "このアップロード済みアトラスが使うタイルインデックスレイアウトを選択します。",
+        tileWidth: "タイルの幅（ピクセル、自動）",
+        tileHeight: "タイルの高さ（ピクセル）",
+        autoTileHeight: "自動",
+        tileDimensionsDescription: "幅は画像の40列から決まります。高さを空欄にすると自動検出します。独自の縦横比には各タイルの高さを入力してください。",
+        invalidTileHeight: "タイルの高さには正の整数を入力してください。",
         tileImage: "タイルセット画像",
         tileImageOptional: "タイルセット画像（任意の差し替え）",
         selectedFile: (fileName: string) => `選択中: ${fileName}`,

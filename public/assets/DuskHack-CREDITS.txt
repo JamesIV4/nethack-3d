@@ -1,0 +1,39 @@
+DuskHack for NetHack 3.6
+
+Credits
+-------
+Completed by clownmilk23, based on the first approximately 200 tiles of
+DragonDePlatino's Unnamed NetHack Tileset. The completed DuskHack release
+was posted by clownmilk23 on July 15, 2024. Its author confirmed compatibility
+with NetHack 3.6.7 in the release discussion.
+
+Primary sources
+---------------
+Release and author's download link:
+https://www.reddit.com/r/nethack/comments/1e3pndu/duskhack_for_nethack_36/
+
+Original artwork by DragonDePlatino:
+https://www.deviantart.com/dragondeplatino/art/Unnamed-NetHack-Tileset-722564068
+
+Original BMP download linked by clownmilk23:
+https://www.mediafire.com/file/og22i886hnwsydw/duskhack16x-1.bmp/file
+
+Bundled original asset
+----------------------
+Path: 3.6/DuskHack.bmp
+Original filename: duskhack16x-1.bmp
+Retrieved: 2026-09-15
+The bitmap bytes are unchanged.
+Size: 1,136,694 bytes
+Dimensions: 640 x 592 pixels
+Tile cells: 16 x 16 pixels; 40 columns x 37 rows (1,480 slots)
+Background: black (#000000); source tile 850 is completely black.
+SHA-256: 41874c3c50c414a50132805a859a1bf3faa2f7aff8c518cf5910e80a7cf05c89
+
+License information
+-------------------
+No explicit redistribution terms or named license were found in the author's
+DuskHack release post, its BMP download, or the linked original artwork page.
+The release discussion's mention of CC0 refers to DawnHack, a different
+artwork, and is not treated as a license statement for DuskHack.
+This file records provenance and attribution; it does not grant new rights.

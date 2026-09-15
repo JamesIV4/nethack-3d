@@ -53,6 +53,40 @@ function fixture(native = false) {
     frame: () => { const camera = presentation.prepareRender(); if (camera) renderer.render(scene, camera); return !!camera; } };
 }
 describe("Three.js owns the Quest world", () => {
+  it("keeps tracked eyes and physical UI undistorted under rectangular world cells", async () => {
+    const f = fixture();
+    f.scene.scale.x = 0.6;
+    f.deps.engineState.playMode = "fps";
+    f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
+    const root = f.scene.getObjectByName("WebXR tracking space")!;
+    const tracked = new THREE.ArrayCamera();
+    tracked.up.set(0, 0, 1); tracked.lookAt(new THREE.Vector3(1, 1, 0)); tracked.updateMatrixWorld();
+    f.renderer.xr.getCamera = () => tracked;
+    f.presentation.updateCamera();
+    const logicalForward = f.deps.camera.camera.getWorldDirection(new THREE.Vector3());
+    expect(logicalForward.distanceTo(new THREE.Vector3(1 / 0.6, 1, 0).normalize())).toBeLessThan(1e-8);
+    const head = new THREE.Vector3(0, 1.6, 0).applyMatrix4(root.matrixWorld);
+    expect(head.x).toBeCloseTo(3 * 0.6);
+    expect(head.y).toBeCloseTo(-5);
+    expect(head.z).toBeCloseTo(0.62);
+    expect(f.deps.camera.camera.position.x).toBeCloseTo(3);
+    expect(f.deps.camera.camera.position.y).toBeCloseTo(-5);
+    const basis = new THREE.Vector3().setFromMatrixScale(root.matrixWorld);
+    expect(basis.x).toBeCloseTo(basis.y);
+    expect(basis.x).toBeCloseTo(basis.z);
+    const owner = f.presentation as unknown as { snapTurn(direction: -1 | 1): void };
+    owner.snapTurn(1);
+    const turnedHead = new THREE.Vector3(0, 1.6, 0).applyMatrix4(root.matrixWorld);
+    expect(turnedHead.distanceTo(head)).toBeLessThan(1e-8);
+    const turnedBasis = new THREE.Vector3().setFromMatrixScale(root.matrixWorld);
+    expect(turnedBasis.x).toBeCloseTo(turnedBasis.y);
+    expect(turnedBasis.x).toBeCloseTo(turnedBasis.z);
+    expect(root.matrixAutoUpdate).toBe(false);
+    f.scene.scale.x = 1;
+    f.presentation.updateCamera();
+    expect(new THREE.Vector3(0, 1.6, 0).applyMatrix4(root.matrixWorld).x).toBeCloseTo(3);
+    f.presentation.dispose();
+  });
   it("uses the tracked head position even when head rotation shifts the stereo union camera", async () => {
     const f = fixture(), union = new THREE.ArrayCamera();
     const head = { position: { x: 0, y: 1.6, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };

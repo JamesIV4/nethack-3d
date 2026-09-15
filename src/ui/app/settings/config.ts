@@ -210,6 +210,12 @@ export const clientOptionsConfig: ClientOption[] = [
     disabled: false,
   },
   {
+    key: "tilesetUseTileAspectRatio",
+    label: t.clientOptions.config.tilesetUseTileAspectRatio.label,
+    description: t.clientOptions.config.tilesetUseTileAspectRatio.description,
+    type: "boolean",
+  },
+  {
     key: "antialiasing",
     label: t.clientOptions.config.antialiasing.label,
     description: t.clientOptions.config.antialiasing.description,

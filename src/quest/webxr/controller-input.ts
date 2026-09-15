@@ -175,15 +175,16 @@ export class WebXrControllerInput {
         tile = { x: object.userData.tileX as number, y: object.userData.tileY as number }; break;
       }
     }
-    if (hit) tile ??= { x: Math.round(hit.point.x / this.tileSize), y: Math.round(-hit.point.y / this.tileSize) };
+    const logicalHit = hit ? this.scene.worldToLocal(hit.point.clone()) : null;
+    if (logicalHit) tile ??= { x: Math.round(logicalHit.x / this.tileSize), y: Math.round(-logicalHit.y / this.tileSize) };
     state.pressedTile = tile;
-    state.contextHeight = hit?.point.z ?? 0;
+    state.contextHeight = logicalHit?.z ?? 0;
     state.gesture.press(this.clock);
   }
   private worldClick(state: PointerState, secondary: boolean): void {
     if (!state.pressedTile && !secondary) return;
     if (secondary && state.pressedTile) this.panel()?.nativePointer?.setContextTarget(
-      new THREE.Vector3(state.pressedTile.x * this.tileSize, -state.pressedTile.y * this.tileSize, state.contextHeight));
+      this.scene.localToWorld(new THREE.Vector3(state.pressedTile.x * this.tileSize, -state.pressedTile.y * this.tileSize, state.contextHeight)));
     this.command({ type: "tile", ...(state.pressedTile ?? { x: 0, y: 0 }), ...(secondary ? { secondary: true } : {}) });
   }
   update(time: number, forward: THREE.Vector3 | null): void {

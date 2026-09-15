@@ -2620,12 +2620,17 @@ export async function importNh3dSoundPackFromZip(
     };
 
     await idbRequestToPromise(packStore.put(importedPack));
-    const metaRecord: Nh3dMetaRecord = {
-      key: activePackMetaKey,
-      value: intoDefaultSlot ? nh3dDefaultSoundPackId : importedPack.id,
-      updatedAt: now,
-    };
-    await idbRequestToPromise(metaStore.put(metaRecord));
+    // Startup refreshes the bundled default on every app launch. Refreshing
+    // its contents must preserve the user's selection; the state loader
+    // already falls back to Default when no valid selection exists.
+    if (!intoDefaultSlot) {
+      const metaRecord: Nh3dMetaRecord = {
+        key: activePackMetaKey,
+        value: importedPack.id,
+        updatedAt: now,
+      };
+      await idbRequestToPromise(metaStore.put(metaRecord));
+    }
     await idbTransactionDone(transaction);
 
     return cloneNh3dSoundPack(importedPack);

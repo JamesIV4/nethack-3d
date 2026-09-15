@@ -42,6 +42,9 @@ export interface TilesetManagerDialogProps {
   selectedTilesetManagerEditUserRecord: StoredUserTilesetRecord | null;
   setTilesetManagerTileLayoutVersion: React.Dispatch<React.SetStateAction<StoredUserTilesetTileLayoutVersion>>;
   tilesetManagerTileLayoutVersion: StoredUserTilesetTileLayoutVersion;
+  tilesetManagerTileHeight: string;
+  setTilesetManagerTileHeight: React.Dispatch<React.SetStateAction<string>>;
+  tilesetManagerTileDimensions: { tileWidth: number; tileHeight: number } | null;
   handleTilesetManagerFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   tilesetManagerFileInputRef: React.MutableRefObject<HTMLInputElement | null>;
   tilesetManagerFile: File | null;
@@ -81,6 +84,9 @@ export function TilesetManagerDialog({
   selectedTilesetManagerEditUserRecord,
   setTilesetManagerTileLayoutVersion,
   tilesetManagerTileLayoutVersion,
+  tilesetManagerTileHeight,
+  setTilesetManagerTileHeight,
+  tilesetManagerTileDimensions,
   handleTilesetManagerFileChange,
   tilesetManagerFileInputRef,
   tilesetManagerFile,
@@ -234,6 +240,26 @@ export function TilesetManagerDialog({
                           selectedTilesetManagerEditUserRecord?.fileName ||
                           t.dialogs.tilesetManager.uploadedImage,
                         )}
+                  </div>
+                </div>
+              ) : null}
+              {tilesetManagerInNewMode || selectedTilesetManagerEditUserRecord ? (
+                <div className="nh3d-tileset-manager-upload-row">
+                  <label className="nh3d-option-label" htmlFor="nh3d-tileset-tile-width">
+                    {t.dialogs.tilesetManager.tileWidth}
+                  </label>
+                  <input id="nh3d-tileset-tile-width" className="nh3d-startup-config-input"
+                    readOnly value={tilesetManagerTileDimensions?.tileWidth ?? ""} />
+                  <label className="nh3d-option-label" htmlFor="nh3d-tileset-tile-height">
+                    {t.dialogs.tilesetManager.tileHeight}
+                  </label>
+                  <input id="nh3d-tileset-tile-height" className="nh3d-startup-config-input"
+                    type="number" min={1} step={1} value={tilesetManagerTileHeight}
+                    placeholder={tilesetManagerTileDimensions ? String(tilesetManagerTileDimensions.tileHeight) : t.dialogs.tilesetManager.autoTileHeight}
+                    onChange={event => setTilesetManagerTileHeight(event.target.value)}
+                    aria-describedby="nh3d-tileset-dimensions-description" />
+                  <div className="nh3d-option-description" id="nh3d-tileset-dimensions-description">
+                    {t.dialogs.tilesetManager.tileDimensionsDescription}
                   </div>
                 </div>
               ) : null}

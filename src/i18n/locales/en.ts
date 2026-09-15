@@ -744,6 +744,10 @@ export const en = {
             terminal: "Terminal",
           },
         },
+        tilesetUseTileAspectRatio: {
+          label: "Match blocks to tile aspect ratio",
+          description: "Use rectangular 3D blocks when tiles are not square. Turn off to keep square blocks.",
+        },
         tilesetPath: {
           label: "Tileset",
           description: "Built-in and uploaded tilesets.",
@@ -1318,6 +1322,11 @@ export const en = {
         layout5: "NetHack 5.0 layout",
         tileLayoutDescription:
           "Choose the tile index layout used by this uploaded atlas.",
+        tileWidth: "Tile width (pixels, automatic)",
+        tileHeight: "Tile height (pixels)",
+        autoTileHeight: "Automatic",
+        tileDimensionsDescription: "Width uses the image's 40 columns. Leave height blank for automatic detection, or enter the height of each tile for a custom aspect ratio.",
+        invalidTileHeight: "Tile height must be a positive whole number.",
         tileImage: "Tileset Image",
         tileImageOptional: "Tileset Image (optional replacement)",
         selectedFile: (fileName: string) => `Selected: ${fileName}`,

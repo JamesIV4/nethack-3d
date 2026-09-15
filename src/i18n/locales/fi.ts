@@ -764,6 +764,10 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
             classic: "Klassinen",
           },
         },
+        tilesetUseTileAspectRatio: {
+          label: "Sovita palikat ruutujen kuvasuhteeseen",
+          description: "Käytä suorakulmaisia 3D-palikoita, kun ruudut eivät ole neliöitä. Poista käytöstä säilyttääksesi neliömäiset palikat.",
+        },
         tilesetPath: {
           label: "Ruutusetti",
           description: "Sisäänrakennetut ja ladatut ruutusetit.",
@@ -1305,6 +1309,11 @@ export const fiOverrides: LocaleOverrides<TranslationDictionary> = {
         layout5: "NetHack 5.0 -asettelu",
         tileLayoutDescription:
           "Valitse tämän ladatun atlaksen käyttämä ruutuindeksien asettelu.",
+        tileWidth: "Ruudun leveys (pikseliä, automaattinen)",
+        tileHeight: "Ruudun korkeus (pikseliä)",
+        autoTileHeight: "Automaattinen",
+        tileDimensionsDescription: "Leveys määräytyy kuvan 40 sarakkeesta. Jätä korkeus tyhjäksi automaattista tunnistusta varten tai anna ruudun korkeus mukautettua kuvasuhdetta varten.",
+        invalidTileHeight: "Ruudun korkeuden on oltava positiivinen kokonaisluku.",
         tileImage: "Ruutusetin kuva",
         tileImageOptional: "Ruutusetin kuva (valinnainen korvaus)",
         selectedFile: (fileName: string) => `Selected: ${fileName}`,

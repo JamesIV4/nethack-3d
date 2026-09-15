@@ -5,7 +5,7 @@ import type { TileMaterialKind } from "../../glyphs";
 import type { Nh3dClientOptions } from "../../ui-types";
 import {
   findNh3dTilesetByPath,
-  inferNh3dTilesetTileSizeFromAtlasWidthForPath,
+  inferNh3dTilesetTileDimensions,
   resolveNh3dFuseBaseTilesetPathForLegacyNh5Runtime,
   resolveNh3dTilesetAssetUrl,
   type Nh3dTilesetTileLayoutVersion
@@ -74,6 +74,7 @@ export interface TilesetAssetsDependencies {
   readonly renderPipeline: Pick<
     RenderPipeline,
     "renderer"
+    | "syncWorldTileScale"
   >;
   readonly tileUpdates: Pick<
     TileUpdates,
@@ -116,6 +117,17 @@ export class TilesetAssets {
   tilesetBackgroundReferenceTilePixels: Uint8ClampedArray | null = null;
 
   tileSourceSize = 32;
+  tileSourceHeight = 32;
+
+  getWorldTileScaleX(): number {
+    const options = this.dependencies.engineState.clientOptions;
+    if (options.tilesetMode !== "tiles" || options.tilesetUseTileAspectRatio === false ||
+        this.isVultureTilesActive(options)) return 1;
+    const width = this.tileSourceSize;
+    const height = this.tileSourceHeight;
+    return Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0
+      ? width / height : 1;
+  }
 
   vultureTilesetTranslator: VultureTilesetTranslator | null = null;
 
@@ -272,6 +284,7 @@ export class TilesetAssets {
   captureTilesetBackgroundReferenceTile(
     atlasImage: HTMLImageElement | HTMLCanvasElement | null,
     tileSize: number,
+    tileHeight: number = tileSize,
   ): void {
     this.clearTilesetBackgroundReferenceTileCache();
     if (!atlasImage || tileSize <= 0) {
@@ -280,7 +293,7 @@ export class TilesetAssets {
     const atlasWidth = Math.max(0, Math.trunc(atlasImage.width || 0));
     const atlasHeight = Math.max(0, Math.trunc(atlasImage.height || 0));
     const tilesPerRow = Math.floor(atlasWidth / tileSize);
-    const rows = Math.floor(atlasHeight / tileSize);
+    const rows = Math.floor(atlasHeight / tileHeight);
     const tileCount = tilesPerRow > 0 && rows > 0 ? tilesPerRow * rows : 0;
     const tileIndex = Math.max(
       0,
@@ -291,31 +304,31 @@ export class TilesetAssets {
     }
     const canvas = document.createElement("canvas");
     canvas.width = tileSize;
-    canvas.height = tileSize;
+    canvas.height = tileHeight;
     const context = canvas.getContext("2d", { willReadFrequently: true });
     if (!context) {
       return;
     }
     context.imageSmoothingEnabled = false;
     const sourceX = (tileIndex % tilesPerRow) * tileSize;
-    const sourceY = Math.floor(tileIndex / tilesPerRow) * tileSize;
-    context.clearRect(0, 0, tileSize, tileSize);
+    const sourceY = Math.floor(tileIndex / tilesPerRow) * tileHeight;
+    context.clearRect(0, 0, tileSize, tileHeight);
     context.drawImage(
       atlasImage,
       sourceX,
       sourceY,
       tileSize,
-      tileSize,
+      tileHeight,
       0,
       0,
       tileSize,
-      tileSize,
+      tileHeight,
     );
     this.tilesetBackgroundReferenceTilePixels = context.getImageData(
       0,
       0,
       tileSize,
-      tileSize,
+      tileHeight,
     ).data;
     this.tilesetBackgroundReferenceTileCanvas = canvas;
   }
@@ -323,12 +336,13 @@ export class TilesetAssets {
   drawTilesetBackgroundReferenceTile(
     context: CanvasRenderingContext2D,
     tileSize: number,
+    tileHeight: number = tileSize,
   ): boolean {
     const sourceCanvas = this.tilesetBackgroundReferenceTileCanvas;
     if (!sourceCanvas || sourceCanvas.width <= 0 || sourceCanvas.height <= 0) {
       return false;
     }
-    context.drawImage(sourceCanvas, 0, 0, tileSize, tileSize);
+    context.drawImage(sourceCanvas, 0, 0, tileSize, tileHeight);
     return true;
   }
 
@@ -358,10 +372,13 @@ export class TilesetAssets {
     legacyAtlasImage: HTMLImageElement,
     tileSize: number,
     fuseBaseImage: HTMLImageElement | null,
+    tileHeight: number = tileSize,
+    fuseBaseTileWidth: number = tileSize,
+    fuseBaseTileHeight: number = tileHeight,
   ): HTMLCanvasElement {
     const outputCanvas = document.createElement("canvas");
     outputCanvas.width = nh5TilesPerRow * tileSize;
-    outputCanvas.height = nh5OutputRows * tileSize;
+    outputCanvas.height = nh5OutputRows * tileHeight;
     const context = outputCanvas.getContext("2d");
     if (!context) {
       throw new Error("Failed to create compiled tileset atlas canvas context");
@@ -370,16 +387,16 @@ export class TilesetAssets {
     context.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
 
     const sourceTilesPerRow = Math.floor(legacyAtlasImage.width / tileSize);
-    const sourceRows = Math.floor(legacyAtlasImage.height / tileSize);
+    const sourceRows = Math.floor(legacyAtlasImage.height / tileHeight);
     const sourceTileCount =
       sourceTilesPerRow > 0 && sourceRows > 0
         ? sourceTilesPerRow * sourceRows
         : 0;
     const fuseBaseTilesPerRow = fuseBaseImage
-      ? Math.floor(fuseBaseImage.width / tileSize)
+      ? Math.floor(fuseBaseImage.width / fuseBaseTileWidth)
       : 0;
     const fuseBaseRows = fuseBaseImage
-      ? Math.floor(fuseBaseImage.height / tileSize)
+      ? Math.floor(fuseBaseImage.height / fuseBaseTileHeight)
       : 0;
     const fuseBaseTileCount =
       fuseBaseTilesPerRow > 0 && fuseBaseRows > 0
@@ -401,22 +418,22 @@ export class TilesetAssets {
           ? Math.abs(rawMappedTileIndex)
           : rawMappedTileIndex;
       const destX = (nh5TileIndex % nh5TilesPerRow) * tileSize;
-      const destY = Math.floor(nh5TileIndex / nh5TilesPerRow) * tileSize;
-      context.clearRect(destX, destY, tileSize, tileSize);
+      const destY = Math.floor(nh5TileIndex / nh5TilesPerRow) * tileHeight;
+      context.clearRect(destX, destY, tileSize, tileHeight);
       if (shouldUseFuseBaseTile && fuseBaseImage) {
-        const fuseSourceX = (nh5TileIndex % fuseBaseTilesPerRow) * tileSize;
+        const fuseSourceX = (nh5TileIndex % fuseBaseTilesPerRow) * fuseBaseTileWidth;
         const fuseSourceY =
-          Math.floor(nh5TileIndex / fuseBaseTilesPerRow) * tileSize;
+          Math.floor(nh5TileIndex / fuseBaseTilesPerRow) * fuseBaseTileHeight;
         context.drawImage(
           fuseBaseImage,
           fuseSourceX,
           fuseSourceY,
-          tileSize,
-          tileSize,
+          fuseBaseTileWidth,
+          fuseBaseTileHeight,
           destX,
           destY,
           tileSize,
-          tileSize,
+          tileHeight,
         );
         continue;
       }
@@ -429,17 +446,17 @@ export class TilesetAssets {
       }
       const sourceX = (sourceTileIndex % sourceTilesPerRow) * tileSize;
       const sourceY =
-        Math.floor(sourceTileIndex / sourceTilesPerRow) * tileSize;
+        Math.floor(sourceTileIndex / sourceTilesPerRow) * tileHeight;
       context.drawImage(
         legacyAtlasImage,
         sourceX,
         sourceY,
         tileSize,
-        tileSize,
+        tileHeight,
         destX,
         destY,
         tileSize,
-        tileSize,
+        tileHeight,
       );
     }
 
@@ -463,6 +480,8 @@ export class TilesetAssets {
       this.tilesetTexture?.dispose();
       this.tilesetTexture = null;
       this.tileSourceSize = 32;
+      this.tileSourceHeight = 32;
+      this.dependencies.renderPipeline.syncWorldTileScale();
       this.loadedTilesetSourceLayoutVersion = "unknown";
       this.loadedTilesetTileLayoutVersion = "unknown";
       this.invalidateTilesetDependentCaches();
@@ -480,6 +499,8 @@ export class TilesetAssets {
       this.ensureVultureTilesetTranslator(tilesetAssetUrl || "");
       this.tileSourceSize =
         this.vultureTilesetTranslator?.nominalTileSize ?? 112;
+      this.tileSourceHeight = this.tileSourceSize;
+      this.dependencies.renderPipeline.syncWorldTileScale();
       this.loadedTilesetSourceAtlasImage = null;
       this.clearTilesetBackgroundReferenceTileCache();
       this.loadedTilesetSourceLayoutVersion = tileset.tileLayoutVersion;
@@ -496,6 +517,7 @@ export class TilesetAssets {
     this.disposeVultureTilesetTranslator();
     this.dependencies.vultureProjectionDebug.syncVultureWallProjectionDebugPanelVisibility();
     this.tileSourceSize = 32;
+    this.tileSourceHeight = 32;
     const atlasUrl = tilesetAssetUrl || tileset.path;
     void (async () => {
       try {
@@ -504,21 +526,23 @@ export class TilesetAssets {
           return;
         }
         const atlasWidth = Math.max(0, Math.trunc(sourceImage.width || 0));
-        const tileSize = inferNh3dTilesetTileSizeFromAtlasWidthForPath(
-          atlasWidth,
-          tileset.path,
-        );
         const atlasHeight = Math.max(0, Math.trunc(sourceImage.height || 0));
+        const { tileWidth: tileSize, tileHeight } = inferNh3dTilesetTileDimensions(
+          atlasWidth,
+          atlasHeight,
+          tileset.path,
+          tileset.tileLayoutVersion,
+        );
         const sourceTilesPerRow = Math.floor(
           atlasWidth / Math.max(1, tileSize),
         );
-        const sourceRows = Math.floor(atlasHeight / Math.max(1, tileSize));
+        const sourceRows = Math.floor(atlasHeight / Math.max(1, tileHeight));
         const sourceTileCount =
           sourceTilesPerRow > 0 && sourceRows > 0
             ? sourceTilesPerRow * sourceRows
             : 0;
         this.loadedTilesetSourceAtlasImage = sourceImage;
-        this.captureTilesetBackgroundReferenceTile(sourceImage, tileSize);
+        this.captureTilesetBackgroundReferenceTile(sourceImage, tileSize, tileHeight);
         let textureSource: HTMLImageElement | HTMLCanvasElement = sourceImage;
         let loadedLayoutVersion: Nh3dTilesetTileLayoutVersion =
           tileset.tileLayoutVersion;
@@ -552,10 +576,16 @@ export class TilesetAssets {
           if (loadRequestId !== this.tilesetTextureLoadRequestId) {
             return;
           }
+          const fuseDimensions = fuseBaseImage
+            ? inferNh3dTilesetTileDimensions(fuseBaseImage.width, fuseBaseImage.height, fuseBaseTilesetPath, "5.0")
+            : { tileWidth: tileSize, tileHeight };
           textureSource = this.compileLegacyTilesetAtlasToNh5(
             sourceImage,
             tileSize,
             fuseBaseImage,
+            tileHeight,
+            fuseDimensions.tileWidth,
+            fuseDimensions.tileHeight,
           );
           loadedLayoutVersion = "5.0";
           sourceLayoutVersion =
@@ -572,6 +602,8 @@ export class TilesetAssets {
         }
         this.tilesetTexture = nextTexture;
         this.tileSourceSize = tileSize;
+        this.tileSourceHeight = tileHeight;
+        this.dependencies.renderPipeline.syncWorldTileScale();
         this.loadedTilesetSourceLayoutVersion = sourceLayoutVersion;
         this.loadedTilesetTileLayoutVersion = loadedLayoutVersion;
         this.invalidateTilesetDependentCaches();
@@ -750,7 +782,7 @@ export class TilesetAssets {
     );
     const tileSize = Math.max(1, Math.trunc(this.tileSourceSize) || 1);
     const tilesPerRow = Math.floor(atlasWidth / tileSize);
-    const rows = Math.floor(atlasHeight / tileSize);
+    const rows = Math.floor(atlasHeight / Math.max(1, this.tileSourceHeight));
     return tilesPerRow > 0 && rows > 0 ? tilesPerRow * rows : 0;
   }
 

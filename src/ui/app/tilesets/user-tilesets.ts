@@ -1,5 +1,5 @@
 import {
-  inferNh3dTilesetTileSizeFromAtlasWidthForPath
+  inferNh3dTilesetTileDimensions
 } from "../../../game/tilesets";
 import {
   type StoredUserTilesetRecord,
@@ -24,12 +24,24 @@ export function appendUserTilesetNameSuffix(value: string): string {
 export const defaultUserTilesetTileLayoutVersion: StoredUserTilesetTileLayoutVersion =
   "3.6.7";
 
+export function resolveUserTilesetTileHeight(rawHeight: string, inferredHeight: number): number {
+  if (!rawHeight.trim()) {
+    return inferredHeight;
+  }
+  const height = Number(rawHeight);
+  if (!Number.isSafeInteger(height) || height < 1) {
+    throw new Error(t.dialogs.tilesetManager.invalidTileHeight);
+  }
+  return height;
+}
+
 export function toUserTilesetRegistrations(
   records: ReadonlyArray<StoredUserTilesetRecord>,
 ): ReadonlyArray<{
   id: string;
   label: string;
   tileSize: number;
+  tileHeight?: number;
   tileLayoutVersion: StoredUserTilesetTileLayoutVersion;
   blob: Blob;
 }> {
@@ -37,22 +49,26 @@ export function toUserTilesetRegistrations(
     id: record.id,
     label: record.label,
     tileSize: record.tileSize,
+    tileHeight: record.tileHeight,
     tileLayoutVersion: record.tileLayoutVersion,
     blob: record.blob,
   }));
 }
 
-export async function inferTilesetTileSizeFromBlob(blob: Blob): Promise<number> {
+export async function inferTilesetTileDimensionsFromBlob(
+  blob: Blob,
+  tileLayoutVersion?: StoredUserTilesetTileLayoutVersion,
+): Promise<{ tileWidth: number; tileHeight: number }> {
   if (typeof window === "undefined") {
-    return 32;
+    return { tileWidth: 32, tileHeight: 32 };
   }
   const objectUrl = URL.createObjectURL(blob);
   try {
-    const size = await new Promise<number>((resolve, reject) => {
+    const size = await new Promise<{ tileWidth: number; tileHeight: number }>((resolve, reject) => {
       const image = new window.Image();
       image.onload = () =>
         resolve(
-          inferNh3dTilesetTileSizeFromAtlasWidthForPath(image.naturalWidth),
+          inferNh3dTilesetTileDimensions(image.naturalWidth, image.naturalHeight, undefined, tileLayoutVersion),
         );
       image.onerror = () => reject(new Error(t.tilesets.failedToReadImage));
       image.src = objectUrl;
@@ -72,16 +88,22 @@ export async function normalizeUserTilesetTileSizes(
         1,
         Math.trunc(Number.isFinite(record.tileSize) ? record.tileSize : 32),
       );
+      const fallbackTileHeight = Math.max(
+        1,
+        Math.trunc(Number.isFinite(record.tileHeight) ? record.tileHeight! : fallbackTileSize),
+      );
       try {
-        const tileSize = await inferTilesetTileSizeFromBlob(record.blob);
+        const dimensions = await inferTilesetTileDimensionsFromBlob(record.blob, record.tileLayoutVersion);
         return {
           ...record,
-          tileSize,
+          tileSize: dimensions.tileWidth,
+          tileHeight: record.tileHeight !== undefined ? fallbackTileHeight : dimensions.tileHeight,
         };
       } catch {
         return {
           ...record,
           tileSize: fallbackTileSize,
+          tileHeight: fallbackTileHeight,
         };
       }
     }),

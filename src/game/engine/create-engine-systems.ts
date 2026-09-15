@@ -161,6 +161,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get worldClassification() { return worldClassification; },
   });
   const minimap: Minimap = new Minimap({
+    get tilesetAssets() { return tilesetAssets; },
     get camera() { return camera; },
     get controllerGameplay() { return controllerGameplay; },
     get directionPrompts() { return directionPrompts; },
@@ -326,6 +327,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get engineState() { return engineState; },
     get heldWeaponAnimationDebug() { return heldWeaponAnimationDebug; },
     get minimap() { return minimap; },
+    get tilesetAssets() { return tilesetAssets; },
   });
   const bloodGround: BloodGround = new BloodGround({
     get audioHapticsPlatform() { return audioHapticsPlatform; },

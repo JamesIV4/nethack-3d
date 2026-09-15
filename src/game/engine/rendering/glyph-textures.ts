@@ -39,6 +39,7 @@ export interface GlyphTexturesDependencies {
     | "resolveTilesetAtlasImageSource"
     | "resolveTilesetBackgroundReferenceTileIndex"
     | "tileSourceSize"
+    | "tileSourceHeight"
     | "tilesetBackgroundReferenceTilePixels"
     | "tilesetTexture"
     | "vultureTilesetTranslator"
@@ -248,15 +249,16 @@ export class GlyphTextures {
     } = {},
   ): THREE.CanvasTexture {
     const size = this.dependencies.tilesetAssets.tileSourceSize;
+    const height = this.dependencies.tilesetAssets.tileSourceHeight ?? size;
     const canvas = document.createElement("canvas");
     canvas.width = size;
-    canvas.height = size;
+    canvas.height = height;
     const context = canvas.getContext("2d", { willReadFrequently: true });
     if (!context) {
       throw new Error("Failed to create tile texture canvas context");
     }
 
-    context.clearRect(0, 0, size, size);
+    context.clearRect(0, 0, size, height);
 
     const sourceGlyph =
       typeof sourceContext.sourceGlyph === "number" &&
@@ -346,7 +348,7 @@ export class GlyphTextures {
       );
       const floorUnderlayImage = floorUnderlayTexture.image;
       if (floorUnderlayImage) {
-        context.drawImage(floorUnderlayImage, 0, 0, size, size);
+        context.drawImage(floorUnderlayImage, 0, 0, size, height);
       }
       floorUnderlayTexture.dispose();
     }
@@ -371,6 +373,7 @@ export class GlyphTextures {
       translatedDrawSucceeded = this.dependencies.tilesetAssets.drawTilesetBackgroundReferenceTile(
         context,
         size,
+        height,
       );
     }
     let usedPrebakedProjectionTexture = false;
@@ -517,7 +520,7 @@ export class GlyphTextures {
       const img = atlasImage;
       const width = Math.trunc(img.width);
       const tilesPerRow = Math.floor(width / size);
-      const tileRows = Math.floor(img.height / size);
+      const tileRows = Math.floor(img.height / height);
       const tileCount =
         tilesPerRow > 0 && tileRows > 0 ? tilesPerRow * tileRows : 0;
       if (tilesPerRow > 0 && tileCount > 0) {
@@ -526,10 +529,10 @@ export class GlyphTextures {
           this.dependencies.tilesetAssets.resolveAtlasTileIndexForRuntime(tileIndex, tileCount),
         );
         const sx = (atlasTileIndex % tilesPerRow) * size;
-        const sy = Math.floor(atlasTileIndex / tilesPerRow) * size;
+        const sy = Math.floor(atlasTileIndex / tilesPerRow) * height;
 
         // Draw the specific tile from the atlas
-        context.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+        context.drawImage(img, sx, sy, size, height, 0, 0, size, height);
 
         if (shouldApplyBackgroundRemoval) {
           this.applyTilesetBillboardBackgroundRemoval(
@@ -538,6 +541,7 @@ export class GlyphTextures {
             size,
             tileCount,
             tilesPerRow,
+            height,
           );
         }
       }
@@ -551,7 +555,7 @@ export class GlyphTextures {
         ? "source-atop"
         : "source-over";
       context.fillStyle = `rgba(0, 0, 0, ${alpha})`;
-      context.fillRect(0, 0, size, size);
+      context.fillRect(0, 0, size, height);
     }
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -584,6 +588,7 @@ export class GlyphTextures {
   applySolidColorChromaKey(
     context: CanvasRenderingContext2D,
     tileSize: number,
+    tileHeight: number = tileSize,
   ): void {
     const solidColor = this.parseSolidChromaKeyColorHex(
       this.dependencies.engineState.clientOptions.tilesetSolidChromaKeyColorHex,
@@ -591,7 +596,7 @@ export class GlyphTextures {
     if (!solidColor) {
       return;
     }
-    const imageData = context.getImageData(0, 0, tileSize, tileSize);
+    const imageData = context.getImageData(0, 0, tileSize, tileHeight);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
       if (
@@ -611,12 +616,13 @@ export class GlyphTextures {
     tileSize: number,
     tileCount: number,
     tilesPerRow: number,
+    tileHeight: number = tileSize,
   ): void {
     if (this.dependencies.engineState.clientOptions.tilesetBackgroundRemovalMode === "none") {
       return;
     }
     if (this.dependencies.engineState.clientOptions.tilesetBackgroundRemovalMode === "solid") {
-      this.applySolidColorChromaKey(context, tileSize);
+      this.applySolidColorChromaKey(context, tileSize, tileHeight);
       return;
     }
     this.applyTilesetBackgroundRemoval(
@@ -625,13 +631,14 @@ export class GlyphTextures {
       tileSize,
       tileCount,
       tilesPerRow,
+      tileHeight,
     );
     if (
       isNh3dTilesetCombinedBackgroundRemovalForced(
         this.dependencies.engineState.clientOptions.tilesetPath,
       )
     ) {
-      this.applySolidColorChromaKey(context, tileSize);
+      this.applySolidColorChromaKey(context, tileSize, tileHeight);
     }
   }
 
@@ -641,6 +648,7 @@ export class GlyphTextures {
     tileIndex: number,
     tileCount: number,
     tilesPerRow: number,
+    tileHeight: number = tileSize,
   ): Uint8ClampedArray | null {
     const normalizedTileIndex = Math.trunc(tileIndex);
     if (
@@ -660,27 +668,27 @@ export class GlyphTextures {
 
     const canvas = document.createElement("canvas");
     canvas.width = tileSize;
-    canvas.height = tileSize;
+    canvas.height = tileHeight;
     const context = canvas.getContext("2d", { willReadFrequently: true });
     if (!context) {
       return null;
     }
 
     const sx = (normalizedTileIndex % tilesPerRow) * tileSize;
-    const sy = Math.floor(normalizedTileIndex / tilesPerRow) * tileSize;
-    context.clearRect(0, 0, tileSize, tileSize);
+    const sy = Math.floor(normalizedTileIndex / tilesPerRow) * tileHeight;
+    context.clearRect(0, 0, tileSize, tileHeight);
     context.drawImage(
       atlasImage,
       sx,
       sy,
       tileSize,
-      tileSize,
+      tileHeight,
       0,
       0,
       tileSize,
-      tileSize,
+      tileHeight,
     );
-    const pixels = context.getImageData(0, 0, tileSize, tileSize).data;
+    const pixels = context.getImageData(0, 0, tileSize, tileHeight).data;
     this.tilesetBackgroundTilePixelsCache.set(normalizedTileIndex, pixels);
     return pixels;
   }
@@ -691,6 +699,7 @@ export class GlyphTextures {
     tileSize: number,
     tileCount: number,
     tilesPerRow: number,
+    tileHeight: number = tileSize,
   ): void {
     const backgroundPixels =
       this.dependencies.tilesetAssets.tilesetBackgroundReferenceTilePixels ??
@@ -700,12 +709,13 @@ export class GlyphTextures {
         this.dependencies.tilesetAssets.resolveTilesetBackgroundReferenceTileIndex(),
         tileCount,
         tilesPerRow,
+        tileHeight,
       );
     if (!backgroundPixels) {
       return;
     }
 
-    const imageData = context.getImageData(0, 0, tileSize, tileSize);
+    const imageData = context.getImageData(0, 0, tileSize, tileHeight);
     const data = imageData.data;
     // Per-channel color-difference threshold where background removal begins.
     // Pixels with max(R/G/B delta) <= this are treated as pure background (fully transparent).

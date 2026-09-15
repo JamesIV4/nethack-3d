@@ -502,6 +502,10 @@ export const zhCnOverrides = {
             terminal: "终端",
           },
         },
+        tilesetUseTileAspectRatio: {
+          label: "使方块匹配图块宽高比",
+          description: "图块不是正方形时使用长方形3D方块。关闭后保留正方形方块。",
+        },
         tilesetPath: {
           label: "瓦片集",
           description: "内置和已上传的瓦片集。",
@@ -1020,6 +1024,11 @@ export const zhCnOverrides = {
         layout367: "NetHack 3.6.7 布局",
         layout5: "NetHack 5.0 布局",
         tileLayoutDescription: "选择此上传图集使用的瓦片索引布局。",
+        tileWidth: "图块宽度（像素，自动）",
+        tileHeight: "图块高度（像素）",
+        autoTileHeight: "自动",
+        tileDimensionsDescription: "宽度根据图像的40列计算。高度留空可自动检测，也可输入每个图块的高度以使用自定义宽高比。",
+        invalidTileHeight: "图块高度必须是正整数。",
         tileImage: "瓦片集图像",
         tileImageOptional: "瓦片集图像（可选替换）",
         selectedFile: (fileName: string) => `已选择：${fileName}`,

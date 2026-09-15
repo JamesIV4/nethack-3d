@@ -695,6 +695,10 @@ export const esOverrides = {
                         terminal: "Terminal",
                     },
                 },
+                tilesetUseTileAspectRatio: {
+                  label: "Ajustar bloques a la proporción de las baldosas",
+                  description: "Usa bloques 3D rectangulares cuando las baldosas no sean cuadradas. Desactívalo para mantener bloques cuadrados.",
+                },
                 tilesetPath: {
                     label: "Conjunto de mosaicos",
                     description: "Conjuntos de mosaicos integrados y cargados.",
@@ -1194,6 +1198,11 @@ export const esOverrides = {
                 layout367: "Dise\u00F1o de NetHack 3.6.7",
                 layout5: "Dise\u00F1o de NetHack 5.0",
                 tileLayoutDescription: "Elija el dise\u00F1o del \u00EDndice de mosaicos utilizado por este atlas cargado.",
+                tileWidth: "Ancho de baldosa (píxeles, automático)",
+                tileHeight: "Alto de baldosa (píxeles)",
+                autoTileHeight: "Automático",
+                tileDimensionsDescription: "El ancho usa las 40 columnas de la imagen. Deja el alto vacío para detectarlo automáticamente o introduce la altura de cada baldosa para una proporción personalizada.",
+                invalidTileHeight: "El alto de baldosa debe ser un número entero positivo.",
                 tileImage: "Imagen del conjunto de mosaicos",
                 tileImageOptional: "Imagen de mosaico (reemplazo opcional)",
                 selectedFile: (fileName: string) => `Seleccionado:${fileName}`,

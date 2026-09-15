@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { applyCameraAttachedWorldAspect } from "./tile-world-presentation";
 import type { NethackMenuItem } from "../../ui-types";
 import { resolveDefaultNh3dTilesetWeaponSpriteFlipX } from "../../tilesets";
 import {
@@ -50,6 +51,7 @@ export interface HeldWeaponDependencies {
   readonly camera: Pick<
     Camera,
     "camera"
+    | "getActiveCamera"
     | "cameraPitch"
     | "cameraYaw"
     | "defaultFpsCameraFov"
@@ -117,6 +119,7 @@ export interface HeldWeaponDependencies {
 
 /** First-person weapon sprite, texture transforms, sway and authored animations */
 export class HeldWeapon {
+  private readonly inverseWorldTileScale = new THREE.Matrix4();
   constructor(private readonly dependencies: HeldWeaponDependencies) {}
 
   fpsHeldWeaponMesh: THREE.Mesh<
@@ -1146,6 +1149,9 @@ export class HeldWeapon {
       .copy(this.dependencies.camera.camera.quaternion)
       .multiply(this.fpsHeldWeaponBaseRotationQuaternion);
     mesh.quaternion.copy(this.fpsHeldWeaponWorldQuaternion);
+    applyCameraAttachedWorldAspect(mesh, this.dependencies.camera.camera,
+      this.dependencies.camera.getActiveCamera(),
+      this.dependencies.renderPipeline.scene.scale.x, this.inverseWorldTileScale);
     mesh.visible = true;
   }
 }

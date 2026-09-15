@@ -95,6 +95,7 @@ export interface CameraDependencies {
   readonly tilesetAssets: Pick<
     TilesetAssets,
     "isVultureTilesActive"
+    | "getWorldTileScaleX"
   >;
   readonly tileUpdates: Pick<
     TileUpdates,
@@ -109,6 +110,8 @@ export class Camera {
   constructor(private readonly dependencies: CameraDependencies) {}
 
   camera!: THREE.PerspectiveCamera;
+  private readonly tileAspectCamera = new THREE.PerspectiveCamera();
+  private readonly tileAspectLookTarget = new THREE.Vector3();
 
 
   // --- Terminal display mode ---
@@ -827,7 +830,22 @@ export class Camera {
     if (this.dependencies.terminalRendering.isTerminalDisplayMode() && this.terminalCamera) {
       return this.terminalCamera;
     }
-    return this.camera;
+    const scaleX = this.dependencies.tilesetAssets.getWorldTileScaleX();
+    if (scaleX === 1) return this.camera;
+    // Keep smoothing and movement in the logical grid. The rendered camera
+    // uses rectangular world positions, with an orthonormal viewing basis.
+    this.camera.updateMatrixWorld();
+    const camera = this.tileAspectCamera;
+    camera.copy(this.camera, false);
+    this.camera.getWorldDirection(this.tileAspectLookTarget);
+    this.tileAspectLookTarget.add(this.camera.position);
+    this.tileAspectLookTarget.x *= scaleX;
+    camera.position.x *= scaleX;
+    camera.up.x *= scaleX;
+    camera.up.normalize();
+    camera.lookAt(this.tileAspectLookTarget);
+    camera.updateMatrixWorld(true);
+    return camera;
   }
 
 
@@ -946,21 +964,22 @@ export class Camera {
   }
 
 
-  // The anisotropic terminal projection stretches world-space sprites
-  // vertically; rescale live effect sprites once per frame after their
-  // update loops so damage numbers and blood mist keep their proportions.
+  // Compensate terminal projection and rectangular world scaling after the
+  // effect update loops so damage numbers and blood mist keep their proportions.
   compensateTerminalWorldSpriteAspect(): void {
-    if (!this.dependencies.terminalRendering.isTerminalDisplayMode() || this.dependencies.terminalRendering.terminalCellAspect === 1) {
-      return;
-    }
-    const inverseAspect = 1 / this.dependencies.terminalRendering.terminalCellAspect;
+    const inverseAspect = this.dependencies.terminalRendering.isTerminalDisplayMode()
+      ? 1 / this.dependencies.terminalRendering.terminalCellAspect : 1;
+    const inverseWidth = 1 / this.dependencies.tilesetAssets.getWorldTileScaleX();
+    if (inverseAspect === 1 && inverseWidth === 1) return;
     for (const particle of this.dependencies.damageNumbers.playerDamageNumberParticles) {
       particle.sprite.scale.y *= inverseAspect;
+      particle.sprite.scale.x *= inverseWidth;
     }
     for (const particle of this.dependencies.bloodParticles.damageParticles) {
       const sprite = particle.sprite;
       if (sprite) {
         sprite.scale.y *= inverseAspect;
+        sprite.scale.x *= inverseWidth;
       }
     }
   }

@@ -7,6 +7,7 @@ export type GeneratedTilesetManifestEntry = {
   readonly label: string;
   readonly path: string;
   readonly tileSize: number;
+  readonly tileHeight?: number;
   readonly tileLayoutVersion: "slashem" | "3.4.3" | "3.6.7" | "5.0";
 };
 
@@ -37,6 +38,19 @@ export const GENERATED_TILESET_MANIFEST: ReadonlyArray<GeneratedTilesetManifestE
     "tileLayoutVersion": "3.6.7"
   },
   {
+    "label": "DuskHack",
+    "path": "assets/3.6/DuskHack.bmp",
+    "tileSize": 16,
+    "tileLayoutVersion": "3.6.7"
+  },
+  {
+    "label": "Geoduck",
+    "path": "assets/3.6/Geoduck.bmp",
+    "tileSize": 15,
+    "tileHeight": 25,
+    "tileLayoutVersion": "3.6.7"
+  },
+  {
     "label": "NetHack Modern",
     "path": "assets/3.6/NetHack Modern.bmp",
     "tileSize": 64,
@@ -59,6 +73,13 @@ export const GENERATED_TILESET_MANIFEST: ReadonlyArray<GeneratedTilesetManifestE
     "path": "assets/3.6/Vanilla NetHack Tiles.png",
     "tileSize": 16,
     "tileLayoutVersion": "3.6.7"
+  },
+  {
+    "label": "Geoduck",
+    "path": "assets/5.0/Geoduck.bmp",
+    "tileSize": 15,
+    "tileHeight": 25,
+    "tileLayoutVersion": "5.0"
   },
   {
     "label": "Nevanda",

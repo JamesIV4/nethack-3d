@@ -36,6 +36,22 @@ function fixture(sendOverride?: (frame: QuestSceneFrame) => Promise<void>) {
 }
 
 describe("Quest resolved scene export", () => {
+  it("exports physical rectangular cell matrices with unchanged heights and logical picking metadata", async () => {
+    const f = fixture();
+    f.snapshot.scene.scale.x = 0.6;
+    f.mesh.position.set(4, -6, 0.5);
+    f.mesh.userData = { tileX: 4, tileY: 6 };
+    f.exporter.update(f.snapshot, 0); await settle();
+    expect(f.frames[0].worldScaleX).toBe(0.6);
+    expect(f.frames[0].objects[0].matrix.slice(12, 15)).toEqual([2.4, -6, 0.5]);
+    expect(f.frames[0].objects[0].tile).toEqual([4, 6]);
+    const scale = new THREE.Vector3().setFromMatrixScale(new THREE.Matrix4().fromArray(f.frames[0].objects[0].matrix));
+    expect(scale.toArray()).toEqual([0.6, 1, 1]);
+    f.snapshot.scene.scale.x = 1;
+    f.exporter.update(f.snapshot, 100); await settle();
+    expect(f.frames[1].worldScaleX).toBe(1);
+    expect(f.frames[1].objects[0].matrix.slice(12, 15)).toEqual([4, -6, 0.5]);
+  });
   it("sends actual geometry, world transforms and camera pose once, then only changes", async () => {
     const f = fixture();
     f.mesh.position.set(3, -2, 0.5);

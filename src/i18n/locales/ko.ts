@@ -744,6 +744,10 @@ export const ko = {
             classic: "클래식",
           },
         },
+        tilesetUseTileAspectRatio: {
+          label: "블록을 타일 종횡비에 맞추기",
+          description: "타일이 정사각형이 아니면 직사각형 3D 블록을 사용합니다. 끄면 정사각형 블록을 유지합니다.",
+        },
         tilesetPath: {
           label: "타일셋",
           description: "내장 및 업로드한 타일셋입니다.",
@@ -1305,6 +1309,11 @@ export const ko = {
         layout5: "NetHack 5.0 레이아웃",
         tileLayoutDescription:
           "이 업로드된 아틀라스가 사용하는 타일 인덱스 레이아웃을 선택합니다.",
+        tileWidth: "타일 너비 (픽셀, 자동)",
+        tileHeight: "타일 높이 (픽셀)",
+        autoTileHeight: "자동",
+        tileDimensionsDescription: "너비는 이미지의 40개 열을 기준으로 합니다. 높이를 비워 두면 자동 감지하며, 원하는 종횡비를 사용하려면 각 타일의 높이를 입력하세요.",
+        invalidTileHeight: "타일 높이는 양의 정수여야 합니다.",
         tileImage: "타일셋 이미지",
         tileImageOptional: "타일셋 이미지(선택적 교체)",
         selectedFile: (fileName: string) => `선택됨: ${fileName}`,

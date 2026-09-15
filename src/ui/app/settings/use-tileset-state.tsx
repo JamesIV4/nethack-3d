@@ -27,6 +27,9 @@ export function useTilesetState() {
   );
 
   const [tilesetManagerName, setTilesetManagerName] = useState("");
+  const [tilesetManagerTileHeight, setTilesetManagerTileHeight] = useState("");
+  const [tilesetManagerTileDimensions, setTilesetManagerTileDimensions] =
+    useState<{ tileWidth: number; tileHeight: number } | null>(null);
 
   const [tilesetManagerTileLayoutVersion, setTilesetManagerTileLayoutVersion] =
     useState<StoredUserTilesetTileLayoutVersion>(
@@ -65,6 +68,10 @@ export function useTilesetState() {
     setTilesetManagerMode,
     tilesetManagerName,
     setTilesetManagerName,
+    tilesetManagerTileHeight,
+    setTilesetManagerTileHeight,
+    tilesetManagerTileDimensions,
+    setTilesetManagerTileDimensions,
     tilesetManagerTileLayoutVersion,
     setTilesetManagerTileLayoutVersion,
     tilesetManagerEditPath,

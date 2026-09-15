@@ -131,6 +131,7 @@ export type ClientOptionToggleKey =
   | "animatedMovement"
   | "disableAnimatedTransitions"
   | "uiTileBackgroundRemoval"
+  | "tilesetUseTileAspectRatio"
   | "minimap"
   | "reduceInventoryMotion"
   | "inventoryTileOnlyMotion"

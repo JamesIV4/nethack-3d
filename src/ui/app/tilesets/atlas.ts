@@ -20,6 +20,7 @@ export type TileAtlasState = {
   loaded: boolean;
   failed: boolean;
   tileSourceSize: number;
+  tileSourceHeight: number;
   columns: number;
   rows: number;
   tileCount: number;
@@ -30,6 +31,7 @@ export const createDefaultTileAtlasState = (): TileAtlasState => ({
   loaded: false,
   failed: false,
   tileSourceSize: 32,
+  tileSourceHeight: 32,
   columns: 0,
   rows: 0,
   tileCount: 0,
@@ -151,11 +153,12 @@ export function createIsolatedAtlasTilePreviewDataUrl(
     solidChromaKeyColorHex: string;
     backgroundTilePixels: Uint8ClampedArray | null;
   },
+  tileSourceHeight = tileSourceSize,
 ): string | null {
   if (
     typeof document === "undefined" ||
     !atlasImage ||
-    tileSourceSize <= 0 ||
+    tileSourceSize <= 0 || tileSourceHeight <= 0 ||
     !Number.isFinite(tileId)
   ) {
     return null;
@@ -170,25 +173,25 @@ export function createIsolatedAtlasTilePreviewDataUrl(
 
   const canvas = document.createElement("canvas");
   canvas.width = tileSourceSize;
-  canvas.height = tileSourceSize;
+  canvas.height = tileSourceHeight;
   const context = canvas.getContext("2d");
   if (!context) {
     return null;
   }
 
   const sx = (safeTileId % tilesPerRow) * tileSourceSize;
-  const sy = Math.floor(safeTileId / tilesPerRow) * tileSourceSize;
-  context.clearRect(0, 0, tileSourceSize, tileSourceSize);
+  const sy = Math.floor(safeTileId / tilesPerRow) * tileSourceHeight;
+  context.clearRect(0, 0, tileSourceSize, tileSourceHeight);
   context.drawImage(
     atlasImage,
     sx,
     sy,
     tileSourceSize,
-    tileSourceSize,
+    tileSourceHeight,
     0,
     0,
     tileSourceSize,
-    tileSourceSize,
+    tileSourceHeight,
   );
 
   if (backgroundRemoval?.enabled) {
@@ -196,7 +199,7 @@ export function createIsolatedAtlasTilePreviewDataUrl(
       0,
       0,
       tileSourceSize,
-      tileSourceSize,
+      tileSourceHeight,
     );
     const data = imageData.data;
     const applySolidChromaKey = (): void => {
@@ -262,11 +265,12 @@ export function getAtlasTilePixels(
   tileId: number,
   tileColumns: number,
   tileRows: number,
+  tileSourceHeight = tileSourceSize,
 ): Uint8ClampedArray | null {
   if (
     typeof document === "undefined" ||
     !atlasImage ||
-    tileSourceSize <= 0 ||
+    tileSourceSize <= 0 || tileSourceHeight <= 0 ||
     !Number.isFinite(tileId)
   ) {
     return null;
@@ -281,27 +285,27 @@ export function getAtlasTilePixels(
 
   const canvas = document.createElement("canvas");
   canvas.width = tileSourceSize;
-  canvas.height = tileSourceSize;
+  canvas.height = tileSourceHeight;
   const context = canvas.getContext("2d", { willReadFrequently: true });
   if (!context) {
     return null;
   }
 
   const sx = (safeTileId % tilesPerRow) * tileSourceSize;
-  const sy = Math.floor(safeTileId / tilesPerRow) * tileSourceSize;
-  context.clearRect(0, 0, tileSourceSize, tileSourceSize);
+  const sy = Math.floor(safeTileId / tilesPerRow) * tileSourceHeight;
+  context.clearRect(0, 0, tileSourceSize, tileSourceHeight);
   context.drawImage(
     atlasImage,
     sx,
     sy,
     tileSourceSize,
-    tileSourceSize,
+    tileSourceHeight,
     0,
     0,
     tileSourceSize,
-    tileSourceSize,
+    tileSourceHeight,
   );
-  return context.getImageData(0, 0, tileSourceSize, tileSourceSize).data;
+  return context.getImageData(0, 0, tileSourceSize, tileSourceHeight).data;
 }
 
 export function resolvePreviewAtlasTileIdForRuntime(

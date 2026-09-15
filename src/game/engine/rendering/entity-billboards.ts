@@ -75,6 +75,8 @@ export interface EntityBillboardsDependencies {
     "resolveTextureAnisotropyLevel"
     | "shouldUseVultureTiles"
     | "tileSourceSize"
+    | "tileSourceHeight"
+    | "getWorldTileScaleX"
   >;
   readonly vultureProjection: Pick<
     VultureProjection,
@@ -146,6 +148,8 @@ export class EntityBillboards {
   readonly fpsPitchLockedBillboardRight = new THREE.Vector3();
 
   readonly fpsPitchLockedBillboardLookTarget = new THREE.Vector3();
+
+  readonly fpsPitchLockedBillboardFacingMatrix = new THREE.Matrix4();
 
   readonly fpsPlayerTileBillboardSideNudge = TILE_SIZE * 0.24;
 
@@ -708,12 +712,31 @@ export class EntityBillboards {
     } else {
       this.fpsPitchLockedBillboardForward.normalize();
     }
-    this.fpsPitchLockedBillboardLookTarget
-      .copy(proxy.position)
-      .add(this.fpsPitchLockedBillboardForward);
-    proxy.lookAt(this.fpsPitchLockedBillboardLookTarget);
+    this.faceStandingBillboardProxy(proxy, this.fpsPitchLockedBillboardForward);
     proxy.visible = true;
     sprite.visible = false;
+  }
+
+  faceStandingBillboardProxy(proxy: THREE.Mesh, logicalDirection: THREE.Vector3): void {
+    const worldScaleX = this.dependencies.tilesetAssets.getWorldTileScaleX();
+    this.fpsPitchLockedBillboardLookTarget.copy(proxy.position).add(logicalDirection);
+    if (worldScaleX === 1) {
+      proxy.lookAt(this.fpsPitchLockedBillboardLookTarget);
+      return;
+    }
+    // Object3D.lookAt assumes an unscaled parent. For the rectangular world,
+    // transform the desired plane normal by S transpose (S * logicalDirection
+    // is the world direction), then orient locally without parent decomposition.
+    this.fpsPitchLockedBillboardLookTarget.x = proxy.position.x + logicalDirection.x * worldScaleX * worldScaleX;
+    this.fpsPitchLockedBillboardFacingMatrix.lookAt(
+      this.fpsPitchLockedBillboardLookTarget, proxy.position, proxy.up,
+    );
+    proxy.quaternion.setFromRotationMatrix(this.fpsPitchLockedBillboardFacingMatrix);
+    const rotation = this.fpsPitchLockedBillboardFacingMatrix.elements;
+    const tangentScale = Math.hypot(rotation[0] * worldScaleX, rotation[1]);
+    // A standing proxy and its camera-facing Sprite must have the same width,
+    // including when the camera looks diagonally across rectangular cells.
+    proxy.scale.x *= worldScaleX / Math.max(tangentScale, 0.000001);
   }
 
   updateMonsterBillboardPitchLockState(): void {
@@ -1093,11 +1116,18 @@ export class EntityBillboards {
       sprite.center.set(0.5, 0);
       sprite.scale.set(scaleX, scaleY, 1);
     } else {
-      // Keep legacy placement/scaling for non-vulture tilesets and ASCII.
+      // Preserve tile pixels' aspect while keeping the existing sprite height.
+      // ASCII and square atlases retain their original scale.
+      const sourceWidth = this.dependencies.tilesetAssets.tileSourceSize;
+      const sourceHeight = this.dependencies.tilesetAssets.tileSourceHeight ?? sourceWidth;
+      const aspect = useTiles
+        ? sourceWidth / Math.max(1, sourceHeight) / this.dependencies.tilesetAssets.getWorldTileScaleX()
+        : 1;
       sprite.center.set(0.5, 0.5);
-      sprite.scale.set(scaleBase, scaleBase, 1);
+      sprite.scale.set(scaleBase * aspect, scaleBase, 1);
     }
     if (flattenedBackdropSprite) {
+      // This child inherits the primary sprite's rectangular aspect.
       // Keep the historical flattened billboard behind the primary billboard.
       flattenedBackdropSprite.scale.set(scaleBase, scaleBase, 1);
       flattenedBackdropSprite.position.set(0, 0, 0);
@@ -1115,7 +1145,7 @@ export class EntityBillboards {
     sprite.userData.billboardKey = key;
 
     const shadowScale =
-      ((useVultureBillboardGrounding ? scaleX : scaleBase) *
+      (sprite.scale.x *
         contentWidth *
         1.25) /
       (TILE_SIZE * 0.8);

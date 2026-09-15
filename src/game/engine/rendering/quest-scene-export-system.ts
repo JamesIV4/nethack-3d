@@ -77,7 +77,7 @@ export class QuestSceneExport {
     this.exporter.update({
       scene: this.dependencies.renderPipeline.scene,
       camera: this.dependencies.camera.getActiveCamera(),
-      player: [player.x * TILE_SIZE, -player.y * TILE_SIZE, 0],
+      player: [player.x * TILE_SIZE * this.dependencies.renderPipeline.scene.scale.x, -player.y * TILE_SIZE, 0],
       tileSize: TILE_SIZE,
       eyeHeight: this.dependencies.camera.firstPersonEyeHeight,
       lighting: {

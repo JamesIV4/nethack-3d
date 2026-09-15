@@ -370,6 +370,7 @@ export type Nh3dClientOptions = {
   tilesetMode: Nh3dTilesetMode;
   asciiColorMode: Nh3dAsciiColorMode;
   tilesetPath: string;
+  tilesetUseTileAspectRatio: boolean;
   antialiasing: Nh3dAntialiasingMode;
   brightness: number;
   contrast: number;
@@ -534,6 +535,7 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
   tilesetMode: "tiles",
   asciiColorMode: "nethack-3d",
   tilesetPath: defaultNh3dTilesetPath,
+  tilesetUseTileAspectRatio: true,
   antialiasing: "taa",
   brightness: 0,
   contrast: 0,
@@ -1201,6 +1203,10 @@ export function normalizeNh3dClientOptions(
       typeof overrides?.uiTileBackgroundRemoval === "boolean"
         ? overrides.uiTileBackgroundRemoval
         : defaultNh3dClientOptions.uiTileBackgroundRemoval,
+    tilesetUseTileAspectRatio:
+      typeof overrides?.tilesetUseTileAspectRatio === "boolean"
+        ? overrides.tilesetUseTileAspectRatio
+        : defaultNh3dClientOptions.tilesetUseTileAspectRatio,
     minimap:
       typeof overrides?.minimap === "boolean"
         ? overrides.minimap

@@ -90,6 +90,8 @@ export function useTilesetManagerPreviews(dependencies: UseTilesetManagerPreview
         tilesetManagerAtlasState.tileSourceSize,
         tilesetManagerAtlasState.columns,
         tilesetManagerAtlasState.rows,
+        undefined,
+        tilesetManagerAtlasState.tileSourceHeight,
       );
       if (!dataUrl) {
         continue;
@@ -104,6 +106,7 @@ export function useTilesetManagerPreviews(dependencies: UseTilesetManagerPreview
     tilesetManagerAtlasState.rows,
     tilesetManagerAtlasState.tileCount,
     tilesetManagerAtlasState.tileSourceSize,
+    tilesetManagerAtlasState.tileSourceHeight,
   ]);
 
   const getTilesetManagerTilePreviewDataUrl = (

@@ -65,6 +65,8 @@ export interface QuestSceneFrame {
   camera: { position: number[]; quaternion: number[] };
   player: number[];
   tileSize: number;
+  /** Presentation width multiplier; logical tile IDs and lighting center stay unscaled. */
+  worldScaleX?: number;
   eyeHeight?: number;
   lighting?: {
     center: number[];
@@ -273,12 +275,13 @@ export class QuestSceneExporter {
       removedGeometries: [], removedMaterials: [], removedTextures: [],
       camera: { position: [], quaternion: [] }, player: snapshot.player,
       tileSize: snapshot.tileSize, eyeHeight: snapshot.eyeHeight, lighting: snapshot.lighting,
+      worldScaleX: snapshot.scene.scale.x,
     };
     snapshot.scene.updateMatrixWorld(true);
     snapshot.camera.updateWorldMatrix(true, false);
     frame.camera.position = new THREE.Vector3().setFromMatrixPosition(snapshot.camera.matrixWorld).toArray();
     frame.camera.quaternion = snapshot.camera.getWorldQuaternion(new THREE.Quaternion()).toArray();
-    next.view = JSON.stringify([frame.camera, frame.player, frame.tileSize, frame.eyeHeight, frame.lighting]);
+    next.view = JSON.stringify([frame.camera, frame.player, frame.tileSize, frame.worldScaleX, frame.eyeHeight, frame.lighting]);
 
     const visitTexture = (texture: THREE.Texture): boolean => {
       if (next.textures.has(texture.uuid)) return true;

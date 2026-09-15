@@ -29,8 +29,10 @@ import type { PromptDialogs } from "./prompt-dialogs";
 import type { QuestionMenus } from "./question-menus";
 import type { TerminalRendering } from "../rendering/terminal-rendering";
 import type { WorldClassification } from "../world/world-classification";
+import type { TilesetAssets } from "../rendering/tileset-assets";
 
 export interface MinimapDependencies {
+  readonly tilesetAssets: Pick<TilesetAssets, "getWorldTileScaleX">;
   readonly camera: Pick<
     Camera,
     "camera"
@@ -574,7 +576,7 @@ export class Minimap {
     const pitchScale = 1 / Math.max(0.45, Math.sin(this.dependencies.camera.cameraPitch));
 
     const viewWidthTiles = THREE.MathUtils.clamp(
-      (baseViewWidthWorld * pitchScale) / TILE_SIZE,
+      (baseViewWidthWorld * pitchScale) / (TILE_SIZE * this.dependencies.tilesetAssets.getWorldTileScaleX()),
       4,
       MINIMAP_WIDTH_TILES,
     );

@@ -32,6 +32,7 @@ function fixture(start = true) {
       uLightingCenter: { value: new THREE.Vector3() }, uLightingRadius: { value: 20 },
       uFalloffPower: { value: 1 }, uMaxDarkAlpha: { value: 1 }, uIsFpsMode: { value: false },
       uBloodGroundStrength: { value: 1 }, uBloodGroundSpecularReferenceStrength: { value: 1 },
+      uWorldTileScaleX: { value: 1 },
     } },
     playerMovement: { playerPos: { x: 5, y: 8 } },
     renderPipeline: { scene: new THREE.Scene() },
@@ -43,6 +44,16 @@ function fixture(start = true) {
 }
 
 describe("Quest native engine presentation", () => {
+  it("exports rectangular world placement with logical lighting coordinates and tile scale metadata", () => {
+    const { system, deps } = fixture();
+    deps.renderPipeline.scene.scale.x = 0.6;
+    deps.lighting.vignetteUniforms.uLightingCenter.value.set(5, -8, 0);
+    system.update(0);
+    expect(sendQuestScene).toHaveBeenCalledWith(expect.objectContaining({
+      player: [3, -8, 0], tileSize: 1, worldScaleX: 0.6,
+      eyeHeight: 0.62, lighting: expect.objectContaining({ center: [5, -8, 0] }),
+    }));
+  });
   it("keeps native mode changes, capture and renderer handoff inactive until engine startup completes", () => {
     const { system, deps } = fixture(false);
     native.mode = "immersive"; native.ready = true;

@@ -772,6 +772,10 @@ export const fr = {
             classic: "Classique",
           },
         },
+        tilesetUseTileAspectRatio: {
+          label: "Adapter les blocs aux proportions des tuiles",
+          description: "Utilisez des blocs 3D rectangulaires lorsque les tuiles ne sont pas carrées. Désactivez pour conserver des blocs carrés.",
+        },
         tilesetPath: {
           label: "Jeu de tuiles",
           description: "Jeux de tuiles integres et importes.",
@@ -1347,6 +1351,11 @@ export const fr = {
         layout5: "Disposition NetHack 5.0",
         tileLayoutDescription:
           "Choisissez la disposition d'indices de tuiles utilisee par cet atlas importe.",
+        tileWidth: "Largeur des tuiles (pixels, automatique)",
+        tileHeight: "Hauteur des tuiles (pixels)",
+        autoTileHeight: "Automatique",
+        tileDimensionsDescription: "La largeur utilise les 40 colonnes de l’image. Laissez la hauteur vide pour la détection automatique ou saisissez la hauteur de chaque tuile pour des proportions personnalisées.",
+        invalidTileHeight: "La hauteur des tuiles doit être un entier positif.",
         tileImage: "Image du jeu de tuiles",
         tileImageOptional: "Image du jeu de tuiles (remplacement facultatif)",
         selectedFile: (fileName: string) => `Selected: ${fileName}`,
