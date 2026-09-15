@@ -69,6 +69,42 @@ let consoleErrorOriginal: typeof console.error | null = null;
 let consoleDebugOriginal: typeof console.debug | null = null;
 let consoleTraceOriginal: typeof console.trace | null = null;
 let consoleAssertOriginal: typeof console.assert | null = null;
+let pendingEntries: DebugSessionLogEntry[] = [];
+let persistFrameId: number | null = null;
+
+function cancelPendingPersistence(): void {
+  if (persistFrameId !== null) {
+    window.cancelAnimationFrame(persistFrameId);
+    persistFrameId = null;
+  }
+}
+
+function flushPendingEntries(): void {
+  cancelPendingPersistence();
+  if (!activeSessionId || pendingEntries.length === 0) return;
+  const batch = pendingEntries;
+  pendingEntries = [];
+  updateSessions((sessions) => sessions.map((session) => {
+    if (session.id !== activeSessionId) return session;
+    return {
+      ...session,
+      lastUpdatedAt: batch[batch.length - 1].timestamp,
+      entries: [...session.entries, ...batch].slice(-maxEntriesPerDebugSession),
+    };
+  }));
+}
+
+function schedulePendingPersistence(): void {
+  if (persistFrameId !== null) return;
+  if (typeof window.requestAnimationFrame !== "function") {
+    flushPendingEntries();
+    return;
+  }
+  persistFrameId = window.requestAnimationFrame(() => {
+    persistFrameId = null;
+    flushPendingEntries();
+  });
+}
 
 function canUseBrowserStorage(): boolean {
   return (
@@ -230,6 +266,7 @@ function closeActiveSession(reason: Exclude<DebugSessionLogCloseReason, "active"
   if (!activeSessionId) {
     return;
   }
+  flushPendingEntries();
   const now = new Date().toISOString();
   updateSessions((sessions) =>
     sessions.map((session) =>
@@ -278,22 +315,16 @@ function appendEntry(
     source: source || "app",
     message: normalizeMessage(args),
   };
-  updateSessions((sessions) =>
-    sessions.map((session) => {
-      if (session.id !== activeSessionId) {
-        return session;
-      }
-      const entries = [...session.entries, entry];
-      if (entries.length > maxEntriesPerDebugSession) {
-        entries.splice(0, entries.length - maxEntriesPerDebugSession);
-      }
-      return {
-        ...session,
-        lastUpdatedAt: now,
-        entries,
-      };
-    }),
-  );
+  pendingEntries.push(entry);
+  if (pendingEntries.length > maxEntriesPerDebugSession) pendingEntries.shift();
+  // Logging bursts must not parse/stringify all saved sessions and block on
+  // localStorage for every callback. Errors stay durable immediately; normal
+  // logs flush once per frame, and before reads or page lifecycle boundaries.
+  if (level === "error" || level === "warn" || level === "assert") {
+    flushPendingEntries();
+  } else {
+    schedulePendingPersistence();
+  }
 }
 
 function handleWindowError(event: ErrorEvent): void {
@@ -316,6 +347,7 @@ function handleVisibilityChange(): void {
   appendEntry("event", "document.visibilitychange", [
     `visibilityState=${document.visibilityState}`,
   ]);
+  if (document.visibilityState === "hidden") flushPendingEntries();
 }
 
 function handlePageHide(event: PageTransitionEvent): void {
@@ -450,6 +482,7 @@ export function enableDebugSessionLogCapture(
 }
 
 export function readDebugSessionLogs(): DebugSessionLogSession[] {
+  flushPendingEntries();
   if (!activeSessionId) {
     markDanglingSessionsAsAbruptStop();
   }
@@ -460,6 +493,8 @@ export function clearDebugSessionLogs(): void {
   if (!canUseBrowserStorage()) {
     return;
   }
+  cancelPendingPersistence();
+  pendingEntries = [];
   try {
     window.localStorage.removeItem(debugSessionLogStorageKey);
   } catch {

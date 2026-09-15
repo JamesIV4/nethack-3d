@@ -87,6 +87,16 @@ For the standalone Quest APK, `QuestSceneExport` runs before rendering in that s
 
 This directory contains the browser engine's state and presentation logic. It does not implement a second NetHack simulation or change WASM rules. The worker bridge, input broker, callback adapter and authoritative game state remain under [src/runtime](../../runtime/); imported/generated runtime artifacts retain their existing roles.
 
+## Performance-sensitive caches and uploads
+
+- Ground blood tracks the pixels actually changed by rasterization. Saturated pixels skip noise/shading work. Android retains its CanvasTexture, nearest filtering, alpha guard and shader; only the CPU canvas copy uses the dirty rectangle. Desktop texture ranges accumulate until Three consumes them, and a pending full upload stays full until `texture.onUpdate`. Full snapshot restoration and recoloring still rebuild every pixel.
+- Billboard proxies copy color, opacity and depth state each frame. Shader invalidation follows source material/texture changes, including an explicit source `needsUpdate`; movement and color-only damage flashes do not invalidate the material. Flat proxy/shatter planes use `forceSinglePass` with `DoubleSide`; the browser fixture compares front/back/angled pixels against two-pass rendering.
+- Pointer alpha masks use weak texture ownership and invalidate on texture/source version, image identity and dimensions. Published canvas changes must set `texture.needsUpdate`, as required for rendering. UV transforms and alpha thresholds are evaluated on every hit.
+- `LevelTerrainCache` bounds its cache of pure signature decoding and returns independent copies. Runtime glyph classification, map coalescing, terrain preservation and player-position fences keep their existing live paths.
+- Controller binding parses are cached by their exact string with a bounded history. Button/axis values and press/release edges are still sampled each frame.
+
+The [performance pass notes](../../../docs/performance-pass.md) describe the repeatable browser fixture and the limits of its measurements.
+
 ## Validation
 
 - `npm run check:tsc` checks contracts and public API compatibility.

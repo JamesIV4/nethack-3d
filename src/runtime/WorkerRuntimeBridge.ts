@@ -7,6 +7,7 @@ import type {
   RuntimeWorkerEnvelope,
 } from "./types";
 import { recordDebugSessionLogEvent } from "../debug-session-log";
+import { isLoggingEnabled } from "../logging";
 
 export default class WorkerRuntimeBridge implements RuntimeBridge {
   private readonly worker: Worker;
@@ -96,7 +97,7 @@ export default class WorkerRuntimeBridge implements RuntimeBridge {
   }
 
   sendInput(input: string, options: { delayMs?: number } = {}): void {
-    if (this.isLikelyNameInputForDebug(input)) {
+    if (isLoggingEnabled() && this.isLikelyNameInputForDebug(input)) {
       const stackPreview = (new Error().stack || "")
         .split("\n")
         .slice(2, 7)

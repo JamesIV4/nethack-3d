@@ -15,6 +15,15 @@ import type { TileUpdates } from "./tile-updates";
 import type { VultureWalls } from "../rendering/vulture-walls";
 import type { WorldClassification } from "./world-classification";
 
+type ParsedTileState = {
+  glyph: number;
+  char?: string;
+  color?: number;
+  tileIndex?: number;
+  symidx?: number;
+  glyphFlags?: number;
+};
+
 export interface LevelTerrainCacheDependencies {
   readonly bloodGround: Pick<
     BloodGround,
@@ -61,6 +70,7 @@ export interface LevelTerrainCacheDependencies {
 
 /** Level identity, remembered terrain snapshots, and deterministic or sampled transition restoration. */
 export class LevelTerrainCache {
+  private readonly parsedTileSignatures = new Map<string, ParsedTileState | null>();
   constructor(private readonly dependencies: LevelTerrainCacheDependencies) {}
 
   lastKnownTerrain: Map<string, TerrainSnapshot> = new Map();
@@ -613,14 +623,20 @@ export class LevelTerrainCache {
     }
   }
 
-  parseTileStateSignature(signature: string): {
-    glyph: number;
-    char?: string;
-    color?: number;
-    tileIndex?: number;
-    symidx?: number;
-    glyphFlags?: number;
-  } | null {
+  parseTileStateSignature(signature: string): ParsedTileState | null {
+    const key = String(signature || "");
+    let parsed = this.parsedTileSignatures.get(key);
+    if (parsed === undefined) {
+      parsed = this.decodeTileStateSignature(key);
+      // This caches only pure string decoding, never runtime glyph behavior.
+      // Copies keep callers and saved level snapshots independently mutable.
+      if (this.parsedTileSignatures.size >= 2048) this.parsedTileSignatures.clear();
+      this.parsedTileSignatures.set(key, parsed);
+    }
+    return parsed ? { ...parsed } : null;
+  }
+
+  private decodeTileStateSignature(signature: string): ParsedTileState | null {
     const parts = String(signature || "").split("|");
     if (parts.length < 3) {
       return null;

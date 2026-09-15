@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NetHack 3D performance fixture</title>
+    <style>
+      body { background: #171b23; color: #e5edf6; font: 16px system-ui; margin: 24px; }
+      button { padding: 10px 16px; margin: 0 8px 12px 0; }
+      canvas { display: block; max-width: 100%; border: 1px solid #53647a; }
+      pre { white-space: pre-wrap; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <h1>NetHack 3D performance fixture</h1>
+    <p>Seeded combat deposits through the real blood rasterizer and WebGL renderer. Timings cover CPU work and render submission, not GPU completion or whole-game FPS.</p>
+    <label>Blood detail <select id="detail"><option value="veryLow">Very low (mobile default)</option><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></label>
+    <button id="desktop">Compare desktop blood</button>
+    <button id="android">Compare Android canvas path</button>
+    <button id="signatures">Compare map signature decoding</button>
+    <button id="planes">Check planar effect rendering</button>
+    <div id="preview"></div>
+    <pre id="results">Run node scripts/performance/prepare-baseline.mjs before comparing.</pre>
+    <script type="module" src="./performance.ts"></script>
+  </body>
+</html>

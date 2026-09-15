@@ -39,6 +39,7 @@ function initializeGround(systems: EngineSystems): BloodGround {
   const ground = systems.bloodGround;
   expect(ground.ensureBloodGroundOverlayResources()).toBe(true);
   ground.syncBloodGroundTexture(true);
+  ground.bloodGroundOverlayTexture!.onUpdate?.(ground.bloodGroundOverlayTexture!);
   return ground;
 }
 
@@ -63,6 +64,78 @@ afterEach(() => {
 });
 
 describe("engine rendering resource ownership", () => {
+  it("animates billboard damage colors without shader invalidation and restores white", () => {
+    const systems = createSystems();
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial());
+    systems.entityBillboards.monsterBillboards.set("2,3", sprite);
+    const version = sprite.material.version;
+    systems.damageFlashes.startMonsterBillboardDamageFlash("2,3");
+    expect(sprite.material.color.getHex()).toBe(0xff0000);
+    systems.damageFlashes.updateMonsterBillboardDamageFlashes(0.08);
+    const expected = new THREE.Color("#ffffff").lerp(new THREE.Color("#ff2d2d"), Math.exp(-8.5 * 0.25));
+    expect(sprite.material.color.equals(expected)).toBe(true);
+    systems.damageFlashes.updateMonsterBillboardDamageFlashes(0.25);
+    expect(sprite.material.color.getHex()).toBe(0xffffff);
+    expect(sprite.material.version).toBe(version);
+    expect(systems.damageFlashes.monsterBillboardDamageFlashes.size).toBe(0);
+  });
+
+  it("renders shatter planes in one pass and still disposes their owned resources", () => {
+    const systems = createSystems();
+    systems.camera.camera = new THREE.PerspectiveCamera();
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial());
+    const texture = new THREE.CanvasTexture(undefined);
+    const disposed = vi.fn();
+    texture.addEventListener("dispose", disposed);
+    systems.billboardShatter.spawnMonsterBillboardShardParticlesFromDescriptors(sprite, [{
+      texture, centerU: 0.5, centerV: 0.5, widthRatio: 0.5, heightRatio: 0.5, areaRatio: 0.25,
+    }]);
+    const particle = systems.bloodParticles.monsterBillboardShardParticles[0];
+    expect(particle.mesh.material.forceSinglePass).toBe(true);
+    expect(particle.mesh.material.side).toBe(THREE.DoubleSide);
+    systems.bloodParticles.clearMonsterBillboardShardParticles();
+    expect(disposed).toHaveBeenCalledTimes(1);
+    expect(systems.renderPipeline.scene.children).not.toContain(particle.mesh);
+  });
+
+  it.each(["ensureMonsterBillboardPitchLockedProxyMesh", "ensureMonsterBillboardFlatProxyMesh"] as const)(
+    "%s refreshes shaders only when their source changes", (method) => {
+      const systems = createSystems();
+      const source = new THREE.SpriteMaterial({ map: new THREE.Texture(), alphaTest: 0.2 });
+      const sprite = new THREE.Sprite(source);
+      const ensure = () => systems.entityBillboards[method](sprite)!;
+      const proxy = ensure();
+      expect(proxy.material.forceSinglePass).toBe(true);
+      expect(proxy.material.side).toBe(THREE.DoubleSide);
+      const initialVersion = proxy.material.version;
+      for (let frame = 0; frame < 120; frame++) {
+        source.opacity = frame / 120;
+        source.color.setRGB(frame / 120, 0.2, 0.1);
+        source.depthTest = frame % 2 === 0;
+        expect(ensure()).toBe(proxy);
+      }
+      expect(proxy.material.version).toBe(initialVersion);
+      expect(proxy.material.opacity).toBe(source.opacity);
+      expect(proxy.material.color.equals(source.color)).toBe(true);
+      expect(proxy.material.depthTest).toBe(source.depthTest);
+      source.map = new THREE.Texture();
+      ensure();
+      expect(proxy.material.version).toBeGreaterThan(initialVersion);
+      expect(proxy.material.map).toBe(source.map);
+      const textureVersion = proxy.material.version;
+      source.needsUpdate = true;
+      ensure();
+      expect(proxy.material.version).toBeGreaterThan(textureVersion);
+      source.alphaTest = 0;
+      ensure();
+      expect(proxy.material.alphaTest).toBe(0);
+      const disposed = vi.fn();
+      proxy.material.addEventListener("dispose", disposed);
+      systems.entityBillboards.disposeMonsterBillboardPitchLockedProxyMesh(sprite);
+      systems.entityBillboards.disposeMonsterBillboardFlatProxyMesh(sprite);
+      expect(disposed).toHaveBeenCalledTimes(1);
+    },
+  );
   it("constructs eager dependencies and keeps resources separate between game sessions", () => {
     const first = createSystems();
     const second = createSystems();

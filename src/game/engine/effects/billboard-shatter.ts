@@ -840,6 +840,9 @@ export class BillboardShatter {
         map: descriptor.texture,
         transparent: true,
         side: THREE.DoubleSide,
+        // Each shard is a single plane. DoubleSide still renders either facing
+        // direction; a second transparent-face pass only repeats draw setup.
+        forceSinglePass: true,
         depthWrite: false,
         depthTest: true,
         toneMapped: false,

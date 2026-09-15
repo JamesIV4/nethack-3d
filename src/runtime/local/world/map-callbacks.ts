@@ -2,6 +2,7 @@
 // Legacy dynamic WASM integration; dependency membership is checked by assembly.
 
 import type { RuntimeCoordinator } from "../runtime-coordinator";
+import { isLoggingEnabled } from "../../../logging";
 import type { RuntimePointerContract } from "../abi/pointer-contract";
 import type { RuntimeGlyphs } from "./glyphs";
 import type { RuntimeMemory } from "../abi/memory";
@@ -136,14 +137,15 @@ export class RuntimeMapCallbacks {
       const monsterId = this.deps.runtimeGlyphs.normalizeRuntimeTrackedEntityId(rawMonsterId);
       const attackingTargetId =
         this.deps.runtimeGlyphs.normalizeRuntimeAttackTargetId(rawAttackingTargetId);
-      const glyphDebugSuffix = [
+      const loggingEnabled = isLoggingEnabled();
+      const glyphDebugSuffix = loggingEnabled ? [
         monsterId !== null ? `monsterId=${monsterId}` : "",
         attackingTargetId !== null
           ? `attackingTargetId=${attackingTargetId}`
           : "",
       ]
         .filter(Boolean)
-        .join(" ");
+        .join(" ") : "";
       if (glyphArgMode === "glyphinfo_ptr" && args.length >= 5) {
         const extra = b;
         const decodedGlyphInfo = this.deps.memory.decodeGlyphInfoPointer(
@@ -167,7 +169,7 @@ export class RuntimeMapCallbacks {
           if (decodedGlyphInfo.tileIndex !== null) {
             decodedTileIndex = decodedGlyphInfo.tileIndex;
           }
-          shouldLogPrintGlyph = !this.deps.runtimeGlyphs.isUndiscoveredOrNothingGlyph(printGlyph);
+          shouldLogPrintGlyph = loggingEnabled && !this.deps.runtimeGlyphs.isUndiscoveredOrNothingGlyph(printGlyph);
           if (shouldLogPrintGlyph) console.log(
             `🎨 GLYPH [Win ${printWin}] at (${x},${y}): ptr=0x${decodedGlyphInfo.pointer.toString(
               16,
@@ -179,7 +181,7 @@ export class RuntimeMapCallbacks {
           );
         }
       } else {
-        shouldLogPrintGlyph = !this.deps.runtimeGlyphs.isUndiscoveredOrNothingGlyph(printGlyph);
+        shouldLogPrintGlyph = loggingEnabled && !this.deps.runtimeGlyphs.isUndiscoveredOrNothingGlyph(printGlyph);
         if (shouldLogPrintGlyph) console.log(
           `🎨 GLYPH [Win ${printWin}] at (${x},${y}): ${printGlyph}`,
         );

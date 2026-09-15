@@ -1,4 +1,5 @@
 import type { NethackRuntimeVersion } from "./types";
+import { isLoggingEnabled } from "../logging";
 import { extractRuntimeNumberPadModeEnabled } from "./number-pad-mode";
 import { createRuntimeSystems, type RuntimeSystems } from "./local/create-runtime-systems";
 import type { RuntimeEventHandler, RuntimeStartupOptions, RuntimeEvent } from "./types";
@@ -141,7 +142,7 @@ class LocalNetHackRuntime {
       // Avoid duplicate callback-level spam for map glyph traffic.
       shouldLogUiCallback = false;
     }
-    if (shouldLogUiCallback) {
+    if (shouldLogUiCallback && isLoggingEnabled()) {
       console.log(`UI Callback: ${name}`, args);
     }
     this.systems.promptContext.recordRecentUICallback(name, args);

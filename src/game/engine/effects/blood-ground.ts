@@ -404,6 +404,13 @@ export class BloodGround {
       ? 1
       : Math.max(1, Math.min(2, this.dependencies.tilesetAssets.resolveTextureAnisotropyLevel()));
     texture.needsUpdate = true;
+    // Keep a full upload pending until Three actually consumes it. The overlay
+    // can be hidden (terminal mode), or painted more than once before a render.
+    texture.onUpdate = () => {
+      if (this.bloodGroundOverlayTexture === texture) {
+        this.bloodGroundTextureRequiresFullUpload = false;
+      }
+    };
 
     const material = new THREE.MeshBasicMaterial({
       map: texture,
@@ -464,7 +471,7 @@ export class BloodGround {
     return true;
   }
 
-  flushBloodGroundCompatibilityTexture(): void {
+  flushBloodGroundCompatibilityTexture(dirtyRect?: BloodGroundDirtyRect): void {
     if (
       !this.bloodGroundCompatibilityMode ||
       !this.bloodGroundUploadContext ||
@@ -473,11 +480,18 @@ export class BloodGround {
       return;
     }
 
-    this.bloodGroundUploadContext.putImageData(
-      this.bloodGroundUploadImageData,
-      0,
-      0,
-    );
+    if (dirtyRect) {
+      // Keep Android's CanvasTexture, filtering and shader compatibility path.
+      // Only the CPU-to-canvas copy is restricted; Three still uploads a canvas.
+      this.bloodGroundUploadContext.putImageData(
+        this.bloodGroundUploadImageData, 0, 0,
+        dirtyRect.minX, dirtyRect.minY,
+        dirtyRect.maxX - dirtyRect.minX + 1,
+        dirtyRect.maxY - dirtyRect.minY + 1,
+      );
+    } else {
+      this.bloodGroundUploadContext.putImageData(this.bloodGroundUploadImageData, 0, 0);
+    }
   }
 
   clearActiveBloodGroundCanvas(): void {
@@ -701,7 +715,10 @@ export class BloodGround {
     const height = this.bloodGroundHeightPx;
     const requiresFullUpload =
       forceFull || this.bloodGroundTextureRequiresFullUpload;
-    const dirtyRect = requiresFullUpload
+    // A new/cleared RGBA buffer is already zero. A full GPU upload does not
+    // require recoloring millions of untouched pixels. Restore/recolor callers
+    // explicitly request forceFull to rebuild every pixel from density.
+    const dirtyRect = forceFull
       ? {
           minX: 0,
           minY: 0,
@@ -719,7 +736,7 @@ export class BloodGround {
     const rowDirtyMin = this.bloodGroundDirtyRowMin;
     const rowDirtyMax = this.bloodGroundDirtyRowMax;
     const hasRowDirtyTracking =
-      !requiresFullUpload &&
+      !forceFull &&
       rowDirtyMin !== null &&
       rowDirtyMax !== null &&
       this.bloodGroundDirtyRowRangeEnd >= this.bloodGroundDirtyRowRangeStart;
@@ -748,7 +765,10 @@ export class BloodGround {
     const colorLut = this.bloodGroundColorLut;
     const texture = this.bloodGroundOverlayTexture;
 
-    texture.clearUpdateRanges();
+    if (!usePartialUpload) {
+      texture.clearUpdateRanges();
+      this.bloodGroundTextureRequiresFullUpload = true;
+    }
     if (hasRowDirtyTracking) {
       for (
         let y = this.bloodGroundDirtyRowRangeStart;
@@ -796,11 +816,10 @@ export class BloodGround {
       }
     }
 
-    if (requiresFullUpload) {
+    if (forceFull) {
       this.resetBloodGroundDirtyRowTracking();
     }
-    this.bloodGroundTextureRequiresFullUpload = false;
-    this.flushBloodGroundCompatibilityTexture();
+    this.flushBloodGroundCompatibilityTexture(dirtyRect);
     texture.needsUpdate = true;
     this.bloodGroundDirtyRect = null;
     this.updateBloodGroundOverlayVisibility();
@@ -865,6 +884,8 @@ export class BloodGround {
     for (let py = minY; py <= maxY; py += 1) {
       const dy = py - centerY;
       const rowOffset = py * width;
+      let changedMinX = width;
+      let changedMaxX = -1;
       let localX = minDx * cos + dy * sin;
       let localY = -minDx * sin + dy * cos;
       let primaryX = 0;
@@ -903,7 +924,7 @@ export class BloodGround {
       for (let px = minX; px <= maxX; px += 1) {
         const radialDistance =
           localX * localX * invRadiusXSq + localY * localY * invRadiusYSq;
-        if (radialDistance > 1) {
+        if (radialDistance > 1 || densityBuffer[rowOffset + px] === this.bloodGroundMaxDensity) {
           localX += cos;
           localY -= sin;
           if (pattern) {
@@ -1041,6 +1062,8 @@ export class BloodGround {
 
         densityBuffer[densityIndex] = nextDensity;
         wrotePixel = true;
+        changedMinX = Math.min(changedMinX, px);
+        changedMaxX = px;
         localX += cos;
         localY -= sin;
         if (pattern) {
@@ -1052,6 +1075,9 @@ export class BloodGround {
           tertiaryY += pattern.tertiary.yx;
         }
       }
+      if (changedMaxX >= changedMinX) {
+        this.markBloodGroundDirtyRect(changedMinX, py, changedMaxX, py);
+      }
     }
 
     if (!wrotePixel) {
@@ -1059,7 +1085,6 @@ export class BloodGround {
     }
 
     this.bloodGroundHasVisibleData = true;
-    this.markBloodGroundDirtyRect(minX, minY, maxX, maxY);
   }
 
   rasterizeBloodGroundTrail(

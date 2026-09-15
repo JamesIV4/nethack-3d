@@ -64,6 +64,7 @@ Paths in this table are relative to this directory.
 ## Ordering and ownership rules
 
 - Keep closed-session checks, callback accounting, startup timer clearing, diagnostics, and pointer-contract validation ahead of callback dispatch. Invalid arguments return the callback's established safe value before domain logic runs.
+- Verbose callback/glyph/status log formatting is gated by `isLoggingEnabled`. This gate must not skip callback history, pointer validation, live glyph helpers, map mutation, status baselines or event delivery. Diagnostic persistence is separate from the worker's ordered gameplay transport.
 - Preserve synchronous returns and existing Promise identity/timing. A callback extraction must not introduce an `async` wrapper. Menu continuations must read current state when they resume.
 - Route all key-consuming waits through `RuntimeInputRequests` and its broker. Preserve target request kinds, FIFO single-consume behavior, and active request identity.
 - Write menu result rows while the selected entries still exist. Then clear selections and resolve/reset waiter state in the established order. The NetHack caller owns previously returned menu buffers; do not free them in the adapter.

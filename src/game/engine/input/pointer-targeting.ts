@@ -68,6 +68,17 @@ export class PointerTargeting {
 
   readonly pointerIntersection = new THREE.Vector3();
 
+  private readonly pointerUv = new THREE.Vector2();
+
+  private readonly spriteAlphaCache = new WeakMap<THREE.Texture, {
+    image: HTMLCanvasElement;
+    width: number;
+    height: number;
+    version: number;
+    sourceVersion: number;
+    alpha: Uint8Array;
+  }>();
+
   getTileUnderFpsCrosshair(): {
     key: string;
     x: number;
@@ -106,18 +117,29 @@ export class PointerTargeting {
       return false;
     }
 
-    const uv = intersection.uv.clone();
+    const uv = this.pointerUv.copy(intersection.uv);
     texture.transformUv(uv);
     const u = THREE.MathUtils.clamp(uv.x, 0, 0.999999);
     const v = THREE.MathUtils.clamp(uv.y, 0, 0.999999);
     const px = Math.floor(u * width);
     const py = Math.floor(THREE.MathUtils.clamp(1 - v, 0, 0.999999) * height);
-    const context = image.getContext("2d", { willReadFrequently: true });
-    if (!context) {
-      return true;
+    let cached = this.spriteAlphaCache.get(texture);
+    if (!cached || cached.image !== image || cached.width !== width ||
+      cached.height !== height || cached.version !== texture.version ||
+      cached.sourceVersion !== texture.source.version) {
+      const context = image.getContext("2d", { willReadFrequently: true });
+      if (!context) return true;
+      // Read once per published texture revision, rather than synchronously
+      // reading a canvas on every mouse/controller/XR raycast. Weak ownership
+      // lets level and tileset disposal release the cached alpha alongside it.
+      const pixels = context.getImageData(0, 0, width, height).data;
+      const alpha = new Uint8Array(width * height);
+      for (let index = 0; index < alpha.length; index++) alpha[index] = pixels[index * 4 + 3];
+      cached = { image, width, height, version: texture.version, sourceVersion: texture.source.version, alpha };
+      this.spriteAlphaCache.set(texture, cached);
     }
 
-    const alpha = context.getImageData(px, py, 1, 1).data[3];
+    const alpha = cached.alpha[py * width + px];
     const alphaThreshold = Math.max(
       1,
       Math.round((material.alphaTest || 0) * 255),

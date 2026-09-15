@@ -9,6 +9,7 @@ import {
   parseNh3dControllerBinding,
   type Nh3dControllerActionId,
   type Nh3dControllerBindings,
+  type ParsedNh3dControllerBinding,
 } from "../../controller-bindings";
 import type {
   Nh3dAndroidBridge,
@@ -161,6 +162,7 @@ export interface ControllerGameplayDependencies {
 
 /** Gamepad sampling and bindings, movement previews and latches, gameplay and camera controls. */
 export class ControllerGameplay {
+  private readonly parsedControllerBindings = new Map<string, ParsedNh3dControllerBinding | null>();
   constructor(private readonly dependencies: ControllerGameplayDependencies) {}
 
   controllerPreviousActionState: Record<Nh3dControllerActionId, boolean> =
@@ -334,7 +336,14 @@ export class ControllerGameplay {
     if (!binding) {
       return 0;
     }
-    const parsedBinding = parseNh3dControllerBinding(binding);
+    let parsedBinding = this.parsedControllerBindings.get(binding);
+    if (parsedBinding === undefined) {
+      parsedBinding = parseNh3dControllerBinding(binding);
+      // Bound historical settings while retaining the active bindings. Keys
+      // are binding strings, so live remaps cannot reuse a stale parse.
+      if (this.parsedControllerBindings.size >= 128) this.parsedControllerBindings.clear();
+      this.parsedControllerBindings.set(binding, parsedBinding);
+    }
     if (!parsedBinding) {
       return 0;
     }

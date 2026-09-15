@@ -17,6 +17,8 @@ flowchart LR
 
 The [store](../state/gameStore.ts) holds live gameplay state and the controller reference. The [adapter](../state/engineUiAdapter.ts) translates engine UI updates into store updates. Runtime-owned questions, inventories and information menus remain in that store; dialog-local drafts, focus refs and presentation state belong to the relevant React hooks.
 
+The store retains references for unchanged primitive HUD snapshots and ordered message/command lists. Actual changes are published synchronously; runtime callback delivery and prompt objects are not batched. This avoids repeated App derivations and layout effects when callbacks repeat the same visible status. Diagnostic log persistence batches ordinary entries once per browser frame, with immediate warning/error persistence and flushes before reads, page exit and backgrounding.
+
 ## Ownership rules
 
 - Keep `App.tsx` and its composition layer focused on wiring. Add behavior to a feature owner and pass the exact dependencies that it consumes.

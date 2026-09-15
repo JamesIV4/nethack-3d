@@ -1,6 +1,7 @@
 // @ts-nocheck
 // Legacy dynamic WASM integration; dependency membership is checked by assembly.
 import { STATUS_FIELD_MAP_367, STATUS_FIELD_MAP_5 } from "../../status-map";
+import { isLoggingEnabled } from "../../../logging";
 import type { RuntimeCoordinator } from "../runtime-coordinator";
 import type { RuntimeGameOver } from "../lifecycle/game-over";
 import type { RuntimeGlobalSnapshots } from "../world/global-snapshots";
@@ -212,7 +213,7 @@ export class RuntimeStatus {
       .map(([, payload]) => payload);
     this.statusPending.clear();
 
-    console.log(
+    if (isLoggingEnabled()) console.log(
       `Flushing ${orderedUpdates.length} pending status updates (reason=${reason})`,
     );
 
@@ -274,7 +275,7 @@ export class RuntimeStatus {
     };
     this.statusPending.set(field, statusPayload);
     this.latestStatusUpdates.set(field, statusPayload);
-    console.log(
+    if (isLoggingEnabled()) console.log(
       `Queued status update ${fieldName} (${field}) => ${decoded.value} [type=${decoded.valueType}, fallback=${decoded.usedFallback}]`,
     );
     return 0;

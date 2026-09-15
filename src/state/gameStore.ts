@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { shallow } from "zustand/shallow";
 import type {
   GameOverState,
   InfoMenuState,
@@ -144,21 +145,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
   engineController: null,
   nextFloatingMessageId: 1,
   setLoadingVisible: (visible) => {
+    if (get().loadingVisible === visible) return;
     set({ loadingVisible: visible });
   },
   setUiBlockingVisible: (visible) => {
+    if (get().uiBlockingVisible === visible) return;
     set({ uiBlockingVisible: visible });
   },
   setStatusText: (text) => {
+    if (get().statusText === text) return;
     set({ statusText: text });
   },
   setConnectionStatus: (text, state) => {
+    if (get().connectionText === text && get().connectionState === state) return;
     set({
       connectionText: text,
       connectionState: state,
     });
   },
   setGameMessages: (messages) => {
+    if (shallow(get().gameMessages, messages)) return;
     set({ gameMessages: messages });
   },
   pushFloatingMessage: (message) => {
@@ -188,6 +194,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
   removeFloatingMessage: (id) => {
+    if (!get().floatingMessages.some(entry => entry.id === id)) return;
     set((state) => ({
       floatingMessages: state.floatingMessages.filter(
         (entry) => entry.id !== id,
@@ -203,15 +210,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
   setPlayerStats: (stats) => {
+    // Runtime callbacks still run synchronously in full. Identical HUD values
+    // retain their reference so the App hooks and layout effects can stay idle.
+    if (shallow(get().playerStats, stats)) return;
     set({ playerStats: stats });
   },
   setQuestion: (question) => {
     set({ question });
   },
   setDirectionQuestion: (text) => {
+    if (get().directionQuestion === text) return;
     set({ directionQuestion: text });
   },
   setNumberPadModeEnabled: (enabled) => {
+    if (get().numberPadModeEnabled === Boolean(enabled)) return;
     set({ numberPadModeEnabled: Boolean(enabled) });
   },
   setInfoMenu: (menu) => {
@@ -227,20 +239,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ fpsCrosshairContext: context });
   },
   setRepeatActionVisible: (visible) => {
+    if (get().repeatActionVisible === Boolean(visible)) return;
     set({ repeatActionVisible: Boolean(visible) });
   },
   setExtendedCommands: (commands) => {
+    if (shallow(get().extendedCommands, commands)) return;
     set({ extendedCommands: commands });
   },
   setPositionRequest: (text) => {
+    if (get().positionRequest === text) return;
     set({ positionRequest: text });
   },
   setPositionInputActive: (active, origin = null) => {
     const normalized = Boolean(active);
+    const normalizedOrigin = normalized && typeof origin === "string" ? origin : null;
+    if (get().positionInputActive === normalized && get().positionInputOrigin === normalizedOrigin) return;
     set({
       positionInputActive: normalized,
-      positionInputOrigin:
-        normalized && typeof origin === "string" ? origin : null,
+      positionInputOrigin: normalizedOrigin,
     });
   },
   setNewGamePrompt: (prompt) => {

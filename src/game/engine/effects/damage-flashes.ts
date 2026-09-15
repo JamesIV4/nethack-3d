@@ -271,7 +271,6 @@ export class DamageFlashes {
 
     // Change to red directly on the billboard material.
     material.color.set(0xff0000);
-    material.needsUpdate = true;
   }
 
   stopMonsterBillboardDamageFlash(key: string): void {
@@ -283,7 +282,6 @@ export class DamageFlashes {
     const sprite = this.dependencies.entityBillboards.monsterBillboards.get(key);
     if (sprite && sprite.material instanceof THREE.SpriteMaterial) {
       sprite.material.color.copy(this.glyphDamageFlashWhite);
-      sprite.material.needsUpdate = true;
     }
 
     this.monsterBillboardDamageFlashes.delete(key);
@@ -314,7 +312,6 @@ export class DamageFlashes {
         .copy(this.glyphDamageFlashWhite)
         .lerp(this.glyphDamageFlashRed, intensity);
       sprite.material.color.copy(this.glyphDamageFlashColor);
-      sprite.material.needsUpdate = true;
 
       if (progress >= 1) {
         this.stopMonsterBillboardDamageFlash(key);

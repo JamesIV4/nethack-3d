@@ -35,6 +35,8 @@ Start with the [engine task-to-owner map](../../src/game/engine/README.md#code-h
 
 ## If You Need To Change Resource Lifetimes Or Frame Work
 
+- Read the engine README's performance-sensitive cache rules before changing blood uploads, billboard proxies, pointer alpha masks, controller binding parses or decoded tile signatures. Keep invalidation tied to the real source revision; do not cache live NetHack glyph behavior by glyph number. See `docs/performance-pass.md` for the baseline comparison fixture.
+
 - Root `animate` in `src/game/Nethack3DEngine.ts` polls controllers and advances entity transitions before camera updates, then updates presentation/effects before rendering. Preserve the root sequence when adding frame work.
 - Root `clearScene` handles scene/level resets; it is distinct from full engine `dispose`. Root `applyClientOptions` / `applyPlayMode` coordinate mode changes and cache invalidation.
 - `src/game/engine/rendering/render-pipeline.ts` owns the renderer/composer, viewport changes, `initAntialiasingPipeline`, `disposeAntialiasingPipeline`, and WebGL context diagnostics. Terminal cells are owned by `terminal-rendering.ts`; the orthographic camera is owned by `src/game/engine/camera/camera.ts`.

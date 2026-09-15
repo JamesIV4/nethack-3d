@@ -90,6 +90,33 @@ export interface EntityBillboardsDependencies {
 
 /** Entity billboard texture ownership, sprites, pitch/flat proxies and blob shadows */
 export class EntityBillboards {
+  private readonly proxyMaterialSources = new WeakMap<THREE.MeshBasicMaterial, {
+    material: THREE.SpriteMaterial;
+    version: number;
+  }>();
+
+  private syncBillboardProxyMaterial(
+    target: THREE.MeshBasicMaterial,
+    source: THREE.SpriteMaterial,
+  ): void {
+    const previous = this.proxyMaterialSources.get(target);
+    const shaderChanged = !previous || previous.material !== source ||
+      previous.version !== source.version || target.map !== source.map;
+    target.map = source.map ?? null;
+    target.opacity = source.opacity;
+    target.color.copy(source.color);
+    target.depthWrite = source.depthWrite;
+    target.depthTest = source.depthTest;
+    target.alphaTest = source.alphaTest;
+    // Opacity/color are uniforms and depth flags are render state. Refresh the
+    // shader only for an actual source-material/texture change, including a
+    // caller explicitly invalidating the source material via needsUpdate.
+    if (shaderChanged) {
+      target.needsUpdate = true;
+      this.proxyMaterialSources.set(target, { material: source, version: source.version });
+    }
+  }
+
   constructor(private readonly dependencies: EntityBillboardsDependencies) {}
 
   readonly elevatedMonsterZ = WALL_HEIGHT * 0.58;
@@ -464,6 +491,7 @@ export class EntityBillboards {
         depthTest: spriteMaterial.depthTest,
         alphaTest: spriteMaterial.alphaTest,
         side: THREE.DoubleSide,
+        forceSinglePass: true,
         toneMapped: false,
       });
       proxyMaterial.opacity = spriteMaterial.opacity;
@@ -480,14 +508,7 @@ export class EntityBillboards {
       sprite.userData.fpsPitchLockedProxyMesh = proxy;
     }
 
-    const proxyMaterial = proxy.material;
-    proxyMaterial.map = spriteMaterial.map ?? null;
-    proxyMaterial.opacity = spriteMaterial.opacity;
-    proxyMaterial.color.copy(spriteMaterial.color);
-    proxyMaterial.depthWrite = spriteMaterial.depthWrite;
-    proxyMaterial.depthTest = spriteMaterial.depthTest;
-    proxyMaterial.alphaTest = spriteMaterial.alphaTest;
-    proxyMaterial.needsUpdate = true;
+    this.syncBillboardProxyMaterial(proxy.material, spriteMaterial);
     return proxy;
   }
 
@@ -536,6 +557,7 @@ export class EntityBillboards {
         depthTest: spriteMaterial.depthTest,
         alphaTest: spriteMaterial.alphaTest,
         side: THREE.DoubleSide,
+        forceSinglePass: true,
         toneMapped: false,
       });
       proxyMaterial.opacity = spriteMaterial.opacity;
@@ -551,14 +573,7 @@ export class EntityBillboards {
       sprite.userData.flatBillboardProxyMesh = proxy;
     }
 
-    const proxyMaterial = proxy.material;
-    proxyMaterial.map = spriteMaterial.map ?? null;
-    proxyMaterial.opacity = spriteMaterial.opacity;
-    proxyMaterial.color.copy(spriteMaterial.color);
-    proxyMaterial.depthWrite = spriteMaterial.depthWrite;
-    proxyMaterial.depthTest = spriteMaterial.depthTest;
-    proxyMaterial.alphaTest = spriteMaterial.alphaTest;
-    proxyMaterial.needsUpdate = true;
+    this.syncBillboardProxyMaterial(proxy.material, spriteMaterial);
     return proxy;
   }
 
