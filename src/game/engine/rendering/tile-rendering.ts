@@ -1164,6 +1164,13 @@ export class TileRendering {
               : null,
           priorTerrain: floorSnapshot,
         });
+        // Vulture doorways already have fixed floor/door planes. Keeping the
+        // terrain cached must not also create a camera-facing copy behind the
+        // player. Other candidates (such as actual loot) remain eligible.
+        if (this.dependencies.tilesetAssets.shouldUseVultureTiles() &&
+            isDoorwayCmapGlyph(floorBehavior.effective.glyph)) {
+          continue;
+        }
         const shouldRenderAsPlayerUnderlay =
           this.dependencies.worldClassification.shouldUseRaisedSpecialTileBillboardInTiles(floorBehavior) ||
           (shouldIncludeFlatUnderPlayerFeatures &&

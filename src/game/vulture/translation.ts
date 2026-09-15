@@ -398,6 +398,7 @@ export class VultureTilesetTranslator {
   >();
 
   private readonly knownCmapIndexByCoordinate = new Map<string, number>();
+  private readonly lastResolvedRoomFloorByCoordinate = new Map<string, VultureTileLookup>();
 
   private readonly roomSelectorHintByCoordinate = new Map<string, number>();
 
@@ -574,6 +575,7 @@ export class VultureTilesetTranslator {
 
   public resetRuntimeMapState(): void {
     this.knownCmapIndexByCoordinate.clear();
+    this.lastResolvedRoomFloorByCoordinate.clear();
     this.roomSelectorHintByCoordinate.clear();
     this.roomSelectorObservationOrderByCoordinate.clear();
     this.roomIndexByCoordinate.clear();
@@ -1202,12 +1204,16 @@ export class VultureTilesetTranslator {
     const wallMaterialKind = params.wallMaterialKind ?? null;
     const heightToken: VultureWallHeightToken =
       params.halfHeight === true ? "H" : "F";
-    const floorCmapIndex = this.resolveCmapIndexFromContext(
+    let floorCmapIndex = this.resolveCmapIndexFromContext(
       params.floorTileIndex ?? null,
       params.floorGlyph ?? null,
       params.floorMaterialKind ?? null,
     );
     this.observeCmapIndexAtCoordinate(floorX, floorY, floorCmapIndex);
+    if (floorCmapIndex === 20 && this.knownCmapIndexByCoordinate.get(this.makeCoordinateKey(floorX, floorY)) === 19) {
+      // Losing sight of a room does not change the neighboring wall's decor.
+      floorCmapIndex = 19;
+    }
     const wallFaceLookupCacheKey = `${floorCmapIndex ?? "null"}|${
       wallMaterialKind ?? "none"
     }|${wallX},${wallY}|${floorX},${floorY}|${params.face}|${heightToken}`;
@@ -1351,10 +1357,14 @@ export class VultureTilesetTranslator {
     const key = this.makeCoordinateKey(x, y);
     const previousCmapIndex = this.knownCmapIndexByCoordinate.get(key);
     const normalizedCmapIndex = Math.trunc(cmapIndex);
+    // S_darkroom is a visibility representation, not a new room boundary.
+    // Keep observed room membership and its floor/rug layout when it goes dark.
+    if (normalizedCmapIndex === 20 && previousCmapIndex === 19) return;
     if (previousCmapIndex === normalizedCmapIndex) {
       return;
     }
     this.knownCmapIndexByCoordinate.set(key, normalizedCmapIndex);
+    if (normalizedCmapIndex !== 19) this.lastResolvedRoomFloorByCoordinate.delete(key);
     if (normalizedCmapIndex === 19) {
       if (!this.roomSelectorHintByCoordinate.has(key)) {
         this.roomSelectorHintByCoordinate.set(
@@ -2253,14 +2263,26 @@ export class VultureTilesetTranslator {
     floorX: number | null,
     floorY: number | null,
   ): VultureTileLookup {
+    const coordinateKey = floorX !== null && floorY !== null
+      ? this.makeCoordinateKey(floorX, floorY) : null;
+    if (cmapIndex === 20 && coordinateKey !== null &&
+        this.knownCmapIndexByCoordinate.get(coordinateKey) === 19) {
+      const remembered = this.lastResolvedRoomFloorByCoordinate.get(coordinateKey);
+      if (remembered) return remembered;
+      // The room may have been observed by a neighboring wall before its own
+      // floor texture was requested. Resolve only that already-known terrain.
+      return this.resolveCmapLookup(19, materialKind, floorX, floorY);
+    }
     if (cmapIndex === 19) {
       const decorativeLookup = this.resolveDecorativeFloorLookupForCoordinate(
         floorX,
         floorY,
       );
-      if (decorativeLookup) {
-        return decorativeLookup;
-      }
+      const resolved = decorativeLookup ?? this.resolveFloorLookup(
+        this.resolveFloorDecorStyleForCmap(cmapIndex, floorX, floorY) ?? "COBBLESTONE", floorX, floorY,
+      );
+      if (coordinateKey !== null) this.lastResolvedRoomFloorByCoordinate.set(coordinateKey, resolved);
+      return resolved;
     }
 
     const floorDecorStyle = this.resolveFloorDecorStyleForCmap(

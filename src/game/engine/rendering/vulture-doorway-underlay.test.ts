@@ -44,6 +44,9 @@ describe("Vulture occupied doorway terrain", () => {
     expect(s.vultureWalls.isVultureDoorwayNeighborFloor(4, 5)).toBe(true);
     expect(mesh.position.toArray()).toEqual([4, -5, 0]);
     expect(mesh).toBe(originalMesh);
+    const billboardCalls = vi.mocked(s.entityBillboards.ensureMonsterBillboard).mock.calls;
+    expect(billboardCalls.some(call => call[0] === "4,5" && call[8] === player)).toBe(true);
+    expect(billboardCalls.some(call => call[8] === door)).toBe(false);
     if (cmap !== 12) {
       expect(mesh.userData.vultureDoorPlaneOverlay).toBe(originalDoorOverlay);
       expect(originalDoorOverlay.floorMaterial.map).toBe(originalFloorTexture);

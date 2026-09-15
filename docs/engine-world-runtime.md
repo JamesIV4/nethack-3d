@@ -68,6 +68,12 @@ or void, and does not add diagonal refresh dependencies. Vulture asset identitie
 NetHack 5 glyph offsets must be normalized through semantic symbols and tile
 translation before selecting those assets.
 
+Vulture treats `S_darkroom` as loss of visibility for a previously observed room,
+not as a terrain replacement. Keep room membership and each coordinate's last
+resolved floor/decor lookup so rugs and neighboring wall styles do not change
+when the room leaves sight. Genuine terrain changes invalidate that remembered
+floor artwork; clearing the runtime map resets it with the other decor state.
+
 On the worker side, `RuntimePostActionRefresh` owns pending refresh reasons, targets and snapshots; `RuntimeUnderPlayerItems` queries and emits authoritative item results. `RuntimeMapCallbacks` owns `gameMap` and player position, and `RuntimeTileRefresh` owns deferred tile/area requests. These owners read live peer state through declared dependencies so a replaced position or collection is visible immediately.
 
 ## Level transitions and snapshots
