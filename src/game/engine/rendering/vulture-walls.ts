@@ -1,6 +1,6 @@
 import { TILE_SIZE } from "../../constants";
 import { isDoorwayCmapGlyph } from "../../glyphs/behavior";
-import { getGlyphCatalogEntry } from "../../glyphs/registry";
+import { getActiveGlyphCatalogVersion, getGlyphCatalogEntry, getGlyphCatalogRanges } from "../../glyphs/registry";
 import type { TileMaterialKind } from "../../glyphs";
 import { type VultureWallFaceDirection } from "../../vulture/translation";
 import type {
@@ -322,6 +322,27 @@ export class VultureWalls {
     );
   }
 
+  isVultureCornerOrJunctionWallAt(wallX: number, wallY: number): boolean {
+    const key = `${wallX},${wallY}`;
+    const mesh = this.dependencies.tileRendering.tileMap.get(key);
+    const glyph = mesh?.userData?.tileTextureSourceGlyph ?? mesh?.userData?.sourceGlyph;
+    if (typeof glyph !== "number" || !Number.isInteger(glyph)) return false;
+    const entry = getGlyphCatalogEntry(glyph);
+    if (entry?.kind !== "cmap") return false;
+    const snapshot = this.dependencies.levelTerrainCache.getTileSnapshotFromStateCache(key);
+    const runtimeSymidx = snapshot?.glyph === glyph ? snapshot.symidx : undefined;
+    const symidx = typeof runtimeSymidx === "number" && Number.isFinite(runtimeSymidx) && runtimeSymidx >= 0
+      ? Math.trunc(runtimeSymidx)
+      : typeof entry.symidx === "number" && Number.isFinite(entry.symidx) && entry.symidx >= 0
+        ? Math.trunc(entry.symidx)
+        : null;
+    if (symidx !== null) return symidx >= 3 && symidx <= 11;
+    // 3.6.7 has contiguous cmap glyphs; 5.0's expanded glyph ranges do not.
+    if (getActiveGlyphCatalogVersion() !== "3.6.7") return false;
+    const start = getGlyphCatalogRanges().find(range => range.kind === "cmap")?.start;
+    return start !== undefined && glyph - start >= 3 && glyph - start <= 11;
+  }
+
   resolveVultureWallPlaneRenderConfig(
     wallX: number,
     wallY: number,
@@ -370,6 +391,12 @@ export class VultureWalls {
       north: northNeighborLookup,
       south: southNeighborLookup,
     };
+    const isCornerOrJunction = this.isVultureCornerOrJunctionWallAt(wallX, wallY);
+    const isInferredCorridorWall = this.dependencies.tileRendering.tileMap
+      .get(`${wallX},${wallY}`)?.userData?.isInferredDarkCorridorWall === true;
+    const useAllExposedFaces = isCornerOrJunction || isInferredCorridorWall;
+    // Diagonal floor decor does not expose a cardinal face. Synthesizing faces
+    // from it draws wall wings into adjacent walls or unseen space.
     const doorwayNeighborByDirection: Record<VultureWallFaceSlot, boolean> = {
       east: this.isVultureDoorwayNeighborFloor(wallX + 1, wallY),
       west: this.isVultureDoorwayNeighborFloor(wallX - 1, wallY),
@@ -378,13 +405,13 @@ export class VultureWalls {
     };
 
     const ewNeighborCount =
-      (eastNeighborLookup ? 1 : 0) + (westNeighborLookup ? 1 : 0);
+      (lookupByDirection.east ? 1 : 0) + (lookupByDirection.west ? 1 : 0);
     const snNeighborCount =
-      (northNeighborLookup ? 1 : 0) + (southNeighborLookup ? 1 : 0);
+      (lookupByDirection.north ? 1 : 0) + (lookupByDirection.south ? 1 : 0);
     let family: VultureWallProjectionFamily | null = null;
-    if (wallOrientationChar === "|") {
+    if (!useAllExposedFaces && wallOrientationChar === "|") {
       family = "ew";
-    } else if (wallOrientationChar === "-") {
+    } else if (!useAllExposedFaces && wallOrientationChar === "-") {
       family = "sn";
     } else if (ewNeighborCount > snNeighborCount) {
       family = "ew";
@@ -456,6 +483,21 @@ export class VultureWalls {
         outerLookup,
       };
     };
+    if (useAllExposedFaces) {
+      // Corners and junctions share '-'/'|' with straight walls in ASCII.
+      // Inferred corridor walls all use stone, even at bends. Both need the
+      // faces bordering known cardinal floors, not an assumed single axis.
+      const slices: VultureWallPlaneRenderConfig["slices"] = [];
+      for (const direction of ["east", "west", "north", "south"] as const) {
+        const lookup = lookupByDirection[direction];
+        if (!lookup) continue;
+        const isEastWest = direction === "east" || direction === "west";
+        const slice = buildSlice(direction, lookup, null,
+          isEastWest ? "east" : "south", isEastWest ? "west" : "north");
+        if (slice) slices.push(slice);
+      }
+      return slices.length > 0 ? { family, slices } : null;
+    }
     const buildDoorwaySlice = (
       direction: VultureWallFaceSlot,
       preferredLookup: VultureWallProjectionLookup | null,

@@ -647,12 +647,15 @@ export class TileRendering {
           });
           const shouldForceCanonicalFloorForSpecialDotOverlayEntity =
             useTiles &&
+            !this.dependencies.tilesetAssets.shouldUseVultureTiles() &&
             (isMonsterLikeCharacter || isLootLikeCharacter) &&
             this.dependencies.worldClassification.isDisallowedSpecialDotFloorBehavior(floorBehavior);
           if (shouldForceCanonicalFloorForSpecialDotOverlayEntity) {
             // Cached tile data is authoritative; if it resolves to a special
             // dot-floor variant (doorway/open-door-ish), normalize to canonical
             // room floor for entity underlays.
+            // Vulture instead needs the cached doorway glyph to retain its
+            // rough floor pattern and upright open-door planes under entities.
             renderBehavior = this.dependencies.worldClassification.resolveNormalRoomFloorBehavior();
           } else {
             const shouldKeepBaseFloorUnderRaisedSpecialInVulture =

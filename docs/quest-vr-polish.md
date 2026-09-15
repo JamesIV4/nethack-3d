@@ -2,19 +2,19 @@
 
 The standalone APK keeps the original Three.js scene, game handlers, and single live HTML surface. Changes are reproduced by `prepare-gecko-runtime.mjs` and `patch-polish.mjs`; no new Gecko rebuild is required beyond the 0.3.8 runtime.
 
-| Request | Implementation |
-| --- | --- |
-| No Wolvic startup splash or acceptance message | Skip native splash creation and browser legal dialogs; do not record consent. Android launch preview is black and has no branded icon. |
-| Large flat window by default | Use Wolvic's own 2× resize preset on kiosk startup. |
-| Black void instead of city panorama | Disable environment loading and use black for the immersive scene background. |
-| Laser endpoint above UI | Separate native pointer root, drawn after all HTML panes with depth testing/writes disabled. |
-| Separate right actions from minimap | Actions remain pane 2 beside the table; minimap is independent pane 5 farther back. |
-| Right-button hover feedback | VR hover/focus states use the existing blue palette, border and highlight. |
-| 150% render resolution with setting | Default XR framebuffer dimensions to 150%; increase native HTML surface density to 150%. VR settings expose a saved 50–200% framebuffer multiplier, applied on the next VR entry. |
-| RT popup bottom on selected tile | Capture selected tile and surface height on press; transform its game-space anchor into tracking space each frame. Native modal geometry offsets its center upward by half its height. |
-| Top UI pitch faces headset | Keep its bottom edge at the far table edge; adjust pitch only toward the viewer. |
-| Two bottom table icons | Grid icon opens a visible-map-area slider; scale icon opens a world-and-UI slider. Area enlarges clip bounds and board without changing tile scale; scale enlarges the complete presentation without changing tile count. Both persist across launches. |
-| Sprites face camera origin in VR | Sprite shader uses the shared headset center rather than each eye's screen-parallel plane. Raycasts use the same facing plane. Existing material hooks remain; normal facing is restored outside VR. |
+| Request                                        | Implementation                                                                                                                                                                                                                                          |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No Wolvic startup splash or acceptance message | Skip native splash creation and browser legal dialogs; do not record consent. Android launch preview is black and has no branded icon.                                                                                                                  |
+| Large flat window by default                   | Use Wolvic's own 2× resize preset on kiosk startup.                                                                                                                                                                                                     |
+| Black void instead of city panorama            | Disable environment loading and use black for the immersive scene background.                                                                                                                                                                           |
+| Laser endpoint above UI                        | Separate native pointer root, drawn after all HTML panes with depth testing/writes disabled.                                                                                                                                                            |
+| Separate right actions from minimap            | Actions remain pane 2 beside the table; minimap is independent pane 5 farther back.                                                                                                                                                                     |
+| Right-button hover feedback                    | VR hover/focus states use the existing blue palette, border and highlight.                                                                                                                                                                              |
+| 150% render resolution with setting            | Default XR framebuffer dimensions to 150%; increase native HTML surface density to 150%. VR settings expose a saved 50–200% framebuffer multiplier, applied on the next VR entry.                                                                       |
+| RT popup bottom on selected tile               | Capture selected tile and surface height on press; transform its game-space anchor into tracking space each frame. Native modal geometry offsets its center upward by half its height.                                                                  |
+| Top UI pitch faces headset                     | Keep its bottom edge at the far table edge; adjust pitch only toward the viewer.                                                                                                                                                                        |
+| Two bottom table icons                         | Grid icon opens a visible-map-area slider; scale icon opens a world-and-UI slider. Area enlarges clip bounds and board without changing tile scale; scale enlarges the complete presentation without changing tile count. Both persist across launches. |
+| Sprites face camera origin in VR               | Sprite shader uses the shared headset center rather than each eye's screen-parallel plane. Raycasts use the same facing plane. Existing material hooks remain; normal facing is restored outside VR.                                                    |
 
 `settings.ts` owns host-specific persisted settings. `TableControls.tsx` mounts once for the XR session and is removed on exit. The controls have their own pane 6. The transport now has a 24-float header (the prior anchor header plus area, scale, context-active, context X/Y/Z), at most seven panes, and a maximum of 571 floats.
 
@@ -66,7 +66,6 @@ Validation also covers the horizontal action row, unchanged scale-control positi
 
 Validation: 70 focused tests, TypeScript, native/APK compilation, content-driven modal browser checks, and 32 stereo GPU comparisons against explicit pitch-only card meshes, including lateral lean and back views. `check-tabletop-facing.mjs` reproduces the GPU comparison. Native grip input and physical comfort still need headset validation. The wired HTML preview retains its single captured panel; the split movable action row uses the native Quest compositor.
 
-
 ## 0.3.14 UI and pointer corrections
 
 - Action-pane crops include CSS box/text shadows, keeping the shadow with the movable bar and excluding it from the first-person upper HUD. The phone safe-area extension is disabled in XR.
@@ -83,7 +82,6 @@ Validation: 72 focused tests, TypeScript, complete APK compilation, original Jav
 
 Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.14-ui-input-debug.apk`.
 SHA256: `65d4d30b372ab10dae6c6ee8246b858ee984fdafecc884a9412a8a1b2746335b`.
-
 
 ## 0.3.15 frame lifecycle and pane isolation
 
@@ -102,7 +100,6 @@ Live evidence: the gold tile at 67,16 was absent from both the tile mesh and bil
 Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.15-frame-ui-debug.apk`.
 SHA256: `fcfc12510dee8d80f06d1e0b6f31ebf4cdf9b32ba007eb02525910dd5f91eaa7`.
 
-
 ## 0.3.16 pane controls and settled corridor inference
 
 - Painted pane crops include a four-CSS-pixel gutter. First-person HUD cutouts use the expanded action crop, preventing bilinear sampling and antialiased blue borders from leaking into the stationary HUD.
@@ -117,7 +114,6 @@ Validation: 75 focused tests, TypeScript, native Java event checks, browser crop
 Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.16-pane-controls-debug.apk`.
 SHA256: `9babb7f024324e0716530956a7e55db0d8cbf51983489d4900a65759e8e157e5`.
 
-
 ## 0.3.17 inventory popup anchor
 
 Restrict the native tile-anchor flag to visible world-action menus (`nh3d-tile-context-menu` and `nh3d-fps-crosshair-context`), and suppress it while a regular modal is visible. Inventory context menus previously matched the generic context-menu selector and reused a stored world hit, moving the entire shared inventory crop to the floor. Inventory popups now retain their floating pane and grip offsets. Standalone world menus retain their selected-tile anchor.
@@ -126,10 +122,9 @@ Validation: four anchor regression cases, TypeScript, APK build, and package ver
 Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.17-inventory-anchor-debug.apk`.
 SHA256: `1ca16369d2808bcfed3946b36acfc109c69e5c24ba54dc7b7898d3cb5e08d0f8`.
 
-
 ## 0.3.18 laser movement audio
 
 Quest tile activation now resumes the existing audio systems, matching mouse/touch gesture handling. Laser movement explicitly opts into first-person pointer-movement feedback through `InputCommands.sendMouseInput`; ordinary first-person mouse attack clicks retain their previous behavior. The existing audio service arms the footstep and movement cooldown, and the normal runtime player-position event decides whether a step actually occurred. No speculative sound is played on click.
 
 Validation: eight Quest input/audio tests and TypeScript passed. Coverage includes runtime-confirmed movement, blocked movement, self-tile actions, secondary clicks, prompt gates, sound disabled, and audio-resume routing. Physical audio playback still needs headset verification.
-Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.18-ray-audio-debug.apk`.
+Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.18.apk`.

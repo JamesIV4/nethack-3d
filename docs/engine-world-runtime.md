@@ -57,6 +57,17 @@ These handlers are active in FPS mode and in overhead tiles mode when under-play
 
 For pickup, partial pickup, drop, eat, or travel onto loot, inspect both ends: the runtime's pending post-action refresh and helper result, then the engine's feature cache and suppression behavior. A rendering fix alone cannot recover a missing runtime item event.
 
+Vulture keeps cached doorway terrain beneath actors and loot so the doorway's
+rough floor, door planes, and adjacent wall faces survive occupancy. Do not apply
+the atlas-only canonical room-floor substitution to Vulture. Wall corners and
+junctions use cmap semantics to retain faces bordering known cardinal floors;
+their ASCII `-` or `|` does not imply a straight wall. Inferred corridor walls
+use the explicit inferred-wall flag because their stone glyph carries no bend
+orientation. Diagonal floor decor must not create cardinal faces against walls
+or void, and does not add diagonal refresh dependencies. Vulture asset identities follow NetHack 3.6, so
+NetHack 5 glyph offsets must be normalized through semantic symbols and tile
+translation before selecting those assets.
+
 On the worker side, `RuntimePostActionRefresh` owns pending refresh reasons, targets and snapshots; `RuntimeUnderPlayerItems` queries and emits authoritative item results. `RuntimeMapCallbacks` owns `gameMap` and player position, and `RuntimeTileRefresh` owns deferred tile/area requests. These owners read live peer state through declared dependencies so a replaced position or collection is visible immediately.
 
 ## Level transitions and snapshots
