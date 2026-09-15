@@ -3,6 +3,7 @@
 
 import type { RuntimeCoordinator } from "../runtime-coordinator";
 import { isGameInputKey } from "../../input/keyboard-key";
+import { silentInventoryRefreshCommand } from "../../input/inventory-refresh";
 import type { RuntimeExtendedCommands } from "./extended-commands";
 import type { RuntimeMouseInput } from "./mouse-poskey";
 import type { RuntimeMenuSelection } from "../menus/selection";
@@ -63,6 +64,7 @@ export interface RuntimeInputDispatchDependencies {
     | "awaitingQuestionInput"
     | "enqueueInputKeys"
     | "inputBroker"
+    | "requestSilentInventoryRefresh"
   >;
   readonly inventoryContext: Pick<
     RuntimeInventoryContext,
@@ -291,6 +293,10 @@ export class RuntimeInputDispatch {
       return;
     }
     if (typeof input !== "string" || input.length === 0) {
+      return;
+    }
+    if (input === silentInventoryRefreshCommand) {
+      this.deps.inputRequests.requestSilentInventoryRefresh();
       return;
     }
     // Only explicit protocol commands can carry text. Never let DOM key names

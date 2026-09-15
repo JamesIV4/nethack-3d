@@ -80,6 +80,8 @@ class LocalNetHackRuntime {
     this.isClosed = true;
     console.log(`Shutting down NetHack session: ${reason}`);
     this.systems.inputRequests.inputBroker.drain();
+    this.systems.inputRequests.silentInventoryRefreshPending = false;
+    this.systems.inputRequests.commandInputContinuation = "none";
     this.systems.textInput.pendingTextResponses = [];
     this.systems.textInput.pendingStdinByteQueue = [];
     this.systems.recovery.didAutoQueueRawRecoverChoice = false;

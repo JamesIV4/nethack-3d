@@ -1,4 +1,5 @@
 import type { RuntimeEvent } from "../../../runtime";
+import { resolveBoundedQuestionAnswer } from "../../../runtime/input/question-answer";
 import type { QuestionDialogState } from "../../ui-types";
 import type { CharacterCreationQuestionPayload } from "../shared/types";
 import type { AudioHapticsPlatform } from "../audio/audio-haptics-platform";
@@ -444,6 +445,25 @@ export class QuestionMenus {
       return;
     }
     this.dependencies.inputCommands.sendInputSequence([...countDigits, input]);
+  }
+
+  trySubmitSimpleQuestionAnswer(input: string): boolean {
+    if (!this.isInQuestion || this.activeQuestionMenuItems.length > 0 || this.activeQuestionIsPickupDialog) {
+      return false;
+    }
+    const answer = resolveBoundedQuestionAnswer(
+      input,
+      this.activeQuestionChoices,
+      this.activeQuestionDefaultChoice,
+    );
+    if (answer === null) {
+      return false;
+    }
+    this.dependencies.inputCommands.updateNumberPadModeFromChoice(answer);
+    this.dependencies.audioHapticsPlatform.maybePlayDrinkSoundForQuestionAnswer(answer);
+    this.sendInputWithPendingQuestionCount(answer);
+    this.hideQuestion();
+    return true;
   }
 
   getVisiblePickupSelectableMenuItems(): any[] {
@@ -1662,6 +1682,10 @@ export class QuestionMenus {
       return;
     }
     const resolvedChoice = this.resolveQuestionSelectionInput(choice);
+    if (this.activeQuestionMenuItems.length === 0 && !this.activeQuestionIsPickupDialog) {
+      this.trySubmitSimpleQuestionAnswer(resolvedChoice);
+      return;
+    }
     this.dependencies.inputCommands.updateNumberPadModeFromChoice(resolvedChoice);
 
     if (this.activeQuestionIsPickupDialog) {
@@ -1696,13 +1720,6 @@ export class QuestionMenus {
       return;
     }
 
-    if (this.activeQuestionMenuItems.length > 0) {
-      return;
-    }
-
-    this.dependencies.audioHapticsPlatform.maybePlayDrinkSoundForQuestionAnswer(resolvedChoice);
-    this.sendInputWithPendingQuestionCount(resolvedChoice);
-    this.hideQuestion();
   }
 
   stepQuestionSelectionCount(delta: number): void {

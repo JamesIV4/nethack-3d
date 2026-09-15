@@ -1,3 +1,4 @@
+import { silentInventoryRefreshCommand } from "../../../runtime/input/inventory-refresh";
 import { useGameStore } from "../../../state/gameStore";
 import type { InventoryDialogState, NethackConnectionState } from "../../ui-types";
 import { getItemTextClassName } from "../../helpers/helpers";
@@ -340,7 +341,9 @@ export class PromptDialogs {
   }
 
   requestSilentInventoryRefresh(reason: string): boolean {
+    const session = this.dependencies.engineState.session;
     if (
+      !session ||
       this.inventoryRefreshInFlight ||
       this.isInventoryDialogVisible ||
       this.dependencies.questionMenus.isInQuestion ||
@@ -356,7 +359,9 @@ export class PromptDialogs {
     this.inventoryRefreshInFlight = true;
     this.pendingInventoryDialog = false;
     this.pendingInventoryDialogOptions = null;
-    this.dependencies.inputCommands.sendInput("i");
+    // An inventory mutation can precede a sell prompt in the same command.
+    // Let the worker wait for an ordinary command prompt before sending i.
+    session.sendInput(silentInventoryRefreshCommand);
     return true;
   }
 

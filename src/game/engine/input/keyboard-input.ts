@@ -196,6 +196,7 @@ export interface KeyboardInputDependencies {
     | "resolveQuestionSelectionInput"
     | "resolveQuestionSelectionInputForKeyPress"
     | "sendInputWithPendingQuestionCount"
+    | "trySubmitSimpleQuestionAnswer"
     | "setActiveQuestionMenuFocusBySelectionInput"
     | "toggleActivePickupFocusSelection"
     | "togglePickupChoice"
@@ -885,10 +886,7 @@ export class KeyboardInput {
           this.dependencies.questionMenus.chooseQuestionChoice(focusedChoice);
           return;
         }
-        this.dependencies.inputCommands.updateNumberPadModeFromChoice(event.key);
-        this.dependencies.audioHapticsPlatform.maybePlayDrinkSoundForQuestionAnswer(event.key);
-        this.dependencies.questionMenus.sendInputWithPendingQuestionCount(event.key);
-        this.dependencies.questionMenus.hideQuestion();
+        this.dependencies.questionMenus.trySubmitSimpleQuestionAnswer(event.key);
         return;
       }
 
@@ -1014,10 +1012,8 @@ export class KeyboardInput {
           this.dependencies.inputCommands.sendInput(selectionInput);
           this.dependencies.questionMenus.hideQuestion();
         } else if (!isMenuQuestion) {
-          this.dependencies.inputCommands.updateNumberPadModeFromChoice(event.key);
-          this.dependencies.audioHapticsPlatform.maybePlayDrinkSoundForQuestionAnswer(event.key);
-          this.dependencies.questionMenus.sendInputWithPendingQuestionCount(event.key);
-          this.dependencies.questionMenus.hideQuestion();
+          event.preventDefault();
+          this.dependencies.questionMenus.trySubmitSimpleQuestionAnswer(event.key);
         } else {
           return;
         }

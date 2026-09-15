@@ -160,7 +160,7 @@ function commandFixture() {
     engineMessages: { logNameInputTrace: vi.fn() },
     engineState: { session: { sendInput, sendInputSequence } },
     gameOver: { gameOverState: { active: false } },
-    movementInput: { isMovementInput: (key: string) => key === "h", isRunMovementInput: () => false, isNumpadRunPrefixInput: () => false, isRunPrefixInput: (key: string) => key === "5", armPlayerCliparoundInputCooldown },
+    movementInput: { isMovementInput: (key: string) => /^[hyn]$/.test(key), isRunMovementInput: () => false, isNumpadRunPrefixInput: () => false, isRunPrefixInput: (key: string) => key === "5", armPlayerCliparoundInputCooldown },
     playerMovement: { hasPlayerMovedOnce: true, setFpsPredictedPlayerTileFromMovementInput },
     positionSelection,
     promptDialogs: { isTextInputActive: false },
@@ -173,6 +173,28 @@ function commandFixture() {
 }
 
 describe("shared input command routing", () => {
+  it.each(["y", "n"])("sends shop answer %s unchanged without arming movement effects", answer => {
+    const f = commandFixture();
+    f.questionMenus.isInQuestion = true;
+    f.questionMenus.activeQuestionText = "Will you accept 10 gold pieces for your dagger?";
+
+    f.commands.sendInput(answer);
+
+    expect(f.sendInput).toHaveBeenCalledExactlyOnceWith(answer, { delayMs: undefined });
+    expect(f.armPendingPlayerFootstepSound).not.toHaveBeenCalled();
+    expect(f.setFpsPredictedPlayerTileFromMovementInput).not.toHaveBeenCalled();
+    expect(f.armPendingFpsHeldWeaponMeleeSwipeFromMovementInput).not.toHaveBeenCalled();
+    expect(f.camera.lastManualDirectionalInputAtMs).toBe(0);
+
+    f.questionMenus.isInQuestion = false;
+    f.commands.sendInput(answer);
+    expect(f.sendInput).toHaveBeenLastCalledWith(answer, { delayMs: undefined });
+    expect(f.armPendingPlayerFootstepSound).toHaveBeenCalledOnce();
+    expect(f.setFpsPredictedPlayerTileFromMovementInput).toHaveBeenCalledExactlyOnceWith(answer);
+    expect(f.armPendingFpsHeldWeaponMeleeSwipeFromMovementInput).toHaveBeenCalledExactlyOnceWith(answer);
+    expect(f.camera.lastManualDirectionalInputAtMs).toBeGreaterThan(0);
+  });
+
   it.each(["position", "direction"])("does not predict player movement for %s selection keys", (mode) => {
     const f = commandFixture();
     f.positionSelection.positionInputModeActive = mode === "position";

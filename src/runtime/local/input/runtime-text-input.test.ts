@@ -28,6 +28,26 @@ function readAnswer() {
 }
 
 describe("explicit runtime text submissions", () => {
+  it.each([
+    ["For what do you wish?", "blessed +2 silver dragon scale mail"],
+    ["What class of monsters do you wish to genocide?", "L"],
+    ["What monster do you want to genocide?", "mind flayer"],
+  ])("keeps %s open through stray keys and repeated prompts", async (question, answer) => {
+    for (const key of ["Unidentified", "AltGraph", "Dead"]) runtime.sendInput(key);
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const response = runtime.handleUICallback("shim_getlin", [question, 64]);
+      expect(systems.textInput.pendingTextRequest).not.toBeNull();
+      expect(events.filter(event => event.type === "text_request")).toHaveLength(attempt + 1);
+      runtime.sendInput("Unidentified");
+      expect(systems.textInput.pendingTextRequest).not.toBeNull();
+      // An explicit empty answer is allowed, but must not auto-answer retries.
+      runtime.sendInput(`__TEXT_INPUT__:${attempt < 2 ? "" : answer}`);
+      await response;
+      expect(readAnswer()).toBe(attempt < 2 ? "" : answer);
+      expect(systems.textInput.pendingTextResponses).toEqual([]);
+    }
+  });
+
   it.each(["Unidentified", "AltGraph", "Dead", "Process", "Shift", "AudioVolumeUp", "F13"])(
     "ignores %s before and during naming and engraving prompts",
     async key => {

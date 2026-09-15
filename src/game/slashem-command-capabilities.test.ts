@@ -19,6 +19,7 @@ describe("Slash'EM command capabilities", () => {
     expect(commands).toContain("options");
     expect(commands).toContain("spells");
     expect(commands).toContain("travel");
+    expect(commands).toContain("pay");
     expect(commands).not.toContain("?");
     expect(new Set(commands).size).toBe(commands.length);
     expect(commands).toEqual([...commands].sort((a, b) => a.localeCompare(b)));
@@ -40,6 +41,7 @@ describe("Slash'EM command capabilities", () => {
     });
     expect(resolveSlashEmCommandInputBinding("spells")).toEqual({ key: "+" });
     expect(resolveSlashEmCommandInputBinding("travel")).toEqual({ key: "_" });
+    expect(resolveSlashEmCommandInputBinding("pay")).toEqual({ key: "p" });
   });
 
   it("keeps every supplemental name executable", () => {

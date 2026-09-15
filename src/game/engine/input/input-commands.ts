@@ -1178,6 +1178,7 @@ export class InputCommands {
     }
     const shouldTreatAsPlayerMovementInput =
       this.dependencies.movementInput.isMovementInput(resolvedInput) &&
+      !this.dependencies.questionMenus.isInQuestion &&
       !this.dependencies.directionPrompts.isInDirectionQuestion &&
       !this.dependencies.positionSelection.positionInputModeActive;
 

@@ -77,6 +77,23 @@ text answers or gameplay commands. Inventory accelerators are case-sensitive:
 `D` and `d` identify different items. If a contextual item is absent from a
 filtered menu, preserve the selection for the full inventory fallback.
 
+Question answers must not arm movement prediction, footsteps, or melee swipes,
+even when an answer such as `y` or `n` is also a vi movement key. FPS WASD
+remapping applies only to gameplay; inventory actions and prompt answers retain
+their NetHack command meanings.
+
+Silent inventory refreshes use `__SILENT_INVENTORY_REFRESH__`, not a queued
+gameplay `i`. The worker coalesces these requests and services them at a normal
+`nh_poskey` command wait, after any sale, text, menu, or map-selection prompts.
+An inventory-change notification can precede a shop's sale question, so the
+engine's current dialog state alone cannot make a raw refresh command safe.
+
+Explicit yes/no prompts validate their allowed choices in both the engine and
+the runtime. Invalid keys leave the current request open; they are not coerced
+into refusal or queued as future gameplay. Validation is limited to yes/no
+choice families so unrestricted input, inventory letters, and numeric prompts
+keep their existing semantics.
+
 Runtime boot config includes:
 
 - `number_pad:1`: can be changed by the user mid-game.

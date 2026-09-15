@@ -1,6 +1,7 @@
 // @ts-nocheck
 // Legacy dynamic WASM integration; dependency membership is checked by assembly.
 import RuntimeInputBroker from "../../input/RuntimeInputBroker";
+import { resolveBoundedQuestionAnswer } from "../../input/question-answer";
 import type {
   InputConsumeResult,
   InputRequestKind,
@@ -34,6 +35,7 @@ export interface RuntimeInputRequestsDependencies {
   readonly coordinator: Pick<
     RuntimeCoordinator,
     "runtimeVersion"
+    | "isClosed"
   >;
   readonly extendedCommands: Pick<
     RuntimeExtendedCommands,
@@ -48,6 +50,7 @@ export interface RuntimeInputRequestsDependencies {
   readonly keyboardInput: Pick<
     RuntimeKeyboardInput,
     "processKey"
+    | "numberPadModeEnabled"
     | "updateNumberPadModeFromInput"
   >;
   readonly menuSelection: Pick<
@@ -67,6 +70,8 @@ export interface RuntimeInputRequestsDependencies {
     | "isPositionModeInitiatorInput"
     | "normalizeFarLookPositionInput"
     | "pendingLookMenuFarLookArm"
+    | "pendingTravelPositionInputArm"
+    | "positionInputActive"
     | "setPositionInputActive"
     | "shouldPreserveFarLookAfterMouseSelection"
   >;
@@ -87,6 +92,8 @@ export class RuntimeInputRequests {
   declare inputBroker: RuntimeInputBroker;
   declare activeInputRequest: any;
   declare awaitingQuestionInput: boolean;
+  silentInventoryRefreshPending = false;
+  commandInputContinuation: "none" | "count" | "prefix" = "none";
 
   constructor(private readonly deps: RuntimeInputRequestsDependencies) {
     this.inputBroker = new RuntimeInputBroker();
@@ -113,11 +120,57 @@ export class RuntimeInputRequests {
     }
   }
 
+  isNormalCommandPositionRequest(): boolean {
+    return this.commandInputContinuation === "none" &&
+      !this.awaitingQuestionInput &&
+      !this.deps.questionInput.activeYnPrompt &&
+      this.deps.positionInput.farLookMode === "none" &&
+      !this.deps.positionInput.positionInputActive &&
+      !this.deps.positionInput.pendingTravelPositionInputArm &&
+      !this.deps.positionInput.pendingLookMenuFarLookArm;
+  }
+
+  requestSilentInventoryRefresh(): void {
+    this.silentInventoryRefreshPending = true;
+    // A live broker waiter is essential: activeInputRequest can still describe
+    // an already-consumed command until its Promise continuation runs.
+    if (this.activeInputRequest?.kind === "position" &&
+        this.inputBroker.hasPendingRequests("position") &&
+        this.isNormalCommandPositionRequest()) {
+      this.silentInventoryRefreshPending = false;
+      this.enqueueInputKeys(["i"], "system", ["position"]);
+    }
+  }
+
+  updateCommandInputContinuation(inputCode: number): void {
+    const key = String.fromCharCode(inputCode);
+    const numberPad = this.deps.keyboardInput.numberPadModeEnabled;
+    // readchar/nh_poskey also collects counts and movement/menu prefixes.
+    // Those waits belong to the command already being entered, not a new one.
+    if (this.commandInputContinuation === "count" && (inputCode === 8 || inputCode === 127)) {
+      return; // Editing a count still leaves its command pending.
+    }
+    if ((!numberPad || this.commandInputContinuation === "count") && /^\d$/.test(key)) {
+      this.commandInputContinuation = "count";
+    } else if (numberPad && key === "n") {
+      this.commandInputContinuation = "count";
+    } else if (/^[gGmMF]$/.test(key) || (numberPad && (key === "5" || key === "-" || inputCode === 0xb5))) {
+      this.commandInputContinuation = "prefix";
+    } else {
+      this.commandInputContinuation = "none";
+    }
+  }
+
   consumeInputResult(result: InputConsumeResult | null, requestKind: InputRequestKind, requestContext = null): number {
     if (!result || result.cancelled) {
+      this.commandInputContinuation = "none";
       return typeof result?.cancelCode === "number" ? result.cancelCode : 27;
     }
 
+    const commandPositionInput = requestKind === "position" &&
+      !this.awaitingQuestionInput && !this.deps.questionInput.activeYnPrompt &&
+      this.deps.positionInput.farLookMode === "none" &&
+      !this.deps.positionInput.positionInputActive;
     const token = result.token;
     if (
       requestKind === "position" &&
@@ -165,6 +218,7 @@ export class RuntimeInputRequests {
         this.deps.positionInput.farLookOrigin = null;
         this.deps.positionInput.setPositionInputActive(false);
       }
+      this.commandInputContinuation = "none";
       return 0;
     }
 
@@ -241,7 +295,13 @@ export class RuntimeInputRequests {
       this.deps.keyboardInput.updateNumberPadModeFromInput(key);
     }
 
-    return this.deps.keyboardInput.processKey(key);
+    const inputCode = this.deps.keyboardInput.processKey(key);
+    if (commandPositionInput) {
+      this.updateCommandInputContinuation(inputCode);
+    } else if (requestKind === "event") {
+      this.commandInputContinuation = "none";
+    }
+    return inputCode;
   }
 
   requestInputCode(requestKind: InputRequestKind, requestContext = null): number | Promise<number> {
@@ -258,7 +318,15 @@ export class RuntimeInputRequests {
       );
     }
 
-    const requested = this.inputBroker.requestNext(requestKind);
+    // Run background inventory queries only at a normal command boundary.
+    // Never enqueue an i behind player commands: a drop can ask to sell before
+    // the next command, and would consume that i as an invalid yes/no answer.
+    if (requestKind === "position" && this.silentInventoryRefreshPending &&
+        this.isNormalCommandPositionRequest()) {
+      this.silentInventoryRefreshPending = false;
+      return this.deps.keyboardInput.processKey("i");
+    }
+    const requested = this.requestValidInputResult(requestKind);
     if (requested && typeof requested.then === "function") {
       let pendingPromise = null;
       pendingPromise = requested
@@ -282,6 +350,34 @@ export class RuntimeInputRequests {
       return pendingPromise;
     }
     return this.consumeInputResult(requested, requestKind, requestContext);
+  }
+
+  requestValidInputResult(requestKind: InputRequestKind): InputConsumeResult | Promise<InputConsumeResult> {
+    const validate = (result: InputConsumeResult): InputConsumeResult | null => {
+      if (this.deps.coordinator.isClosed) {
+        return { ...result, token: null, cancelled: true, cancelCode: 27 };
+      }
+      const prompt = this.deps.questionInput.activeYnPrompt;
+      if (result.cancelled || !result.token || requestKind !== "event" || !prompt) {
+        return result;
+      }
+      const answer = resolveBoundedQuestionAnswer(
+        result.token.key, prompt.choices, prompt.defaultChoice,
+      );
+      return answer === null ? null : {
+        ...result, token: { ...result.token, key: answer },
+      };
+    };
+    // Invalid answers leave this same request pending. Read directly from the
+    // broker rather than re-entering requestInputCode and awaiting ourselves.
+    while (true) {
+      const requested = this.inputBroker.requestNext(requestKind);
+      if (requested instanceof Promise) {
+        return requested.then(result => validate(result) ?? this.requestValidInputResult(requestKind));
+      }
+      const valid = validate(requested);
+      if (valid) return valid;
+    }
   }
 
   waitForQuestionInput() {
