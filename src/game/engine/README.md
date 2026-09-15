@@ -111,3 +111,7 @@ The tabletop defaults to a 45-degree pitch controlled by `src/quest/webxr/board-
 XR canvas ownership lives in `rendering/xr-canvas-presentation.ts`. Hide the existing world canvas before session entry and restore it after renderer cleanup; never start another game renderer for the HTML pane. Session cleanup must ignore stale end events. The pitch ring is side-mounted and uses angular dragging; controller polling also observes raw trigger release to recover from missed selectend events.
 
 VR input adds 45-degree snap turns about the current head position, LT-modified running through `InputCommands.sendForcedDirectionalInput`, and RT tap/hold dispatch through the existing mouse/context owners. `controller-gestures.ts` owns neutral rearming and tap/hold timing. Tabletop UI crops come from `table-ui-layout.ts` and are rendered by Wolvic's `GameUiPanels` against the single live HTML surface.
+
+### XR camera lifecycle
+
+The shared animation frame always runs `Camera.updateCamera` before applying the final tracked XR pose. This call also completes first-person step transitions and schedules pending tile updates. Do not skip it merely because a headset supplies the view. Billboard, lighting, and remaining scene updates retain their normal order; `WebXrPresentation.prepareRender` applies final XR presentation changes before the original scene is rendered.

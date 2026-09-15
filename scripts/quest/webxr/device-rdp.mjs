@@ -62,6 +62,13 @@ try {
     const started = await receive((message) => message.from === consoleActor && (message.resultID || message.error));
     if (started.error) throw new Error(JSON.stringify(started));
     const result = await receive((message) => message.type === "evaluationResult" && message.resultID === started.resultID);
+    if (result.result?.type === "longString") {
+      const string = result.result;
+      send({ to: string.actor, type: "substring", start: 0, end: Math.min(string.length, 2_000_000) });
+      const text = await receive(message => message.from === string.actor && (typeof message.substring === "string" || message.error));
+      if (text.error) throw new Error(JSON.stringify(text));
+      result.result = text.substring;
+    }
     console.log(JSON.stringify(result, null, 2));
     }
   }

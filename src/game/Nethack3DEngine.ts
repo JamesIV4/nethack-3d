@@ -1694,7 +1694,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.controllerGameplay.updateControllerInput(deltaSeconds, !this.systems.webXrPresentation.active);
     this.systems.entityMovement.updateEntityMoveTransitions();
     this.systems.camera.updateCameraPanInertia(deltaSeconds);
-    if (!this.systems.webXrPresentation.updateCamera()) this.systems.camera.updateCamera(deltaSeconds);
+    // Preserve step completion and queued tile flushing before applying the XR view.
+    this.systems.camera.updateCamera(deltaSeconds);
+    this.systems.webXrPresentation.updateCamera();
     this.systems.promptDialogs.maybeRequestPendingStartupInventoryRefresh();
     this.systems.heldWeapon.syncFpsHeldWeaponSprite(deltaSeconds);
     this.systems.entityBillboards.updateMonsterBillboardPitchLockState();

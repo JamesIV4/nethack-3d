@@ -95,7 +95,7 @@ public final class BundledGameServer {
                 JSONArray values = new JSONArray(new String(body));
                 int count = values.getInt(1);
                 int panels = values.getInt(13);
-                if (count < 0 || count > 128 || panels < 1 || panels > 8 || values.length() != 29 + count * 4 + panels * 5) throw new IOException("Invalid table UI snapshot");
+                if (count < 0 || count > 128 || panels < 0 || panels > 8 || values.length() != 29 + count * 4 + panels * 5) throw new IOException("Invalid table UI snapshot");
                 float[] pose = new float[values.length()];
                 for (int i = 0; i < pose.length; i++) {
                     pose[i] = (float)values.getDouble(i);

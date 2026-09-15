@@ -1,3 +1,4 @@
+import { isQuestBrowser } from "../../../quest/webxr/host";
 import * as THREE from "three";
 import type { AudioHapticsPlatform } from "../audio/audio-haptics-platform";
 import type { Camera } from "../camera/camera";
@@ -391,6 +392,7 @@ export class MouseInput {
   }
 
   handleMouseDown(event: MouseEvent): void {
+    if (isQuestBrowser() && this.dependencies.movementInput.isFpsMode()) return;
     if (this.dependencies.promptDialogs.isUiInputBlocked()) {
       event.preventDefault();
       return;
@@ -555,6 +557,7 @@ export class MouseInput {
   }
 
   handleMouseMove(event: MouseEvent): void {
+    if (isQuestBrowser() && this.dependencies.movementInput.isFpsMode()) return;
     if (this.dependencies.promptDialogs.isUiInputBlocked()) {
       event.preventDefault();
       return;
@@ -656,6 +659,7 @@ export class MouseInput {
   }
 
   handleMouseUp(event: MouseEvent): void {
+    if (isQuestBrowser() && this.dependencies.movementInput.isFpsMode()) return;
     if (this.dependencies.promptDialogs.isUiInputBlocked()) {
       event.preventDefault();
       return;

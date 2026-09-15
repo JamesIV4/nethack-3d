@@ -19,20 +19,20 @@ afterEach(() => vi.unstubAllGlobals());
 
 it("keeps all four edge crops unchanged while quick actions open and close", () => {
   const f = fixture(), edges = tableUiPanes(false, []);
-  f.add(".nh3d-context-menu.is-visible", 600, 300, 400, 400);
+  f.add(".nh3d-context-menu", 600, 300, 400, 400);
   expect(tableUiPanes(false, [])).toEqual([...edges, [4, 0.375, 0.3, 0.625, 0.7]]);
-  f.nodes.delete(".nh3d-context-menu.is-visible");
+  f.nodes.delete(".nh3d-context-menu");
   expect(tableUiPanes(false, [])).toEqual(edges);
 });
-it("gives an unfamiliar popover a tight floating crop without relocating the HUD", () => {
+it("does not promote an unmatched hit rectangle to an invisible upright pane", () => {
   fixture(); const edges = tableUiPanes(false, []);
-  expect(tableUiPanes(false, [.4, .35, .6, .65])).toEqual([...edges, [4, .4, .35, .6, .65]]);
+  expect(tableUiPanes(false, [.4, .35, .6, .65])).toEqual(edges);
 });
 it("refreshes a resized modal crop without changing the edge crops", () => {
   const f = fixture(), edges = tableUiPanes(false, []);
-  f.add(".nh3d-dialog.is-visible", 500, 200, 600, 500);
+  f.add(".nh3d-dialog", 500, 200, 600, 500);
   expect(tableUiPanes(false, []).slice(0, 4)).toEqual(edges);
-  f.add(".nh3d-dialog.is-visible", 500, 150, 600, 600);
+  f.add(".nh3d-dialog", 500, 150, 600, 600);
   expect(tableUiPanes(false, [])).toEqual([...edges, [4, .3125, .15, .6875, .75]]);
 });
 it("retains the single world-anchored HUD in first-person mode", () => {
@@ -40,7 +40,7 @@ it("retains the single world-anchored HUD in first-person mode", () => {
   expect(tableUiPanes(true, [])).toEqual([[7, 0, 0, 1, 1]]);
 });
 it("cuts a first-person modal out of the HUD rather than duplicating it at full size", () => {
-  const f = fixture(); f.nodes.delete(".nh3d-mobile-bottom-bar"); f.nodes.delete(".nh3d-desktop-bottom-actions"); f.add(".nh3d-dialog.is-visible", 400, 200, 800, 600);
+  const f = fixture(); f.nodes.delete(".nh3d-mobile-bottom-bar"); f.nodes.delete(".nh3d-desktop-bottom-actions"); f.add(".nh3d-dialog", 400, 200, 800, 600);
   const panes = tableUiPanes(true, []), modal = panes.find(p => p[0] === 4)!;
   expect(modal).toEqual([4, .25, .2, .75, .8]);
   for (const p of panes.filter(p => p[0] !== 4)) {

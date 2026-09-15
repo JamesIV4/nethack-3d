@@ -30,6 +30,7 @@ const sources={
  static void check(boolean b,String s){if(!b)throw new AssertionError(s);}
  static long count(WindowWidget w,int a){return w.events.stream().filter(e->e.action==a).count();}
  public static void main(String[] args){
+  MotionEventGenerator.gameImmersive=true;
   WindowWidget w=new WindowWidget();Widget outside=new Widget(){public void handleHoverEvent(MotionEvent e){}public void handleTouchEvent(MotionEvent e){}};
   send(w,0,true,false,10);w.events.clear();send(w,0,true,true,10);send(w,0,true,false,10);
   check(count(w,MotionEvent.ACTION_DOWN)==1&&count(w,MotionEvent.ACTION_UP)==1,"one click on first press");
@@ -40,6 +41,9 @@ const sources={
   send(w,1,false,false,60);w.events.clear();send(w,0,true,true,30);send(w,0,true,false,30);
   check(count(w,10)==0,"other hand cannot inject hover exit into this click");
   w.events.clear();send(w,0,true,true,30);send(w,0,true,true,50);send(w,0,true,false,50);check(count(w,2)==1,"drag remains supported");
+  MotionEventGenerator.clearDevices(); MotionEventGenerator.gameImmersive=false; w.events.clear();
+  send(w,0,true,false,10);send(w,0,true,true,10);send(w,0,true,true,20);send(w,0,true,false,20);
+  check(w.events.stream().filter(e->e.action==0||e.action==1||e.action==2).allMatch(e->e.source==InputDevice.SOURCE_TOUCHSCREEN && e.type==MotionEvent.TOOL_TYPE_FINGER),"flat game uses touch press and drag");
   MotionEventGenerator.clearDevices();com.igalia.wolvic.BuildConfig.NH3D_GAME_HOST=false;w.events.clear();send(w,0,true,false,10);send(w,0,true,true,10);send(w,0,true,false,10);
   check(w.events.stream().filter(e->e.action==0).allMatch(e->e.source==InputDevice.SOURCE_TOUCHSCREEN),"non-host touch behavior retained");
   System.out.println("PASS: first click, re-entry, mouse buttons, other-hand isolation, drag, non-host behavior");

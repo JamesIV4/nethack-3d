@@ -29,8 +29,8 @@
   --nh3d-ui-font-scale: 1; --nh3d-live-log-font-scale: 1;
 }
 /* Reserve the center of the shared texture for the independent floating pane. */
-:root.nh3d-webxr-active .nh3d-context-menu.is-visible,
-:root.nh3d-webxr-active .nh3d-dialog.is-visible,
+:root.nh3d-webxr-active .nh3d-context-menu,
+:root.nh3d-webxr-active .nh3d-dialog,
 :root.nh3d-webxr-active .nh3d-mobile-actions-sheet,
 :root.nh3d-webxr-active .nh3d-wizard-commands-sheet.is-visible,
 :root.nh3d-webxr-active .nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),
@@ -57,14 +57,14 @@
   animation: none !important;
   transition: none !important;
 }
-:root.nh3d-webxr-active:not(.nh3d-xr-native-ui) .nh3d-context-menu.is-visible,
-:root.nh3d-webxr-active:not(.nh3d-xr-native-ui) .nh3d-dialog.is-visible {
+:root.nh3d-webxr-active:not(.nh3d-xr-native-ui) .nh3d-context-menu,
+:root.nh3d-webxr-active:not(.nh3d-xr-native-ui) .nh3d-dialog {
   transform-origin: center center !important;
   transform: translate(-50%, -50%) !important;
 }
 /* Nested dialog markup inherits the outer zoom instead of halving twice. */
-:root.nh3d-webxr-active :is(.nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible,[role="dialog"],[role="alertdialog"])
-  :is(.nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,[role="dialog"],[role="alertdialog"]) { zoom: 1 !important; }
+:root.nh3d-webxr-active :is(.nh3d-dialog,.nh3d-context-menu,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible,[role="dialog"],[role="alertdialog"])
+  :is(.nh3d-dialog,.nh3d-context-menu,[role="dialog"],[role="alertdialog"]) { zoom: 1 !important; }
 .nh3d-select-backdrop { position: fixed; inset: 0; z-index: 2147483000; }
 .nh3d-select-dialog { z-index: 2147483001; padding: 20px; min-width: 220px; max-height: 80vh; }
 .nh3d-select-dialog h2 { font-size: 18px; margin: 0 0 12px; }
@@ -116,3 +116,29 @@
   background: #23465d; border-color: #78d5ff; color: #d7f4ff;
   box-shadow: 0 0 0 1px #78d5ff;
 }
+
+/* Native source atlas: keep modal pixels separate from the table controls.
+   These document coordinates do not determine the panes' world poses. */
+:root.nh3d-xr-native-ui .nh3d-context-menu,
+:root.nh3d-xr-native-ui .nh3d-dialog,
+:root.nh3d-xr-native-ui .nh3d-mobile-actions-sheet,
+:root.nh3d-xr-native-ui .nh3d-wizard-commands-sheet.is-visible,
+:root.nh3d-xr-native-ui .nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),
+:root.nh3d-xr-native-ui [role="dialog"],
+:root.nh3d-xr-native-ui [role="alertdialog"] {
+  top: 42% !important; max-height: 144vh !important;
+  box-shadow: none !important;
+}
+:root.nh3d-xr-native-ui .nh3d-mobile-bottom-bar,
+:root.nh3d-xr-native-ui .nh3d-desktop-bottom-actions,
+:root.nh3d-xr-native-ui .nh3d-map-move-controls {
+  bottom: 8vh !important; max-height: 12vh !important;
+  box-shadow: none !important;
+}
+:root.nh3d-xr-native-ui .nh3d-mobile-bottom-bar * { box-shadow: none !important; }
+:root.nh3d-webxr-active .nh3d-xr-table-controls {
+  left: 50%; transform: translateX(-50%); width: max-content; max-width: 90vw;
+}
+:root.nh3d-webxr-active .nh3d-xr-table-controls:has(input) { min-width: 240px; }
+
+:root.nh3d-xr-native-ui #stats-bar { z-index: 1 !important; }

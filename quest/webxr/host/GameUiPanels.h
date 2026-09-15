@@ -36,6 +36,7 @@ class GameUiPanels {
   std::array<float, 4> modal{};
   bool firstPerson = false;
   vrb::Matrix actionHud;
+  vrb::Vector actionViewer;
   float actionY = -0.85f, actionDepth = 0;
   int gripOwner = -1;
   vrb::Matrix gripInverse;
@@ -56,7 +57,7 @@ class GameUiPanels {
     const float worldScale = state[10] == 1 ? 1 : state[19];
     const float extent = state[18] * worldScale;
     const float scale = 1; // UI dimensions are independent of game-world scale.
-    firstPerson = state[10] == 1; actionHud = hud;
+    firstPerson = state[10] == 1; actionHud = hud; actionViewer = viewer;
     if (!firstPerson) gripOwner = -1;
     hasModal = false;
     for (size_t i = start; i < state.size(); i += 5) if (int(state[i]) == 4) {
@@ -84,7 +85,7 @@ class GameUiPanels {
         p.quad->SetTextureRect(device::EyeRect(crop[0], crop[1], crop[2]-crop[0], crop[3]-crop[1]));
       }
       p.id = int(state[at]);
-      if (p.id == 2 && firstPerson) p.pose = actionHud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0,actionY,actionDepth)));
+      if (p.id == 2 && firstPerson) p.pose = ActionPose();
       else if (p.id >= 7) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
           3.0f * ((crop[0] + crop[2]) / 2 - 0.5f),
           3.0f * float(textureHeight) / textureWidth * (0.5f - (crop[1] + crop[3]) / 2), 0)));
@@ -116,6 +117,11 @@ class GameUiPanels {
     }
   }
  private:
+  vrb::Matrix ActionPose() const {
+    const auto pose = actionHud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0,actionY,actionDepth)));
+    const auto toward = pose.AfineInverse().MultiplyPosition(actionViewer);
+    return pose.PostMultiply(vrb::Matrix::Rotation(vrb::Vector(1,0,0), -std::atan2(toward.y(), std::fabs(toward.z()))));
+  }
   void UpdateMask(Pane& p) {
     const float l = std::max(p.crop[0], modal[0]), t = std::max(p.crop[1], modal[1]);
     const float r = std::min(p.crop[2], modal[2]), b = std::min(p.crop[3], modal[3]);
@@ -166,13 +172,13 @@ class GameUiPanels {
     const auto delta = gripInverse.MultiplyPosition(hand) - gripStart;
     actionY = std::max(-2.0f,std::min(0.6f,gripStartY + delta.y()));
     actionDepth = std::max(-1.5f,std::min(0.6f,gripStartDepth + delta.z()));
-    p.pose = actionHud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0,actionY,actionDepth)));
+    p.pose = ActionPose();
     p.quad->GetTransformNode()->SetTransform(p.pose); UpdateMask(p);
     return true;
   }
   bool Hit(int controller, bool captured, const vrb::Vector& origin, const vrb::Vector& direction,
            const std::vector<float>& state, vrb::Vector& point, vrb::Vector& normal, float& distance) {
-    bool found = false;
+    bool found = false, modalHit = false;
     distance = 10000;
     for (const auto& p : panes) {
       if (captured && selected.count(controller) && selected[controller] != p.id) continue;
@@ -192,18 +198,22 @@ class GameUiPanels {
       if (!interactive) continue;
       const auto hit = p.pose.MultiplyPosition(local);
       const float length = (hit - origin).Magnitude();
-      if (length >= distance) continue;
+      if (modalHit && p.id != 4) continue;
+      if (length >= distance && p.id != 4) continue;
+      modalHit = p.id == 4;
       found = true; point = hit; distance = length;
       normal = p.pose.MultiplyDirection(vrb::Vector(0,0,1));
       selected[controller] = p.id; pixels[controller] = {x * textureWidth, y * textureHeight};
     }
     return found;
   }
+  bool IsAction(int controller) const { auto it = selected.find(controller); return it != selected.end() && it->second == 2; }
   void Coordinates(int controller, float& x, float& y) const {
     auto it = pixels.find(controller); if (it != pixels.end()) { x = it->second.first; y = it->second.second; }
   }
-  void Cull(vrb::CullVisitor& visitor, vrb::DrawableList& list) {
+  void Cull(vrb::CullVisitor& visitor, vrb::DrawableList& list, bool modalPass = false) {
     for (const auto& p : panes) {
+      if ((p.id == 4) != modalPass) continue;
       if (p.masked) { for (const auto& piece : p.pieces) piece.quad->GetRoot()->Cull(visitor,list); }
       else p.quad->GetRoot()->Cull(visitor, list);
     }

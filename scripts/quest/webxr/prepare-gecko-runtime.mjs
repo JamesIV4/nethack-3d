@@ -1,3 +1,4 @@
+import { patchPaneIsolation } from "./patch-pane-isolation.mjs";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync } from "node:fs";
 import path from "node:path";
@@ -134,7 +135,7 @@ configurations.configureEach {
     }
 }
 android.defaultConfig {
-    versionName = "0.3.14-ui-input"
+    versionName = "0.3.15-frame-ui"
     resValue "string", "app_name", "NetHack 3D VR"
 }
 `);
@@ -172,4 +173,5 @@ patchUiFollow(checkout);
 patchUiLayout(checkout);
 patchActionGrip(checkout);
 patchPointerInput(checkout);
+patchPaneIsolation(checkout);
 console.log("Prepared standalone WebXR host with patched GeckoView and its matching v19 native ABI.");

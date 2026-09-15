@@ -1,3 +1,4 @@
+import { isQuestBrowser } from "../../../quest/webxr/host";
 
 import type { DirectionPrompts } from "../ui/direction-prompts";
 import type { ExtendedCommands } from "../ui/extended-commands";
@@ -112,6 +113,11 @@ export class PointerLock {
   }
 
   syncFpsPointerLockForUiState(tryAcquire: boolean): void {
+    if (isQuestBrowser()) {
+      if (document.pointerLockElement) document.exitPointerLock?.();
+      this.fpsPointerLockActive = false; this.fpsPointerLockRestorePending = false;
+      return;
+    }
     if (document.documentElement.classList.contains("nh3d-webxr-active")) return;
     if (!this.dependencies.movementInput.isFpsMode()) {
       return;

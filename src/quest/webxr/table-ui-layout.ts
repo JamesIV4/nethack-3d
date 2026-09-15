@@ -18,7 +18,7 @@ function bounds(selector: string, paint = false): [number, number, number, numbe
 }
 
 export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles()): UiPane[] {
-  let modal = bounds(".nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,.nh3d-mobile-actions-sheet,.nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=alertdialog],[role=menu]", true);
+  const modal = bounds(".nh3d-dialog,.nh3d-context-menu,.nh3d-mobile-actions-sheet,.nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=alertdialog],[role=menu]", true);
   if (firstPerson) {
     const actions = bounds(".nh3d-mobile-bottom-bar", true) ?? bounds(".nh3d-desktop-bottom-actions", true);
     const hole = actions ?? modal;
@@ -37,13 +37,7 @@ export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles())
   }
   const messages = bounds(".top-left-ui,.floating-message-container,.nh3d-mobile-log-collapsed", true);
   if (messages) panes.push([11, ...messages]);
-  // Unknown controls get their own floating crop. Never move the edge HUD to
-  // the modal pane just because a context menu opens in the same document.
-  for (let i = 0; i < hitRects.length; i += 4) {
-    if (panes.some((p) => p[1] <= hitRects[i] + 0.002 && p[2] <= hitRects[i + 1] + 0.002 && p[3] >= hitRects[i + 2] - 0.002 && p[4] >= hitRects[i + 3] - 0.002)) continue;
-    modal = modal ? [Math.min(modal[0], hitRects[i]), Math.min(modal[1], hitRects[i+1]),
-      Math.max(modal[2], hitRects[i+2]), Math.max(modal[3], hitRects[i+3])] : hitRects.slice(i, i+4) as [number, number, number, number];
-  }
+  // Only explicit UI surfaces become panes; arbitrary hit boxes are not windows.
   if (modal) panes.push([4, ...modal]);
-  return panes.length ? panes : [[4, 0, 0, 1, 1]];
+  return panes;
 }

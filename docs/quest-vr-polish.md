@@ -83,3 +83,21 @@ Validation: 72 focused tests, TypeScript, complete APK compilation, original Jav
 
 Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.14-ui-input-debug.apk`.
 SHA256: `65d4d30b372ab10dae6c6ee8246b858ee984fdafecc884a9412a8a1b2746335b`.
+
+
+## 0.3.15 frame lifecycle and pane isolation
+
+- Keep the normal `Camera.updateCamera` call in the shared frame sequence, then apply the tracked XR view. The camera lifecycle completes first-person steps and releases pending tile updates; skipping it can leave items, enemies, their floor underlays, and other queued visuals absent until flat mode resumes. No world meshes, materials, or render ordering were replaced for this fix.
+- Native UI source layout reserves separate vertical regions for modals, the action bar, and scale controls. Modal crops cannot carry chunks of the bar. Unassigned hit rectangles no longer create upright fallback panes; only explicit dialog/context surfaces create modal crops.
+- All dialog/context roots receive whole-layout scaling, including conditionally mounted inventory Drop submenus without an `is-visible` class. The content-driven maximum remains 54vw by 72vh. Native source placement differs from world placement.
+- Modals render in a foreground native pass and take hit priority over table UI. The table status bar cannot draw through them.
+- Scale controls fit their icons; opening a slider supplies a minimum usable width.
+- The independent first-person action pane pitches toward the viewer position while preserving its horizontal frame orientation and grip offsets. Hovering it no longer masks controller axes; grip still owns input while repositioning.
+- Bundled-host flat presses and drags use touchscreen events; hover remains mouse-style for feedback. Immersive pane clicks retain mouse events. FPS pointer lock and mouse-look handlers are disabled for this host so the existing touch controls own flat camera dragging.
+
+Validation: 73 focused tests and TypeScript passed; the real engine-frame/Camera regression fails with the old skipped-camera path and passes with the shared lifecycle restored. Native Java input tests cover immersive clicks, flat touch dragging, and non-host behavior. Browser isolation checks pass at 1600x1000, 1280x800, and 800x600, including maximum-height inventory, Drop submenu scaling, and content-sized scale controls. Native/APK builds and repeatable patch preparation pass.
+
+Live evidence: the gold tile at 67,16 was absent from both the tile mesh and billboard collections during the reported VR failure. It appeared after exiting to flat mode; the user confirmed it remained visible upon re-entering VR. Document animation callbacks continued running during the subsequent capture, ruling out a general rAF pause in that capture. The skipped first-person camera lifecycle is reproduced by the regression test. Physical validation of the complete new APK is still required.
+
+Artifact: `quest/build/outputs/apk/nethack3d-webxr-0.3.15-frame-ui-debug.apk`.
+SHA256: `fcfc12510dee8d80f06d1e0b6f31ebf4cdf9b32ba007eb02525910dd5f91eaa7`.

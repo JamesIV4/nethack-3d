@@ -1,6 +1,6 @@
 import { isVisibleUi } from "./visibility";
 const controls = "button,a[href],input,textarea,select,label,summary,canvas,#stats-bar,#game-log,[tabindex]:not([tabindex='-1']),[role=button],[role=slider],[contenteditable=true],[data-xr-ui]";
-const surfaces = ".nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=alertdialog]";
+const surfaces = ".nh3d-dialog,.nh3d-context-menu,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=alertdialog]";
 
 export function uiHitRectangles(): number[] {
   const regions: number[][] = [];
