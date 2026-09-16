@@ -47,10 +47,11 @@ function fixture(native = false) {
     engineState: { clientOptions: { vrPassthrough: false }, playMode: "normal", disposed: false },
     playerMovement: { playerPos: { x: 3, y: 5 } }, renderPipeline: { scene, renderer },
     heldWeapon: { fpsHeldWeaponMesh: null },
+    tileRendering: { tileMap: new Map(), floorGeometry: new THREE.PlaneGeometry() }, glyphTextures: { glyphOverlayMap: new Map() },
   } as unknown as WebXrPresentationDependencies;
   const presentation = new WebXrPresentation(deps);
   return { presentation, deps, renderer, scene, mesh, classes, session, requestSession, styleValues,
-    frame: () => { const camera = presentation.prepareRender(); if (camera) renderer.render(scene, camera); return !!camera; } };
+    frame: () => { const camera = presentation.prepareRender(); if (camera) presentation.render(camera); return !!camera; } };
 }
 describe("Three.js owns the Quest world", () => {
   it("keeps tracked eyes and physical UI undistorted under rectangular world cells", async () => {

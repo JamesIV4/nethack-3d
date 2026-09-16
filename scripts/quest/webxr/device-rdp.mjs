@@ -44,7 +44,9 @@ try {
   if (process.argv[2] !== "--eval-file" && process.argv[2] !== "--console") {
     console.log(JSON.stringify({ hello, list }, null, 2));
   } else {
-    const tab = list.tabs?.find((entry) => entry.url?.startsWith("http://127.0.0.1:18973/"));
+    const browserId = process.env.QUEST_BROWSER_ID;
+    const tab = list.tabs?.find((entry) => entry.url?.startsWith("http://127.0.0.1:18973/") &&
+      (!browserId || String(entry.browserId) === browserId));
     if (!tab) throw new Error("The bundled game tab is not available: " + JSON.stringify(list));
     send({ to: tab.actor, type: "getTarget" });
     const target = await receive((message) => message.from === tab.actor && (message.frame || message.target || message.error));

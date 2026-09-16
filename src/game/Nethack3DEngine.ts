@@ -1741,7 +1741,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.camera.compensateTerminalWorldSpriteAspect();
     const xrCamera = this.systems.webXrPresentation.prepareRender();
     if (xrCamera) {
-      this.systems.renderPipeline.renderer.render(this.systems.renderPipeline.scene, xrCamera);
+      this.systems.webXrPresentation.render(xrCamera);
       return;
     }
     this.systems.questSceneExport.update(timeMs);

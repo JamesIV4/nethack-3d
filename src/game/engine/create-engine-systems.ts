@@ -876,6 +876,8 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get playerMovement() { return playerMovement; },
     get renderPipeline() { return renderPipeline; },
     get heldWeapon() { return heldWeapon; },
+    get tileRendering() { return tileRendering; },
+    get glyphTextures() { return glyphTextures; },
   });
   const questSceneExport = new QuestSceneExport({
     coordinator,

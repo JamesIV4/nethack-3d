@@ -31,7 +31,7 @@ it("preserves camera completion and releases postmortem modals in the shared XR 
     gameOver,
     engineState: { disposed: false, lastFrameTimeMs: null, clientOptions: { minimap: false } },
     camera: new Proxy(camera, { get: (o,k) => k in o ? Reflect.get(o,k) : noop }),
-    webXrPresentation: { active: true, updateInput: noop, updateCamera: () => { order.push("XR pose"); return true; }, prepareRender: () => camera.camera },
+    webXrPresentation: { active: true, updateInput: noop, updateCamera: () => { order.push("XR pose"); return true; }, prepareRender: () => camera.camera, render: () => order.push("render") },
     renderPipeline: { syncWorldTileScale: () => order.push("world scale"), renderer: { xr: { isPresenting: true }, render: () => order.push("render") }, scene: new THREE.Scene() },
     directionPrompts: { directionPromptOverlay: null, syncDirectionPromptOverlayVisibility: noop },
     tilesetAssets: { vultureTilesetTranslator: null },

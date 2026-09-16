@@ -1,5 +1,9 @@
 import * as THREE from "three";
 import { ScaledCameraSprites } from "./scaled-camera-sprites";
+import { WorldClipCulling } from "./world-clip-culling";
+import { XrTerrainBatches } from "./xr-terrain-batches";
+import type { TileRendering } from "./tile-rendering";
+import type { GlyphTextures } from "./glyph-textures";
 import { XrCanvasPresentation } from "./xr-canvas-presentation";
 import { HtmlUiPanel } from "../../../quest/webxr/html-ui-panel";
 import { BoardTilt } from "../../../quest/webxr/board-tilt";
@@ -21,6 +25,8 @@ export interface WebXrPresentationDependencies {
   readonly engineState: Pick<EngineState, "clientOptions" | "playMode" | "disposed">;
   readonly playerMovement: Pick<PlayerMovement, "playerPos">;
   readonly renderPipeline: Pick<RenderPipeline, "renderer" | "scene">;
+  readonly tileRendering: Pick<TileRendering, "tileMap" | "floorGeometry">;
+  readonly glyphTextures: Pick<GlyphTextures, "glyphOverlayMap">;
   readonly heldWeapon: Pick<HeldWeapon, "fpsHeldWeaponMesh" | "resolveFpsHeldWeaponTextureState" | "createQuestWeaponTexture" | "measureTextureOpaqueAspectRatio">;
 }
 
@@ -33,6 +39,8 @@ export class WebXrPresentation {
   private canvasPresentation: XrCanvasPresentation | null = null;
   private unregister: (() => void) | null = null;
   private readonly scaledSprites = new ScaledCameraSprites();
+  private readonly worldClipCulling = new WorldClipCulling();
+  private readonly terrainBatches = new XrTerrainBatches();
   private readonly trackingRoot = new THREE.Group();
   private readonly xrCamera = new THREE.PerspectiveCamera(75, 1, 0.03, 150);
   private readonly anchor = new THREE.Vector3(0, 1.6, 0);
@@ -180,6 +188,7 @@ export class WebXrPresentation {
   }
 
   private readonly ended = (): void => {
+    this.terrainBatches.dispose();
     this.uiFirstPerson = false; this.uiRecenter = true;
     this.scaledSprites.disable(this.dependencies.renderPipeline.scene);
     document.documentElement.classList.remove("nh3d-xr-first-person");
@@ -329,6 +338,13 @@ export class WebXrPresentation {
     return this.xrCamera;
   }
 
+  render(camera: THREE.Camera): void {
+    const { renderer, scene } = this.dependencies.renderPipeline;
+    this.terrainBatches.render(renderer, scene, camera, this.trackingRoot,
+      this.dependencies.tileRendering.tileMap, this.dependencies.tileRendering.floorGeometry,
+      this.dependencies.glyphTextures.glyphOverlayMap, this.worldClipCulling);
+  }
+
   dispose(): void {
     this.started = false;
     this.lifecycle.abort();
@@ -339,5 +355,6 @@ export class WebXrPresentation {
     if (this.host) document.documentElement.classList.remove("nh3d-webxr-active");
     this.board.geometry.dispose(); this.board.material.dispose();
     this.tilt.dispose();
+    this.terrainBatches.dispose();
   }
 }

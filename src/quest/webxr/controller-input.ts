@@ -7,6 +7,7 @@ import type { HtmlUiPanel, UiHit } from "./html-ui-panel";
 import type { BoardTilt } from "./board-tilt";
 import { withoutWorldClipping } from "./overlay-material";
 import { SnapTurnLatch, WorldClickGesture } from "./controller-gestures";
+import { WorldRaycast } from "./world-raycast";
 
 function command(value: QuestNativeCommand): QuestCommandResult {
   return routeQuestCommand(value, useGameStore.getState(), {
@@ -60,6 +61,7 @@ export class WebXrControllerInput {
     if (this.diagnostics.length > 16) this.diagnostics.shift();
   }
   private readonly caster = new THREE.Raycaster();
+  private readonly worldRaycast = new WorldRaycast();
   private readonly pickCamera = new THREE.PerspectiveCamera();
   private readonly inverse = new THREE.Matrix4();
   private readonly selectStart = (event: XRInputSourceEvent): void => {
@@ -126,10 +128,7 @@ export class WebXrControllerInput {
       const tracked = this.renderer.xr.getCamera();
       tracked.matrixWorld.decompose(this.pickCamera.position, this.pickCamera.quaternion, new THREE.Vector3());
       this.pickCamera.updateMatrixWorld(true); this.caster.camera = this.pickCamera;
-      state.world = this.caster.intersectObjects(this.scene.children.filter((child) => child !== this.root), true).find((hit) => {
-        for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
-        return this.renderer.clippingPlanes.every((plane) => plane.distanceToPoint(hit.point) >= 0);
-      }) ?? null;
+      state.world = this.worldRaycast.intersect(this.caster, this.scene, this.root, this.renderer.clippingPlanes);
       if (state.world) {
         point = state.world.point.clone().applyMatrix4(this.inverse);
         if (state.world.face) normal.copy(state.world.face.normal)

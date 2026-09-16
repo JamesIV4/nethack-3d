@@ -141,6 +141,8 @@ VR input adds 45-degree snap turns about the current head position, LT-modified 
 
 ### XR camera lifecycle
 
+XR world submission uses `XrTerrainBatches` and `WorldClipCulling`. They reject geometry outside the tabletop's existing clip planes, instance eligible opaque terrain, and use cached wall geometry without undersides or redundant material groups. Original tile meshes and materials remain authoritative for runtime updates, effects and picking; temporary draw masks/geometry are restored in `finally`. Instance materials borrow textures and preserve the lighting shader hook. Derived geometry, instance buffers and owned materials belong to the XR owner and are disposed on exit. Ground batching requires verified opaque texture content and matching material state; fades and unsupported cases use the existing tile draws. See [Quest performance measurements](../../../docs/quest-vr-performance.md).
+
 The shared animation frame always runs `Camera.updateCamera` before applying the final tracked XR pose. This call also completes first-person step transitions and schedules pending tile updates. Do not skip it merely because a headset supplies the view. Billboard, lighting, and remaining scene updates retain their normal order; `WebXrPresentation.prepareRender` applies final XR presentation changes before the original scene is rendered.
 
 `TileUpdates.flushSettledDarkCorridorInference` runs at the shared frame boundary when queued map work and player transitions have finished. Player-position fences drain both a partial batch and newer pending arrivals. Preserve the superseded-payload terrain cache when coalescing those arrivals; do not reconcile inferred walls halfway through a batch or defer late arrivals until another turn.

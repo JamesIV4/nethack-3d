@@ -120,7 +120,7 @@ The hardware acceptance pass should cover both views, movement and tile refresh,
 
 The current pass has 52 focused regression tests, including run/prompt routing, tap-versus-hold behavior, context-menu reuse, snap-turn latching and room-scale pivot preservation. A Chrome integration fixture verifies native-only pointer ownership, absence of synthetic native UI clicks or Three.js laser geometry, UI hit regions, world hit metadata, original game actions, bounded transport, and stable anchoring until explicit recenter. A real WebGL check also reproduces the old marker disappearing under a transparent floor and verifies the corrected draw ordering. The host Java/C++ integration and APK compile successfully. Headset testing must still confirm alpha composition, pose alignment, native form/keyboard behavior, and drag ergonomics.
 
-Performance is not yet established. Desktop postprocessing is bypassed in XR, and the flat held-weapon overlay is hidden pending a proper XR presentation. Standalone MR remains unfinished.
+The [Quest 3 performance pass](quest-vr-performance.md) measures the explored-level bottleneck and documents XR terrain instancing, clipping and reduced wall-face submissions. Its live previews substantially improved one explored tabletop level; packaged hardware acceptance remains necessary. Desktop postprocessing is bypassed in XR, and the flat held-weapon overlay is hidden pending a proper XR presentation. Standalone MR remains unfinished.
 
 ## Tabletop UI panes
 

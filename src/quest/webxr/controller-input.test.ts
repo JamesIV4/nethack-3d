@@ -25,17 +25,39 @@ function fixture() {
   tile.userData = { tileX: 4, tileY: 6 }; scene.add(tile); scene.updateMatrixWorld(true);
   const camera = new THREE.PerspectiveCamera(); camera.position.z = 1; camera.updateMatrixWorld();
   const pose = new THREE.Matrix4().makeTranslation(0, 0, 1);
-  const renderer = { clippingPlanes: [], xr: { getReferenceSpace: () => ({}), getCamera: () => camera,
+  const renderer = { clippingPlanes: [] as THREE.Plane[], xr: { getReferenceSpace: () => ({}), getCamera: () => camera,
     getFrame: () => ({ getPose: () => ({ transform: { matrix: pose.elements } }) }) } };
   const panel = { native: true, hit: () => null, hover: vi.fn(), forget: vi.fn() };
   const tilt = { hit: () => null, hover: vi.fn(), surfaceHit: () => null, end: vi.fn() };
   const input = new WebXrControllerInput(session as unknown as XRSession, renderer as unknown as THREE.WebGLRenderer,
     scene, root, 1, () => panel as unknown as HtmlUiPanel, tilt as unknown as BoardTilt);
-  return { input, left, right, controller, session, scene, root, tile, pose, panel };
+  return { input, left, right, controller, session, scene, root, tile, pose, panel, renderer };
 }
 afterEach(() => vi.unstubAllGlobals());
 
 describe("WebXR trigger to game command integration", () => {
+  it("skips hidden raycasts while retaining child overlays and exact hit clipping", () => {
+    const f = fixture();
+    const clipped = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+    clipped.position.x = 30; f.scene.add(clipped);
+    const overlay = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshBasicMaterial());
+    overlay.position.set(-30, 0, 0.5); overlay.userData = { tileX: 8, tileY: 9 }; clipped.add(overlay);
+    const hidden = new THREE.Group(); hidden.visible = false; f.scene.add(hidden);
+    const hiddenMesh = overlay.clone(); hidden.add(hiddenMesh);
+    f.renderer.clippingPlanes = [new THREE.Plane(new THREE.Vector3(-1, 0, 0), 1)];
+    f.scene.updateMatrixWorld(true);
+    const hiddenRaycast = vi.spyOn(hiddenMesh, "raycast");
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(0, null);
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(100, null);
+    expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(8, 9);
+    expect(hiddenRaycast).not.toHaveBeenCalled();
+    // The wide floor overlaps the boundary, but this ray hits its clipped part.
+    overlay.visible = false; f.pose.makeTranslation(2, 0, 1);
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(200, null);
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(300, null);
+    expect(f.controller.activateQuestTile).toHaveBeenCalledOnce();
+    f.input.dispose();
+  });
   it("converts physical rectangular-cell hits back to logical tile coordinates", () => {
     const f = fixture();
     f.scene.scale.x = 0.6;

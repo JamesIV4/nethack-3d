@@ -196,7 +196,7 @@ export class ControllerDialogs {
 
   resetControllerVirtualCursor(): void {
     this.controllerVirtualCursorVisible = false;
-    if (this.controllerVirtualCursorElement) {
+    if (this.controllerVirtualCursorElement && this.controllerVirtualCursorElement.style.display !== "none") {
       this.controllerVirtualCursorElement.style.display = "none";
     }
     if (this.controllerVirtualCursorPulseHideTimerId !== null) {
@@ -204,8 +204,11 @@ export class ControllerDialogs {
       this.controllerVirtualCursorPulseHideTimerId = null;
     }
     if (this.controllerVirtualCursorPulseElement) {
-      this.controllerVirtualCursorPulseElement.classList.remove("is-active");
-      this.controllerVirtualCursorPulseElement.style.display = "none";
+      const pulse = this.controllerVirtualCursorPulseElement;
+      // A no-op classList.remove still emits a mutation in Gecko. This reset
+      // runs every XR frame and otherwise invalidates the native UI hit layout.
+      if (pulse.classList.contains("is-active")) pulse.classList.remove("is-active");
+      if (pulse.style.display !== "none") pulse.style.display = "none";
     }
   }
 

@@ -835,14 +835,9 @@ export class TileMaterials {
         this.dependencies.wallOverlays.disposeVultureWallFaceOverlay(mesh);
         this.dependencies.wallOverlays.disposeVultureWallPlaneOverlay(mesh);
         this.dependencies.wallOverlays.disposeVultureDoorPlaneOverlay(mesh);
-        mesh.material = [
-          solidWallMaterial,
-          solidWallMaterial,
-          solidWallMaterial,
-          solidWallMaterial,
-          solidWallMaterial,
-          solidWallMaterial,
-        ];
+        // Every face uses the same opaque material. A material array makes
+        // Three submit all six box groups separately, including in each XR eye.
+        mesh.material = solidWallMaterial;
       } else {
         this.dependencies.wallOverlays.disposeIronBarsWallPlaneOverlay(mesh);
         this.dependencies.wallOverlays.disposeVultureWallFaceOverlay(mesh);
