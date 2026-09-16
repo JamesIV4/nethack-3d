@@ -14,4 +14,5 @@ export type RuntimeCoordinator = Pick<
   | "runtimeTerminationEmitted"
   | "runtimeVersion"
   | "startupOptions"
+  | "protocol"
 >;

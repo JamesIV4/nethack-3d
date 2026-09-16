@@ -22,6 +22,7 @@ export interface RuntimeMenuSelectionDependencies {
     | "eventHandler"
     | "nethackModule"
     | "runtimeVersion"
+    | "protocol"
   >;
   readonly gameOver: Pick<
     RuntimeGameOver,
@@ -117,6 +118,7 @@ export class RuntimeMenuSelection {
       if (selectionCount <= 0) {
         this.menuSelections.clear();
       }
+      this.deps.coordinator.protocol.consumed(undefined, ["shim_select_menu"]);
       resolver(selectionCount);
       this.menuSelectionReadyCount = null;
       this.deps.tileRefresh.maybeFlushDeferredTileRefreshes();

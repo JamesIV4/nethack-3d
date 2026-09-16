@@ -1,0 +1,25 @@
+diff --git a/win/shim/winshim.c b/win/shim/winshim.c
+index a23f7da..362750e 100644
+--- a/win/shim/winshim.c
++++ b/win/shim/winshim.c
+@@ -741,11 +741,18 @@ EM_JS(void, local_callback,
+         }
+ 
+         let userCallback = globalThis[cbName];
+-        userCallback.call(this, name, ...jsArgs).then(retVal => {
++        globalThis.nethackGlobal.nh3dSynchronousGlyphCallbacks = 1;
++        const complete = retVal => {
+             setPointerValue(name, ret_ptr, retType, retVal);
+             reentryGuardExit();
+             wakeUp();
+-        });
++        };
++        const result = userCallback.call(this, name, ...jsArgs);
++        if (result && typeof result.then === "function") {
++            result.then(complete);
++        } else {
++            complete(result);
++        }
+ 
+         function getArg(ptr, type) {
+             return (type === "p")

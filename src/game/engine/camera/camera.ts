@@ -99,9 +99,8 @@ export interface CameraDependencies {
   >;
   readonly tileUpdates: Pick<
     TileUpdates,
-    "flushPendingTileUpdates"
+    "schedulePendingTileFlush"
     | "pendingTileUpdates"
-    | "tileFlushScheduled"
   >;
 }
 
@@ -1119,9 +1118,8 @@ export class Camera {
           this.fpsStepCameraTargetTile = null;
           this.fpsStepCameraFrom.set(targetEyeX, targetEyeY, eyeZ);
           this.fpsStepCameraTo.set(targetEyeX, targetEyeY, eyeZ);
-          if (this.dependencies.tileUpdates.pendingTileUpdates.size > 0 && !this.dependencies.tileUpdates.tileFlushScheduled) {
-            this.dependencies.tileUpdates.tileFlushScheduled = true;
-            requestAnimationFrame(() => this.dependencies.tileUpdates.flushPendingTileUpdates());
+          if (this.dependencies.tileUpdates.pendingTileUpdates.size > 0) {
+            this.dependencies.tileUpdates.schedulePendingTileFlush();
           }
         }
       }

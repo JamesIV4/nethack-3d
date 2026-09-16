@@ -725,7 +725,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
         return;
       }
       this.systems.engineState.session.setLoggingEnabled(isLoggingEnabled());
-      this.systems.engineState.session.requestRuntimeGlobalsSnapshot();
       this.systems.promptDialogs.updateConnectionStatus("Running", "running");
       this.systems.promptDialogs.updateStatus("Local NetHack runtime started");
       // this.addGameMessage("Local NetHack runtime started");
@@ -905,6 +904,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
         }
         break;
 
+      case "map_update_complete":
+        this.systems.tileUpdates.flushPendingDarkCorridorInference();
+        break;
+
       case "player_position":
         if (this.systems.positionSelection.positionInputModeActive) {
           console.log(
@@ -968,7 +971,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
         if (didMove) {
           this.systems.tileContextActions.closeAnyTileContextMenu(false);
         }
-        this.systems.tileUpdates.flushPendingTileUpdatesForPlayerPositionReconcile();
+        this.systems.tileUpdates.flushPendingTileUpdatesForPlayerPositionReconcile(
+          oldPos.x,
+          oldPos.y,
+          data.x,
+          data.y,
+        );
         this.systems.tileUpdates.refreshTilesAfterPlayerPositionUpdate(
           oldPos.x,
           oldPos.y,
@@ -981,7 +989,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
         ) {
           this.systems.tileUpdates.requestPlayerTileRefresh("overhead-under-player-move");
         }
-        this.systems.darkCorridorInference.requestInferredDarkCorridorWallReconcile({ forceImmediate: true });
+        // Re-evaluate every authoritative step, even during continuous motion.
+        // Later map observations get another pass at their display boundary.
+        this.systems.tileUpdates.flushPendingDarkCorridorInference(true);
         if (this.systems.movementInput.isFpsMode()) {
           const playerTileKey = `${data.x},${data.y}`;
           const shouldKeepPlayerTileBillboard =
@@ -1521,7 +1531,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.darkCorridorInference.darkCorridorBlindSearchInferenceUntilMs = 0;
     this.systems.darkCorridorInference.newlyDiscoveredDarkCorridorTilesForCurrentInput.clear();
     this.systems.tileRendering.activeEffectTileKeys.clear();
-    this.systems.tileUpdates.clearAllTileRefreshRetryPlans();
     this.systems.tileUpdates.pendingTileUpdates.clear();
     this.systems.tileUpdates.pendingTileFlushQueue = [];
     this.systems.tileUpdates.pendingTileFlushQueueIndex = 0;
@@ -1737,7 +1746,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.tileRendering.updateTileRevealFades(timeMs);
     this.systems.vultureWalls.updateVultureDoorPlaneRenderOrdering();
     this.systems.vultureWalls.updateIronBarsWallPlaneVisibility();
-    this.systems.tileUpdates.flushSettledDarkCorridorInference();
+    this.systems.tileUpdates.flushPendingDarkCorridorInference();
     this.systems.camera.compensateTerminalWorldSpriteAspect();
     const xrCamera = this.systems.webXrPresentation.prepareRender();
     if (xrCamera) {

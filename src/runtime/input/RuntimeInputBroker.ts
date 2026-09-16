@@ -5,6 +5,8 @@ export type InputRequestKind = "event" | "position" | "menu";
 export type InputTargetKinds = "any" | ReadonlyArray<InputRequestKind>;
 
 export interface InputToken {
+  commandId?: number;
+  tokenIndex?: number;
   key: string;
   source: InputSource;
   createdAt: number;
@@ -37,7 +39,8 @@ export default class RuntimeInputBroker {
 
   private readonly maxQueueSize: number;
 
-  constructor(maxQueueSize: number = RuntimeInputBroker.DEFAULT_MAX_QUEUE_SIZE) {
+  constructor(maxQueueSize: number = RuntimeInputBroker.DEFAULT_MAX_QUEUE_SIZE,
+    private readonly prepareToken: (token: InputToken) => InputToken = token => token) {
     const normalized =
       Number.isInteger(maxQueueSize) && maxQueueSize > 0
         ? maxQueueSize
@@ -173,15 +176,15 @@ export default class RuntimeInputBroker {
       token.targetKinds !== "any" &&
       (!Array.isArray(token.targetKinds) || token.targetKinds.length === 0)
     ) {
-      return {
+      return this.prepareToken({
         ...token,
         targetKinds: "any",
-      };
+      });
     }
-    return {
+    return this.prepareToken({
       ...token,
       targetKinds: token.targetKinds ?? "any",
-    };
+    });
   }
 
   private canSatisfyRequest(

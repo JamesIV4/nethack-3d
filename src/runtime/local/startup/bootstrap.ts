@@ -10,6 +10,27 @@ import type { RuntimePersistence } from "../persistence/startup-persistence";
 import type { RuntimePointerContract } from "../abi/pointer-contract";
 import type { RuntimeCheckpointRecovery } from "../persistence/checkpoint-recovery";
 import type { RuntimeWindows } from "../messages/windows";
+
+export function createNethackCallbackDispatcher(handleUICallback) {
+  return (name, ...args) => {
+    try {
+      const result = handleUICallback(name, args);
+      const supportsSynchronousGlyphCallbacks =
+        globalThis.nethackGlobal?.nh3dSynchronousGlyphCallbacks === 1;
+      if (
+        supportsSynchronousGlyphCallbacks &&
+        name === "shim_print_glyph" &&
+        !(result && typeof result.then === "function")
+      ) {
+        return result;
+      }
+      return Promise.resolve(result);
+    } catch (error) {
+      // Preserve the previous async wrapper's rejected-Promise behavior.
+      return Promise.reject(error);
+    }
+  };
+}
 import type { RuntimeSlashEmLocks } from "../persistence/slashem-locks";
 import type { RuntimeMemory } from "../abi/memory";
 import type { RuntimeStartupDiagnostics } from "../diagnostics/startup-diagnostics";
@@ -89,9 +110,9 @@ export class RuntimeBootstrap {
     try {
       console.log("Starting local NetHack session...");
 
-      globalThis.nethackCallback = async (name, ...args) => {
-        return this.deps.coordinator.handleUICallback(name, args);
-      };
+      globalThis.nethackCallback = createNethackCallbackDispatcher(
+        (name, args) => this.deps.coordinator.handleUICallback(name, args),
+      );
 
       this.deps.coordinator.runtimeVersion = this.deps.assets.normalizeRuntimeVersion(
         this.deps.coordinator.startupOptions?.runtimeVersion,

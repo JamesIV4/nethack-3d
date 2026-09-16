@@ -16,8 +16,12 @@ import type { RuntimeEntityTracking } from "./runtime-entity-tracking";
 import type { TileRendering } from "../rendering/tile-rendering";
 import type { VultureWalls } from "../rendering/vulture-walls";
 import type { WorldClassification } from "./world-classification";
+import type { FloorOcclusion } from "../rendering/floor-occlusion";
+import type { WallGeometry } from "../rendering/wall-geometry";
 
 export interface TileUpdatesDependencies {
+  readonly floorOcclusion: Pick<FloorOcclusion, "beginTileBatch" | "flushTileBatch" | "endTileBatch">;
+  readonly wallGeometry: Pick<WallGeometry, "beginTileBatch" | "flushTileBatch" | "endTileBatch">;
   readonly camera: Pick<
     Camera,
     "fpsStepCameraActive"
@@ -87,10 +91,12 @@ export interface TileUpdatesDependencies {
     RuntimeEntityTracking,
     "finalizePendingRuntimeMonsterVacatedTracking"
     | "isRuntimeTrackedPlayerEntityId"
+    | "pendingRuntimeMonsterVacatedTileKeyById"
   >;
   readonly tileRendering: Pick<
     TileRendering,
     "updateTile"
+    | "tileMap"
   >;
   readonly vultureWalls: Pick<
     VultureWalls,
@@ -113,16 +119,13 @@ export interface TileUpdatesDependencies {
   >;
 }
 
-/** Runtime map update batching, deduplication, player tile refresh scheduling and retry ownership. */
+/** Runtime map update batching, deduplication and completion-backed refresh scheduling. */
 export class TileUpdates {
   constructor(private readonly dependencies: TileUpdatesDependencies) {}
 
   pendingTileFlushQueue: any[] = [];
 
   pendingTileFlushQueueIndex: number = 0;
-
-  tileRefreshRetryPlansByKey: Map<string, { timerIds: number[] }> =
-    new Map();
 
   readonly tileFlushFrameBudgetMs: number = 5;
 
@@ -133,12 +136,11 @@ export class TileUpdates {
   pendingTileUpdates: Map<string, any> = new Map();
 
   tileFlushScheduled: boolean = false;
+  private tileFlushGeneration = 0;
 
-  private corridorReconcileAfterTiles = false;
+  private corridorInferenceDirty = false;
 
   pendingPlayerTileRefreshOnNextPosition: boolean = true;
-
-  readonly tileRefreshRetryDelayMs: number = 120;
 
   readonly fpsCacheAssumptionRefreshCooldownMs: number = 280;
 
@@ -258,25 +260,40 @@ export class TileUpdates {
     }
 
     const key = `${tile.x},${tile.y}`;
+    // Capture input-scoped discovery as soon as the observation arrives. The
+    // visual rebuild may intentionally span later frames on limited devices.
+    this.dependencies.darkCorridorInference.recordNewlyDiscoveredDarkCorridorTileForCurrentInput(tile);
     const pendingTile = this.pendingTileUpdates.get(key);
     if (pendingTile) {
       this.dependencies.worldClassification.seedTerrainCacheFromSupersededPendingUpdate(key, pendingTile, tile);
     }
     this.pendingTileUpdates.set(key, tile);
-    this.corridorReconcileAfterTiles = true;
+    this.corridorInferenceDirty = true;
+    this.schedulePendingTileFlush();
+  }
 
-    if (this.tileFlushScheduled) {
-      return;
-    }
-
+  schedulePendingTileFlush(): void {
+    if (this.tileFlushScheduled) return;
     this.tileFlushScheduled = true;
-    requestAnimationFrame(() => this.flushPendingTileUpdates(false));
+    const generation = ++this.tileFlushGeneration;
+    requestAnimationFrame(() => {
+      // A player-position fence may already have drained this work and queued
+      // another flush. Obsolete callbacks must not spend another frame budget.
+      if (this.tileFlushScheduled && generation === this.tileFlushGeneration) this.flushPendingTileUpdates(false);
+    });
   }
 
   processPendingTileUpdate(tile: any): void {
     const key = `${tile.x},${tile.y}`;
-    this.dependencies.darkCorridorInference.recordNewlyDiscoveredDarkCorridorTileForCurrentInput(tile);
     const behavior = this.dependencies.worldClassification.classifyTilePayload(tile);
+    // Keep actor/feature snapshots on their original geometry boundary. Only
+    // consecutive ordinary terrain updates share deferred neighbor rebuilds.
+    if (!behavior || !["floor", "wall", "dark", "dark_wall"].includes(behavior.materialKind) ||
+      (typeof tile.monsterId === "number" && tile.monsterId >= 0) ||
+      this.dependencies.entityBillboards.monsterBillboards.has(key)) {
+      this.dependencies.wallGeometry.flushTileBatch();
+      this.dependencies.floorOcclusion.flushTileBatch();
+    }
     const nowMs = Date.now();
     const isRuntimeTrackedPlayerTile = this.dependencies.runtimeEntityTracking.isRuntimeTrackedPlayerEntityId(
       tile.monsterId,
@@ -446,6 +463,7 @@ export class TileUpdates {
 
   flushPendingTileUpdates(forceFullBatch: boolean = false): void {
     this.tileFlushScheduled = false;
+    this.tileFlushGeneration++;
 
     if (forceFullBatch && this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length && this.pendingTileUpdates.size) {
       // A player-position fence must include arrivals queued behind a partially
@@ -476,6 +494,9 @@ export class TileUpdates {
 
     const frameStartMs = performance.now();
     let processedCount = 0;
+    this.dependencies.floorOcclusion.beginTileBatch();
+    this.dependencies.wallGeometry.beginTileBatch();
+    try {
     while (
       this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length
     ) {
@@ -495,14 +516,18 @@ export class TileUpdates {
       this.processPendingTileUpdate(tile);
       processedCount += 1;
     }
+    } finally {
+      // Door trims consume the final chamfer masks; occlusion consumes both.
+      try { this.dependencies.wallGeometry.endTileBatch(); }
+      finally { this.dependencies.floorOcclusion.endTileBatch(); }
+    }
 
     if (this.pendingTileFlushQueueIndex >= this.pendingTileFlushQueue.length) {
       this.pendingTileFlushQueue = [];
       this.pendingTileFlushQueueIndex = 0;
       this.dependencies.runtimeEntityTracking.finalizePendingRuntimeMonsterVacatedTracking();
     }
-    // Late tile arrivals are reconciled at the settled frame boundary below,
-    // never halfway through a batch or during a player movement transition.
+    // Inference reads queued observations independently of visual rebuilding.
     // Flush minimap cells once per tile batch to keep runtime bursts lightweight.
     this.dependencies.minimap.flushPendingMinimapTileUpdates();
     this.dependencies.vultureWalls.flushPendingVultureWallMaterialRefreshes();
@@ -511,11 +536,9 @@ export class TileUpdates {
 
     if (
       (this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length ||
-        this.pendingTileUpdates.size > 0) &&
-      !this.tileFlushScheduled
+        this.pendingTileUpdates.size > 0)
     ) {
-      this.tileFlushScheduled = true;
-      requestAnimationFrame(() => this.flushPendingTileUpdates(false));
+      this.schedulePendingTileFlush();
     }
   }
 
@@ -743,25 +766,127 @@ export class TileUpdates {
     }
   }
 
-  flushSettledDarkCorridorInference(): void {
-    if (!this.corridorReconcileAfterTiles || this.pendingTileUpdates.size ||
-        this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length ||
-        this.dependencies.camera.fpsStepCameraActive ||
-        this.dependencies.entityMovement.activeEntityMoveTransitions.has("player")) return;
-    this.corridorReconcileAfterTiles = false;
-    this.dependencies.darkCorridorInference.requestInferredDarkCorridorWallReconcile({ forceImmediate: true });
+  flushPendingDarkCorridorInference(force = false): void {
+    if (!force && !this.corridorInferenceDirty) return;
+    this.corridorInferenceDirty = false;
+    this.dependencies.floorOcclusion.beginTileBatch();
+    this.dependencies.wallGeometry.beginTileBatch();
+    try {
+      this.dependencies.darkCorridorInference.requestInferredDarkCorridorWallReconcile({ forceImmediate: true });
+    } finally {
+      try { this.dependencies.wallGeometry.endTileBatch(); }
+      finally { this.dependencies.floorOcclusion.endTileBatch(); }
+    }
   }
 
-  flushPendingTileUpdatesForPlayerPositionReconcile(): void {
+  collectPendingTileUpdates(): ReadonlyMap<string, any> {
+    const pending = new Map<string, any>();
+    for (let index = this.pendingTileFlushQueueIndex; index < this.pendingTileFlushQueue.length; index++) {
+      const tile = this.pendingTileFlushQueue[index];
+      pending.set(`${tile.x},${tile.y}`, tile);
+    }
+    for (const [key, tile] of this.pendingTileUpdates) pending.set(key, tile);
+    return pending;
+  }
+
+  flushPendingTileUpdatesForPlayerPositionReconcile(
+    oldX: number,
+    oldY: number,
+    newX: number,
+    newY: number,
+  ): void {
     if (
       !this.pendingTileUpdates.size &&
       this.pendingTileFlushQueueIndex >= this.pendingTileFlushQueue.length
     ) {
       return;
     }
-    // Drain queued map updates before dark-corridor wall inference runs for
-    // this movement step, preventing temporary front-wall flashes.
-    this.flushPendingTileUpdates(true);
+    // Apply only the cells that can affect the current movement immediately.
+    // Discovery bursts keep the normal frame budget instead of blocking the
+    // player-position callback with an entire room or corridor rebuild.
+    const urgentKeys = new Set<string>();
+    for (const origin of [{ x: oldX, y: oldY }, { x: newX, y: newY }]) {
+      // Door trims read adjacent wall chamfers, which in turn read their
+      // neighbors. Both rings must be current around the movement endpoints.
+      for (let dx = -2; dx <= 2; dx += 1) {
+        for (let dy = -2; dy <= 2; dy += 1) {
+          urgentKeys.add(`${origin.x + dx},${origin.y + dy}`);
+        }
+      }
+    }
+
+    const merged = new Map<string, any>();
+    for (
+      let index = this.pendingTileFlushQueueIndex;
+      index < this.pendingTileFlushQueue.length;
+      index += 1
+    ) {
+      const tile = this.pendingTileFlushQueue[index];
+      merged.set(`${tile.x},${tile.y}`, tile);
+    }
+    for (const [key, tile] of this.pendingTileUpdates) {
+      const previous = merged.get(key);
+      if (previous) {
+        this.dependencies.worldClassification.seedTerrainCacheFromSupersededPendingUpdate(
+          key,
+          previous,
+          tile,
+        );
+      }
+      merged.set(key, tile);
+    }
+    this.pendingTileUpdates.clear();
+
+    const deferred: any[] = [];
+    const vacatedEntityTiles = new Set(this.dependencies.runtimeEntityTracking.pendingRuntimeMonsterVacatedTileKeyById?.values() ?? []);
+    this.dependencies.floorOcclusion.beginTileBatch();
+    this.dependencies.wallGeometry.beginTileBatch();
+    try {
+      for (const [key, tile] of merged) {
+        const existingVisual = this.tileStateCache.has(key) || this.dependencies.tileRendering.tileMap.has(key);
+        const trackedEntity = typeof tile.monsterId === "number" && tile.monsterId >= 0;
+        if (urgentKeys.has(key) || existingVisual || trackedEntity || vacatedEntityTiles.has(key) || tile.isRuntimeUndiscoveredClear === true) {
+          this.processPendingTileUpdate(tile);
+        } else {
+          const behavior = this.dependencies.worldClassification.classifyTilePayload(tile);
+          // Defer only newly discovered ordinary terrain. Features, effects,
+          // entity arrivals and vacates retain their movement-step fence.
+          if (behavior && ["floor", "wall", "dark", "dark_wall"].includes(behavior.materialKind)) deferred.push(tile);
+          else this.processPendingTileUpdate(tile);
+        }
+      }
+    } finally {
+      try { this.dependencies.wallGeometry.endTileBatch(); }
+      finally { this.dependencies.floorOcclusion.endTileBatch(); }
+    }
+    this.pendingTileFlushQueue = deferred;
+    this.pendingTileFlushQueueIndex = 0;
+
+    this.dependencies.minimap.flushPendingMinimapTileUpdates();
+    this.dependencies.vultureWalls.flushPendingVultureWallMaterialRefreshes();
+    this.dependencies.vultureWalls.collectPendingVultureRoomDecorReconcileKeys(false);
+    this.dependencies.vultureWalls.flushPendingVultureRoomDecorReconcile();
+
+    if (deferred.length === 0) {
+      this.tileFlushScheduled = false;
+      this.tileFlushGeneration++;
+      this.dependencies.runtimeEntityTracking.finalizePendingRuntimeMonsterVacatedTracking();
+    } else if (!this.tileFlushScheduled) {
+      this.schedulePendingTileFlush();
+    }
+  }
+
+  hasPendingTileUpdateAtKey(key: string): boolean {
+    if (this.pendingTileUpdates.has(key)) return true;
+    for (
+      let index = this.pendingTileFlushQueueIndex;
+      index < this.pendingTileFlushQueue.length;
+      index += 1
+    ) {
+      const tile = this.pendingTileFlushQueue[index];
+      if (`${tile?.x},${tile?.y}` === key) return true;
+    }
+    return false;
   }
 
 
@@ -788,7 +913,7 @@ export class TileUpdates {
       return;
     }
     console.log(`Requesting tile update at (${x}, ${y})`);
-    this.dependencies.engineState.session.requestTileUpdate(x, y);
+    void this.dependencies.engineState.session.requestTileUpdate(x, y);
   }
 
   requestAreaUpdate(
@@ -800,7 +925,7 @@ export class TileUpdates {
       console.log(
         `Requesting area update centered at (${centerX}, ${centerY}) with radius ${radius}`,
       );
-      this.dependencies.engineState.session.requestAreaUpdate(centerX, centerY, radius);
+      void this.dependencies.engineState.session.requestAreaUpdate(centerX, centerY, radius);
     } else {
       console.log("Cannot request area update - runtime not started");
     }
@@ -824,59 +949,14 @@ export class TileUpdates {
     return this.dependencies.playerStatus.latestRuntimeGlobalsSnapshot;
   }
 
-  clearTileRefreshRetryPlan(key: string): void {
-    const plan = this.tileRefreshRetryPlansByKey.get(key);
-    if (!plan) {
-      return;
-    }
-    if (typeof window !== "undefined") {
-      for (const timerId of plan.timerIds) {
-        window.clearTimeout(timerId);
-      }
-    }
-    this.tileRefreshRetryPlansByKey.delete(key);
-  }
-
-  clearAllTileRefreshRetryPlans(): void {
-    for (const key of Array.from(this.tileRefreshRetryPlansByKey.keys())) {
-      this.clearTileRefreshRetryPlan(key);
-    }
-  }
-
-  requestTileUpdateWithRetry(
+  requestTileUpdateWithCompletion(
     x: number,
     y: number,
     options: { forceRuntime?: boolean } = {},
   ): void {
+    // Identified refreshes remain pending while helpers are unsafe and report
+    // one explicit completion. Timer retries only duplicated those requests.
     this.requestTileUpdate(x, y, options);
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const key = `${Math.trunc(x)},${Math.trunc(y)}`;
-    this.clearTileRefreshRetryPlan(key);
-
-    const plan = { timerIds: [] as number[] };
-    this.tileRefreshRetryPlansByKey.set(key, plan);
-    const scheduleRetry = (delayMs: number): void => {
-      const timerId = window.setTimeout(() => {
-        const activePlan = this.tileRefreshRetryPlansByKey.get(key);
-        if (activePlan !== plan) {
-          return;
-        }
-        activePlan.timerIds = activePlan.timerIds.filter(
-          (id) => id !== timerId,
-        );
-        this.requestTileUpdate(x, y, options);
-        if (activePlan.timerIds.length <= 0) {
-          this.tileRefreshRetryPlansByKey.delete(key);
-        }
-      }, delayMs);
-      plan.timerIds.push(timerId);
-    };
-
-    scheduleRetry(this.tileRefreshRetryDelayMs);
-    scheduleRetry(this.tileRefreshRetryDelayMs * 2);
   }
 
   requestPlayerTileRefresh(
@@ -896,7 +976,7 @@ export class TileUpdates {
     console.log(
       `Requesting player tile refresh (${reason}) at (${this.dependencies.playerMovement.playerPos.x}, ${this.dependencies.playerMovement.playerPos.y})`,
     );
-    this.requestTileUpdateWithRetry(
+    this.requestTileUpdateWithCompletion(
       this.dependencies.playerMovement.playerPos.x,
       this.dependencies.playerMovement.playerPos.y,
       options,
@@ -1014,13 +1094,13 @@ export class TileUpdates {
     }
     const originX = this.dependencies.playerMovement.playerPos.x;
     const originY = this.dependencies.playerMovement.playerPos.y;
-    this.requestTileUpdateWithRetry(originX, originY);
+    this.requestTileUpdateWithCompletion(originX, originY);
 
     const direction = this.dependencies.movementInput.getDirectionVectorFromInput(directionInput);
     if (!direction) {
       return;
     }
-    this.requestTileUpdateWithRetry(
+    this.requestTileUpdateWithCompletion(
       originX + direction.dx,
       originY + direction.dy,
     );

@@ -13,6 +13,7 @@ export interface RuntimeWindowTextDependencies {
     RuntimeCoordinator,
     "emit"
     | "eventHandler"
+    | "protocol"
   >;
   readonly gameOver: Pick<
     RuntimeGameOver,
@@ -245,6 +246,7 @@ export class RuntimeWindowText {
 
   handleShimDisplayNhwindow(args) {
     const [winid, blocking] = args;
+    if (this.deps.windows.isMapWindow(winid)) this.deps.coordinator.protocol.boundary("map-display");
     console.log(`DISPLAY WINDOW [Win ${winid}], blocking: ${blocking}`);
     const displayLines = this.consumeWindowTextBuffer(winid);
     const hasDisplayText = displayLines.some(

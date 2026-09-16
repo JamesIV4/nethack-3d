@@ -26,6 +26,8 @@ function fixture(mode: "ascii" | "tiles" = "ascii", fps = false) {
   });
   const dependencies = {
     camera, movementInput,
+    floorOcclusion: { beginTileBatch() {}, flushTileBatch() {}, endTileBatch() {} },
+    wallGeometry: { beginTileBatch() {}, flushTileBatch() {}, endTileBatch() {} },
     engineState: { clientOptions: { tilesetMode: mode } },
     playerMovement: player,
     entityBillboards: { monsterBillboards: billboards, removeMonsterBillboard: remove },

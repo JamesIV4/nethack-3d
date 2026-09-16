@@ -36,6 +36,7 @@ export interface RuntimeInputRequestsDependencies {
     RuntimeCoordinator,
     "runtimeVersion"
     | "isClosed"
+    | "protocol"
   >;
   readonly extendedCommands: Pick<
     RuntimeExtendedCommands,
@@ -96,7 +97,7 @@ export class RuntimeInputRequests {
   commandInputContinuation: "none" | "count" | "prefix" = "none";
 
   constructor(private readonly deps: RuntimeInputRequestsDependencies) {
-    this.inputBroker = new RuntimeInputBroker();
+    this.inputBroker = new RuntimeInputBroker(256, token => this.deps.coordinator.protocol.tagToken(token));
     this.activeInputRequest = null;
     this.awaitingQuestionInput = false;
   }
@@ -163,6 +164,11 @@ export class RuntimeInputRequests {
 
   consumeInputResult(result: InputConsumeResult | null, requestKind: InputRequestKind, requestContext = null): number {
     if (!result || result.cancelled) {
+      this.deps.coordinator.protocol.cancelWait(
+        requestKind === "position"
+          ? ["shim_nh_poskey"]
+          : ["shim_nhgetch", "shim_yn_function", "shim_display_nhwindow", "shim_display_file"],
+      );
       this.commandInputContinuation = "none";
       return typeof result?.cancelCode === "number" ? result.cancelCode : 27;
     }
@@ -172,6 +178,12 @@ export class RuntimeInputRequests {
       this.deps.positionInput.farLookMode === "none" &&
       !this.deps.positionInput.positionInputActive;
     const token = result.token;
+    this.deps.coordinator.protocol.consumed(
+      token ?? undefined,
+      requestKind === "position"
+        ? ["shim_nh_poskey"]
+        : ["shim_nhgetch", "shim_yn_function", "shim_display_nhwindow", "shim_display_file"],
+    );
     if (
       requestKind === "position" &&
       this.deps.mouseInput.applyMouseTokenToPoskeyRequest(token, requestContext)

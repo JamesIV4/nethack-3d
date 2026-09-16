@@ -114,7 +114,8 @@ export interface DarkCorridorInferenceDependencies {
   >;
   readonly tileUpdates: Pick<
     TileUpdates,
-    "pendingTileUpdates"
+    "collectPendingTileUpdates"
+    | "hasPendingTileUpdateAtKey"
     | "tileStateCache"
   >;
   readonly vultureWalls: Pick<
@@ -136,7 +137,9 @@ export interface DarkCorridorInferenceDependencies {
   >;
   readonly worldClassification: Pick<
     WorldClassification,
-    "flatFeatureUnderPlayerCache"
+    "classifyTilePayload"
+    | "snapshotPersistentTerrainFromTile"
+    | "flatFeatureUnderPlayerCache"
     | "isBoulderLikeBehavior"
     | "isUndiscoveredKind"
   >;
@@ -145,6 +148,9 @@ export interface DarkCorridorInferenceDependencies {
 /** Dark corridor discovery windows, boulder-aware inference and inferred wall reconciliation. */
 export class DarkCorridorInference {
   constructor(private readonly dependencies: DarkCorridorInferenceDependencies) {}
+
+  private pendingInferenceTiles: ReadonlyMap<string, any> = new Map();
+  private readonly pendingInferenceTerrain = new Map<string, TerrainSnapshot>();
 
   inferredDarkCorridorWallTiles: Map<string, { x: number; y: number }> =
     new Map();
@@ -207,12 +213,12 @@ export class DarkCorridorInference {
       this.dependencies.tileUpdates.tileStateCache.has(key) ||
       this.dependencies.levelTerrainCache.lastKnownTerrain.has(key) ||
       this.dependencies.worldClassification.flatFeatureUnderPlayerCache.has(key) ||
-      this.dependencies.tileUpdates.pendingTileUpdates.has(key)
+      this.dependencies.tileUpdates.hasPendingTileUpdateAtKey(key)
     );
   }
 
   isBoulderKnownAtKeyForDarkCorridorInference(key: string): boolean {
-    const terrain = this.dependencies.levelTerrainCache.getTileSnapshotFromStateCache(key);
+    const terrain = this.pendingInferenceTiles.get(key) ?? this.dependencies.levelTerrainCache.getTileSnapshotFromStateCache(key);
     if (!terrain) {
       return false;
     }
@@ -231,7 +237,7 @@ export class DarkCorridorInference {
   }
 
   isPetKnownAtKeyForDarkCorridorInference(key: string): boolean {
-    const terrain = this.dependencies.levelTerrainCache.getTileSnapshotFromStateCache(key);
+    const terrain = this.pendingInferenceTiles.get(key) ?? this.dependencies.levelTerrainCache.getTileSnapshotFromStateCache(key);
     if (!terrain) {
       return false;
     }
@@ -538,6 +544,8 @@ export class DarkCorridorInference {
   getKnownTerrainSnapshotForInferenceAtKey(
     key: string,
   ): TerrainSnapshot | null {
+    const pendingTerrain = this.pendingInferenceTerrain.get(key);
+    if (pendingTerrain) return pendingTerrain;
     const cachedTerrain = this.dependencies.levelTerrainCache.lastKnownTerrain.get(key);
     if (cachedTerrain) {
       return cachedTerrain;
@@ -595,7 +603,7 @@ export class DarkCorridorInference {
   classifyAuthoritativeTileForDarkCorridorInference(
     key: string,
   ): TileBehaviorResult | null {
-    const terrain = this.dependencies.levelTerrainCache.lastKnownTerrain.get(key);
+    const terrain = this.pendingInferenceTerrain.get(key) ?? this.dependencies.levelTerrainCache.lastKnownTerrain.get(key);
     if (terrain) {
       return classifyTileBehavior({
         glyph: terrain.glyph,
@@ -607,7 +615,7 @@ export class DarkCorridorInference {
       });
     }
 
-    const snapshot = this.dependencies.levelTerrainCache.getTileSnapshotFromStateCache(key);
+    const snapshot = this.pendingInferenceTiles.get(key) ?? this.dependencies.levelTerrainCache.getTileSnapshotFromStateCache(key);
     if (!snapshot) {
       return null;
     }
@@ -672,6 +680,12 @@ export class DarkCorridorInference {
       tryAddKey(key, parsed);
     }
 
+    // Queued terrain is already authoritative even when its mesh is budgeted
+    // for a later frame. Newer non-corridor terrain also supersedes old memory.
+    for (const [key, terrain] of this.pendingInferenceTerrain) {
+      discovered.delete(key);
+      tryAddKey(key, terrain);
+    }
     return discovered;
   }
 
@@ -948,6 +962,27 @@ export class DarkCorridorInference {
   }
 
   reconcileInferredDarkCorridorWalls(): void {
+    if (!this.isDarkCorridorWallInferenceEnabled()) {
+      this.pendingBoulderPushDarkCorridorInference = null;
+      this.clearAllInferredDarkCorridorWallMeshes();
+      return;
+    }
+    this.pendingInferenceTiles = this.dependencies.tileUpdates.collectPendingTileUpdates();
+    try {
+      for (const [key, tile] of this.pendingInferenceTiles) {
+        const behavior = this.dependencies.worldClassification.classifyTilePayload(tile);
+        if (!behavior || this.dependencies.worldClassification.isUndiscoveredKind(behavior.effective.kind)) continue;
+        const terrain = this.dependencies.worldClassification.snapshotPersistentTerrainFromTile(tile, behavior);
+        if (terrain) this.pendingInferenceTerrain.set(key, terrain);
+      }
+      this.reconcileInferredDarkCorridorWallsFromObservations();
+    } finally {
+      this.pendingInferenceTiles = new Map();
+      this.pendingInferenceTerrain.clear();
+    }
+  }
+
+  private reconcileInferredDarkCorridorWallsFromObservations(): void {
     const nowMs = Date.now();
     const pendingBoulderPushInference =
       this.pendingBoulderPushDarkCorridorInference;
@@ -1039,7 +1074,9 @@ export class DarkCorridorInference {
       this.inferredDarkCorridorWallTiles.entries(),
     )) {
       if (!this.shouldInferDarkCorridorWallAt(key)) {
-        this.removeInferredDarkCorridorTile(key);
+        // A pending floor can invalidate an inferred wall before the floor's
+        // mesh is built. Remove that wall now, not at the end of discovery.
+        this.clearInferredDarkCorridorWallMeshAt(key, tile.x, tile.y);
         continue;
       }
 

@@ -13,6 +13,7 @@ export interface RuntimeStatusDependencies {
     | "eventHandler"
     | "nethackModule"
     | "runtimeVersion"
+    | "protocol"
   >;
   readonly gameOver: Pick<
     RuntimeGameOver,
@@ -205,6 +206,7 @@ export class RuntimeStatus {
 
   flushPendingStatusUpdates(reason = "flush") {
     if (this.statusPending.size === 0) {
+      this.deps.coordinator.protocol.boundary("status-flush");
       return;
     }
 
@@ -225,6 +227,7 @@ export class RuntimeStatus {
         this.deps.coordinator.emit(payload);
       }
     }
+    this.deps.coordinator.protocol.boundary("status-flush");
   }
 
   readLatestStatusInteger(fieldName) {

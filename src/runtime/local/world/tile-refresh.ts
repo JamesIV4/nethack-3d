@@ -9,6 +9,8 @@ import type { RuntimeCoordinator } from "../runtime-coordinator";
 import type { RuntimeMapCallbacks } from "./map-callbacks";
 import type { RuntimeWindows } from "../messages/windows";
 import type { RuntimeUnderPlayerItems } from "./under-player-items";
+import { RuntimeRefreshRequests } from "../../protocol/refresh-requests";
+import { refreshAreaCells, resolveRuntimeMapDimensions, runtimeMapContains } from "../../protocol/map-bounds";
 
 export interface RuntimeTileRefreshDependencies {
   readonly coordinator: Pick<
@@ -17,6 +19,7 @@ export interface RuntimeTileRefreshDependencies {
     | "eventHandler"
     | "isClosed"
     | "runtimeVersion"
+    | "protocol"
   >;
   readonly inputRequests: Pick<
     RuntimeInputRequests,
@@ -57,11 +60,18 @@ export interface RuntimeTileRefreshDependencies {
 
 /** Helper-safe deferred tile/area refresh queues, floor underlays and map update emission. */
 export class RuntimeTileRefresh {
+  readonly identifiedRequests: RuntimeRefreshRequests;
   declare deferredTileRefreshKeys: Set<string>;
   declare deferredAreaRefreshRequests: Map<any, any>;
   declare deferredTileRefreshFlushScheduled: boolean;
 
   constructor(private readonly deps: RuntimeTileRefreshDependencies) {
+    this.identifiedRequests = new RuntimeRefreshRequests({
+      scope: () => this.deps.coordinator.protocol.scope,
+      canQuery: () => this.canQueryWasmHelpers(),
+      query: (cell, includeUnderPlayer) => this.handleTileUpdateRequest(cell.x, cell.y, { defer: false, includeUnderPlayer }),
+      emit: event => this.deps.coordinator.emit(event),
+    });
     this.deferredTileRefreshKeys = new Set();
     this.deferredAreaRefreshRequests = new Map();
     this.deferredTileRefreshFlushScheduled = false;
@@ -73,6 +83,14 @@ export class RuntimeTileRefresh {
       !this.deps.textInput.pendingTextRequest &&
       !this.deps.menuSelection.pendingMenuSelection
     );
+  }
+
+  handleCellRefreshSet(requestId, cells, scope, includeUnderPlayer = false) {
+    this.identifiedRequests.request(requestId, cells, scope, includeUnderPlayer);
+  }
+
+  cancelPendingRefreshSets() {
+    this.identifiedRequests.cancelAll();
   }
 
   deferTileRefreshRequest(x, y) {
@@ -107,7 +125,7 @@ export class RuntimeTileRefresh {
     }
     if (
       this.deferredTileRefreshKeys.size === 0 &&
-      this.deferredAreaRefreshRequests.size === 0
+      this.deferredAreaRefreshRequests.size === 0 && !this.identifiedRequests.hasPending
     ) {
       return;
     }
@@ -130,7 +148,7 @@ export class RuntimeTileRefresh {
     }
     if (
       this.deferredTileRefreshKeys.size === 0 &&
-      this.deferredAreaRefreshRequests.size === 0
+      this.deferredAreaRefreshRequests.size === 0 && !this.identifiedRequests.hasPending
     ) {
       return;
     }
@@ -153,6 +171,7 @@ export class RuntimeTileRefresh {
       }
       this.handleTileUpdateRequest(x, y);
     }
+    this.identifiedRequests.flush();
   }
 
   decodeFloorUnderlayAtPosition(
@@ -243,16 +262,22 @@ export class RuntimeTileRefresh {
   }
 
   // Handle request for tile update from client
-  handleTileUpdateRequest(x, y) {
+  handleTileUpdateRequest(x, y, options = {}) {
     if (this.deps.coordinator.isClosed) {
-      return;
+      return "cancelled";
     }
+    const constants = globalThis.nethackGlobal?.constants;
+    const dimensions = resolveRuntimeMapDimensions({ columns: constants?.COLNO, rows: constants?.ROWNO });
+    // glyph_at returns a room glyph outside the map in all three games.
+    // Such a query is unavailable, not a newly discovered floor tile.
+    if (!runtimeMapContains(x, y, dimensions)) return "unavailable";
     console.log(`🔄 Client requested tile update for (${x}, ${y})`);
 
     const canQueryWasmHelpers = this.canQueryWasmHelpers();
-    if (!canQueryWasmHelpers) {
+    if (!canQueryWasmHelpers && options.defer !== false) {
       this.deferTileRefreshRequest(x, y);
     }
+    let queryFailed = false;
     const key = `${x},${y}`;
     const tileData = this.deps.mapCallbacks.gameMap.get(key);
     const isPlayerTile =
@@ -356,8 +381,11 @@ export class RuntimeTileRefresh {
             decodedTileIndex = this.deps.runtimeGlyphs.extractGlyphInfoTileIndex(glyphInfo);
             decodedSymidx = this.deps.runtimeGlyphs.extractGlyphInfoSymidx(glyphInfo);
             decodedGlyphFlags = this.deps.runtimeGlyphs.extractGlyphInfoGlyphFlags(glyphInfo);
+          } else {
+            queryFailed = true;
           }
         } catch (error) {
+          queryFailed = true;
           console.log("⚠️ Error decoding glyph for refresh:", error);
         }
       }
@@ -445,6 +473,9 @@ export class RuntimeTileRefresh {
     };
 
     const emitUnderPlayerItemGlyphIfAvailable = () => {
+      // Area/map-only refreshes did not query under-player items. Preserve
+      // that boundary: a negative legacy item sentinel can also mean unseen.
+      if (options.includeUnderPlayer === false) return;
       this.deps.underPlayerItems.emitUnderPlayerItemGlyphIfAvailableAt(
         x,
         y,
@@ -461,9 +492,11 @@ export class RuntimeTileRefresh {
         const glyph = glyphAtHelper(x, y);
         if (updateTileFromGlyph(glyph)) {
           emitUnderPlayerItemGlyphIfAvailable();
-          return;
+          return queryFailed ? "failed" : "fresh";
         }
+        queryFailed = true;
       } catch (error) {
+        queryFailed = true;
         console.log("[WARN] glyphAtHelper refresh failed:", error);
       }
     }
@@ -488,6 +521,8 @@ export class RuntimeTileRefresh {
           floorUnderlayColor: tileData.floorUnderlayColor ?? null,
           floorUnderlayTileIndex: tileData.floorUnderlayTileIndex ?? null,
           floorUnderlaySymidx: tileData.floorUnderlaySymidx ?? null,
+          monsterId: this.deps.runtimeGlyphs.getTrackedMonsterIdFromRuntimeTile(tileData),
+          attackingTargetId: null,
           window: this.deps.windows.getRuntimeWindowId("WIN_MAP"),
           isRefresh: true, // Mark this as a refresh to distinguish from new data
         });
@@ -507,6 +542,7 @@ export class RuntimeTileRefresh {
         });
       }
     }
+    return queryFailed ? "failed" : tileData ? "cached" : "unavailable";
   }
 
   // Handle request for area update from client
@@ -545,10 +581,9 @@ export class RuntimeTileRefresh {
           : null
       : null;
 
-    for (let dx = -radius; dx <= radius; dx++) {
-      for (let dy = -radius; dy <= radius; dy++) {
-        const x = centerX + dx;
-        const y = centerY + dy;
+    const constants = globalThis.nethackGlobal?.constants;
+    const dimensions = resolveRuntimeMapDimensions({ columns: constants?.COLNO, rows: constants?.ROWNO });
+    for (const { x, y } of refreshAreaCells(centerX, centerY, radius, dimensions)) {
         const key = `${x},${y}`;
         const tileData = this.deps.mapCallbacks.gameMap.get(key);
 
@@ -745,7 +780,6 @@ export class RuntimeTileRefresh {
           }
           tilesRefreshed++;
         }
-      }
     }
 
     console.log(

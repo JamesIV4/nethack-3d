@@ -14,6 +14,7 @@ export interface RuntimeTextInputDependencies {
     "emit"
     | "eventHandler"
     | "nethackModule"
+    | "protocol"
   >;
   readonly keyboardInput: Pick<
     RuntimeKeyboardInput,
@@ -145,6 +146,7 @@ export class RuntimeTextInput {
         pending.maxLength,
       );
       if (typeof pending.resolve === "function") {
+        this.deps.coordinator.protocol.consumed(undefined, ["shim_getlin"]);
         pending.resolve(0);
       }
       this.deps.tileRefresh.maybeFlushDeferredTileRefreshes();

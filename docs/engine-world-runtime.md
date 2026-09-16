@@ -4,7 +4,7 @@ This guide locates the code that turns NetHack runtime events into remembered wo
 
 ## Runtime boundary
 
-[LocalNetHackRuntime](../src/runtime/LocalNetHackRuntime.ts) coordinates startup, callback guards and dispatch, public commands, and shutdown in the worker. Its [runtime subsystems](../src/runtime/local/README.md) own callback decoding, input waits, caches, ABI handling, and persistence; [create-runtime-systems.ts](../src/runtime/local/create-runtime-systems.ts) assembles their explicit dependencies before WASM starts. [runtime-worker.ts](../src/runtime/runtime-worker.ts) and [WorkerRuntimeBridge](../src/runtime/WorkerRuntimeBridge.ts) transport events and commands. [Nethack3DEngine.handleRuntimeEvent](../src/game/Nethack3DEngine.ts) receives those events and preserves their coordination order; presentation implementations live under `src/game/engine/`.
+[LocalNetHackRuntime](../src/runtime/LocalNetHackRuntime.ts) coordinates startup, callback guards and dispatch, public commands, and shutdown in the worker. Its [runtime subsystems](../src/runtime/local/README.md) own callback decoding, input waits, caches, ABI handling, and persistence; [create-runtime-systems.ts](../src/runtime/local/create-runtime-systems.ts) assembles their explicit dependencies before WASM starts. [runtime-worker.ts](../src/runtime/runtime-worker.ts), [WorkerRuntimeBridge](../src/runtime/WorkerRuntimeBridge.ts), and [protocol owners](../src/runtime/protocol/) transport versioned, ordered commands and observations. [Nethack3DEngine.handleRuntimeEvent](../src/game/Nethack3DEngine.ts) still receives each observation through its established handler in order; presentation implementations live under `src/game/engine/`.
 
 The event and command envelope types are in [runtime/types.ts](../src/runtime/types.ts). Engine-side shared types, such as level snapshots and tracked entity appearances, are in [engine/shared/types.ts](../src/game/engine/shared/types.ts).
 
@@ -15,7 +15,7 @@ The event and command envelope types are in [runtime/types.ts](../src/runtime/ty
 | Worker map/player callback decoding and runtime map cache | [local/world/map-callbacks.ts](../src/runtime/local/world/map-callbacks.ts): `handleShimPrintGlyph`, `handleShimCliparound`, `handleShimCurs` |
 | Worker player-tile refresh intent and authoritative item results | [local/world/post-action-refresh.ts](../src/runtime/local/world/post-action-refresh.ts), [local/world/under-player-items.ts](../src/runtime/local/world/under-player-items.ts) |
 | Worker status batching and reconnect replay | [local/status/status.ts](../src/runtime/local/status/status.ts), [local/world/global-snapshots.ts](../src/runtime/local/world/global-snapshots.ts) |
-| Map event batching and refresh requests | [world/tile-updates.ts](../src/game/engine/world/tile-updates.ts): `enqueueTileUpdate`, `processPendingTileUpdate`, `flushPendingTileUpdates`, `requestTileUpdateWithRetry` |
+| Map event batching and refresh requests | [protocol/event-batches.ts](../src/runtime/protocol/event-batches.ts), [protocol/refresh-requests.ts](../src/runtime/protocol/refresh-requests.ts), and [world/tile-updates.ts](../src/game/engine/world/tile-updates.ts) |
 | Glyph classification and features under the player | [world/world-classification.ts](../src/game/engine/world/world-classification.ts): `classifyTilePayload`, `shouldRenderFlatFeatureUnderPlayer`, `applyUnderPlayerItemGlyphEvent`, `clearUnderPlayerItemGlyphEvent` |
 | Level identity, snapshots, and restoration | [world/level-terrain-cache.ts](../src/game/engine/world/level-terrain-cache.ts): `persistActiveLevelTerrainCache`, `beginPendingLevelCacheTransition`, `maybeFinalizePendingLevelCacheTransition`, `restoreLevelTerrainCacheEntry` |
 | Dark corridor discovery and inferred walls | [world/dark-corridor-inference.ts](../src/game/engine/world/dark-corridor-inference.ts): `beginDarkCorridorDiscoveryWindowFromPlayerInput`, `requestInferredDarkCorridorWallReconcile` |
@@ -32,16 +32,16 @@ The event and command envelope types are in [runtime/types.ts](../src/runtime/ty
 
 A single `map_glyph` event updates runtime entity tracking, captures level-transition observations, attempts transition resolution, resolves pending character damage, and enqueues the tile. A `map_glyph_batch` first captures its complete set of transition observations and attempts transition resolution, then tracks entities, resolves damage, and enqueues each tile. Keep these paths' existing order when changing dispatch.
 
-`TileUpdates` owns `pendingTileUpdates`, the frame-budgeted flush queue, and `tileStateCache`. Before replacing a pending update for the player tile, it lets `WorldClassification` preserve terrain or a flat feature from the superseded payload. Flushes update visual state and finish vacated entity tracking when the flush queue drains, then flush minimap and Vulture reconciliation work.
+`TileUpdates` owns `pendingTileUpdates`, the frame-budgeted flush queue, and `tileStateCache`. Before replacing a pending update for the player tile, it lets `WorldClassification` preserve terrain or a flat feature from the superseded payload. Flushes update visual state and finish vacated entity tracking when the flush queue drains, then flush minimap and Vulture reconciliation work. Neighbor-dependent wall, door and floor-occlusion updates deduplicate within each chunk.
 
 Duplicate-signature billboard reconciliation must match `TileRendering.updateTile`:
 overhead 3D ASCII entities use raised billboards too. An unchanged player glyph
 after pickup or a terrain change must preserve its existing billboard; the FPS
 player suppression and deferred movement checks still apply.
 
-`player_position` is the authoritative position update. The dispatcher ignores it while position-input mode is active, since a selection cursor must not move the player. It resolves any pending level transition, records movement using the old position, assigns `PlayerMovement.playerPos`, and reconciles queued tile visuals. It then requests dark corridor wall reconciliation and any required player-tile refresh. `map_cursor` supplies prediction hints; it does not replace that authoritative position flow.
+`player_position` is the authoritative position update. The dispatcher ignores it while position-input mode is active, since a selection cursor must not move the player. It resolves any pending level transition, records movement using the old position, assigns `PlayerMovement.playerPos`, and immediately reconciles only the old/new player neighborhoods. Remaining discovery visuals keep the normal per-frame budget. `map_cursor` supplies prediction hints; it does not replace that authoritative position flow.
 
-Dark corridor walls reconcile from player-position updates rather than ordinary tile flushes, avoiding temporary walls during movement.
+Dark corridor observations are recorded when they enter the queue. Inference evaluates every authoritative player step and again on `map_update_complete`, which the bridge delivers after the runtime's ordered map-display or snapshot-complete boundary. It reads a temporary view of pending terrain, with newer arrivals overriding the unfinished visual queue; render caches stay untouched until their tiles are processed. Queued floors suppress inferred walls immediately. Camera/player motion and distant mesh rebuilding do not delay this evaluation. The shared frame also checks dirty observations for legacy delivery paths.
 
 ## Features and loot under the player
 
@@ -84,7 +84,7 @@ resolved floor/decor lookup so rugs and neighboring wall styles do not change
 when the room leaves sight. Genuine terrain changes invalidate that remembered
 floor artwork; clearing the runtime map resets it with the other decor state.
 
-On the worker side, `RuntimePostActionRefresh` owns pending refresh reasons, targets and snapshots; `RuntimeUnderPlayerItems` queries and emits authoritative item results. `RuntimeMapCallbacks` owns `gameMap` and player position, and `RuntimeTileRefresh` owns deferred tile/area requests. These owners read live peer state through declared dependencies so a replaced position or collection is visible immediately.
+On the worker side, `RuntimePostActionRefresh` owns pending refresh reasons, targets and snapshots; `RuntimeUnderPlayerItems` queries and emits authoritative item results. `RuntimeMapCallbacks` owns `gameMap` and player position, and `RuntimeTileRefresh` owns legacy refreshes plus identified cell sets. Cached responses do not satisfy a fresh-data obligation: identified sets complete only after helper-safe querying or an explicit unavailable/failed/cancelled outcome. These owners read live peer state through declared dependencies so a replaced position or collection is visible immediately.
 
 ## Level transitions and snapshots
 

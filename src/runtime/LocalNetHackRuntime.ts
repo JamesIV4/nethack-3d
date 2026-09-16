@@ -3,6 +3,14 @@ import { isLoggingEnabled } from "../logging";
 import { extractRuntimeNumberPadModeEnabled } from "./number-pad-mode";
 import { createRuntimeSystems, type RuntimeSystems } from "./local/create-runtime-systems";
 import type { RuntimeEventHandler, RuntimeStartupOptions, RuntimeEvent } from "./types";
+import { RuntimeProtocolSession } from "./protocol/session";
+import type {
+  RuntimeCell,
+  RuntimeCommandIdentity,
+  RuntimeLevelIdentity,
+  RuntimeObservationScope,
+  RuntimeProtocolHandshake,
+} from "./protocol/types";
 
 /** Public worker commands, callback dispatch and coordinated runtime lifecycle. */
 class LocalNetHackRuntime {
@@ -16,6 +24,7 @@ class LocalNetHackRuntime {
   declare runtimeTerminationEmitted: boolean;
 
   private readonly systems: RuntimeSystems;
+  readonly protocol: RuntimeProtocolSession;
   readonly runtimeSourceUrl = import.meta.url;
 
   constructor(eventHandler: RuntimeEventHandler, startupOptions: RuntimeStartupOptions | null = null) {
@@ -28,6 +37,13 @@ class LocalNetHackRuntime {
     this.isClosed = false;
     this.nethackInstance = null;
     this.runtimeTerminationEmitted = false;
+    this.protocol = new RuntimeProtocolSession(
+      this.startupOptions.protocolVersion === 1,
+      event => {
+        if (typeof this.eventHandler === "function") this.eventHandler(event);
+      },
+      () => this.getProtocolLevelIdentity(),
+    );
     this.systems = createRuntimeSystems(this);
     this.ready = this.systems.bootstrap.initializeNetHack();
   }
@@ -39,16 +55,67 @@ class LocalNetHackRuntime {
     this.requestRuntimeGlobalsSnapshot();
   }
 
-  sendInput(input: string): void {
-    this.systems.inputDispatch.handleClientInput(input);
+  sendInput(input: string, identity?: RuntimeCommandIdentity): void {
+    this.protocol.dispatchCommand(identity, () => this.systems.inputDispatch.handleClientInput(input));
   }
 
-  sendInputSequence(inputs: string[]): void {
-    this.systems.inputDispatch.handleClientInputSequence(inputs);
+  sendInputSequence(inputs: string[], identity?: RuntimeCommandIdentity): void {
+    this.protocol.dispatchCommand(identity, () => this.systems.inputDispatch.handleClientInputSequence(inputs));
   }
 
-  sendMouseInput(x: number, y: number, button: number): void {
-    this.systems.inputDispatch.handleClientMouseInput(x, y, button);
+  sendMouseInput(x: number, y: number, button: number, identity?: RuntimeCommandIdentity): void {
+    this.protocol.dispatchCommand(identity, () => this.systems.inputDispatch.handleClientMouseInput(x, y, button));
+  }
+
+  getProtocolHandshake(sessionId: string): RuntimeProtocolHandshake {
+    const root = (globalThis as typeof globalThis & { nethackGlobal?: any }).nethackGlobal;
+    const helpers = root?.helpers, constants = root?.constants;
+    const columns = constants?.COLNO, rows = constants?.ROWNO;
+    // COLNO/ROWNO are compile-time constants (80/21) in every staged source;
+    // use exported values when an artifact publishes them.
+    const mapDimensions = Number.isSafeInteger(columns) &&
+      Number.isSafeInteger(rows) &&
+      columns > 0 &&
+      rows > 0
+      ? { columns, rows }
+      : { columns: 80, rows: 21 };
+    const pointerContract = this.systems.pointerContract.getRuntimePointerContract();
+    const pointerAbi = pointerContract.abiTag || (
+      this.runtimeVersion === "5.0"
+        ? "nh5-pointer-v1"
+        : this.runtimeVersion === "slashem"
+          ? "slashem-pointer-v1"
+          : "nh367-pointer-v1"
+    );
+    return { protocolVersion: 1, sessionId, runtimeVersion: this.runtimeVersion,
+      artifactTag: this.systems.assets.readRuntimeBuildTag() || null,
+      pointerAbi,
+      pointerAbiValidated: this.systems.pointerContract.runtimePointerContractValidated,
+      mapDimensions,
+      capabilities: { orderedBatches: true, refreshSets: true, inputRequestIdentity: true,
+        synchronousGlyphCallbacks: root?.nh3dSynchronousGlyphCallbacks === 1,
+        glyphQuery: typeof helpers?.glyphAtHelper === "function", floorQuery: typeof helpers?.floorGlyphAtHelper === "function",
+        underPlayerItemQuery: typeof helpers?.topItemGlyphUnderPlayer === "function" } };
+  }
+
+  getProtocolLevelIdentity(): RuntimeLevelIdentity | null {
+    try {
+      const root = (globalThis as typeof globalThis & { nethackGlobal?: any })
+        .nethackGlobal?.globals;
+      const level = (root?.u ?? root?.g?.u)?.uz;
+      const dnum = this.systems?.memory.normalizeRuntimeInteger(level?.dnum);
+      const dlevel = this.systems?.memory.normalizeRuntimeInteger(level?.dlevel);
+      return dnum !== null &&
+        dlevel !== null &&
+        Number.isSafeInteger(dnum) &&
+        Number.isSafeInteger(dlevel) &&
+        dnum >= 0 &&
+        dlevel > 0
+        ? { dnum, dlevel }
+        : null;
+    } catch {
+      return null;
+    }
   }
 
   requestTileUpdate(x: number, y: number): void {
@@ -57,6 +124,15 @@ class LocalNetHackRuntime {
 
   requestAreaUpdate(centerX: number, centerY: number, radius: number): void {
     this.systems.tileRefresh.handleAreaUpdateRequest(centerX, centerY, radius);
+  }
+
+  requestCells(
+    refreshId: number,
+    cells: readonly RuntimeCell[],
+    scope: RuntimeObservationScope,
+    includeUnderPlayer = false,
+  ): void {
+    this.systems.tileRefresh.handleCellRefreshSet(refreshId, cells, scope, includeUnderPlayer);
   }
 
   requestRuntimeGlobalsSnapshot(): void {
@@ -78,6 +154,8 @@ class LocalNetHackRuntime {
     }
 
     this.isClosed = true;
+    this.protocol.shutdown();
+    this.systems.tileRefresh.cancelPendingRefreshSets();
     console.log(`Shutting down NetHack session: ${reason}`);
     this.systems.inputRequests.inputBroker.drain();
     this.systems.inputRequests.silentInventoryRefreshPending = false;
@@ -160,19 +238,18 @@ class LocalNetHackRuntime {
       this.systems.gameOver.gameOverEmptyRawPrintCount = 0;
     }
 
-    const inputCallbackHandlers: Record<string, () => any> = {
-      shim_get_nh_event: () => this.systems.inputRequests.handleShimGetNhEvent(),
-      shim_nhgetch: () => this.systems.inputRequests.handleShimNhGetch(),
-      shim_yn_function: () => this.systems.questionInput.handleShimYnFunction(args),
-      shim_nh_poskey: () => this.systems.positionInput.handleShimNhPoskey(args),
-      shim_getlin: () => this.systems.textInput.handleShimGetlin(args),
-    };
-    const mappedInputHandler = inputCallbackHandlers[name];
-    if (mappedInputHandler) {
-      return mappedInputHandler();
-    }
+    return this.protocol.tracksCallback(name)
+      ? this.protocol.invokeCallback(name, () => this.dispatchUICallback(name, args))
+      : this.dispatchUICallback(name, args);
+  }
 
+  private dispatchUICallback(name: string, args: any[]): any {
     switch (name) {
+      case "shim_get_nh_event": return this.systems.inputRequests.handleShimGetNhEvent();
+      case "shim_nhgetch": return this.systems.inputRequests.handleShimNhGetch();
+      case "shim_yn_function": return this.systems.questionInput.handleShimYnFunction(args);
+      case "shim_nh_poskey": return this.systems.positionInput.handleShimNhPoskey(args);
+      case "shim_getlin": return this.systems.textInput.handleShimGetlin(args);
       case "shim_get_ext_cmd":
         return this.systems.extendedCommands.handleShimGetExtCmd();
 
@@ -318,8 +395,15 @@ class LocalNetHackRuntime {
   }
 
   emit(payload: RuntimeEvent): void {
-    if (typeof this.eventHandler === "function") {
-      this.eventHandler(payload);
+    const previousPresentationGeneration = this.protocol.scope.presentationGeneration;
+    const previousLevelGeneration = this.protocol.scope.levelGeneration;
+    this.protocol.publish(payload);
+    if (
+      this.systems?.tileRefresh &&
+      (this.protocol.scope.presentationGeneration !== previousPresentationGeneration ||
+        this.protocol.scope.levelGeneration !== previousLevelGeneration)
+    ) {
+      this.systems.tileRefresh.identifiedRequests.cancelObsolete();
     }
   }
 }

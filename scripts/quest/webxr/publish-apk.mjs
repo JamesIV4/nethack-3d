@@ -115,7 +115,11 @@ const output = path.join(
 );
 mkdirSync(path.dirname(output), { recursive: true });
 copyFileSync(apk, output);
-const versionedOutput = path.join(path.dirname(output), "nethack3d-webxr.apk");
+// Keep the stable sideloading path while also producing a desktop-style release artifact.
+copyFileSync(apk, path.join(path.dirname(output), "nethack3d-webxr.apk"));
+const { version } = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
+const versionedOutput = path.join(root, "release", `NetHack 3D ${version} Quest.apk`);
+mkdirSync(path.dirname(versionedOutput), { recursive: true });
 copyFileSync(apk, versionedOutput);
 console.log("Verified standalone APK: " + versionedOutput);
 console.log("Latest APK: " + output);

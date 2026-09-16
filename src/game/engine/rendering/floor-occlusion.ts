@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { TileNeighborBatch } from "./tile-neighbor-batch";
 import { TILE_SIZE } from "../../constants";
 import { getOpenDoorGlyphFrom, isDoorwayCmapGlyph } from "../../glyphs/behavior";
 import type { TileMaterialKind } from "../../glyphs";
@@ -42,6 +43,13 @@ export interface FloorOcclusionDependencies {
 /** Wall and door contact occlusion masks, textures and floor overlays */
 export class FloorOcclusion {
   constructor(private readonly dependencies: FloorOcclusionDependencies) {}
+
+  private readonly floorBatch = new TileNeighborBatch((x, y) => this.updateFloorBlockAmbientOcclusionAt(x, y));
+  private readonly chamferBatch = new TileNeighborBatch((x, y) => this.updateFpsWallChamferFloorAmbientOcclusionAt(x, y));
+
+  beginTileBatch(): void { this.floorBatch.begin(); this.chamferBatch.begin(); }
+  flushTileBatch(): void { this.floorBatch.flush(); this.chamferBatch.flush(); }
+  endTileBatch(): void { try { this.floorBatch.end(); } finally { this.chamferBatch.end(); } }
 
   floorBlockAmbientOcclusionTextureCache: Map<
     number,
@@ -1089,6 +1097,10 @@ export class FloorOcclusion {
     tileX: number,
     tileY: number,
   ): void {
+    this.floorBatch.update(tileX, tileY);
+  }
+
+  private updateFloorBlockAmbientOcclusionAt(tileX: number, tileY: number): void {
     const key = `${tileX},${tileY}`;
     const mesh = this.dependencies.tileRendering.tileMap.get(key);
     if (!mesh || this.dependencies.engineState.clientOptions.blockAmbientOcclusion !== true) {
@@ -1204,6 +1216,10 @@ export class FloorOcclusion {
     tileX: number,
     tileY: number,
   ): void {
+    this.chamferBatch.update(tileX, tileY);
+  }
+
+  private updateFpsWallChamferFloorAmbientOcclusionAt(tileX: number, tileY: number): void {
     const key = `${tileX},${tileY}`;
     const chamferFloor = this.dependencies.wallGeometry.fpsWallChamferFloorMeshes.get(key);
     if (

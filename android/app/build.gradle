@@ -3,9 +3,42 @@ import groovy.json.JsonSlurper
 
 def rootPackage = new JsonSlurper().parse(file('../../package.json'))
 def packageVersion = rootPackage.version ?: "0.0.0"
+def signingProperties = new Properties()
+def signingPropertiesFile = rootProject.file('keystore.properties')
+if (signingPropertiesFile.exists()) {
+    signingPropertiesFile.withInputStream { signingProperties.load(it) }
+}
+def signingValues = [
+    storeFile: System.getenv('NH3D_ANDROID_STORE_FILE') ?: signingProperties.getProperty('storeFile'),
+    storePassword: System.getenv('NH3D_ANDROID_STORE_PASSWORD') ?: signingProperties.getProperty('storePassword'),
+    keyAlias: System.getenv('NH3D_ANDROID_KEY_ALIAS') ?: signingProperties.getProperty('keyAlias'),
+    keyPassword: System.getenv('NH3D_ANDROID_KEY_PASSWORD') ?: signingProperties.getProperty('keyPassword')
+]
+def signingReady = signingValues.values().every { it != null && !it.isEmpty() }
+
+tasks.register('validateReleaseSigning') {
+    doLast {
+        if (!signingReady) {
+            throw new GradleException('Release signing is missing. Configure android/keystore.properties using keystore.properties.example, or set NH3D_ANDROID_STORE_FILE, NH3D_ANDROID_STORE_PASSWORD, NH3D_ANDROID_KEY_ALIAS and NH3D_ANDROID_KEY_PASSWORD.')
+        }
+        if (!rootProject.file(signingValues.storeFile).isFile()) {
+            throw new GradleException('Release keystore file does not exist. Check storeFile in android/keystore.properties.')
+        }
+    }
+}
 
 android {
     namespace = "com.nethack3d.app"
+    signingConfigs {
+        release {
+            if (signingReady) {
+                storeFile rootProject.file(signingValues.storeFile)
+                storePassword signingValues.storePassword
+                keyAlias signingValues.keyAlias
+                keyPassword signingValues.keyPassword
+            }
+        }
+    }
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.nethack3d.app"
@@ -22,6 +55,7 @@ android {
     }
     buildTypes {
         release {
+            if (signingReady) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

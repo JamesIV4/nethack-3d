@@ -9,7 +9,8 @@ afterEach(() => vi.unstubAllGlobals());
 it("preserves camera completion and releases postmortem modals in the shared XR frame", () => {
   const callbacks: FrameRequestCallback[] = [];
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { callbacks.push(callback); return callbacks.length; });
-  const tiles = { pendingTileUpdates: new Map([["2,3", {}]]), tileFlushScheduled: false, flushPendingTileUpdates: vi.fn() };
+  const tiles = { pendingTileUpdates: new Map([["2,3", {}]]), tileFlushScheduled: false, flushPendingTileUpdates: vi.fn(),
+    schedulePendingTileFlush: () => { tiles.tileFlushScheduled = true; requestAnimationFrame(() => tiles.flushPendingTileUpdates()); } };
   const camera = new Camera({
     tilesetAssets: { getWorldTileScaleX: () => 1 },
     movementInput: { isFpsMode: () => true }, terminalRendering: { isTerminalDisplayMode: () => false },

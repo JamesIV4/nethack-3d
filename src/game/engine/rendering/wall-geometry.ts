@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { TileNeighborBatch } from "./tile-neighbor-batch";
 import { TILE_SIZE, WALL_HEIGHT } from "../../constants";
 import {
   classifyTileBehavior,
@@ -100,6 +101,25 @@ export interface WallGeometryDependencies {
 /** Chamfered wall geometry, door transforms and floor wedge resources */
 export class WallGeometry {
   constructor(private readonly dependencies: WallGeometryDependencies) {}
+
+  private readonly chamferBatch = new TileNeighborBatch((x, y) => this.refreshFpsWallChamferGeometryAt(x, y));
+  private readonly doorBatch = new TileNeighborBatch((x, y) => this.applyFpsClosedDoorChamferTransformAt(x, y));
+  private clearChamfersAfterBatch = false;
+
+  beginTileBatch(): void { this.chamferBatch.begin(); this.doorBatch.begin(); }
+  flushTileBatch(): void {
+    if (this.clearChamfersAfterBatch) { this.clearChamfersAfterBatch = false; this.clearFpsWallChamferFloorMeshes(); }
+    this.chamferBatch.flush(); this.doorBatch.flush();
+  }
+  endTileBatch(): void {
+    try { this.chamferBatch.end(); }
+    finally {
+      this.doorBatch.end();
+      if (!this.chamferBatch.active && this.clearChamfersAfterBatch) {
+        this.clearChamfersAfterBatch = false; this.clearFpsWallChamferFloorMeshes();
+      }
+    }
+  }
 
   fpsWallChamferGeometryCache: Map<string, THREE.BufferGeometry> =
     new Map();
@@ -1189,18 +1209,19 @@ export class WallGeometry {
     tileY: number,
   ): void {
     if (!this.shouldUseChamferedWallGeometry()) {
-      this.clearFpsWallChamferFloorMeshes();
+      if (this.chamferBatch.active) this.clearChamfersAfterBatch = true;
+      else this.clearFpsWallChamferFloorMeshes();
       return;
     }
     for (let dy = -1; dy <= 1; dy += 1) {
       for (let dx = -1; dx <= 1; dx += 1) {
-        this.refreshFpsWallChamferGeometryAt(tileX + dx, tileY + dy);
+        this.chamferBatch.update(tileX + dx, tileY + dy);
       }
     }
     // Door trims depend on neighboring wall chamfer masks; re-apply after masks settle.
     for (let dy = -2; dy <= 2; dy += 1) {
       for (let dx = -2; dx <= 2; dx += 1) {
-        this.applyFpsClosedDoorChamferTransformAt(tileX + dx, tileY + dy);
+        this.doorBatch.update(tileX + dx, tileY + dy);
       }
     }
   }

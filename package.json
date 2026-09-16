@@ -21,6 +21,7 @@
     "dev:isolated": "npm run ensure:rollup-native && cross-env NH3D_ENABLE_CROSS_ORIGIN_ISOLATION=true vite",
     "android:add": "cap add android",
     "android:sync": "npm run build:capacitor && cap sync android",
+    "android:release": "node scripts/android/build-release.mjs",
     "android:open": "cap open android",
     "electron:dev": "cross-env VITE_DEPLOY_TARGET=electron VITE_DEV_SERVER_URL=http://127.0.0.1:5173 concurrently -k \"npm run dev\" \"wait-on tcp:5173 && electron .\"",
     "electron:dev:isolated": "cross-env VITE_DEPLOY_TARGET=electron NH3D_ENABLE_CROSS_ORIGIN_ISOLATION=true VITE_DEV_SERVER_URL=http://127.0.0.1:5173 concurrently -k \"npm run dev:isolated\" \"wait-on tcp:5173 && electron .\"",

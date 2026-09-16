@@ -17,6 +17,7 @@ export interface RuntimeGlobalSnapshotsDependencies {
     "emit"
     | "eventHandler"
     | "runtimeVersion"
+    | "protocol"
   >;
   readonly extendedCommandCatalog: Pick<
     RuntimeExtendedCommandCatalog,
@@ -433,6 +434,7 @@ export class RuntimeGlobalSnapshots {
         attr: msg.attr,
       });
     }
+    this.deps.coordinator.protocol.boundary("snapshot-complete");
   }
 
   emitStartupObjectTileMap() {

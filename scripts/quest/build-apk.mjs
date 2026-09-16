@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, copyFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { findAndroidSdk, javaEnvironment } from "./build-environment.mjs";
@@ -35,6 +35,10 @@ try {
   else {
     const apk=path.join(project,"app/build/outputs/apk/debug/app-debug.apk");
     if (!existsSync(apk)) throw new Error("Gradle finished without the expected APK: "+apk);
-    console.log("APK ready: "+apk);
+    const { version } = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
+    const output = path.join(root, "release", `NetHack 3D ${version} Quest Legacy.apk`);
+    mkdirSync(path.dirname(output), { recursive: true });
+    copyFileSync(apk, output);
+    console.log("APK ready: "+output);
   }
 } catch(error) { console.error(error.message); process.exitCode=1; }

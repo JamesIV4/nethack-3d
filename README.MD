@@ -120,12 +120,21 @@ An experimental, fully bundled Quest UI proof and the staged VR port design are 
 - `npm run electron:dist:all:parallel` - Same as above, but packages Windows and Linux at the same time after the shared Electron build.
 - `npm run android:add` - Create the native Android project with Capacitor (run once).
 - `npm run android:sync` - Build web assets and sync them into the Android project.
+- `npm run android:release` - Build web assets, sync Android, and create a signed release APK without opening Android Studio. Output: `release/NetHack 3D <version> Android.apk`.
+- `npm run quest:webxr:apk` - Build and verify the standalone Quest APK, then copy it to `release/NetHack 3D <version> Quest.apk`. `quest:webxr:publish-apk` verifies and copies an existing build. Quest retains its existing debug signing.
+- `npm run quest:apk` - Build the legacy Quest app and copy it to `release/NetHack 3D <version> Quest Legacy.apk`.
 - `npm run android:open` - Open the Android project in Android Studio.
 - `npm run android:run` - Build web assets and run on a connected Android device/emulator.
 - `npm run updates:package` - Create `build/client-updates/manifest.json` + build payload from `dist/` for in-app client updates.
 - `npm run update` - Build + package the latest client-update payload in one command.
 - `npm run glyphs:generate` - Regenerate glyph catalog from runtime artifacts.
 - `npm run glyphs:check` - Verify checked-in glyph catalog is up to date.
+
+### Android release signing
+
+Once, copy `android/keystore.properties.example` to `android/keystore.properties` and fill in your existing release keystore path, alias, and passwords. Use the same key used for previous releases so installed apps can be updated. The local properties file and `.jks`/`.keystore` files are ignored by Git. Use forward slashes for Windows paths; relative keystore paths resolve from `android/`.
+
+Then run `npm run android:release`. Java and the Android SDK must be installed; the script detects Android Studio's bundled Java and default SDK without opening the IDE. `npm run android:release -- --check` checks prerequisites and the signing configuration without building (passwords are checked during signing). For automation, `NH3D_ANDROID_STORE_FILE`, `NH3D_ANDROID_STORE_PASSWORD`, `NH3D_ANDROID_KEY_ALIAS`, and `NH3D_ANDROID_KEY_PASSWORD` override the corresponding properties.
 
 ## Client Update Pipeline
 

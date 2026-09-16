@@ -17,6 +17,7 @@ export interface RuntimeExtendedCommandsDependencies {
     "emit"
     | "eventHandler"
     | "startupOptions"
+    | "protocol"
   >;
   readonly extendedCommandCatalog: Pick<
     RuntimeExtendedCommandCatalog,
@@ -252,6 +253,7 @@ export class RuntimeExtendedCommands {
       return;
     }
     this.armFarLookForExtendedCommandIndex(commandIndex);
+    this.deps.coordinator.protocol.consumed(undefined, ["shim_get_ext_cmd"]);
     pending.resolve(Number.isInteger(commandIndex) ? commandIndex : -1);
   }
 

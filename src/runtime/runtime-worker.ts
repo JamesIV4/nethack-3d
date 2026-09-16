@@ -1,5 +1,8 @@
 import LocalNetHackRuntime from "./LocalNetHackRuntime";
 import { setLoggingEnabled } from "../logging";
+import { createTaskCheckpoint, RuntimeEventBatchPublisher } from "./protocol/event-batches";
+import type { RuntimeCommandIdentity, RuntimeLevelIdentity } from "./protocol/types";
+import { bundleMapGlyphEvents } from "./protocol/map-events";
 import type {
   RuntimeCommand,
   RuntimeEvent,
@@ -12,10 +15,15 @@ let started = false;
 let terminationReported = false;
 let asyncifyWakeUpTrapInstalled = false;
 const mapGlyphBatchMaxSize = 384;
-let pendingMapGlyphTilesByKey: Map<string, RuntimeEvent> = new Map();
-let pendingMapGlyphTileOrder: string[] = [];
+let pendingMapGlyphTiles: RuntimeEvent[] = [];
 let mapGlyphFlushScheduled = false;
 let workerConsoleMirrorsInstalled = false;
+let protocolSessionId: string | null = null;
+let lastCommandId = 0;
+let publisher: RuntimeEventBatchPublisher | null = null;
+let checkpoint: ReturnType<typeof createTaskCheckpoint> | null = null;
+let pendingMapLevel: RuntimeLevelIdentity | null = null;
+let starting: Promise<void> | null = null;
 
 function isLikelyNameInputForDebug(input: string): boolean {
   const trimmed = String(input || "").trim();
@@ -28,7 +36,17 @@ function isLikelyNameInputForDebug(input: string): boolean {
   return /^[A-Za-z][A-Za-z0-9 _'-]*$/.test(trimmed);
 }
 
-function postEnvelopeDirect(envelope: RuntimeWorkerEnvelope): void {
+function currentRuntimeLevel(): RuntimeLevelIdentity | null {
+  const level = runtime?.protocol.scope.level;
+  return level ? { ...level } : null;
+}
+
+function postEnvelopeDirect(envelope: RuntimeWorkerEnvelope, level = currentRuntimeLevel()): void {
+  if (publisher && envelope.type === "runtime_event") {
+    publisher.enqueue(envelope.event, level);
+    return;
+  }
+  if (envelope.type !== "runtime_console") publisher?.flush("control");
   (self as unknown as Worker).postMessage(envelope);
 }
 
@@ -114,11 +132,14 @@ function schedulePendingMapGlyphFlush(): void {
 function enqueuePendingMapGlyphTile(
   tile: RuntimeEvent,
   scheduleFlush: boolean = true,
+  level: RuntimeLevelIdentity | null = currentRuntimeLevel(),
 ): void {
+  if (pendingMapGlyphTiles.length && (pendingMapLevel?.dnum !== level?.dnum || pendingMapLevel?.dlevel !== level?.dlevel)) {
+    flushPendingMapGlyphEvents();
+  }
+  pendingMapLevel = level;
   const candidate = tile as RuntimeEvent & { x?: unknown; y?: unknown };
-  const x = Number(candidate.x);
-  const y = Number(candidate.y);
-  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+  if (!Number.isFinite(Number(candidate.x)) || !Number.isFinite(Number(candidate.y))) {
     flushPendingMapGlyphEvents();
     postEnvelopeDirect({
       type: "runtime_event",
@@ -127,11 +148,7 @@ function enqueuePendingMapGlyphTile(
     return;
   }
 
-  const key = `${Math.trunc(x)},${Math.trunc(y)}`;
-  if (!pendingMapGlyphTilesByKey.has(key)) {
-    pendingMapGlyphTileOrder.push(key);
-  }
-  pendingMapGlyphTilesByKey.set(key, tile);
+  pendingMapGlyphTiles.push(tile);
 
   if (scheduleFlush) {
     schedulePendingMapGlyphFlush();
@@ -140,40 +157,22 @@ function enqueuePendingMapGlyphTile(
 
 function flushPendingMapGlyphEvents(): void {
   mapGlyphFlushScheduled = false;
-  if (pendingMapGlyphTileOrder.length <= 0) {
+  if (pendingMapGlyphTiles.length <= 0) {
     return;
   }
 
-  const orderedTiles: RuntimeEvent[] = [];
-  for (const key of pendingMapGlyphTileOrder) {
-    const tile = pendingMapGlyphTilesByKey.get(key);
-    if (tile) {
-      orderedTiles.push(tile);
-    }
-  }
-
-  pendingMapGlyphTilesByKey.clear();
-  pendingMapGlyphTileOrder = [];
+  const orderedTiles = pendingMapGlyphTiles;
+  const level = pendingMapLevel;
+  pendingMapGlyphTiles = [];
 
   if (orderedTiles.length <= 0) {
     return;
   }
-  if (orderedTiles.length === 1) {
+  for (const event of bundleMapGlyphEvents(orderedTiles, mapGlyphBatchMaxSize)) {
     postEnvelopeDirect({
       type: "runtime_event",
-      event: orderedTiles[0],
-    });
-    return;
-  }
-
-  for (let start = 0; start < orderedTiles.length; start += mapGlyphBatchMaxSize) {
-    postEnvelopeDirect({
-      type: "runtime_event",
-      event: {
-        type: "map_glyph_batch",
-        tiles: orderedTiles.slice(start, start + mapGlyphBatchMaxSize),
-      },
-    });
+      event,
+    }, level);
   }
 }
 
@@ -403,16 +402,32 @@ self.onmessage = async (message: MessageEvent<RuntimeCommand>) => {
   try {
     installWorkerConsoleMirrors();
     const command = message.data;
+    if (command.type === "start" && command.startupOptions?.protocolVersion === 1 && !protocolSessionId) {
+      if (typeof command.sessionId !== "string" || !command.sessionId) throw new Error("Missing runtime session identity");
+      protocolSessionId = command.sessionId;
+      checkpoint = createTaskCheckpoint(() => publisher?.flush());
+      publisher = new RuntimeEventBatchPublisher(protocolSessionId,
+        batch => (self as unknown as Worker).postMessage(batch), () => checkpoint?.schedule());
+    }
+    if (protocolSessionId) {
+      if (command.sessionId !== protocolSessionId) return;
+      if (!Number.isSafeInteger(command.commandId) || command.commandId !== lastCommandId + 1) {
+        throw new Error("Runtime command stream is discontinuous; refusing to replay input.");
+      }
+      lastCommandId = command.commandId;
+    }
+    const identity = protocolSessionId ? command as RuntimeCommand & RuntimeCommandIdentity : undefined;
 
     switch (command.type) {
       case "start":
         setLoggingEnabled(Boolean(command.startupOptions?.loggingEnabled));
         const startInstance = ensureRuntime(command.startupOptions);
         if (!started) {
-          await startInstance.start();
+          starting ??= startInstance.start();
+          await starting;
           started = true;
         }
-        postEnvelope({ type: "runtime_ready" });
+        postEnvelope({ type: "runtime_ready", ...(protocolSessionId ? { protocol: startInstance.getProtocolHandshake(protocolSessionId) } : {}) });
         return;
       case "send_input":
         if (isLikelyNameInputForDebug(command.input)) {
@@ -420,13 +435,13 @@ self.onmessage = async (message: MessageEvent<RuntimeCommand>) => {
             input: command.input,
           });
         }
-        ensureRuntime().sendInput(command.input);
+        ensureRuntime().sendInput(command.input, identity);
         return;
       case "send_input_sequence":
-        ensureRuntime().sendInputSequence(command.inputs);
+        ensureRuntime().sendInputSequence(command.inputs, identity);
         return;
       case "send_mouse_input":
-        ensureRuntime().sendMouseInput(command.x, command.y, command.button);
+        ensureRuntime().sendMouseInput(command.x, command.y, command.button, identity);
         return;
       case "request_tile_update":
         ensureRuntime().requestTileUpdate(command.x, command.y);
@@ -437,6 +452,9 @@ self.onmessage = async (message: MessageEvent<RuntimeCommand>) => {
           command.centerY,
           command.radius,
         );
+        return;
+      case "request_cells":
+        ensureRuntime().requestCells(command.refreshId, command.cells, command.scope, command.includeUnderPlayer === true);
         return;
       case "request_runtime_globals_snapshot":
         ensureRuntime().requestRuntimeGlobalsSnapshot();
@@ -471,6 +489,11 @@ self.onmessage = async (message: MessageEvent<RuntimeCommand>) => {
         }
         runtime = null;
         started = false;
+        starting = null;
+        flushPendingMapGlyphEvents();
+        publisher?.dispose(); publisher = null;
+        checkpoint?.dispose(); checkpoint = null;
+        protocolSessionId = null; lastCommandId = 0;
         terminationReported = false;
         return;
       default:

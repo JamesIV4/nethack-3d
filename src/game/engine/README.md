@@ -145,7 +145,7 @@ XR world submission uses `XrTerrainBatches` and `WorldClipCulling`. They reject 
 
 The shared animation frame always runs `Camera.updateCamera` before applying the final tracked XR pose. This call also completes first-person step transitions and schedules pending tile updates. Do not skip it merely because a headset supplies the view. Billboard, lighting, and remaining scene updates retain their normal order; `WebXrPresentation.prepareRender` applies final XR presentation changes before the original scene is rendered.
 
-`TileUpdates.flushSettledDarkCorridorInference` runs at the shared frame boundary when queued map work and player transitions have finished. Player-position fences drain both a partial batch and newer pending arrivals. Preserve the superseded-payload terrain cache when coalescing those arrivals; do not reconcile inferred walls halfway through a batch or defer late arrivals until another turn.
+`TileUpdates.flushPendingDarkCorridorInference` runs on every authoritative player step and on `map_update_complete`, emitted by the bridge after ordered map-display or snapshot-complete boundaries. The shared frame provides a fallback for late legacy observations. Inference reads the latest pending terrain without committing render caches or draining the visual queue; it must not wait for camera/player animation to finish. Preserve superseded-payload terrain when coalescing arrivals, and evaluate after complete map delivery rather than per glyph.
 
 ### VR controller weapons
 
