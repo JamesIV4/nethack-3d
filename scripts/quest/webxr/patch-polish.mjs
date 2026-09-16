@@ -1,8 +1,17 @@
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from "node:fs";
 import path from "node:path";
 import { replaceOnce } from "./runtime-patch.mjs";
 export function patchPolish(checkout) {
   const edit = (name, fn) => { const p = path.join(checkout, name); writeFileSync(p, fn(readFileSync(p,"utf8").replaceAll("\r\n","\n"))); };
+  const assets = path.join(checkout, "app/src/main/assets");
+  mkdirSync(assets, { recursive: true });
+  copyFileSync(new URL("../../../public/NetHack3D-splash.png", import.meta.url), path.join(assets, "NetHack3D-splash.png"));
+  edit("app/src/main/cpp/SplashAnimation.cpp", s => s.includes('LoadTexture("NetHack3D-splash.png")') ? s : replaceOnce(
+    s, 'LoadTexture("logo.png")', 'LoadTexture("NetHack3D-splash.png")', "NetHack splash texture"));
+  // Also restore the splash in checkouts already patched for direct startup.
+  edit("app/src/main/cpp/BrowserWorld.cpp", s => s.replace(
+    "    splashAnimation = nullptr; // NH3D direct game startup.",
+    "    splashAnimation = SplashAnimation::Create(create);"));
   const values = path.join(checkout, "app/src/main/res/values"); mkdirSync(values, { recursive: true });
   writeFileSync(path.join(values, "nh3d-startup.xml"), `<resources>
     <style name="Nh3d.Game" parent="FxR.Dark">
@@ -27,7 +36,6 @@ export function patchPolish(checkout) {
   edit("app/src/main/cpp/VRBrowser.cpp", s => s.replace("length >= 18 && length <= 555", "length >= 24 && length <= 571"));
   edit("app/src/main/cpp/BrowserWorld.cpp", s => {
     if (s.includes("NH3D polished table presentation")) return s;
-    s = s.replace("    splashAnimation = SplashAnimation::Create(create);", "    splashAnimation = nullptr; // NH3D direct game startup.");
     const start = s.indexOf("BrowserWorld::UpdateEnvironment() {");
     const end = s.indexOf("\n}\n", start);
     if (start < 0 || end < 0) throw new Error("Missing environment loader");
