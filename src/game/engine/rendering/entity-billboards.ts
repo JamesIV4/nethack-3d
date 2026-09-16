@@ -512,6 +512,10 @@ export class EntityBillboards {
       sprite.userData.fpsPitchLockedProxyMesh = proxy;
     }
 
+    // A visible proxy can extend into a neighboring tile. Ray input must use
+    // its entity's tile, not round the edge of the rendered quad to the grid.
+    proxy.userData.tileX = sprite.userData.tileX;
+    proxy.userData.tileY = sprite.userData.tileY;
     this.syncBillboardProxyMaterial(proxy.material, spriteMaterial);
     return proxy;
   }
@@ -577,6 +581,8 @@ export class EntityBillboards {
       sprite.userData.flatBillboardProxyMesh = proxy;
     }
 
+    proxy.userData.tileX = sprite.userData.tileX;
+    proxy.userData.tileY = sprite.userData.tileY;
     this.syncBillboardProxyMaterial(proxy.material, spriteMaterial);
     return proxy;
   }

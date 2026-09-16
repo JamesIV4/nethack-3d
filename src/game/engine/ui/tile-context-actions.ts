@@ -176,6 +176,12 @@ export class TileContextActions {
 
   fpsCrosshairContextSignature: string = "";
 
+  /**
+   * A native immersive ray supplies its own target. Keep its coordinates while
+   * the menu is open so head movement cannot retarget probes or actions.
+   */
+  fpsCrosshairContextTarget: { x: number; y: number } | null = null;
+
   normalTileContextMenuOpen: boolean = false;
 
   normalTileContextSignature: string = "";
@@ -425,7 +431,9 @@ export class TileContextActions {
     this.updateNormalTileContextMenu();
   }
 
-  openFpsCrosshairContextMenu(): void {
+  openFpsCrosshairContextMenu(
+    target: { x: number; y: number } | null = null,
+  ): void {
     if (!this.dependencies.movementInput.isFpsMode()) {
       return;
     }
@@ -433,6 +441,7 @@ export class TileContextActions {
     this.fpsCrosshairGlanceAttemptedKeys.clear();
     this.fpsCrosshairGlanceIssuedThisOpen = false;
     this.dependencies.inputCommands.clearAutomaticGlancePendingState();
+    this.fpsCrosshairContextTarget = target;
     this.fpsCrosshairContextMenuOpen = true;
     this.dependencies.pointerLock.syncFpsPointerLockForUiState(false);
     this.updateFpsCrosshairContextMenu();
@@ -446,6 +455,7 @@ export class TileContextActions {
       return;
     }
     this.fpsCrosshairContextMenuOpen = false;
+    this.fpsCrosshairContextTarget = null;
     this.fpsCrosshairGlanceIssuedThisOpen = false;
     this.dependencies.inputCommands.clearAutomaticGlancePendingState();
     this.activeContextActionTile = null;
@@ -1335,8 +1345,21 @@ export class TileContextActions {
       return;
     }
 
-    let target = this.dependencies.pointerTargeting.getTileUnderFpsCrosshair();
-    let treatAsVoidWallTarget = false;
+    const pinnedTarget = this.fpsCrosshairContextTarget;
+    let target: TileContextTarget | null = pinnedTarget
+      ? (() => {
+          const key = `${pinnedTarget.x},${pinnedTarget.y}`;
+          return {
+            key,
+            x: pinnedTarget.x,
+            y: pinnedTarget.y,
+            mesh:
+              this.dependencies.tileRendering.tileMap.get(key) ??
+              this.fpsVoidContextMesh,
+          };
+        })()
+      : this.dependencies.pointerTargeting.getTileUnderFpsCrosshair();
+    let treatAsVoidWallTarget = target?.mesh === this.fpsVoidContextMesh;
     if (!target) {
       const aim = this.dependencies.camera.getFpsAimDirectionFromCamera();
       if (!aim) {

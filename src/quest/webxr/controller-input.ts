@@ -311,10 +311,10 @@ export class WebXrControllerInput {
   }
   private worldClick(state: PointerState, secondary: boolean): void {
     if (!secondary && state.voidTarget) { if (state.voidDirection) this.command({type:"move",...state.voidDirection,run:true}); return; }
-    if (!state.pressedTile && !secondary) return;
+    if (!state.pressedTile) return;
     if (secondary && state.pressedTile) this.panel()?.nativePointer?.setContextTarget(
       this.scene.localToWorld(new THREE.Vector3(state.pressedTile.x * this.tileSize, -state.pressedTile.y * this.tileSize, state.contextHeight)));
-    this.command({ type: "tile", ...(state.pressedTile ?? { x: 0, y: 0 }), ...(secondary ? { secondary: true } : {}) });
+    this.command({ type: "tile", ...state.pressedTile, ...(secondary ? { secondary: true } : {}) });
   }
   update(time: number, forward: THREE.Vector3 | null): void {
     this.clock = time;

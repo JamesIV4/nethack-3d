@@ -141,6 +141,8 @@ XR canvas ownership lives in `rendering/xr-canvas-presentation.ts`. Hide the exi
 
 VR input adds 45-degree snap turns about the current head position, LT-modified running through `InputCommands.sendForcedDirectionalInput`, and RT tap/hold dispatch through the existing mouse/context owners. `controller-gestures.ts` owns neutral rearming and tap/hold timing. Tabletop UI crops come from `table-ui-layout.ts` and are rendered by Wolvic's `GameUiPanels` against the single live HTML surface.
 
+FPS laser context activation passes an explicit tile to `TileContextActions.openFpsCrosshairContextMenu`. That target stays pinned through probes and action selection; ordinary desktop opens retain crosshair targeting. Billboard proxy meshes carry their source sprite's tile coordinates so hits on wide artwork still select the owning tile. Rays without a target must not synthesize a click at tile zero.
+
 ### XR camera lifecycle
 
 XR world submission uses `XrTerrainBatches` and `WorldClipCulling`. They reject geometry outside the tabletop's existing clip planes, instance eligible opaque terrain, and use cached wall geometry without undersides or redundant material groups. Original tile meshes and materials remain authoritative for runtime updates, effects and picking; temporary draw masks/geometry are restored in `finally`. Instance materials borrow textures and preserve the lighting shader hook. Derived geometry, instance buffers and owned materials belong to the XR owner and are disposed on exit. Ground batching requires verified opaque texture content and matching material state; fades and unsupported cases use the existing tile draws. See [Quest performance measurements](../../../docs/quest-vr-performance.md).

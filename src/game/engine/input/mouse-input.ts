@@ -360,7 +360,7 @@ export class MouseInput {
     this.dependencies.audioHapticsPlatform.resumeFmodFromUserGesture();
     if (secondary && this.dependencies.movementInput.isFpsMode()) {
       if (this.dependencies.tileContextActions.fpsCrosshairContextMenuOpen) this.dependencies.tileContextActions.closeFpsCrosshairContextMenu(true);
-      else this.dependencies.tileContextActions.openFpsCrosshairContextMenu();
+      else this.dependencies.tileContextActions.openFpsCrosshairContextMenu({ x, y });
       return true;
     }
     const tile = this.dependencies.tileRendering.tileMap.get(x + "," + y);

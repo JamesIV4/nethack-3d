@@ -11,8 +11,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
   "sprites": {
     "assets/3.6/Nevanda.png|403|-1": {
       "attachmentOffsetPixels": {
-        "x": -4.5,
-        "y": -1.5,
+        "x": 1.5,
+        "y": -6.5,
         "z": 0
       },
       "rotationDeg": {
@@ -2051,8 +2051,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|784|-1": {
       "attachmentOffsetPixels": {
-        "x": 8,
-        "y": -7,
+        "x": 14,
+        "y": -12,
         "z": 0
       },
       "rotationDeg": {
@@ -2063,8 +2063,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|783|-1": {
       "attachmentOffsetPixels": {
-        "x": 10,
-        "y": -9,
+        "x": 17,
+        "y": -15,
         "z": 0
       },
       "rotationDeg": {
@@ -2075,8 +2075,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|782|-1": {
       "attachmentOffsetPixels": {
-        "x": 10.5,
-        "y": -9,
+        "x": 16.5,
+        "y": -14,
         "z": 0
       },
       "rotationDeg": {
@@ -2087,8 +2087,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|785|-1": {
       "attachmentOffsetPixels": {
-        "x": 10,
-        "y": -9,
+        "x": 15,
+        "y": -14,
         "z": 0
       },
       "rotationDeg": {
@@ -2099,8 +2099,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|786|-1": {
       "attachmentOffsetPixels": {
-        "x": 10.5,
-        "y": -9.5,
+        "x": 15.5,
+        "y": -13.5,
         "z": 0
       },
       "rotationDeg": {
@@ -2111,8 +2111,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|787|-1": {
       "attachmentOffsetPixels": {
-        "x": 11,
-        "y": -9,
+        "x": 16,
+        "y": -15,
         "z": 0
       },
       "rotationDeg": {
@@ -2123,8 +2123,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|788|-1": {
       "attachmentOffsetPixels": {
-        "x": 11.5,
-        "y": -9,
+        "x": 16.5,
+        "y": -15,
         "z": 0
       },
       "rotationDeg": {
@@ -2135,8 +2135,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|789|-1": {
       "attachmentOffsetPixels": {
-        "x": 9.5,
-        "y": -8,
+        "x": 13.5,
+        "y": -13,
         "z": 0
       },
       "rotationDeg": {
@@ -2147,8 +2147,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|790|-1": {
       "attachmentOffsetPixels": {
-        "x": 10.5,
-        "y": -8.5,
+        "x": 16.5,
+        "y": -15.5,
         "z": 0
       },
       "rotationDeg": {
@@ -2159,8 +2159,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|791|-1": {
       "attachmentOffsetPixels": {
-        "x": 10.5,
-        "y": -9,
+        "x": 16.5,
+        "y": -15,
         "z": 0
       },
       "rotationDeg": {
@@ -2171,8 +2171,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|792|-1": {
       "attachmentOffsetPixels": {
-        "x": 9.5,
-        "y": -8.5,
+        "x": 14.5,
+        "y": -13.5,
         "z": 0
       },
       "rotationDeg": {
@@ -2183,8 +2183,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|793|-1": {
       "attachmentOffsetPixels": {
-        "x": 10,
-        "y": -8.5,
+        "x": 15,
+        "y": -14.5,
         "z": 0
       },
       "rotationDeg": {
@@ -2195,8 +2195,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|794|-1": {
       "attachmentOffsetPixels": {
-        "x": 11,
-        "y": -9,
+        "x": 17,
+        "y": -15,
         "z": 0
       },
       "rotationDeg": {
@@ -2207,8 +2207,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|796|-1": {
       "attachmentOffsetPixels": {
-        "x": 11.5,
-        "y": -9.5,
+        "x": 15.5,
+        "y": -13.5,
         "z": 0
       },
       "rotationDeg": {
@@ -2219,8 +2219,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|797|-1": {
       "attachmentOffsetPixels": {
-        "x": 12,
-        "y": -10,
+        "x": 15,
+        "y": -13,
         "z": 0
       },
       "rotationDeg": {
@@ -2231,8 +2231,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|798|-1": {
       "attachmentOffsetPixels": {
-        "x": 12.5,
-        "y": -12.5,
+        "x": 17.5,
+        "y": -18.5,
         "z": 0
       },
       "rotationDeg": {
@@ -2243,8 +2243,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|799|-1": {
       "attachmentOffsetPixels": {
-        "x": 10.5,
-        "y": -10.5,
+        "x": 13.5,
+        "y": -12.5,
         "z": 0
       },
       "rotationDeg": {
@@ -2255,8 +2255,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|800|-1": {
       "attachmentOffsetPixels": {
-        "x": 8.5,
-        "y": -8,
+        "x": 10.5,
+        "y": -9,
         "z": 0
       },
       "rotationDeg": {
@@ -2267,8 +2267,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|801|-1": {
       "attachmentOffsetPixels": {
-        "x": 10,
-        "y": -10,
+        "x": 14,
+        "y": -12,
         "z": 0
       },
       "rotationDeg": {
@@ -2278,6 +2278,18 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
       }
     },
     "assets/3.6/Absurdly Evil.png|802|-1": {
+      "attachmentOffsetPixels": {
+        "x": 18,
+        "y": -17,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|803|-1": {
       "attachmentOffsetPixels": {
         "x": 14,
         "y": -13,
@@ -2289,22 +2301,10 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
         "z": 0
       }
     },
-    "assets/3.6/Absurdly Evil.png|803|-1": {
-      "attachmentOffsetPixels": {
-        "x": 11,
-        "y": -10,
-        "z": 0
-      },
-      "rotationDeg": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      }
-    },
     "assets/3.6/Absurdly Evil.png|804|-1": {
       "attachmentOffsetPixels": {
-        "x": 14.5,
-        "y": -10.5,
+        "x": 20.5,
+        "y": -14.5,
         "z": 0
       },
       "rotationDeg": {
@@ -2315,8 +2315,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|805|-1": {
       "attachmentOffsetPixels": {
-        "x": 10.5,
-        "y": -9,
+        "x": 14.5,
+        "y": -12,
         "z": 0
       },
       "rotationDeg": {
@@ -2327,8 +2327,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|806|-1": {
       "attachmentOffsetPixels": {
-        "x": 10,
-        "y": -9.5,
+        "x": 14,
+        "y": -12.5,
         "z": 0
       },
       "rotationDeg": {
@@ -7021,6 +7021,6582 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
       "attachmentOffsetPixels": {
         "x": 4.5,
         "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|791|-1": {
+      "attachmentOffsetPixels": {
+        "x": -2,
+        "y": 0,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|812|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|814|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/5.0/Nevanda.png|815|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|816|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|817|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|818|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|819|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|820|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|821|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|822|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|823|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|824|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|825|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|826|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|827|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|828|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|829|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|830|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|831|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|832|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|833|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|834|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|835|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|836|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|837|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -8,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|838|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|839|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|840|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|841|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|842|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|843|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|844|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|845|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|846|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|847|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|848|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|849|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|850|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|851|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|852|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|853|-1": {
+      "attachmentOffsetPixels": {
+        "x": 9,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|854|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|855|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|856|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|857|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|858|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|859|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|860|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|861|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|862|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|863|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|864|-1": {
+      "attachmentOffsetPixels": {
+        "x": -8.5,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 90
+      }
+    },
+    "assets/5.0/Nevanda.png|865|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -8,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|866|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|867|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|868|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -8,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|869|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|870|-1": {
+      "attachmentOffsetPixels": {
+        "x": -6.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 60
+      }
+    },
+    "assets/5.0/Nevanda.png|871|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": 4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|872|-1": {
+      "attachmentOffsetPixels": {
+        "x": -5.5,
+        "y": 4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 45
+      }
+    },
+    "assets/5.0/Nevanda.png|873|-1": {
+      "attachmentOffsetPixels": {
+        "x": -2,
+        "y": 2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 45
+      }
+    },
+    "assets/5.0/Nevanda.png|874|-1": {
+      "attachmentOffsetPixels": {
+        "x": -4.5,
+        "y": 5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|875|-1": {
+      "attachmentOffsetPixels": {
+        "x": -3.5,
+        "y": 7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|876|-1": {
+      "attachmentOffsetPixels": {
+        "x": -7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|877|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 30
+      }
+    },
+    "assets/5.0/Nevanda.png|1030|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1013|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1033|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1052|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1201|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1202|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1203|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1204|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1205|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1206|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1207|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1208|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1209|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1210|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1211|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1212|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1213|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1214|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1215|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1216|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1217|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1218|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1219|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1220|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1221|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -8,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1222|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1223|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1224|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1225|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -8,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1226|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -9,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1227|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1228|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1384|-1": {
+      "attachmentOffsetPixels": {
+        "x": -4.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Nevanda.png|1385|-1": {
+      "attachmentOffsetPixels": {
+        "x": -4.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|409|-1": {
+      "attachmentOffsetPixels": {
+        "x": 18.5,
+        "y": -18.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|410|-1": {
+      "attachmentOffsetPixels": {
+        "x": 19.5,
+        "y": -19,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|411|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|412|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11.5,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|413|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11.5,
+        "y": -11,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|414|-1": {
+      "attachmentOffsetPixels": {
+        "x": 12,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|415|-1": {
+      "attachmentOffsetPixels": {
+        "x": 12,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|416|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|417|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|418|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|419|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|420|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|421|-1": {
+      "attachmentOffsetPixels": {
+        "x": 14.5,
+        "y": -11,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|422|-1": {
+      "attachmentOffsetPixels": {
+        "x": 18.5,
+        "y": -17.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|423|-1": {
+      "attachmentOffsetPixels": {
+        "x": 14,
+        "y": -14,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|424|-1": {
+      "attachmentOffsetPixels": {
+        "x": 15,
+        "y": -13.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|425|-1": {
+      "attachmentOffsetPixels": {
+        "x": 14.5,
+        "y": -14,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|426|-1": {
+      "attachmentOffsetPixels": {
+        "x": 14.5,
+        "y": -14,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|427|-1": {
+      "attachmentOffsetPixels": {
+        "x": 17,
+        "y": -16,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|428|-1": {
+      "attachmentOffsetPixels": {
+        "x": 17,
+        "y": -17.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|429|-1": {
+      "attachmentOffsetPixels": {
+        "x": 21.5,
+        "y": -20.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|430|-1": {
+      "attachmentOffsetPixels": {
+        "x": 21,
+        "y": -20.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|431|-1": {
+      "attachmentOffsetPixels": {
+        "x": 19,
+        "y": -18,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|432|-1": {
+      "attachmentOffsetPixels": {
+        "x": 17.5,
+        "y": -17.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|433|-1": {
+      "attachmentOffsetPixels": {
+        "x": 21.5,
+        "y": -23.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|434|-1": {
+      "attachmentOffsetPixels": {
+        "x": 18.5,
+        "y": -20.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|435|-1": {
+      "attachmentOffsetPixels": {
+        "x": 20,
+        "y": -20,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|436|-1": {
+      "attachmentOffsetPixels": {
+        "x": 19.5,
+        "y": -19,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|437|-1": {
+      "attachmentOffsetPixels": {
+        "x": 20,
+        "y": -18.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|438|-1": {
+      "attachmentOffsetPixels": {
+        "x": 19,
+        "y": -18.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|439|-1": {
+      "attachmentOffsetPixels": {
+        "x": 18,
+        "y": -19.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|440|-1": {
+      "attachmentOffsetPixels": {
+        "x": 20,
+        "y": -20,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|441|-1": {
+      "attachmentOffsetPixels": {
+        "x": 20,
+        "y": -19,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|442|-1": {
+      "attachmentOffsetPixels": {
+        "x": 20.5,
+        "y": -18.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|443|-1": {
+      "attachmentOffsetPixels": {
+        "x": 20,
+        "y": -18.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|444|-1": {
+      "attachmentOffsetPixels": {
+        "x": 18,
+        "y": -17,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|445|-1": {
+      "attachmentOffsetPixels": {
+        "x": 18.5,
+        "y": -19.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|446|-1": {
+      "attachmentOffsetPixels": {
+        "x": 18.5,
+        "y": -19.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|447|-1": {
+      "attachmentOffsetPixels": {
+        "x": 18.5,
+        "y": -19.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|448|-1": {
+      "attachmentOffsetPixels": {
+        "x": 20,
+        "y": -18.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|449|-1": {
+      "attachmentOffsetPixels": {
+        "x": 20,
+        "y": -21,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|450|-1": {
+      "attachmentOffsetPixels": {
+        "x": 15,
+        "y": -14,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|451|-1": {
+      "attachmentOffsetPixels": {
+        "x": 17,
+        "y": -16,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|452|-1": {
+      "attachmentOffsetPixels": {
+        "x": 16,
+        "y": -15,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|453|-1": {
+      "attachmentOffsetPixels": {
+        "x": 20.5,
+        "y": -20,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|455|-1": {
+      "attachmentOffsetPixels": {
+        "x": 18.5,
+        "y": -18.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|456|-1": {
+      "attachmentOffsetPixels": {
+        "x": 21.5,
+        "y": -14.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|457|-1": {
+      "attachmentOffsetPixels": {
+        "x": 23,
+        "y": -22,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|458|-1": {
+      "attachmentOffsetPixels": {
+        "x": -15,
+        "y": -18,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|459|-1": {
+      "attachmentOffsetPixels": {
+        "x": -6,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|460|-1": {
+      "attachmentOffsetPixels": {
+        "x": -5.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|461|-1": {
+      "attachmentOffsetPixels": {
+        "x": -6,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|462|-1": {
+      "attachmentOffsetPixels": {
+        "x": -6,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|463|-1": {
+      "attachmentOffsetPixels": {
+        "x": 16,
+        "y": 20,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|464|-1": {
+      "attachmentOffsetPixels": {
+        "x": 17.5,
+        "y": 11,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -30
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|613|-1": {
+      "attachmentOffsetPixels": {
+        "x": -10.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|622|-1": {
+      "attachmentOffsetPixels": {
+        "x": -10.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|621|-1": {
+      "attachmentOffsetPixels": {
+        "x": -12.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|620|-1": {
+      "attachmentOffsetPixels": {
+        "x": -10.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|623|-1": {
+      "attachmentOffsetPixels": {
+        "x": -10.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|632|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -9,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|780|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11.5,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|781|-1": {
+      "attachmentOffsetPixels": {
+        "x": 13,
+        "y": -11,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|403|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|404|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|400|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|401|-1": {
+      "attachmentOffsetPixels": {
+        "x": -0.5,
+        "y": 6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|402|-1": {
+      "attachmentOffsetPixels": {
+        "x": -0.5,
+        "y": 1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -30
+      }
+    },
+    "assets/3.6/RZTiles.bmp|405|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|406|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|407|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|408|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|409|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|410|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|411|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": 1,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|412|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": 1,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|413|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": 1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|414|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": 0,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|415|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -1,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|416|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|417|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -1,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|418|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|419|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": 0,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|420|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|421|-1": {
+      "attachmentOffsetPixels": {
+        "x": 9.5,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|422|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11.5,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|423|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|424|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|425|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|426|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|427|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|428|-1": {
+      "attachmentOffsetPixels": {
+        "x": 9.5,
+        "y": -8,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|429|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11,
+        "y": -12,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|430|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11,
+        "y": -12,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|431|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10,
+        "y": -11,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|432|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11.5,
+        "y": -11.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|433|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -12,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|434|-1": {
+      "attachmentOffsetPixels": {
+        "x": 12,
+        "y": -13.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|435|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11,
+        "y": -12,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|436|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11.5,
+        "y": -11.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|437|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -11.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|438|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11.5,
+        "y": -12.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|439|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|440|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|441|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|442|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|443|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|444|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10,
+        "y": -8,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|445|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|446|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11.5,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|447|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|448|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10,
+        "y": -11,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|449|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10,
+        "y": -11,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|450|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|451|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|452|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11.5,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|453|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|454|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|455|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|456|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|457|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -12.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|458|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|459|-1": {
+      "attachmentOffsetPixels": {
+        "x": -6,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/RZTiles.bmp|460|-1": {
+      "attachmentOffsetPixels": {
+        "x": -5.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/RZTiles.bmp|461|-1": {
+      "attachmentOffsetPixels": {
+        "x": -5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/RZTiles.bmp|462|-1": {
+      "attachmentOffsetPixels": {
+        "x": -3,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/RZTiles.bmp|463|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": 10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|464|-1": {
+      "attachmentOffsetPixels": {
+        "x": 9,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 45
+      }
+    },
+    "assets/3.6/RZTiles.bmp|613|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|627|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": 3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|620|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": 10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/RZTiles.bmp|621|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": 11.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/RZTiles.bmp|622|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": 11.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/RZTiles.bmp|623|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": 11.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/3.6/RZTiles.bmp|632|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|647|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|653|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|780|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|781|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|782|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|783|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|784|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|785|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|786|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|787|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|788|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|789|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|790|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|791|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|792|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|793|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|794|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|795|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|796|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|797|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|798|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|799|-1": {
+      "attachmentOffsetPixels": {
+        "x": 9,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|800|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|801|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|802|-1": {
+      "attachmentOffsetPixels": {
+        "x": 9.5,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|803|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|804|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|805|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/RZTiles.bmp|806|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|400|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|401|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2,
+        "y": -0.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|403|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|404|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|405|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|406|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|407|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|408|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|409|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|410|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|411|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|412|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|413|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|414|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|415|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|416|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|417|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|418|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|419|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|430|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|431|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|432|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|433|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|434|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|435|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|436|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|437|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|438|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|439|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|440|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|441|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|442|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|443|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|444|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|445|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|446|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|447|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|448|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|449|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|450|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|451|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": 3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|452|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|453|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|454|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|455|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|456|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|457|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|458|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|463|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|464|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": 0,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|592|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": 1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|593|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": 2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|630|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|631|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|780|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|781|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|782|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|783|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|784|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|785|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|786|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|787|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|788|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|789|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|790|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|791|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|792|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|793|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|794|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|795|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|796|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|797|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|798|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|799|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|800|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|801|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|802|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|803|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|804|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|805|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Vanilla NetHack Tiles.png|806|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|814|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -15
+      }
+    },
+    "assets/5.0/PixelHack.png|815|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|816|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|817|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|818|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|819|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|820|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|821|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|822|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|823|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|824|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|825|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|826|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|827|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|828|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|829|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|830|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|831|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|832|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|833|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|834|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -8,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|835|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|836|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|837|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|838|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|839|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -9,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|840|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|841|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|842|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|843|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -9,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|844|-1": {
+      "attachmentOffsetPixels": {
+        "x": 11,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|845|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|846|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|847|-1": {
+      "attachmentOffsetPixels": {
+        "x": 9,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|848|-1": {
+      "attachmentOffsetPixels": {
+        "x": 9.5,
+        "y": -9,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|849|-1": {
+      "attachmentOffsetPixels": {
+        "x": 9.5,
+        "y": -9,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|850|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|851|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|852|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -9,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|853|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|854|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|855|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -8.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|856|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|857|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|858|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|859|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|860|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10.5,
+        "y": -10,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|861|-1": {
+      "attachmentOffsetPixels": {
+        "x": 10,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|862|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|863|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|864|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|865|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|866|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|867|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -9.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|868|-1": {
+      "attachmentOffsetPixels": {
+        "x": 9.5,
+        "y": -9,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|869|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|870|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|871|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|872|-1": {
+      "attachmentOffsetPixels": {
+        "x": -2.5,
+        "y": 1,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|873|-1": {
+      "attachmentOffsetPixels": {
+        "x": -1,
+        "y": 1,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|874|-1": {
+      "attachmentOffsetPixels": {
+        "x": -2,
+        "y": 1,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|875|-1": {
+      "attachmentOffsetPixels": {
+        "x": -1.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/5.0/PixelHack.png|876|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -0.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -90
+      }
+    },
+    "assets/5.0/PixelHack.png|877|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 45
+      }
+    },
+    "assets/5.0/PixelHack.png|1012|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2,
+        "y": -1,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1013|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1015|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1016|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1017|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0,
+        "y": 14,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1047|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": 0.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1050|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1051|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1052|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -7,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1073|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1201|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1202|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1203|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1204|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1205|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1206|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1207|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1208|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1209|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1210|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1211|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1212|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1213|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1214|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1215|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1216|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1217|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1218|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1219|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1220|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1221|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1222|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1223|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1224|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1225|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7.5,
+        "y": -6,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1226|-1": {
+      "attachmentOffsetPixels": {
+        "x": 6.5,
+        "y": -7.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1227|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/PixelHack.png|1228|-1": {
+      "attachmentOffsetPixels": {
+        "x": 7,
+        "y": -6.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|791|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|812|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|813|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2,
+        "y": -0.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|814|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|815|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|816|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|817|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|818|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|819|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|820|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|821|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|822|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|823|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|824|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|825|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|826|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|827|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|828|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|829|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|830|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|831|-1": {
+      "attachmentOffsetPixels": {
+        "x": 0,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|832|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|833|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|834|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|835|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|836|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|837|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|838|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|839|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|840|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|841|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|842|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|843|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|844|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|845|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|846|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|847|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|848|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|849|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|850|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|851|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|852|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|853|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|854|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|855|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|856|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|857|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|858|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|859|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|860|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|861|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -5.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|862|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|863|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|864|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|865|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|866|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4.5,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|867|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|868|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|869|-1": {
+      "attachmentOffsetPixels": {
+        "x": -1,
+        "y": -5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|870|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|871|-1": {
+      "attachmentOffsetPixels": {
+        "x": 5.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|876|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1,
+        "y": -4,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|877|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": 0,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1012|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": 1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1013|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": 1,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1036|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": 1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1037|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": 1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1047|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1,
+        "y": 0.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1040|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": 3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1041|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": 3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1042|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": 4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1043|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": 4.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": -45
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1052|-1": {
+      "attachmentOffsetPixels": {
+        "x": 4,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1201|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1202|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1203|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -2,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1204|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1205|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1206|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1207|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1208|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1209|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1210|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1211|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1212|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1213|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1214|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1215|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1217|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1216|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1218|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1219|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1220|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1221|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1222|-1": {
+      "attachmentOffsetPixels": {
+        "x": 1.5,
+        "y": -1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1223|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1224|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1225|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2,
+        "y": -3.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1226|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3.5,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1227|-1": {
+      "attachmentOffsetPixels": {
+        "x": 2.5,
+        "y": -2.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/5.0/Vanilla NetHack Tiles.png|1228|-1": {
+      "attachmentOffsetPixels": {
+        "x": 3,
+        "y": -3,
         "z": 0
       },
       "rotationDeg": {

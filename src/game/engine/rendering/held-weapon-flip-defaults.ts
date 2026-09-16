@@ -60,6 +60,46 @@ export const authoredHeldWeaponTileFlips: FpsHeldWeaponTileFlipOverridesByTilese
       "flipY": true,
       "flipDiagonal": false
     },
+    "417": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "418": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "427": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "428": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "439": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "613": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "790": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "795": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": false
+    },
     "805": {
       "flipX": true,
       "flipY": false,
@@ -548,6 +588,611 @@ export const authoredHeldWeaponTileFlips: FpsHeldWeaponTileFlipOverridesByTilese
     "1129": {
       "flipX": false,
       "flipY": false,
+      "flipDiagonal": false
+    }
+  },
+  "assets/5.0/Nevanda.png": {
+    "813": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": false
+    },
+    "815": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "829": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "839": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "865": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "872": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "873": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "874": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "875": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1013": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1052": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1201": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1202": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1203": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1204": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1205": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1206": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1207": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1208": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1209": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1210": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1211": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1212": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1213": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1214": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1215": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1216": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1217": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1218": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1219": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1220": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1221": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1222": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1223": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1224": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1225": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "1226": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1227": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1228": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1384": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "1385": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    }
+  },
+  "assets/3.6/RZTiles.bmp": {
+    "400": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "406": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "437": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "438": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "448": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "449": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "613": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "620": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "621": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "622": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "623": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "627": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "647": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "653": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "799": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "800": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "806": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    }
+  },
+  "assets/3.6/Vanilla NetHack Tiles.png": {
+    "403": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "416": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "419": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    }
+  },
+  "assets/5.0/PixelHack.png": {
+    "807": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "808": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "809": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "810": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "811": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "812": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "813": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "823": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "824": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "825": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "826": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "827": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "828": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "829": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "830": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "831": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "832": {
+      "flipX": true,
+      "flipY": true,
+      "flipDiagonal": false
+    },
+    "835": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "836": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "837": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "838": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "843": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "844": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "876": {
+      "flipX": true,
+      "flipY": true,
+      "flipDiagonal": false
+    },
+    "1052": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "1073": {
+      "flipX": true,
+      "flipY": true,
+      "flipDiagonal": false
+    }
+  },
+  "assets/5.0/Vanilla NetHack Tiles.png": {
+    "807": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "808": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "809": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "810": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "811": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "812": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "813": {
+      "flipX": false,
+      "flipY": true,
+      "flipDiagonal": false
+    },
+    "822": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "828": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "831": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "833": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "834": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "835": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "836": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "837": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "838": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "839": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "841": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "842": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "859": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "861": {
+      "flipX": true,
+      "flipY": true,
+      "flipDiagonal": false
+    },
+    "869": {
+      "flipX": true,
+      "flipY": true,
+      "flipDiagonal": false
+    },
+    "876": {
+      "flipX": true,
+      "flipY": true,
+      "flipDiagonal": true
+    },
+    "877": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "1036": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1037": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1040": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1041": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1042": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1043": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1047": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "1052": {
+      "flipX": true,
+      "flipY": true,
       "flipDiagonal": false
     }
   }

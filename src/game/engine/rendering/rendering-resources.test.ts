@@ -103,8 +103,13 @@ describe("engine rendering resource ownership", () => {
       const systems = createSystems();
       const source = new THREE.SpriteMaterial({ map: new THREE.Texture(), alphaTest: 0.2 });
       const sprite = new THREE.Sprite(source);
+      sprite.userData.tileX = 12; sprite.userData.tileY = 8;
       const ensure = () => systems.entityBillboards[method](sprite)!;
       const proxy = ensure();
+      expect(proxy.userData).toMatchObject({ tileX: 12, tileY: 8 });
+      sprite.userData.tileX = 13;
+      ensure();
+      expect(proxy.userData.tileX).toBe(13);
       expect(proxy.material.forceSinglePass).toBe(true);
       expect(proxy.material.side).toBe(THREE.DoubleSide);
       const initialVersion = proxy.material.version;

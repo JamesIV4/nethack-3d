@@ -40,7 +40,7 @@ describe("native Quest map ray input", () => {
     expect(f.sendMouseInput).not.toHaveBeenCalled();
     f.dependencies.movementInput.isFpsMode = () => true;
     expect(f.mouse.activateQuestTile(0, 0, true)).toBe(true);
-    expect(f.dependencies.tileContextActions.openFpsCrosshairContextMenu).toHaveBeenCalledOnce();
+    expect(f.dependencies.tileContextActions.openFpsCrosshairContextMenu).toHaveBeenCalledExactlyOnceWith({ x: 0, y: 0 });
     f.dependencies.tileContextActions.fpsCrosshairContextMenuOpen = true;
     f.mouse.activateQuestTile(0, 0, true);
     expect(f.dependencies.tileContextActions.closeFpsCrosshairContextMenu).toHaveBeenCalledWith(true);

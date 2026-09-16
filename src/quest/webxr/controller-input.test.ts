@@ -46,6 +46,39 @@ function fixture(withTableHandle = false, withNavigation = false, withWeapons = 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("WebXR trigger to game command integration", () => {
+  it("keeps a billboard's owning tile for FPS secondary hits through a scaled tracking rig", () => {
+    const f = fixture();
+    f.tile.visible = false;
+    const billboard = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+    billboard.position.set(4, -6, .5);
+    billboard.userData = { tileX: 4, tileY: 6 };
+    f.scene.add(billboard);
+    f.scene.scale.x = 1.4;
+    f.root.position.set(4, -6, 0);
+    f.root.scale.setScalar(.5);
+    f.scene.updateMatrixWorld(true);
+    // Hit the visual edge, which rounds to a neighboring grid tile without metadata.
+    f.pose.makeTranslation(1.6, 0, 2);
+    f.right.gamepad.buttons[1].pressed = true;
+    f.input.update(0, new THREE.Vector3(0, 1, 0));
+    f.right.gamepad.buttons[1].pressed = false;
+    f.input.update(100, new THREE.Vector3(0, 1, 0));
+    expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(4, 6, true);
+    f.input.dispose();
+  });
+
+  it("does not invent tile zero when an FPS context ray has no target", () => {
+    const f = fixture(); f.tile.visible = false;
+    f.pose.makeRotationY(Math.PI);
+    f.pose.setPosition(0, 0, 1);
+    f.right.gamepad.buttons[1].pressed = true;
+    f.input.update(0, new THREE.Vector3(0, 1, 0));
+    f.right.gamepad.buttons[1].pressed = false;
+    f.input.update(100, new THREE.Vector3(0, 1, 0));
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled();
+    f.input.dispose();
+  });
+
   it("mounts held weapon voxels only while in first-person VR", () => {
     const f = fixture(false, false, true);
     f.input.update(0, new THREE.Vector3(0, 0, -1));
