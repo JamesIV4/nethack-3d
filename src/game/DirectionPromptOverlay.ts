@@ -14,6 +14,12 @@ export type DirectionPromptOverlayButtonId =
   | "up"
   | "down";
 
+/** Current map-grid anchor for XR rays that hit a tile rather than an arrow. */
+export const directionPromptOverlayPlayerTileUserData = {
+  x: "nh3dDirectionPromptPlayerTileX",
+  y: "nh3dDirectionPromptPlayerTileY",
+} as const;
+
 type DirectionPromptOverlayButtonKind = "ground" | "billboard";
 type DirectionPromptOverlayIconKind = "arrow" | "circle";
 type DirectionPromptOverlayVisualState =
@@ -352,6 +358,8 @@ export class DirectionPromptOverlay {
     }
     this.root.visible = visible && this.textures !== null;
     if (!visible) {
+      delete this.scene.userData[directionPromptOverlayPlayerTileUserData.x];
+      delete this.scene.userData[directionPromptOverlayPlayerTileUserData.y];
       this.hoveredButtonId = null;
       this.pressedButtonId = null;
       this.previewedButtonId = null;
@@ -403,6 +411,8 @@ export class DirectionPromptOverlay {
     }
 
     this.root.visible = true;
+    this.scene.userData[directionPromptOverlayPlayerTileUserData.x] = playerX;
+    this.scene.userData[directionPromptOverlayPlayerTileUserData.y] = playerY;
     const baseX = playerX * TILE_SIZE;
     const baseY = -playerY * TILE_SIZE;
 

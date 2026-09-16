@@ -100,7 +100,7 @@ export class PlayerStatus {
 
 
   // Player stats tracking
-  playerStats = {
+  private readonly initialPlayerStats = {
     name: "Adventurer",
     hp: 10,
     maxHp: 10,
@@ -126,6 +126,18 @@ export class PlayerStatus {
     time: 1,
     score: 0,
   };
+
+  playerStats = { ...this.initialPlayerStats };
+
+  resetForNewGame(): void {
+    this.playerStats = { ...this.initialPlayerStats };
+    this.statusConditionMask = 0;
+    this.statusDebugHistory = [];
+    this.autoPickupEnabled = true;
+    this.applyRuntimeGlobalsSnapshot(null);
+    this.resetPlayerStatusDeltaTracking();
+    this.updateStatsDisplay();
+  }
 
   lastKnownPlayerHp: number | null = null;
 

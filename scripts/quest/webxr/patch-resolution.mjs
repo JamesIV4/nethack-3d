@@ -4,12 +4,59 @@ import { replaceOnce } from "./runtime-patch.mjs";
 
 export function patchResolution(checkout) {
   const edit = (name, fn) => { const file = path.join(checkout, name); writeFileSync(file, fn(readFileSync(file, "utf8").replaceAll("\r\n", "\n"))); };
-  edit("app/src/common/shared/com/igalia/wolvic/ui/widgets/WindowWidget.java", s => s.includes("NH3D persistent UI density") ? s : replaceOnce(s,
-    "        return mBrowserDensity;", "        return mBrowserDensity * 1.5f; // NH3D persistent UI density, including compositor recreation.", "persistent HTML density"));
-  edit("app/src/common/shared/com/igalia/wolvic/browser/engine/EngineProvider.kt", s => s.includes("NH3D logical viewport") ? s : s
-    .replace("builder.displayDensityOverride(settingsStore.displayDensity)", "// NH3D logical viewport stays unchanged while its surface gains pixels.\n            builder.displayDensityOverride(settingsStore.displayDensity * 1.5f)")
-    .replace("builder.displayDpiOverride(settingsStore.displayDpi)", "builder.displayDpiOverride((settingsStore.displayDpi * 1.5f).toInt())")
-    .replaceAll("settingsStore.displayDpi / 100.0", "settingsStore.displayDpi * 1.5 / 100.0"));
+  // Flat view is 1080p; immersive HTML is 1440p, both at DPR 1.5.
+  edit("app/src/common/shared/com/igalia/wolvic/ui/widgets/WindowWidget.java", s => {
+    s = s.replace(/aPlacement.width = (1600|1920|2560);/, "aPlacement.width = gameViewportWidth();")
+      .replace(/aPlacement.height = (1000|1080|1440);/, "aPlacement.height = gameViewportHeight();");
+    if (!s.includes("// NH3D fixed viewport texture scale")) s = replaceOnce(s,
+      "        aPlacement.density = 1.5f;",
+      "        aPlacement.density = 1.5f;\n        aPlacement.textureScale = 1.0f; // NH3D fixed viewport texture scale", "fixed viewport texture scale");
+    const density = s.match(/    private float getBrowserDensity\(\) \{[\s\S]*?\n    \}/)?.[0];
+    if (!density) throw new Error("Missing browser density method");
+    s = replaceOnce(s, density, `    private float getBrowserDensity() {
+        return 1.5f; // NH3D persistent UI density: 1080p flat / 1440p immersive logical viewport.
+    }`, "fixed browser density");
+    if (!s.includes("void setGameImmersiveViewport")) s = replaceOnce(s,
+      "    private float getBrowserDensity() {", `    private boolean mGameImmersiveViewport = false;
+    private int gameViewportWidth() { return mGameImmersiveViewport ? 2560 : 1920; }
+    private int gameViewportHeight() { return mGameImmersiveViewport ? 1440 : 1080; }
+    public void setGameImmersiveViewport(boolean immersive) {
+        if (mGameImmersiveViewport == immersive) return;
+        mGameImmersiveViewport = immersive;
+        mWidgetPlacement.width = gameViewportWidth();
+        mWidgetPlacement.height = gameViewportHeight();
+        mWidgetPlacement.density = getBrowserDensity();
+        mWidgetPlacement.textureScale = 1.0f;
+        mViewModel.setWidth(mWidgetPlacement.width);
+        mViewModel.setHeight(mWidgetPlacement.height);
+        mWidgetManager.updateWidget(this);
+    }
+
+    private float getBrowserDensity() {`, "mode-dependent logical viewport");
+    return s.replace(/mWidgetPlacement.width = (1920|2560);/g, "mWidgetPlacement.width = gameViewportWidth();")
+      .replace(/mWidgetPlacement.height = (1080|1440);/g, "mWidgetPlacement.height = gameViewportHeight();")
+      .replace("mWidgetPlacement.width = width + mBorderWidth * 2;", "mWidgetPlacement.width = gameViewportWidth(); // NH3D fixed viewport on resize")
+      .replace("mWidgetPlacement.height = height + mBorderWidth * 2;", "mWidgetPlacement.height = gameViewportHeight();")
+      .replace("mWidgetPlacement.width = getWindowWidth(maxSize.first);", "mWidgetPlacement.width = gameViewportWidth(); // NH3D fixed viewport at maximum world scale")
+      .replace("mWidgetPlacement.height = (int) Math.ceil((float)mWidgetPlacement.width / currentAspect);", "mWidgetPlacement.height = gameViewportHeight();");
+  });
+  edit("app/src/common/shared/com/igalia/wolvic/browser/engine/EngineProvider.kt", s => {
+    s = s.replace(/            \/\/ NH3D logical viewport[^\n]*\n/, "");
+    const display = s.match(/            builder.displayDensityOverride\([^\n]+\n[\s\S]*?builder.screenSizeOverride\([\s\S]*?\n            \)/)?.[0];
+    if (!display) throw new Error("Missing Gecko display overrides");
+    return replaceOnce(s, display, `            // NH3D logical viewport: 2560x1440 CSS pixels at DPR 1.5.
+            builder.displayDensityOverride(1.5f)
+            builder.displayDpiOverride(144)
+            builder.screenSizeOverride(
+                3840,
+                2160
+            )`, "1440p Gecko display");
+  });
+  edit("app/src/common/shared/com/igalia/wolvic/VRBrowserActivity.java", s => s.includes("setGameImmersiveViewport(presenting)") ? s : replaceOnce(s,
+    "    private void onPresentingImmersiveChange(boolean presenting) {", `    private void onPresentingImmersiveChange(boolean presenting) {
+        if (BuildConfig.NH3D_GAME_HOST && mWindows != null && mWindows.getFocusedWindow() != null) {
+            mWindows.getFocusedWindow().setGameImmersiveViewport(presenting);
+        }`, "switch HTML resolution with immersive mode"));
   edit("app/src/openxr/cpp/DeviceDelegateOpenXR.cpp", s => {
     if (s.includes("NH3D end-to-end render resolution")) return s;
     s = replaceOnce(s, "  XrSwapchainCreateInfo GetSwapChainCreateInfo(uint32_t w = 0, uint32_t h = 0) {", `  // NH3D end-to-end render resolution. Gecko clamps requests to the host's

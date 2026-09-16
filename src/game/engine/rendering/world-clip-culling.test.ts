@@ -19,8 +19,8 @@ function fixture() {
 }
 
 describe("world clipping before XR submission", () => {
-  it("keeps touching/partial tiles and restores masks even after a render failure", () => {
-    const f = fixture(), outside = f.mesh(14), touching = f.mesh(13), partial = f.mesh(12.8);
+  it("keeps inset/partial tiles and restores masks even after a render failure", () => {
+    const f = fixture(), outside = f.mesh(14), touching = f.mesh(12.999), partial = f.mesh(12.8);
     outside.layers.set(3);
     const invisible = f.mesh(0); invisible.visible = false;
     const update = vi.spyOn(f.scene, "updateMatrixWorld");

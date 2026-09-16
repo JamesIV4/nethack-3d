@@ -1,15 +1,7 @@
-export interface StartupLogoProps {
-  asciiLogoVisible: boolean;
-}
+import type { CSSProperties } from "react";
 
-export function StartupLogo({
-  asciiLogoVisible,
-}: StartupLogoProps) {
-  return (
-    asciiLogoVisible && (
-      <div className="logo-container">
-        <pre className="nethack-ascii-logo">
-          {`                
+const logoLayers = [
+  `
   +$$&&&&&$;         :X$&&&&$X:                       :X$&&&&&$X;     :X&&&&&&&$+                               .;;+X$;                                               
     +X&&&&&$X          X&&&$+                           +X&&&$+:        xX&&&&+:                              .$&&&&&+:                                               
     :x&&&&&&&$:        X$&&X;                           ;X&&&$x.        +X&&&$x.                                X$&&$+:                                               
@@ -39,10 +31,8 @@ export function StartupLogo({
                                             x&+         :XX;;;;;.   :+;;;+.     XXx;;;+::                                                                             
                                             :;xx$&&$$XXX$X;:::;:.   .;+;;;++&$&&&x;;;+;:                                                                               
                                              ::::::;;;;;::::::      x+;:::;;;;:::::::                                                                                  
-                                                                      `}
-        </pre>
-        <pre className="nethack-ascii-logo">
-          {`                
+                                                                      `,
+  `
   +$$&&&&&$;         :X$&&&&$X:                       :X$&&&&&$X;     :X&&&&&&&$+                               .;;+X$;                                               
     +X&&&&&$X          X&&&$+                           +X&&&$+:        xX&&&&+:                              .$&&&&&+:                                               
     :x&&&&&&&$:        X$&&X;                           ;X&&&$x.        +X&&&$x.                                X$&&$+:                                               
@@ -72,9 +62,35 @@ export function StartupLogo({
                                             x&+         :XX;;;;;.   :+;;;+.     XXx;;;+::                                                                             
                                             :;xx$&&$$XXX$X;:::;:.   .;+;;;++&$&&&x;;;+;:                                                                               
                                              ::::::;;;;;::::::      x+;:::;;;;:::::::                                                                                  
-                                                                      `}
-        </pre>
-      </div>
-    )
+                                                                      `
+];
+
+// Preserve desktop's original spacing, but give VR the visible art's bounds.
+const logoLayouts = logoLayers.map(logo => {
+  const rows = logo.split("\n");
+  const ink = rows.filter(row => row.trim().length > 0);
+  const left = Math.min(...ink.map(row => row.length - row.trimStart().length));
+  const right = Math.max(...ink.map(row => row.trimEnd().length));
+  return { rows, left, width: right - left };
+});
+
+export interface StartupLogoProps {
+  asciiLogoVisible: boolean;
+}
+
+export function StartupLogo({ asciiLogoVisible }: StartupLogoProps) {
+  if (!asciiLogoVisible) return null;
+  return (
+    <div className="logo-container" role="img" aria-label="NetHack 3D">
+      {logoLayouts.map(({ rows, left, width }, layer) => {
+        return <pre className="nethack-ascii-logo" aria-hidden="true" key={layer}
+          style={{ "--nh3d-logo-ink-left": `${left}ch`, "--nh3d-logo-ink-width": `${width}ch` } as CSSProperties}>
+          {rows.map((row, index) => <span className="nh3d-logo-row" key={index}
+            style={{ "--nh3d-logo-wave-delay": `${index * 4.5 / Math.max(1, rows.length - 1)}s` } as CSSProperties}>
+            {row || " "}
+          </span>)}
+        </pre>;
+      })}
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { uiHitRectangles } from "./dom-pointer";
 import { paintBounds } from "./paint-bounds";
-import { isVisibleUi } from "./visibility";
+import { isVisibleUi, clipUiBounds } from "./visibility";
 
 /** id, left, top, right, bottom in the one live HTML surface. */
 export type UiPane = [number, number, number, number, number];
@@ -9,7 +9,8 @@ function bounds(selector: string, paint = false): [number, number, number, numbe
   for (const node of document.querySelectorAll<HTMLElement>(selector)) {
     const rect = node.getBoundingClientRect();
     if (!isVisibleUi(node) || rect.width <= 0 || rect.height <= 0) continue;
-    const box = paint ? paintBounds(node) : rect;
+    const box = clipUiBounds(node, paint ? paintBounds(node) : rect);
+    if (!box) continue;
     left = Math.min(left, box.left); top = Math.min(top, box.top);
     right = Math.max(right, box.right); bottom = Math.max(bottom, box.bottom);
   }
@@ -21,20 +22,42 @@ function bounds(selector: string, paint = false): [number, number, number, numbe
 }
 
 export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles()): UiPane[] {
-  const modal = bounds(".nh3d-dialog,.nh3d-context-menu,.nh3d-mobile-actions-sheet,.nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=alertdialog],[role=menu]", true);
-  if (firstPerson) {
-    const actions = bounds(".nh3d-mobile-bottom-bar", true) ?? bounds(".nh3d-desktop-bottom-actions", true);
-    const hole = actions ?? modal;
-    if (!hole) return [[7, 0, 0, 1, 1]];
-    const [left, top, right, bottom] = hole;
-    // The movable action row is not also painted in the upper HUD. Native
-    // modal masking removes any additional overlap without duplicating UI.
-    const hud: UiPane[] = [[7, 0, 0, 1, top], [8, 0, bottom, 1, 1], [9, 0, top, left, bottom], [10, right, top, 1, bottom]];
-    return [...hud.filter(p => p[3] > p[1] && p[4] > p[2]), ...(actions ? [[2, ...actions] as UiPane] : []), ...(modal ? [[4, ...modal] as UiPane] : [])];
+  const minimap = bounds(".nh3d-minimap");
+  const status = bounds("#stats-bar", true);
+  // Shadow padding must not sample the separately positioned minimap.
+  if (status && minimap && minimap[1] > status[1] && minimap[1] < status[3]) {
+    status[3] = minimap[1];
   }
-  const selectors = [[0, "#stats-bar"], [2, ".nh3d-mobile-bottom-bar"], [3, ".nh3d-desktop-bottom-actions,.nh3d-map-move-controls"]] as const;
+  const modal = bounds("#loading,.nh3d-dialog,.nh3d-context-menu,.nh3d-mobile-actions-sheet,.nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=alertdialog],[role=menu]", true);
+  // The native host attaches this crop to pane 4 at its source-pixel offset,
+  // leaving the parent dialog crop and its physical placement unchanged.
+  const selectMenu = bounds(".nh3d-select-menu", true);
+  // These crops share the game's live DOM texture and native hit-testing path.
+  if (document.documentElement?.classList.contains("nh3d-xr-menu")) {
+    const panes: UiPane[] = [];
+    const logo = bounds(".logo-container", true);
+    const footer = bounds(".nh3d-startup-build-label,.nh3d-startup-build-label-link,.nh3d-startup-build-label-toast,.nh3d-startup-vr-entry:has(button)", true);
+    if (logo) panes.push([12, ...logo]);
+    if (modal) panes.push([13, ...modal]);
+    if (modal && selectMenu) panes.push([15, ...selectMenu]);
+    if (footer) panes.push([14, ...footer]);
+    return panes;
+  }
+  if (firstPerson) {
+    const actions = bounds(".nh3d-mobile-bottom-bar,.nh3d-mobile-repeat-button", true) ?? bounds(".nh3d-desktop-bottom-actions", true);
+    const dedicated: UiPane[] = [
+      ...(status ? [[0, ...status] as UiPane] : []),
+      ...(actions ? [[2, ...actions] as UiPane] : []),
+      ...(minimap ? [[5, ...minimap] as UiPane] : []),
+    ];
+    // GameUiPanels subtracts these exact dedicated crops from the full HUD.
+    // Retaining the complete source pane preserves messages and every other
+    // HUD element between the status, minimap, and action controls.
+    return [...dedicated, [7, 0, 0, 1, 1], ...(modal ? [[4, ...modal] as UiPane] : []), ...(modal && selectMenu ? [[15, ...selectMenu] as UiPane] : [])];
+  }
+  const selectors = [[0, "#stats-bar"], [2, ".nh3d-mobile-bottom-bar,.nh3d-mobile-repeat-button"], [3, ".nh3d-desktop-bottom-actions,.nh3d-map-move-controls"]] as const;
   const panes: UiPane[] = [];
-  selectors.forEach(([id, selector]) => { const rect = bounds(selector, id === 2 || id === 3); if (rect) panes.push([id, ...rect]); });
+  selectors.forEach(([id, selector]) => { const rect = id === 0 ? status : bounds(selector, true); if (rect) panes.push([id, ...rect]); });
   for (const [id, selector] of [[5, ".nh3d-minimap"], [6, ".nh3d-xr-table-controls"]] as const) {
     const rect = bounds(selector); if (rect) panes.push([id, ...rect]);
   }
@@ -42,5 +65,6 @@ export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles())
   if (messages) panes.push([11, ...messages]);
   // Only explicit UI surfaces become panes; arbitrary hit boxes are not windows.
   if (modal) panes.push([4, ...modal]);
+  if (modal && selectMenu) panes.push([15, ...selectMenu]);
   return panes;
 }

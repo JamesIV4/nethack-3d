@@ -237,6 +237,16 @@ export function useStartupController(dependencies: UseStartupControllerDependenc
         return;
       }
 
+      // XR B arrives through the same key route as gameplay's Back command.
+      if (document.documentElement.classList.contains("nh3d-webxr-active") &&
+          document.documentElement.classList.contains("nh3d-xr-menu") &&
+          startupFlowStep !== "variant") {
+        event.preventDefault();
+        event.stopPropagation();
+        setStartupFlowStep(startupFlowStep === "choose" ? "variant" : "choose");
+        return;
+      }
+
       if ((!isDesktopGameRunning && !isMobileGameRunning) || hasGameplayOverlayOpen) {
         return;
       }
@@ -276,6 +286,8 @@ export function useStartupController(dependencies: UseStartupControllerDependenc
     loadingOverlayVisible,
     openPauseMenu,
     toggleDeferredGameOverTombstoneUi,
+    startupFlowStep,
+    setStartupFlowStep,
   ]);
 
   const clearStartupControllerCursorHighlight = useCallback((): void => {
@@ -502,7 +514,7 @@ export function useStartupController(dependencies: UseStartupControllerDependenc
       const controllerSupportEnabled =
         sourceOptions.controllerEnabled === true ||
         isControllerSupportPromptVisible;
-      if (!controllerSupportEnabled) {
+      if (!controllerSupportEnabled || document.documentElement.classList.contains("nh3d-webxr-active")) {
         startupControllerPreviousActionActiveRef.current = {};
         startupAccordionConfirmReleaseLatchRef.current = false;
         startupControllerSliderInteractionActiveRef.current = false;

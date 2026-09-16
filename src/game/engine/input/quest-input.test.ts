@@ -60,7 +60,8 @@ describe("native Quest map ray input", () => {
     expect(f.dependencies.inputCommands.sendForcedDirectionalInput).toHaveBeenCalledWith("6");
     expect(f.sendMouseInput).not.toHaveBeenCalled();
     f.dependencies.movementInput.isFpsMode=()=>true;
-    expect(f.mouse.activateQuestTile(13,8)).toBe(false);
+    expect(f.mouse.activateQuestTile(13,8)).toBe(true);
+    expect(f.dependencies.inputCommands.sendForcedDirectionalInput).toHaveBeenCalledTimes(2);
   });
   it("issues one normal force-fight sequence from either equipped hand and obeys prompts", () => {
     const f=mouseFixture();f.dependencies.movementInput.isFpsMode=()=>true;

@@ -6,12 +6,15 @@ import "./styles/app.scss";
 import "./quest/native/native.css";
 import { initializeQuestNative } from "./quest/native/bootstrap";
 import { initializeQuestFormControls } from "./quest/webxr/form-controls";
+import { initializeNativeInputMode } from "./quest/webxr/native-input-mode";
 import "./quest/webxr/webxr.css";
 
 const disposeQuestNative = initializeQuestNative();
 const disposeQuestForms = initializeQuestFormControls();
+const disposeNativeInputMode = initializeNativeInputMode();
 if (import.meta.hot) import.meta.hot.dispose(disposeQuestNative);
 if (import.meta.hot) import.meta.hot.dispose(disposeQuestForms);
+if (import.meta.hot) import.meta.hot.dispose(disposeNativeInputMode);
 
 if (import.meta.hot) {
   import.meta.hot.on("vite:beforeUpdate", () => {

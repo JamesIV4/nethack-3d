@@ -223,6 +223,32 @@ export class Camera {
 
   fpsStepCameraTargetTile: { x: number; y: number } | null = null;
 
+  /** Samples the active FPS step without advancing its completion or tile-flush lifecycle. */
+  sampleFpsStepCameraGroundPosition(target: THREE.Vector3, now: number = performance.now()): boolean {
+    if (!this.fpsStepCameraActive) return false;
+    const progress = THREE.MathUtils.clamp(
+      (now - this.fpsStepCameraStartMs) / Math.max(1, this.fpsStepCameraDurationMs),
+      0,
+      1,
+    );
+    const eased = 1 - Math.pow(1 - progress, 3);
+    target.set(
+      THREE.MathUtils.lerp(this.fpsStepCameraFrom.x, this.fpsStepCameraTo.x, eased),
+      THREE.MathUtils.lerp(this.fpsStepCameraFrom.y, this.fpsStepCameraTo.y, eased),
+      0,
+    );
+    return true;
+  }
+
+  /** Recenter at the authoritative grid; let the normal camera frame finish/flush the step. */
+  snapFpsStepToPlayer(): void {
+    if (!this.fpsStepCameraActive) return;
+    const player = this.dependencies.playerMovement.playerPos;
+    this.fpsStepCameraTo.set(player.x * TILE_SIZE, -player.y * TILE_SIZE, this.firstPersonEyeHeight);
+    this.fpsStepCameraFrom.copy(this.fpsStepCameraTo);
+    this.fpsStepCameraStartMs = performance.now() - Math.max(1,this.fpsStepCameraDurationMs);
+  }
+
 
   // Camera controls
   cameraDistance: number = 20;

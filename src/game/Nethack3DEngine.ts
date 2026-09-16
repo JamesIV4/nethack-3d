@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { setNativeInputModeFps } from "../quest/webxr/native-input-mode";
 import { gameFrameTime } from "./engine/rendering/frame-time";
 import { WebHaptics } from "web-haptics";
 import { WorkerRuntimeBridge } from "../runtime";
@@ -9,6 +10,7 @@ import { TILE_SIZE } from "./constants";
 import { setActiveGlyphCatalog } from "./glyphs/registry";
 import type {
   Nh3dClientOptions,
+  CharacterCreationConfig,
   Nethack3DEngineController,
   Nethack3DEngineOptions,
   PlayMode
@@ -22,8 +24,11 @@ import { createEngineSystems, type EngineSystems } from "./engine/create-engine-
 /** Main engine composition, ordered lifecycle, and public UI controller. */
 class Nethack3DEngine implements Nethack3DEngineController {
   private readonly systems: EngineSystems;
+  private startupOnly = false;
+  private runtimeGeneration = 0;
 
   constructor(options: Nethack3DEngineOptions) {
+    this.startupOnly = options.startupOnly === true;
     this.systems = createEngineSystems({
       initThreeJS: (...args) => this.initThreeJS(...args),
       initUI: (...args) => this.initUI(...args),
@@ -61,6 +66,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
         ? "fps"
         : "normal";
     this.systems.engineState.clientOptions.fpsMode = this.systems.engineState.playMode === "fps";
+    setNativeInputModeFps(!this.startupOnly && this.systems.engineState.playMode === "fps");
     if (typeof options.loggingEnabled === "boolean") {
       setLoggingEnabled(options.loggingEnabled);
     }
@@ -74,8 +80,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
       : null;
     this.systems.tileFaceTextureRotationDebug.initialize();
     this.initThreeJS();
-    this.initUI();
-    this.connectToRuntime();
+    if (!this.startupOnly) {
+      this.initUI();
+      void this.connectToRuntime();
+    }
     this.systems.engineState.uiAdapter.setNumberPadModeEnabled(this.systems.inputCommands.numberPadModeEnabled);
     this.systems.engineState.uiAdapter.setRepeatActionVisible(false);
     this.systems.engineState.uiAdapter.setGameOver({ ...this.systems.gameOver.gameOverState });
@@ -99,7 +107,55 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.systems.terminalRendering.enterTerminalDisplayMode();
     }
     this.systems.questSceneExport.start();
+    this.systems.webXrPresentation.setStartupMenu(this.startupOnly);
     this.systems.webXrPresentation.start();
+  }
+
+  /** Start the selected character on the front end's existing renderer/XR session. */
+  public startGame(config: CharacterCreationConfig, options: Nh3dClientOptions): void {
+    if (!this.startupOnly || this.systems.engineState.disposed) return;
+    this.systems.engineState.characterCreationConfig = config;
+    this.systems.inputCommands.numberPadModeEnabled = this.systems.extendedCommands.resolveStartupNumberPadModeEnabled(config.initOptions);
+    this.systems.extendedCommands.useNativeExtendedCommandMenu = this.systems.extendedCommands.resolveStartupExtmenuEnabled(config.initOptions);
+    this.applyClientOptions(options);
+    this.startupOnly = false;
+    setNativeInputModeFps(this.systems.engineState.playMode === "fps");
+    this.systems.webXrPresentation.setStartupMenu(false);
+    this.initUI();
+    this.systems.engineState.uiAdapter.setNumberPadModeEnabled(this.systems.inputCommands.numberPadModeEnabled);
+    void this.connectToRuntime();
+  }
+
+  public returnToStartupMenu(): void {
+    if (this.systems.engineState.disposed || this.startupOnly) return;
+    this.runtimeGeneration++;
+    this.systems.engineState.session?.dispose();
+    this.systems.engineState.session = null;
+    this.systems.gameOver.setGameOverState(false, null);
+    this.systems.extendedCommands.exitMetaCommandMode();
+    this.systems.questionMenus.hideQuestion();
+    this.systems.directionPrompts.hideDirectionQuestion();
+    this.systems.promptDialogs.hideTextInputRequest();
+    this.systems.promptDialogs.hideInventoryDialog();
+    this.systems.promptDialogs.hideInfoMenuDialog();
+    this.systems.tileContextActions.closeAnyTileContextMenu(false);
+    this.systems.inputCommands.clearRepeatableAction();
+    this.systems.inputCommands.clearRepeatDirectionCandidate();
+    this.systems.controllerGameplay.clearControllerMovePreview();
+    this.clearScene();
+    this.systems.playerStatus.resetForNewGame();
+    this.systems.playerMovement.playerPos = { x: 0, y: 0 };
+    this.systems.playerMovement.hasSeenPlayerPosition = false;
+    this.systems.engineMessages.gameMessages = [];
+    this.systems.engineState.uiAdapter.setGameMessages([]);
+    this.systems.engineState.uiAdapter.setPositionRequest(null);
+    this.systems.promptDialogs.updateConnectionStatus("Disconnected", "disconnected");
+    this.systems.promptDialogs.setLoadingVisible(false);
+    this.systems.engineState.lastFrameTimeMs = null;
+    document.exitPointerLock?.();
+    this.startupOnly = true;
+    setNativeInputModeFps(false);
+    this.systems.webXrPresentation.setStartupMenu(true);
   }
 
   private initThreeJS(): void {
@@ -172,12 +228,12 @@ class Nethack3DEngine implements Nethack3DEngineController {
     );
     window.addEventListener(
       "keydown",
-      this.systems.keyboardInput.handleKeyDown.bind(this.systems.keyboardInput),
+      (event) => { if (!this.startupOnly) this.systems.keyboardInput.handleKeyDown(event); },
       eventListenerSignal,
     );
     window.addEventListener(
       "keyup",
-      this.systems.keyboardInput.handleKeyUp.bind(this.systems.keyboardInput),
+      (event) => { if (!this.startupOnly) this.systems.keyboardInput.handleKeyUp(event); },
       eventListenerSignal,
     );
     window.addEventListener(
@@ -272,6 +328,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     }
 
     this.systems.engineState.playMode = resolvedPlayMode;
+    setNativeInputModeFps(!this.startupOnly && resolvedPlayMode === "fps");
     this.systems.engineState.clientOptions.fpsMode = this.systems.engineState.playMode === "fps";
     this.systems.engineState.characterCreationConfig.playMode = this.systems.engineState.playMode;
     this.systems.touchInput.clearFpsTouchGestures();
@@ -660,7 +717,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
   }
 
   private async connectToRuntime(): Promise<void> {
-    if (this.systems.engineState.disposed) {
+    const generation = ++this.runtimeGeneration;
+    if (this.systems.engineState.disposed || generation !== this.runtimeGeneration) {
       return;
     }
     console.log("Starting local NetHack runtime");
@@ -688,13 +746,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
     await setActiveGlyphCatalog(
       this.systems.engineState.characterCreationConfig.runtimeVersion ?? "3.6.7",
     );
-    if (this.systems.engineState.disposed) {
+    if (this.systems.engineState.disposed || generation !== this.runtimeGeneration) {
       return;
     }
 
     const session = new WorkerRuntimeBridge(
       (payload: RuntimeEvent) => {
-        this.handleRuntimeEvent(payload);
+        if (generation === this.runtimeGeneration) this.handleRuntimeEvent(payload);
       },
       {
         runtimeVersion: this.systems.engineState.characterCreationConfig.runtimeVersion ?? "3.6.7",
@@ -711,17 +769,17 @@ class Nethack3DEngine implements Nethack3DEngineController {
         loggingEnabled: isLoggingEnabled(),
       },
     );
-    if (this.systems.engineState.disposed) {
+    if (this.systems.engineState.disposed || generation !== this.runtimeGeneration) {
       session.dispose();
       return;
     }
     this.systems.engineState.session = session;
 
     try {
-      await this.systems.engineState.session.start();
-      if (this.systems.engineState.disposed) {
-        this.systems.engineState.session?.dispose();
-        this.systems.engineState.session = null;
+      await session.start();
+      if (this.systems.engineState.disposed || generation !== this.runtimeGeneration) {
+        session.dispose();
+        if (this.systems.engineState.session === session) this.systems.engineState.session = null;
         return;
       }
       this.systems.engineState.session.setLoggingEnabled(isLoggingEnabled());
@@ -735,7 +793,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       }
       this.systems.promptDialogs.setLoadingVisible(false);
     } catch (error) {
-      if (this.systems.engineState.disposed) {
+      if (this.systems.engineState.disposed || generation !== this.runtimeGeneration) {
         return;
       }
       const startupErrorMessage =
@@ -1549,6 +1607,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (this.systems.engineState.disposed) {
       return;
     }
+    setNativeInputModeFps(false);
     this.systems.engineState.disposed = true;
     this.systems.renderPipeline.renderer.setAnimationLoop(null);
     this.systems.webXrPresentation.dispose();
@@ -1693,6 +1752,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
   private animate(animationTime: number = performance.now()): void {
     const timeMs = gameFrameTime(animationTime, this.systems.renderPipeline.renderer.xr.isPresenting, performance.now());
     if (this.systems.engineState.disposed) {
+      return;
+    }
+    if (this.startupOnly) {
+      this.systems.webXrPresentation.renderStartupFrame(timeMs);
       return;
     }
     if (!this.systems.webXrPresentation.active && this.systems.fpsDiagnostics.shouldSkipFrameForFpsDebugOverride(timeMs)) {

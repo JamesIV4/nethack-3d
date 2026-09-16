@@ -22,19 +22,22 @@ export class LaggingUiAnchor {
     this.targetPosition.copy(this.position); this.targetYaw = yaw;
     this.turning = this.moving = false;
   }
-  update(position: THREE.Vector3, yaw: number, time: number): void {
-    if (this.time === null) { this.reset(position, yaw, time); return; }
+  update(position: THREE.Vector3, yaw: number, time: number, snapYaw?: (yaw:number)=>number): void {
+    if (this.time === null) { this.reset(position, snapYaw ? snapYaw(yaw) : yaw, time); return; }
     const dt = Math.min(.1, Math.max(0, (time - this.time) / 1000)); this.time = time;
-    if (Math.abs(wrap(yaw - this.targetYaw)) >= Math.PI / 2 ||
+    if (Math.abs(wrap(yaw - this.targetYaw)) >= 46 * Math.PI / 180 ||
         Math.hypot(position.x - this.targetPosition.x, position.z - this.targetPosition.z) > .2) {
-      this.targetYaw = yaw; this.targetPosition.set(position.x, this.position.y, position.z);
+      this.targetYaw = snapYaw ? snapYaw(yaw) : yaw; this.targetPosition.set(position.x, this.position.y, position.z);
       this.turning = this.moving = true;
     }
     if (this.turning) {
-      [this.yaw, this.yawVelocity] = damp(this.yaw, this.yawVelocity, this.yaw + wrap(this.targetYaw - this.yaw), dt);
-      this.yaw = wrap(this.yaw);
-      if (Math.abs(wrap(this.targetYaw - this.yaw)) < .002 && Math.abs(this.yawVelocity) < .01) {
-        this.yaw = this.targetYaw; this.yawVelocity = 0; this.turning = false;
+      if (snapYaw) { this.yaw=this.targetYaw; this.yawVelocity=0; this.turning=false; }
+      else {
+        [this.yaw, this.yawVelocity] = damp(this.yaw, this.yawVelocity, this.yaw + wrap(this.targetYaw - this.yaw), dt);
+        this.yaw = wrap(this.yaw);
+        if (Math.abs(wrap(this.targetYaw - this.yaw)) < .002 && Math.abs(this.yawVelocity) < .01) {
+          this.yaw = this.targetYaw; this.yawVelocity = 0; this.turning = false;
+        }
       }
     }
     if (this.moving) {

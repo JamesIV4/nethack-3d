@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { unzipSync } from "three/examples/jsm/libs/fflate.module.js";
 import { readGeckoArtifact, PAINT_PREFERENCE } from "./gecko-artifact.mjs";
+import { questAppVersion } from "./app-version.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const apk = path.join(
@@ -28,10 +29,12 @@ const details = execFileSync(aapt, ["dump", "badging", apk], {
   encoding: "utf8",
   windowsHide: true,
 });
-if (!details.includes("package: name='com.nethack3d.quest.webxrproof'"))
-  throw new Error("Incorrect proof package identity.");
-if (!details.includes("versionName='0.3.21-vr-options'"))
+if (!details.includes("package: name='com.nethack3d.quest.vr'"))
+  throw new Error("Incorrect Quest VR package identity.");
+const appVersion = questAppVersion();
+if (!details.includes(`versionName='${appVersion.name}'`) || !details.includes(`versionCode='${appVersion.code}'`))
   throw new Error("Unexpected APK version.");
+if (!details.includes("application-label:'NetHack 3D VR'")) throw new Error("Incorrect Quest launcher name.");
 for (const permission of ["WAKE_LOCK", "FOREGROUND_SERVICE"]) {
   if (!details.includes("name='android.permission." + permission + "'"))
     throw new Error("Missing Gecko runtime permission: " + permission);
@@ -43,6 +46,7 @@ const inspected = unzipSync(bytes, {
     names.add(entry.name);
     return [
       "assets/nh3d-gecko-runtime.json",
+      "assets/vr_splash.png",
       "lib/arm64-v8a/libxul.so",
       "lib/arm64-v8a/libnative-lib.so",
       "res/raw/fxr_config.yaml",
@@ -111,8 +115,11 @@ if (
 }
 const output = path.join(
   root,
-  "quest/build/outputs/apk/nethack3d-webxr-proof-debug.apk",
+  "quest/build/outputs/apk/nethack3d-vr.apk",
 );
+if (!Buffer.from(inspected["assets/vr_splash.png"] ?? []).equals(readFileSync(path.join(root, "public/NetHack3D-splash.png")))) {
+  throw new Error("Quest launcher splash does not match NetHack3D-splash.png.");
+}
 mkdirSync(path.dirname(output), { recursive: true });
 copyFileSync(apk, output);
 // Keep the stable sideloading path while also producing a desktop-style release artifact.

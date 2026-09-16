@@ -7,6 +7,13 @@ it("holds position and yaw inside the deadzone and never follows height", () => 
   for (let t = 10; t <= 1000; t += 10) ui.update(new THREE.Vector3(.1, 3, .1), .2, t);
   expect(ui.yaw).toBe(0); expect(ui.position).toEqual(position);
 });
+it("starts following at 46 degrees", () => {
+  const ui = new LaggingUiAnchor(); ui.reset(position, 0, 0);
+  ui.update(position, 45 * Math.PI / 180, 10);
+  expect(ui.yaw).toBe(0);
+  ui.update(position, 47 * Math.PI / 180, 20);
+  expect(ui.yaw).toBeGreaterThan(0);
+});
 it("starts gently, catches up exponentially, and settles without overshoot", () => {
   const ui = new LaggingUiAnchor(); ui.reset(position, 0, 0);
   ui.update(position, 2, 10); const first = ui.yaw;
@@ -40,7 +47,7 @@ it("finishes at the latched target while the headset keeps making small movement
 });
 it("evaluates the next deadzone from the new target even during catch-up", () => {
   const ui = new LaggingUiAnchor(); ui.reset(position,0,0); ui.update(position,1.7,10);
-  for(let t=20;t<=2500;t+=10) ui.update(position,2.8,t);
+  for(let t=20;t<=2500;t+=10) ui.update(position,2.45,t);
   expect(ui.yaw).toBe(1.7);
   ui.update(position,-2.7,2510);
   for(let t=2520;t<=5000;t+=10) ui.update(position,-2.7,t);

@@ -1431,6 +1431,8 @@ export interface Nethack3DEngineController {
 }
 
 export interface Nethack3DEngineOptions {
+  /** Keep the XR renderer alive on the front end without starting a game worker. */
+  startupOnly?: boolean;
   mountElement?: HTMLElement | null;
   uiAdapter: Nethack3DEngineUIAdapter;
   characterCreationConfig?: CharacterCreationConfig;

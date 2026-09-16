@@ -74,6 +74,13 @@ describe("native Quest input", () => {
     expect(f.controller.sendInput).not.toHaveBeenCalled();
   });
 
+  it("routes explicit ray directions through chooseDirection, including self", () => {
+    const f = fixture(); f.state.directionQuestion = "In what direction?";
+    expect(routeQuestCommand({ type: "direction", key: "5" }, f.state, f.ui).accepted).toBe(true);
+    expect(f.controller.chooseDirection).toHaveBeenCalledExactlyOnceWith("5");
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled();
+  });
+
   it("position prompts keep cursor movement but reject wait and inventory", () => {
     const f = fixture(); f.state.positionInputActive = true;
     expect(routeQuestCommand({ type: "move", dx: 0, dy: 1 }, f.state, f.ui).accepted).toBe(true);

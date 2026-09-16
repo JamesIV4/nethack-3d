@@ -2,10 +2,12 @@ import type { Nethack3DEngineController } from "../../game/ui-types";
 
 export type QuestNativeCommand =
   | { type: "move"; dx: number; dy: number; run?: boolean }
+  | { type: "direction"; key: string }
   | { type: "tile"; x: number; y: number; secondary?: boolean }
   | { type: "key"; key: string }
   | { type: "inventory" }
   | { type: "wait" }
+  | { type: "search" }
   | { type: "attack"; dx: number; dy: number; hand: "left" | "right" };
 export type QuestCommandResult = { accepted: boolean; reason?: string };
 export interface QuestInputState {
@@ -29,12 +31,18 @@ export interface QuestInputUi {
   dispatchKey(key: string): void;
 }
 const keys = new Set(["Enter", "Escape", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Tab", "Backspace", " "]);
+const directionKeys = new Set([
+  "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "h", "j", "k", "l", "y", "u", "b", "n", "s", "S", "<", ">",
+]);
 export function parseQuestCommand(value: unknown): QuestNativeCommand | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const command = value as Record<string, unknown>;
-  if ((command.type === "inventory" || command.type === "wait") && Object.keys(command).length === 1) return { type: command.type };
+  if ((command.type === "inventory" || command.type === "wait" || command.type === "search") && Object.keys(command).length === 1) return { type: command.type };
   if (command.type === "key" && Object.keys(command).length === 2 && typeof command.key === "string" && keys.has(command.key)) {
     return { type: "key", key: command.key };
+  }
+  if (command.type === "direction" && Object.keys(command).length === 2 && typeof command.key === "string" && directionKeys.has(command.key)) {
+    return { type: "direction", key: command.key };
   }
   if (command.type === "attack" && Object.keys(command).every(k=>["type","dx","dy","hand"].includes(k)) &&
       (command.hand === "left" || command.hand === "right") && Number.isInteger(command.dx) && Number.isInteger(command.dy) &&
@@ -76,15 +84,20 @@ export function routeQuestCommand(command: QuestNativeCommand, state: QuestInput
   if (ui.hasBlockingOverlay || ui.editableFocused || state.textInput || state.infoMenu || state.question) {
     return deny("Finish the active dialog first.");
   }
+  if (command.type === "direction") {
+    if (!state.directionQuestion || state.positionInputActive) return deny("Choose a direction when prompted.");
+    controller.chooseDirection(command.key);
+    return { accepted: true };
+  }
   if (command.type === "inventory") {
     if (state.directionQuestion || state.positionInputActive) return deny("Finish the active prompt first.");
     controller.toggleInventoryDialog();
     return { accepted: true };
   }
   if (state.inventory.visible) return deny("Close inventory first.");
-  if (command.type === "wait") {
+  if (command.type === "wait" || command.type === "search") {
     if (state.directionQuestion || state.positionInputActive) return deny("Finish the active prompt first.");
-    controller.sendInput(".");
+    controller.sendInput(command.type === "search" ? "s" : ".");
     return { accepted: true };
   }
   if (command.type === "attack") {

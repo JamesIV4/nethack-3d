@@ -1,3 +1,4 @@
+import { patchIdentity } from "./patch-identity.mjs";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync } from "node:fs";
 import path from "node:path";
@@ -67,8 +68,8 @@ if (!existsSync(marker)) {
   for (const [key, file] of Object.entries(runtimePaths)) writeFileSync(path.join(checkout, file), patched[key]);
   const gradle = path.join(checkout, "app/build.gradle");
   let config = readFileSync(gradle, "utf8")
-    .replace('applicationId "com.igalia.wolvic"', 'applicationId "com.nethack3d.quest.webxrproof"')
-    .replace('resValue "string", "app_name", "Wolvic Chromium"', 'resValue "string", "app_name", "NetHack 3D WebXR Proof"');
+    .replace('applicationId "com.igalia.wolvic"', 'applicationId "com.nethack3d.quest.vr"')
+    .replace('resValue "string", "app_name", "Wolvic Chromium"', 'resValue "string", "app_name", "NetHack 3D VR"');
   const assetRoot = path.join(root, "quest/app/build/generated/gameAssets").replaceAll("\\", "/").replaceAll("'", "\\'");
   config += `\n// Dedicated NetHack WebXR proof host.\nandroid.defaultConfig { buildConfigField "boolean", "NH3D_GAME_HOST", "true" }\nandroid.sourceSets.main.assets.srcDir('${assetRoot}')\n`;
   writeFileSync(gradle, config);
@@ -86,4 +87,5 @@ cpSync(platform, path.join(checkout, "third_party/OVRPlatformSDK"), { recursive:
 const property = (value) => value.replaceAll("\\", "/").replaceAll(":", "\\:");
 writeFileSync(path.join(checkout, "local.properties"), `sdk.dir=${property(sdk)}\nchromium_aar=${property(path.resolve(chromium))}\n`);
 writeFileSync(path.join(checkout, "user.properties"), "useStaticVersionCode=true\nuseDebugSigningOnRelease=true\n");
+patchIdentity(checkout);
 console.log("Prepared the standalone WebXR host at " + checkout);

@@ -1,6 +1,7 @@
 import {
   startupMenuRainParticles
 } from "./rain";
+import { QuestWebXrButton } from "../../../quest/webxr/QuestWebXrControls";
 import {
   t
 } from "../shared/translations";
@@ -29,6 +30,7 @@ export function StartupBackdrop({
   return (
     startupMenuVisible ? (
       <>
+        <div className="nh3d-startup-vr-entry"><QuestWebXrButton className="nh3d-menu-action-button" /></div>
         <div aria-hidden="true" className="nh3d-startup-background-rain">
           <div className="nh3d-startup-background-rain-field">
             {startupMenuRainParticles.map((particle, index) => (

@@ -9,6 +9,7 @@
   pointer-events: none;
 }
 :root.nh3d-webxr-active .nh3d-fps-crosshair { display: none; }
+:root.nh3d-webxr-active .nh3d-dialog.is-visible { opacity: 1; }
 :root.nh3d-webxr-active .floating-message-container {
   left: 50%;
   right: auto;
@@ -28,14 +29,16 @@
   zoom: 0.5; text-align: center;
   --nh3d-ui-font-scale: 1; --nh3d-live-log-font-scale: 1;
 }
-/* Reserve the center of the shared texture for the independent floating pane. */
-:root.nh3d-webxr-active .nh3d-context-menu,
+/* Keep the authored dialog layout in the shared texture. The native modal
+   pane supplies the comfortable viewing distance; CSS must not shrink its
+   controls, including inventory and prompt dialogs. */
+:root.nh3d-webxr-active .nh3d-context-menu:not(.nh3d-tile-context-menu):not(.nh3d-fps-crosshair-context),
 :root.nh3d-webxr-active .nh3d-dialog,
 :root.nh3d-webxr-active .nh3d-mobile-actions-sheet,
 :root.nh3d-webxr-active .nh3d-wizard-commands-sheet.is-visible,
 :root.nh3d-webxr-active .nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),
-:root.nh3d-webxr-active [role="dialog"],
-:root.nh3d-webxr-active [role="alertdialog"] {
+:root.nh3d-webxr-active [role="dialog"]:not(.nh3d-tile-context-menu):not(.nh3d-fps-crosshair-context),
+:root.nh3d-webxr-active [role="alertdialog"]:not(.nh3d-tile-context-menu):not(.nh3d-fps-crosshair-context) {
   position: fixed !important;
   left: 50% !important;
   top: 50% !important;
@@ -43,11 +46,31 @@
   bottom: auto !important;
   width: fit-content !important;
   min-width: 0 !important;
-  /* Scale the complete layout, including hard-coded text, controls and icons.
-     Compensated limits retain a painted cap of 54vw by 72vh. */
-  zoom: 0.5 !important;
-  max-width: 108vw !important;
-  max-height: 144vh !important;
+  zoom: 1 !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100vh - 32px) !important;
+  --nh3d-ui-font-scale: 1 !important;
+  --nh3d-live-log-font-scale: 1 !important;
+  box-sizing: border-box;
+  overflow: auto;
+  margin: 0 !important;
+  transform: translate(-50%, -50%) !important;
+  animation: none !important;
+  transition: none !important;
+}
+/* Tile and FPS context actions are their own interaction pane, so keep their
+   text and controls at the authored size instead of modal half scaling. */
+:root.nh3d-webxr-active :is(.nh3d-tile-context-menu,.nh3d-fps-crosshair-context) {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: fit-content !important;
+  min-width: 0 !important;
+  zoom: 1 !important;
+  max-width: 54vw !important;
+  max-height: 72vh !important;
   --nh3d-ui-font-scale: 1 !important;
   --nh3d-live-log-font-scale: 1 !important;
   box-sizing: border-box;
@@ -62,18 +85,30 @@
   transform-origin: center center !important;
   transform: translate(-50%, -50%) !important;
 }
-/* Nested dialog markup inherits the outer zoom instead of halving twice. */
+/* Nested dialog markup keeps the authored scale. */
 :root.nh3d-webxr-active :is(.nh3d-dialog,.nh3d-context-menu,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible,[role="dialog"],[role="alertdialog"])
   :is(.nh3d-dialog,.nh3d-context-menu,[role="dialog"],[role="alertdialog"]) { zoom: 1 !important; }
-.nh3d-select-backdrop { position: fixed; inset: 0; z-index: 2147483000; }
-.nh3d-dialog.nh3d-select-dialog { opacity: 1; animation: none; z-index: 2147483001; padding: 20px; min-width: 220px; max-height: 80vh; }
-.nh3d-select-dialog h2 { font-size: 18px; margin: 0 0 12px; }
-.nh3d-select-choices { display: flex; flex-direction: column; gap: 4px; overflow: auto; max-height: 55vh; }
+/* The WebXR host keeps choices on the live HTML texture. Anchor this listbox
+   directly to its select so it reads as a dropdown instead of a second modal. */
+.nh3d-select-menu {
+  position: fixed;
+  z-index: 2147483001;
+  box-sizing: border-box;
+  padding: 4px;
+  overflow: auto;
+  opacity: 1;
+  animation: none;
+  border: 1px solid #78d5ff;
+  border-radius: 3px;
+  background: #102432;
+  box-shadow: 0 3px 12px #001722;
+}
+.nh3d-select-choices { display: flex; flex-direction: column; gap: 2px; }
 .nh3d-select-choice { min-height: 34px; width: 100%; text-align: left; padding: 7px 12px; }
 .nh3d-select-choice[aria-selected="true"] { border-color: #78d5ff; background: #23465d; }
 .nh3d-select-choice:focus-visible { outline: 2px solid #78d5ff; outline-offset: -2px; }
 .nh3d-select-group { padding: 8px 4px 2px; color: #78d5ff; font-weight: bold; }
-.nh3d-select-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; }
+.nh3d-select-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 6px; }
 .nh3d-xr-pointer {
   position: fixed;
   z-index: 2147483647;
@@ -109,6 +144,17 @@
   flex: 1 1 0 !important; width: auto !important; min-width: 0 !important; min-height: 48px;
 }
 :root.nh3d-webxr-active .nh3d-mobile-bottom-bar::after { display: none !important; }
+/* Repeat remains a separate DOM button for flat/mobile layout. In VR its
+   source pixels sit directly above the action bar and share pane 2's crop. */
+:root.nh3d-webxr-active .nh3d-mobile-repeat-button {
+  left: 50% !important; right: auto !important; bottom: var(--nh3d-xr-repeat-bottom, 210px) !important;
+  transform: translateX(-50%) !important;
+}
+:root.nh3d-webxr-active .nh3d-mobile-repeat-button:hover,
+:root.nh3d-webxr-active .nh3d-mobile-repeat-button:focus-visible {
+  background: #23465d; border-color: #78d5ff; color: #d7f4ff;
+  box-shadow: 0 0 0 1px #78d5ff;
+}
 :root:not(.nh3d-webxr-active) .nh3d-xr-table-controls,
 :root.nh3d-xr-first-person .nh3d-xr-table-controls { display: none; }
 :root.nh3d-webxr-active .nh3d-mobile-bottom-button:not(:disabled):hover,
@@ -119,14 +165,14 @@
 
 /* Native source atlas: keep modal pixels separate from the table controls.
    These document coordinates do not determine the panes' world poses. */
-:root.nh3d-xr-native-ui .nh3d-context-menu,
+:root.nh3d-xr-native-ui .nh3d-context-menu:not(.nh3d-tile-context-menu):not(.nh3d-fps-crosshair-context),
 :root.nh3d-xr-native-ui .nh3d-dialog,
 :root.nh3d-xr-native-ui .nh3d-mobile-actions-sheet,
 :root.nh3d-xr-native-ui .nh3d-wizard-commands-sheet.is-visible,
 :root.nh3d-xr-native-ui .nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),
-:root.nh3d-xr-native-ui [role="dialog"],
-:root.nh3d-xr-native-ui [role="alertdialog"] {
-  top: 42% !important; max-height: 144vh !important;
+:root.nh3d-xr-native-ui [role="dialog"]:not(.nh3d-tile-context-menu):not(.nh3d-fps-crosshair-context),
+:root.nh3d-xr-native-ui [role="alertdialog"]:not(.nh3d-tile-context-menu):not(.nh3d-fps-crosshair-context) {
+  top: 42% !important; max-height: 72vh !important;
   box-shadow: none !important;
 }
 :root.nh3d-xr-native-ui .nh3d-mobile-bottom-bar,
@@ -142,3 +188,72 @@
 :root.nh3d-webxr-active .nh3d-xr-table-controls:has(input) { min-width: 240px; }
 
 :root.nh3d-xr-native-ui #stats-bar { z-index: 1 !important; }
+:root.nh3d-webxr-active:not(.nh3d-xr-menu) #stats-bar {
+  left: 50%;
+  right: auto;
+  width: calc(100vw * 2 / 3);
+  box-sizing: border-box;
+  transform: translateX(-50%);
+  justify-content: center;
+  text-align: center;
+  --nh3d-xr-meter-width-scale: 2;
+}
+:root.nh3d-webxr-active:not(.nh3d-xr-menu) #stats-bar > * { flex-grow: 0; }
+:root.nh3d-webxr-active:not(.nh3d-xr-menu) #stats-bar .nh3d-stats-location {
+  flex: 0 1 auto;
+  text-align: center;
+}
+/* Pane 5 is placed above the status pane by the native compositor. Keep its
+   source crop centered too, while retaining the user's minimap scale. */
+:root.nh3d-webxr-active:not(.nh3d-xr-menu) .nh3d-minimap {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+/* Reserve a source-texture slot; native FPS positioning follows the laser. */
+:root.nh3d-webxr-active.nh3d-xr-first-person :is(.nh3d-tile-context-menu,.nh3d-fps-crosshair-context) {
+  left: auto !important;
+  right: 12px !important;
+  top: 50% !important;
+  max-width: calc(100vw / 6 - 24px) !important;
+  transform: translateY(-50%) !important;
+}
+
+/* Front-end source crops never overlap. The compositor places them in 3D. */
+.nh3d-startup-vr-entry { position: fixed; right: 2vw; bottom: 2vh; z-index: 2200; }
+:root.nh3d-webxr-active #loading {
+  position: fixed; inset: auto; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: max-content; height: auto; max-width: 80vw; padding: 24px;
+}
+:root.nh3d-webxr-active.nh3d-xr-menu .nh3d-startup-background-rain,
+:root.nh3d-xr-menu .nh3d-xr-table-controls { display: none; }
+:root.nh3d-webxr-active.nh3d-xr-menu .logo-container {
+  position: fixed; left: 50%; top: 1vh; width: max-content; height: auto;
+  transform: translateX(-50%); opacity: 1; animation: none;
+  /* The pre's padding contains the full depth wave, giving a stable native crop. */
+  max-width: none; overflow: hidden; zoom: 1;
+}
+:root.nh3d-webxr-active.nh3d-xr-menu .logo-container .nethack-ascii-logo {
+  position: relative; top: auto; left: auto; transform: none;
+  font-size: min(11px, .56vw, .86vh); line-height: normal; margin: 0;
+}
+:root.nh3d-webxr-active.nh3d-xr-menu .nh3d-logo-row {
+  width: var(--nh3d-logo-ink-width);
+  text-indent: calc(-1 * var(--nh3d-logo-ink-left));
+}
+:root.nh3d-webxr-active.nh3d-xr-menu .logo-container .nethack-ascii-logo + .nethack-ascii-logo { display: none; }
+:root.nh3d-webxr-active.nh3d-xr-menu :is(.nh3d-dialog,[role="dialog"],[role="alertdialog"]) {
+  top: 62% !important; zoom: 1 !important;
+  max-width: 90vw !important; max-height: 55vh !important;
+}
+:root.nh3d-webxr-active.nh3d-xr-menu .nh3d-startup-build-label,
+:root.nh3d-webxr-active.nh3d-xr-menu .nh3d-startup-build-label-link,
+:root.nh3d-webxr-active.nh3d-xr-menu .nh3d-startup-build-label-toast {
+  position: fixed; top: auto; bottom: 7vh; left: 50%; right: auto; transform: translateX(-50%);
+}
+:root.nh3d-webxr-active.nh3d-xr-menu .nh3d-startup-build-label-link { bottom: 5vh; }
+:root.nh3d-webxr-active.nh3d-xr-menu .nh3d-startup-build-label-toast { bottom: 9vh; }
+:root.nh3d-webxr-active.nh3d-xr-menu .nh3d-startup-vr-entry {
+  left: 50%; right: auto; transform: translateX(-50%); width: max-content;
+}

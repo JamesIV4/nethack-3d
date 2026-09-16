@@ -15,15 +15,22 @@ import type { EngineState } from "../runtime/engine-state";
 import type { PlayerMovement } from "../world/player-movement";
 import type { RenderPipeline } from "./render-pipeline";
 import type { HeldWeapon } from "./held-weapon";
+import type { MovementInput } from "../input/movement-input";
 import { createTrackingToGame, tabletopClippingPlanes } from "./webxr-rig";
-import { enterWebXr, registerWebXrOwner, updateWebXrState } from "../../../quest/webxr/presentation";
+import { registerWebXrOwner, updateWebXrState } from "../../../quest/webxr/presentation";
 import { getXrSettings } from "../../../quest/webxr/settings";
 import { LaggingUiAnchor } from "../../../quest/webxr/lagging-ui-anchor";
+import { MenuRain } from "../../../quest/webxr/menu-rain";
+import { TableMoveHandle } from "../../../quest/webxr/table-move-handle";
+import { TabletopPan } from "../../../quest/webxr/tabletop-pan";
+import { QuestResumeMode } from "../../../quest/webxr/quest-resume-mode";
+import { gridUiHeading } from "../../../quest/webxr/grid-ui-heading";
 
 export interface WebXrPresentationDependencies {
-  readonly camera: Pick<Camera, "camera" | "cameraYaw" | "cameraPitch" | "firstPersonEyeHeight" | "applyStandardCameraPresetForTopDownModes">;
+  readonly movementInput: Pick<MovementInput,"resolveDirectionKeyFromDelta">;
+  readonly camera: Pick<Camera, "camera" | "cameraYaw" | "cameraPitch" | "firstPersonEyeHeight" | "sampleFpsStepCameraGroundPosition" | "snapFpsStepToPlayer" | "fpsAutoTurnTargetYaw" | "cameraPanX" | "cameraPanY" | "cameraPanTargetX" | "cameraPanTargetY" | "isCameraCenteredOnPlayer" | "getOverheadCameraFollowTargetWorldPosition" | "applyStandardCameraPresetForTopDownModes">;
   readonly engineState: Pick<EngineState, "clientOptions" | "playMode" | "disposed">;
-  readonly playerMovement: Pick<PlayerMovement, "playerPos">;
+  readonly playerMovement: Pick<PlayerMovement, "playerPos" | "hasSeenPlayerPosition">;
   readonly renderPipeline: Pick<RenderPipeline, "renderer" | "scene">;
   readonly tileRendering: Pick<TileRendering, "tileMap" | "floorGeometry">;
   readonly glyphTextures: Pick<GlyphTextures, "glyphOverlayMap">;
@@ -45,6 +52,9 @@ export class WebXrPresentation {
   private readonly xrCamera = new THREE.PerspectiveCamera(75, 1, 0.03, 150);
   private readonly anchor = new THREE.Vector3(0, 1.6, 0);
   private readonly heading = new THREE.Quaternion();
+  private readonly tableHeading = new THREE.Quaternion();
+  private readonly tablePosition = new THREE.Vector3();
+  private readonly tabletopPan = new TabletopPan();
   private readonly position = new THREE.Vector3();
   private readonly orientation = new THREE.Quaternion();
   private readonly forward = new THREE.Vector3();
@@ -56,6 +66,8 @@ export class WebXrPresentation {
   private uiFirstPerson = false;
   private uiRecenter = true;
   private uiRevision = 0;
+  private lastFpsPlayerTileKey = "";
+  private lastPlayerPositionReady = false;
   private readonly board = new THREE.Mesh(
     new THREE.BoxGeometry(2.8, 0.05, 1.9),
     withoutWorldClipping(new THREE.MeshBasicMaterial({ color: 0x17212c })),
@@ -70,14 +82,47 @@ export class WebXrPresentation {
   private needsRecenter = true;
   private host = false;
   private nativeHost = false;
-  private autoEntryAttempted = false;
   private availabilityPending = false;
   private xrAvailable = false;
+  private resumeMode: QuestResumeMode | null = null;
+  private lastPresentationTick = performance.now();
   private readonly lifecycle = new AbortController();
   private wired = false;
   private htmlPanel: HtmlUiPanel | null = null;
   private readonly tilt = new BoardTilt(this.trackingRoot);
+  private readonly tableMove = new TableMoveHandle(this.trackingRoot);
   private input: WebXrControllerInput | null = null;
+  private startupMenu = false;
+  private menuRain: MenuRain | null = null;
+
+  setStartupMenu(visible: boolean): void {
+    this.lastPlayerPositionReady = false;
+    this.startupMenu = visible;
+    document.documentElement.classList.toggle("nh3d-xr-menu", visible);
+    this.needsRecenter = true;
+    this.lastRigKey = "";
+    this.tabletopPan.reset();
+    if (visible) {
+      this.terrainBatches.dispose();
+      this.scaledSprites.disable(this.dependencies.renderPipeline.scene);
+    }
+    if (!visible) {
+      if (this.active) this.dependencies.renderPipeline.scene.add(this.trackingRoot);
+      this.menuRain?.dispose(); this.menuRain = null;
+    }
+  }
+
+  renderStartupFrame(time: number): void {
+    this.checkResumeAfterFramePause();
+    if (!this.active) return;
+    this.menuRain ??= new MenuRain();
+    if (this.trackingRoot.parent !== this.menuRain.scene) this.menuRain.scene.add(this.trackingRoot);
+    this.updateCamera();
+    this.input?.update(time, null);
+    this.htmlPanel?.update(time);
+    this.menuRain.update(time);
+    this.dependencies.renderPipeline.renderer.render(this.menuRain.scene, this.xrCamera);
+  }
 
   constructor(private readonly dependencies: WebXrPresentationDependencies) {
     this.trackingRoot.name = "WebXR tracking space";
@@ -97,10 +142,26 @@ export class WebXrPresentation {
     this.wired = host === "wired";
     // Only expose entry where a live HTML UI compositor is available.
     if (!this.host) return;
+    if (this.nativeHost) {
+      let storage: Storage | null = null;
+      try { storage = typeof localStorage === "undefined" ? null : localStorage; } catch { /* Use session-only intent. */ }
+      this.resumeMode = new QuestResumeMode({
+        storage,
+        isVisible: () => this.started && this.xrAvailable && document.visibilityState !== "hidden",
+        isImmersiveActive: () => this.active,
+        enterImmersive: async () => {
+          updateWebXrState({ busy: true });
+          try { await this.enter(); } finally { if (this.started) updateWebXrState({ busy: false }); }
+        },
+        exitImmersive: async () => { await this.session?.end(); },
+      });
+    }
     this.dependencies.renderPipeline.renderer.xr.enabled = true;
     this.dependencies.renderPipeline.renderer.xr.setReferenceSpaceType("local-floor");
     this.unregister = registerWebXrOwner({
-      enter: () => this.enter(), exit: async () => { await this.session?.end(); }, recenter: () => { this.needsRecenter = true; },
+      enter: () => this.resumeMode?.chooseImmersive() ?? this.enter(),
+      exit: () => this.resumeMode?.chooseFlat() ?? this.session?.end() ?? Promise.resolve(),
+      recenter: () => { this.needsRecenter = true; },
     });
     updateWebXrState({ host: true, available: false, error: "" });
     if (!navigator.xr) {
@@ -109,6 +170,10 @@ export class WebXrPresentation {
     }
     navigator.xr.addEventListener("devicechange", this.refreshAvailability, { signal: this.lifecycle.signal });
     document.addEventListener("visibilitychange", this.refreshAvailability, { signal: this.lifecycle.signal });
+    if (typeof window !== "undefined") {
+      window.addEventListener("pageshow", this.refreshAvailability, { signal: this.lifecycle.signal });
+      window.addEventListener("focus", this.refreshAvailability, { signal: this.lifecycle.signal });
+    }
     document.addEventListener("pointerup", this.tryAutomaticEntry, { capture: true, signal: this.lifecycle.signal });
     document.addEventListener("keydown", this.tryAutomaticEntry, { capture: true, signal: this.lifecycle.signal });
     void this.refreshAvailability();
@@ -129,13 +194,21 @@ export class WebXrPresentation {
   };
 
   private readonly tryAutomaticEntry = (): void => {
-    if (!this.started || !this.nativeHost || !this.xrAvailable || this.autoEntryAttempted ||
-        document.visibilityState === "hidden" || navigator.userActivation?.isActive === false) return;
-    // Use the normal Start/Resume interaction's transient activation. If startup
-    // outlasts it, the next ordinary game interaction completes entry.
-    this.autoEntryAttempted = true;
-    void enterWebXr();
+    if (this.resumeMode) this.resumePresentation();
   };
+
+  private resumePresentation(): void {
+    if (!this.started || !this.xrAvailable || document.visibilityState === "hidden") return;
+    void this.resumeMode?.onVisibilityResume().catch(error => {
+      if (this.started) updateWebXrState({ error: error instanceof Error ? error.message : String(error) });
+    });
+  }
+  private checkResumeAfterFramePause(): void {
+    const now = performance.now(), paused = now-this.lastPresentationTick > 1000;
+    this.lastPresentationTick = now;
+    // A resumed native compositor can restart RAF without a DOM visibility event.
+    if (paused && !this.active) this.resumePresentation();
+  }
 
   private async enter(): Promise<void> {
     if (this.session || this.entering || !navigator.xr || !this.host) return;
@@ -156,6 +229,9 @@ export class WebXrPresentation {
         if (this.session === currentSession) this.ended();
       });
       session.addEventListener("end", this.endListener);
+      session.addEventListener("visibilitychange", () => {
+        if (this.session === currentSession && currentSession.visibilityState === "visible") this.resumePresentation();
+      }, { signal: this.lifecycle.signal });
       const gameCamera = this.dependencies.camera.camera;
       this.savedCamera = { position: gameCamera.position.clone(), quaternion: gameCamera.quaternion.clone(),
         yaw: this.dependencies.camera.cameraYaw, pitch: this.dependencies.camera.cameraPitch, mode: this.dependencies.engineState.playMode };
@@ -173,7 +249,11 @@ export class WebXrPresentation {
       if (layer) updateWebXrState({ renderResolution: `${Math.floor(layer.framebufferWidth / 2)} × ${layer.framebufferHeight} pixels per eye` });
       this.htmlPanel = new HtmlUiPanel(this.trackingRoot, this.nativeHost);
       this.input = new WebXrControllerInput(session, renderer, this.dependencies.renderPipeline.scene,
-        this.trackingRoot, TILE_SIZE, () => this.htmlPanel, this.tilt, direction => this.snapTurn(direction), this.dependencies.heldWeapon);
+        this.trackingRoot, TILE_SIZE, () => this.htmlPanel, this.tilt, direction => this.snapTurn(direction), this.dependencies.heldWeapon,
+        (dx, dy) => this.panTabletop(dx, dy), this.tableMove, {
+          playerTile: () => this.dependencies.playerMovement.playerPos,
+          direction: (dx,dy) => this.dependencies.movementInput.resolveDirectionKeyFromDelta(dx,dy,.25),
+        });
       this.needsRecenter = true;
       this.lastRigKey = "";
       document.documentElement.classList.add("nh3d-webxr-active");
@@ -189,7 +269,7 @@ export class WebXrPresentation {
 
   private readonly ended = (): void => {
     this.terrainBatches.dispose();
-    this.uiFirstPerson = false; this.uiRecenter = true;
+    this.uiFirstPerson = false; this.uiRecenter = true; this.lastFpsPlayerTileKey = "";
     this.scaledSprites.disable(this.dependencies.renderPipeline.scene);
     document.documentElement.classList.remove("nh3d-xr-first-person");
     if (this.endListener) this.session?.removeEventListener("end", this.endListener);
@@ -217,13 +297,31 @@ export class WebXrPresentation {
       this.savedCamera = null;
     }
     this.board.visible = false;
+    this.tabletopPan.reset();
+    this.tableMove.cancel();
+    this.menuRain?.reset();
+    this.trackingRoot.removeFromParent();
     this.tilt.cancel();
     this.canvasPresentation?.exit();
     document.documentElement.classList.remove("nh3d-webxr-active");
     updateWebXrState({ active: false });
+    if (this.started && !this.entering) void this.resumeMode?.onSessionEnded().catch(error => {
+      if (this.started) updateWebXrState({ error: String(error) });
+    });
   };
 
   get active(): boolean { return this.session !== null && this.dependencies.renderPipeline.renderer.xr.isPresenting; }
+
+  private panTabletop(dx: number, dy: number): void {
+    if (!this.active || this.startupMenu || this.dependencies.engineState.playMode === "fps") return;
+    const camera = this.dependencies.camera;
+    const direction = this.dependencies.engineState.clientOptions.invertTouchPanningDirection ? -1 : 1;
+    camera.cameraPanX -= dx * direction;
+    camera.cameraPanY -= dy * direction;
+    camera.cameraPanTargetX = camera.cameraPanX;
+    camera.cameraPanTargetY = camera.cameraPanY;
+    camera.isCameraCenteredOnPlayer = false;
+  }
 
   private snapTurn(direction: -1 | 1): void {
     if (!this.active || this.dependencies.engineState.playMode !== "fps") return;
@@ -231,24 +329,40 @@ export class WebXrPresentation {
     const reference = xr.getReferenceSpace();
     const pose = reference && xr.getFrame()?.getViewerPose(reference);
     if (!pose) return;
-    const angle = direction * Math.PI / 4;
-    const pivot = new THREE.Vector3(pose.transform.position.x, 0, pose.transform.position.z);
+    this.rotateView(direction * Math.PI / 4, pose.transform.position);
+    this.updateCamera();
+  }
+
+  private rotateView(angle: number, head: {x:number;z:number}): void {
+    const pivot = new THREE.Vector3(head.x, 0, head.z);
     const offset = new THREE.Vector3(this.anchor.x, 0, this.anchor.z).sub(pivot)
       .applyAxisAngle(new THREE.Vector3(0, 1, 0), angle).add(pivot);
     this.anchor.x = offset.x; this.anchor.z = offset.z;
     this.viewYaw += angle; this.lastRigKey = "";
     this.uiRecenter = true;
-    this.updateCamera();
   }
 
   updateCamera(): boolean {
+    this.checkResumeAfterFramePause();
     if (!this.active) return false;
     const renderer = this.dependencies.renderPipeline.renderer;
     const xr = renderer.xr;
     const referenceSpace = xr.getReferenceSpace();
     const pose = referenceSpace && xr.getFrame()?.getViewerPose(referenceSpace);
     if (!pose) return true;
-    if (this.needsRecenter) {
+    const positionReady = this.dependencies.playerMovement.hasSeenPlayerPosition !== false;
+    const enteringFps = !this.startupMenu && this.dependencies.engineState.playMode === "fps" &&
+      (!this.uiFirstPerson || (!this.lastPlayerPositionReady && positionReady));
+    this.lastPlayerPositionReady = positionReady;
+    if (this.needsRecenter || enteringFps) {
+      const camera = this.dependencies.camera;
+      if (this.needsRecenter) {
+        this.tableMove.reset();
+        camera.cameraPanX = camera.cameraPanY = camera.cameraPanTargetX = camera.cameraPanTargetY = 0;
+        camera.isCameraCenteredOnPlayer = true;
+        this.tabletopPan.reset();
+      }
+      if (this.dependencies.engineState.playMode === "fps") camera.snapFpsStepToPlayer();
       this.viewYaw = 0;
       const { position, orientation } = pose.transform;
       this.anchor.set(position.x, position.y > 0.35 ? position.y : 1.6, position.z);
@@ -259,39 +373,87 @@ export class WebXrPresentation {
       this.uiRecenter = true;
       this.needsRecenter = false; this.lastRigKey = "";
     }
+    if (this.startupMenu) {
+      this.trackingRoot.matrix.identity();
+      this.trackingRoot.updateMatrixWorld(true);
+      renderer.clippingPlanes = [];
+      this.board.visible = false;
+      this.tilt.place(this.anchor, this.heading, false);
+      this.tableMove.place(this.anchor, this.heading, this.tilt.pitch, false);
+      this.htmlPanel?.nativePointer?.setBoard(false, 0, -.65);
+      this.menuRain?.recenter(this.anchor);
+      return true;
+    }
     const player = this.dependencies.playerMovement.playerPos;
     const scene = this.dependencies.renderPipeline.scene;
     scene.updateWorldMatrix(true, false);
     this.sceneInverse.copy(scene.matrixWorld).invert();
-    this.position.set(player.x * TILE_SIZE, -player.y * TILE_SIZE, 0);
-    this.position.applyMatrix4(scene.matrixWorld);
     const firstPerson = this.dependencies.engineState.playMode === "fps";
+    const turnTarget = this.dependencies.camera.fpsAutoTurnTargetYaw;
+    if (firstPerson && typeof turnTarget === "number" && Number.isFinite(turnTarget)) {
+      const o = pose.transform.orientation;
+      const headForward = new THREE.Vector3(0,0,-1).applyQuaternion(new THREE.Quaternion(o.x,o.y,o.z,o.w));
+      const gridForward = new THREE.Vector3(0,0,-1).applyQuaternion(this.heading);
+      const headYaw = Math.atan2(-headForward.x,-headForward.z), gridYaw = Math.atan2(-gridForward.x,-gridForward.z);
+      const currentYaw = Math.PI + gridYaw + this.viewYaw - headYaw;
+      const angle = Math.atan2(Math.sin(turnTarget-currentYaw),Math.cos(turnTarget-currentYaw));
+      this.rotateView(angle,pose.transform.position);
+      // The XR turn is complete now; do not also run the flat camera's slow turn.
+      this.dependencies.camera.fpsAutoTurnTargetYaw = null;
+    }
+    const playerTileKey = `${player.x},${player.y}`;
+    if (firstPerson && this.lastFpsPlayerTileKey && this.lastFpsPlayerTileKey !== playerTileKey) this.uiRecenter = true;
+    this.lastFpsPlayerTileKey = firstPerson ? playerTileKey : "";
+    const settings = getXrSettings();
+    const usingAnimatedFpsPosition = firstPerson && !settings.instantMovement &&
+      this.dependencies.camera.sampleFpsStepCameraGroundPosition(this.position);
+    if (!usingAnimatedFpsPosition && !firstPerson) {
+      const target = this.dependencies.camera.getOverheadCameraFollowTargetWorldPosition();
+      if (this.uiFirstPerson) this.tabletopPan.reset(target);
+      const smoothed = this.tabletopPan.update(target, performance.now());
+      this.position.set(smoothed.x, smoothed.y, 0);
+    } else if (!usingAnimatedFpsPosition) this.position.set(player.x * TILE_SIZE, -player.y * TILE_SIZE, 0);
+    this.position.applyMatrix4(scene.matrixWorld);
     if (firstPerson) {
       const viewer = new THREE.Vector3(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z);
       const o = pose.transform.orientation;
       const facing = new THREE.Vector3(0, 0, -1).applyQuaternion(new THREE.Quaternion(o.x, o.y, o.z, o.w));
       const yaw = Math.hypot(facing.x, facing.z) > .1 ? Math.atan2(-facing.x, -facing.z) : this.uiFollow.yaw, time = performance.now();
+      const gridForward = new THREE.Vector3(0,0,-1).applyQuaternion(this.heading);
+      const gridYaw = Math.atan2(-gridForward.x,-gridForward.z);
+      const snapUiYaw = (value:number) => gridUiHeading(value,gridYaw,this.viewYaw);
       if (!this.uiFirstPerson || this.uiRecenter) {
-        this.uiFollow.reset(viewer, yaw, time, this.uiFirstPerson); this.uiRevision++;
-      } else this.uiFollow.update(viewer, yaw, time);
+        this.uiFollow.reset(viewer, snapUiYaw(yaw), time, this.uiFirstPerson); this.uiRevision++;
+      } else {
+        const previousYaw = this.uiFollow.yaw;
+        this.uiFollow.update(viewer, yaw, time, snapUiYaw);
+        if (Math.abs(previousYaw-this.uiFollow.yaw) > .000001) this.uiRevision++;
+      }
       this.htmlPanel?.setFirstPersonAnchor(this.uiFollow.position, this.uiFollow.yaw, this.uiRevision);
       this.uiRecenter = false;
     } else if (this.uiFirstPerson) this.htmlPanel?.recenter(this.anchor, this.heading);
     this.uiFirstPerson = firstPerson;
-    const settings = getXrSettings();
     document.documentElement.classList.toggle("nh3d-xr-first-person", firstPerson);
-    const key = [player.x, player.y, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.area, settings.scale, ...scene.matrixWorld.elements].join(":");
+    this.tablePosition.set(0, THREE.MathUtils.clamp(this.anchor.y-.65,.45,1.05), -1.55).applyQuaternion(this.heading)
+      .add(new THREE.Vector3(this.anchor.x,0,this.anchor.z)).add(this.tableMove.offset);
+    const towardX = this.tablePosition.x-pose.transform.position.x, towardZ = this.tablePosition.z-pose.transform.position.z;
+    this.tableHeading.copy(this.heading);
+    if (Math.hypot(towardX,towardZ) > .05) this.tableHeading.setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(-towardX,-towardZ));
+    const heading = firstPerson ? this.heading : this.tableHeading;
+    const key = [this.position.x, this.position.y, this.position.z, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.area, settings.scale, ...this.tablePosition.toArray(), ...heading.toArray(), ...scene.matrixWorld.elements].join(":");
     if (key !== this.lastRigKey) {
       const rig = createTrackingToGame(firstPerson ? "first-person" : "tabletop", this.position, this.anchor,
-        this.heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.scale);
+        heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.scale, firstPerson ? undefined : this.tablePosition);
       this.trackingRoot.matrix.multiplyMatrices(this.sceneInverse, rig.matrix);
       this.trackingRoot.updateMatrixWorld(true);
-      this.board.quaternion.copy(this.heading).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.tilt.pitch));
+      this.board.quaternion.copy(heading).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.tilt.pitch));
       this.board.scale.set(settings.area * settings.scale, settings.scale, settings.area * settings.scale);
       this.board.position.copy(rig.tabletop).add(new THREE.Vector3(0, -0.027 * settings.scale, 0).applyQuaternion(this.board.quaternion));
       this.board.visible = !firstPerson;
-      this.tilt.place(rig.tabletop, this.heading, !firstPerson, settings.area, settings.scale);
-      this.htmlPanel?.nativePointer?.setBoard(firstPerson, this.tilt.pitch, rig.tabletop.y - this.anchor.y);
+      this.tilt.place(rig.tabletop, heading, !firstPerson, settings.area, settings.scale);
+      this.tableMove.place(rig.tabletop, heading, this.tilt.pitch, !firstPerson, settings.area, settings.scale);
+      if (!firstPerson) this.htmlPanel?.nativePointer?.setTablePose(rig.tabletop, heading);
+      this.htmlPanel?.nativePointer?.setBoard(firstPerson, this.tilt.pitch, firstPerson ? rig.tabletop.y - this.anchor.y : -.65);
       renderer.clippingPlanes = firstPerson ? [] : tabletopClippingPlanes(this.position, TILE_SIZE, settings.area);
       this.dependencies.renderPipeline.scene.background = this.session?.environmentBlendMode === "opaque"
         ? new THREE.Color(0x000000) : null;
@@ -355,6 +517,9 @@ export class WebXrPresentation {
     if (this.host) document.documentElement.classList.remove("nh3d-webxr-active");
     this.board.geometry.dispose(); this.board.material.dispose();
     this.tilt.dispose();
+    this.tableMove.dispose();
     this.terrainBatches.dispose();
+    this.menuRain?.dispose(); this.menuRain = null;
+    document.documentElement.classList.remove("nh3d-xr-menu");
   }
 }

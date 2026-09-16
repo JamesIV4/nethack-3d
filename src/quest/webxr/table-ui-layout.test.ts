@@ -17,6 +17,27 @@ function fixture() {
 }
 afterEach(() => vi.unstubAllGlobals());
 
+it("trims status shadow padding before the separate minimap source", () => {
+  const f = fixture();
+  f.add(".nh3d-minimap", 500, 82, 600, 160);
+  for (const firstPerson of [false, true]) {
+    const panes = tableUiPanes(firstPerson, []);
+    expect(panes.find(p => p[0] === 0)![4]).toBe(.082);
+    expect(panes.find(p => p[0] === 5)![2]).toBe(.082);
+  }
+});
+
+it("crops the menu logo independently of dialogs and excludes game panes", () => {
+  const f = fixture();
+  Object.assign(document, { documentElement: { classList: { contains: (name: string) => name === "nh3d-xr-menu" } } });
+  f.add(".logo-container", 300, 10, 1000, 280);
+  f.add(".nh3d-dialog", 500, 400, 600, 420);
+  const panes = tableUiPanes(false, []);
+  expect(panes.map(p => p[0])).toEqual([12, 13]);
+  expect(panes[0][4]).toBeLessThan(panes[1][2]);
+  expect(tableUiPanes(true, [])).toEqual(panes);
+});
+
 it("keeps all four edge crops unchanged while quick actions open and close", () => {
   const f = fixture(), edges = tableUiPanes(false, []);
   f.add(".nh3d-context-menu", 600, 300, 400, 400);
@@ -35,18 +56,26 @@ it("refreshes a resized modal crop without changing the edge crops", () => {
   f.add(".nh3d-dialog", 500, 150, 600, 600);
   expect(tableUiPanes(false, [])).toEqual([...edges, [4, .31, .146, .69, .754]]);
 });
-it("retains the single world-anchored HUD in first-person mode", () => {
+it("keeps an input-anchored select list in a child pane without enlarging its dialog crop", () => {
+  const f = fixture();
+  f.add(".nh3d-dialog", 500, 200, 600, 500);
+  const before = tableUiPanes(false, []);
+  f.add(".nh3d-select-menu", 820, 410, 240, 260);
+  const panes = tableUiPanes(false, []);
+  expect(panes.find(p => p[0] === 4)).toEqual(before.find(p => p[0] === 4));
+  expect(panes.find(p => p[0] === 15)).toEqual([15, .51, .406, .665, .674]);
+});
+it("keeps a full first-person HUD source pane beside the dedicated status pane", () => {
   const f=fixture(); f.nodes.delete(".nh3d-mobile-bottom-bar"); f.nodes.delete(".nh3d-desktop-bottom-actions");
-  expect(tableUiPanes(true, [])).toEqual([[7, 0, 0, 1, 1]]);
+  const panes = tableUiPanes(true, []);
+  expect(panes.find(p => p[0] === 0)).toEqual([0, 0, 0, 1, .084]);
+  expect(panes.find(p => p[0] === 7)).toEqual([7, 0, 0, 1, 1]);
 });
 it("cuts a first-person modal out of the HUD rather than duplicating it at full size", () => {
   const f = fixture(); f.nodes.delete(".nh3d-mobile-bottom-bar"); f.nodes.delete(".nh3d-desktop-bottom-actions"); f.add(".nh3d-dialog", 400, 200, 800, 600);
   const panes = tableUiPanes(true, []), modal = panes.find(p => p[0] === 4)!;
   expect(modal).toEqual([4, .2475, .196, .7525, .804]);
-  for (const p of panes.filter(p => p[0] !== 4)) {
-    expect(Math.min(p[3], modal[3]) <= Math.max(p[1], modal[1]) || Math.min(p[4], modal[4]) <= Math.max(p[2], modal[2])).toBe(true);
-  }
-  expect(panes.reduce((area,p) => area + (p[3]-p[1])*(p[4]-p[2]), 0)).toBeCloseTo(1);
+  expect(panes.find(p => p[0] === 7)).toEqual([7, 0, 0, 1, 1]);
 });
 it("assigns separate panes to the minimap, actions, and table controls", () => {
   const f = fixture();
@@ -57,12 +86,30 @@ it("assigns separate panes to the minimap, actions, and table controls", () => {
   expect(panes.find(p => p[0] === 5)).toEqual([5, .8125, 0, 1, .08]);
   expect(panes.find(p => p[0] === 6)).toEqual([6, .375, .8, .625, .9]);
 });
+it("unions the repeat action above the bottom bar into the existing action pane", () => {
+  const f = fixture();
+  f.add(".nh3d-mobile-repeat-button", 1300, 820, 300, 40);
+  const panes = tableUiPanes(false, []);
+  expect(panes.filter(p => p[0] === 2)).toEqual([[2, .81, .096, 1, .864]]);
+  expect(tableUiPanes(true, []).filter(p => p[0] === 2)).toEqual([[2, .81, .096, 1, .864]]);
+});
 it("separates first-person actions from the upper HUD without painting a second copy", () => {
   const f=fixture(); f.nodes.delete(".nh3d-desktop-bottom-actions");
   const panes=tableUiPanes(true, []), actions=panes.find(p=>p[0]===2)!;
   expect(actions).toEqual([2,.81,.096,1,.804]);
-  for(const p of panes.filter(p=>p[0]>=7)) expect(
-    Math.min(p[3],actions[3])<=Math.max(p[1],actions[1]) || Math.min(p[4],actions[4])<=Math.max(p[2],actions[2])
-  ).toBe(true);
-  expect(panes.reduce((a,p)=>a+(p[3]-p[1])*(p[4]-p[2]),0)).toBeCloseTo(1);
+  expect(panes.find(p => p[0] === 7)).toEqual([7, 0, 0, 1, 1]);
+});
+it("keeps the first-person minimap interactive in pane 5 without duplicating it in the HUD", () => {
+  const f = fixture();
+  f.add(".nh3d-minimap", 500, 100, 600, 160);
+  const panes = tableUiPanes(true, []), minimap = panes.find(p => p[0] === 5)!;
+  expect(minimap).toEqual([5, .3125, .1, .6875, .26]);
+  // The message source at x=.1/y=.5 lies outside status, minimap, and action
+  // crops, so the full HUD pane still supplies it to the native mask pass.
+  const hud = panes.find(p => p[0] === 7)!;
+  expect(hud).toEqual([7, 0, 0, 1, 1]);
+  expect(.1 >= hud[1] && .1 <= hud[3] && .5 >= hud[2] && .5 <= hud[4]).toBe(true);
+  for (const hole of panes.filter(p => p[0] === 0 || p[0] === 2 || p[0] === 5)) {
+    expect(.1 >= hole[1] && .1 <= hole[3] && .5 >= hole[2] && .5 <= hole[4]).toBe(false);
+  }
 });

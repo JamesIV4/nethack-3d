@@ -9,7 +9,7 @@ export function patchActionGrip(checkout) {
     .replace("  gameWorldCaptured = aController.gameWorldCaptured;", "  gameWorldCaptured = aController.gameWorldCaptured;\n  gameUiGrip = aController.gameUiGrip;")
     .replace("  gameWorldCaptured = false;", "  gameWorldCaptured = false;\n  gameUiGrip = false;"));
   edit("app/src/main/cpp/BrowserWorld.cpp", s => {
-    if(s.includes("NH3D movable action row")) return s;
+    if(s.includes("NH3D movable action row") || s.includes("NH3D grip is the secondary mouse button")) return s;
     s=replaceOnce(s,"    const bool runHand = externalVR->IsPresenting() && controller.leftHanded;",`    // NH3D movable action row: either squeeze/grip owns a drag; it is not a click.
     const bool wasUiGrip = controller.gameUiGrip;
     const bool grabbing = externalVR->IsPresenting() && controller.hasAim && gamePanels && gamePanels->Grip(

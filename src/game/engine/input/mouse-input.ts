@@ -364,8 +364,8 @@ export class MouseInput {
       return true;
     }
     const tile = this.dependencies.tileRendering.tileMap.get(x + "," + y);
-    if (!tile) return !secondary && !this.dependencies.movementInput.isFpsMode() &&
-      !this.dependencies.positionSelection.positionInputModeActive && this.activateEmptyMapTarget({x,y});
+    if (!tile) return !secondary && !this.dependencies.positionSelection.positionInputModeActive &&
+      this.activateEmptyMapTarget({x,y});
     if (!tile.visible) return false;
     if (secondary) {
       this.dependencies.tileContextActions.openNormalTileContextMenuAtTarget({ key: `${x},${y}`, x, y, mesh: tile });

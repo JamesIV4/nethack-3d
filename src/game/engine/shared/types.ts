@@ -241,6 +241,7 @@ export type InventoryDialogOptions = {
 export type FpsHeldWeaponTextureState = {
   tileIndex: number;
   sourceGlyph: number | null;
+  tilesetPath: string;
   signature: string;
 };
 

@@ -71,10 +71,25 @@ describe("direct WebXR tracking rig", () => {
     const b = createTrackingToGame("tabletop", next, anchor, heading, 1, 0.62);
     near(player.clone().applyMatrix4(a.matrix.clone().invert()), next.applyMatrix4(b.matrix.clone().invert()));
   });
+  it("uses an explicit physical tabletop position without changing the logical rig", () => {
+    const tablePosition = new THREE.Vector3(-2, 3, 4);
+    const rig = createTrackingToGame("tabletop", player, anchor, heading, 1, 0.62, 0, 0, 1, tablePosition);
+    expect(rig.tabletop).toEqual(tablePosition);
+    expect(rig.tabletop).not.toBe(tablePosition);
+    near(player.clone().applyMatrix4(rig.matrix.clone().invert()), tablePosition);
+  });
   it("bounds tabletop rendering with GPU clipping planes while preserving vertical walls", () => {
     const planes = tabletopClippingPlanes(player, 1);
     expect(planes.every((plane) => plane.distanceToPoint(player) > 0)).toBe(true);
     expect(planes.every((plane) => plane.distanceToPoint(player.clone().add(new THREE.Vector3(0, 0, 50))) > 0)).toBe(true);
     expect(planes.some((plane) => plane.distanceToPoint(player.clone().add(new THREE.Vector3(13, 0, 0))) < 0)).toBe(true);
+  });
+  it("insets every tabletop clip edge so exact tile bounds cannot leak through", () => {
+    const planes = tabletopClippingPlanes(new THREE.Vector3(), 1);
+    for (const edge of [
+      new THREE.Vector3(-12.5, 0, 0), new THREE.Vector3(12.5, 0, 0),
+      new THREE.Vector3(0, -8.5, 0), new THREE.Vector3(0, 8.5, 0),
+    ]) expect(planes.every((plane) => plane.distanceToPoint(edge) >= 0)).toBe(false);
+    expect(planes.every((plane) => plane.distanceToPoint(new THREE.Vector3(12.49, 0, 0)) >= 0)).toBe(true);
   });
 });

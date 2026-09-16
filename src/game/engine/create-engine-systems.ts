@@ -873,6 +873,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get tileRendering() { return tileRendering; },
   });
   const webXrPresentation = new WebXrPresentation({
+    get movementInput() { return movementInput; },
     get camera() { return camera; },
     get engineState() { return engineState; },
     get playerMovement() { return playerMovement; },

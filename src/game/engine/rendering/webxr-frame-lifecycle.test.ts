@@ -6,6 +6,17 @@ vi.mock("../create-engine-systems", () => ({ createEngineSystems: vi.fn() }));
 import { GameOver, type GameOverDependencies } from "../ui/game-over";
 import Nethack3DEngine from "../../Nethack3DEngine";
 afterEach(() => vi.unstubAllGlobals());
+it("recenter snaps an active FPS step to the player grid without discarding its completion lifecycle", () => {
+  const camera=new Camera({playerMovement:{playerPos:{x:10,y:9}}} as unknown as CameraDependencies);
+  camera.fpsStepCameraActive=true; camera.fpsStepCameraFrom.set(2,-3,.62); camera.fpsStepCameraTo.set(3,-3,.62);
+  camera.fpsStepCameraStartMs=performance.now(); camera.fpsStepCameraDurationMs=1000;
+  camera.snapFpsStepToPlayer();
+  const position=new THREE.Vector3();
+  expect(camera.sampleFpsStepCameraGroundPosition(position)).toBe(true);
+  expect(position).toEqual(new THREE.Vector3(10,-9,0));
+  expect(camera.fpsStepCameraActive).toBe(true);
+  expect(performance.now()-camera.fpsStepCameraStartMs).toBeGreaterThanOrEqual(1000);
+});
 it("preserves camera completion and releases postmortem modals in the shared XR frame", () => {
   const callbacks: FrameRequestCallback[] = [];
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { callbacks.push(callback); return callbacks.length; });

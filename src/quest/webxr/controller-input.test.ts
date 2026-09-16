@@ -3,19 +3,21 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { WebXrControllerInput } from "./controller-input";
 import type { HtmlUiPanel } from "./html-ui-panel";
 import type { BoardTilt } from "./board-tilt";
+import { TableMoveHandle } from "./table-move-handle";
+import type { QuestWeaponProvider } from "./controller-weapons";
 
 const { game } = vi.hoisted(() => ({ game: { current: {} as Record<string, unknown> } }));
 vi.mock("../../state/gameStore", () => ({ useGameStore: { getState: () => game.current } }));
 vi.mock("../native/bootstrap", () => ({ dispatchQuestKey: vi.fn() }));
 
-function fixture() {
+function fixture(withTableHandle = false, withNavigation = false, withWeapons = false) {
   vi.stubGlobal("HTMLElement", class {});
   vi.stubGlobal("document", { querySelector: () => null, activeElement: null });
-  const controller = { runQuestDirection: vi.fn(), sendInput: vi.fn(), activateQuestTile: vi.fn(() => true) };
+  const controller = { runQuestDirection: vi.fn(), chooseDirection: vi.fn(), sendInput: vi.fn(), activateQuestTile: vi.fn(() => true) };
   game.current = { engineController: controller, connectionState: "running", loadingVisible: false,
     uiBlockingVisible: false, inventory: { visible: false }, newGamePrompt: { visible: false },
     gameOver: { active: false }, numberPadModeEnabled: true };
-  const source = (handedness: string) => ({ handedness, targetRaySpace: {},
+  const source = (handedness: string) => ({ handedness, targetRaySpace: {}, gripSpace: {},
     gamepad: { buttons: Array.from({ length: 6 }, () => ({ pressed: false })), axes: [0, 0, 0, 0] } });
   const left = source("left"), right = source("right");
   const session = Object.assign(new EventTarget(), { visibilityState: "visible", inputSources: [left, right] });
@@ -26,16 +28,145 @@ function fixture() {
   const camera = new THREE.PerspectiveCamera(); camera.position.z = 1; camera.updateMatrixWorld();
   const pose = new THREE.Matrix4().makeTranslation(0, 0, 1);
   const renderer = { clippingPlanes: [] as THREE.Plane[], xr: { getReferenceSpace: () => ({}), getCamera: () => camera,
-    getFrame: () => ({ getPose: () => ({ transform: { matrix: pose.elements } }) }) } };
-  const panel = { native: true, hit: () => null, hover: vi.fn(), forget: vi.fn() };
+    getFrame: () => ({ getPose: () => ({ transform: { matrix: pose.elements } }),
+      getViewerPose: () => ({ transform: { position: { x: 0, y: 1.6, z: 0 } } }) }) } };
+  const panel = { native: true, hit: () => null, hover: vi.fn(), forget: vi.fn(), beginGrab: vi.fn(), moveGrab: vi.fn(), endGrab: vi.fn() };
   const tilt = { hit: () => null, hover: vi.fn(), surfaceHit: () => null, end: vi.fn() };
+  const pan = vi.fn();
+  const tableMove = withTableHandle ? new TableMoveHandle(root) : undefined;
+  const weaponProvider: QuestWeaponProvider | undefined = withWeapons ? {
+    resolveFpsHeldWeaponTextureState: () => ({ signature: "test", tileIndex: 1, sourceGlyph: 1, tilesetPath: "test" }),
+    createQuestWeaponTexture: () => new THREE.Texture(),
+  } : undefined;
   const input = new WebXrControllerInput(session as unknown as XRSession, renderer as unknown as THREE.WebGLRenderer,
-    scene, root, 1, () => panel as unknown as HtmlUiPanel, tilt as unknown as BoardTilt);
-  return { input, left, right, controller, session, scene, root, tile, pose, panel, renderer };
+    scene, root, 1, () => panel as unknown as HtmlUiPanel, tilt as unknown as BoardTilt, undefined, weaponProvider, pan, tableMove,
+    withNavigation ? {playerTile:()=>({x:3,y:6}),direction:(dx,dy)=>dx||dy ? {dx:Math.sign(dx),dy:Math.sign(dy)} : null} : undefined);
+  return { input, left, right, controller, session, scene, root, tile, pose, panel, renderer, pan, tableMove };
 }
 afterEach(() => vi.unstubAllGlobals());
 
 describe("WebXR trigger to game command integration", () => {
+  it("mounts held weapon voxels only while in first-person VR", () => {
+    const f = fixture(false, false, true);
+    f.input.update(0, new THREE.Vector3(0, 0, -1));
+    expect(f.root.children.filter(child => child instanceof THREE.InstancedMesh && child.visible)).toHaveLength(2);
+    f.input.update(20, null);
+    expect(f.root.children.filter(child => child instanceof THREE.InstancedMesh && child.visible)).toHaveLength(0);
+    f.input.dispose();
+  });
+  it("uses fast directional movement for a horizontal FPS void ray instead of requiring a floor hit", () => {
+    const f=fixture(false,true); f.tile.visible=false;
+    f.pose.compose(new THREE.Vector3(3,-6,.62),new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,-1),new THREE.Vector3(1,0,0)),new THREE.Vector3(1,1,1));
+    f.right.gamepad.buttons[0].pressed=true; f.input.update(0,new THREE.Vector3(1,0,0));
+    f.right.gamepad.buttons[0].pressed=false; f.input.update(100,new THREE.Vector3(1,0,0));
+    expect(f.controller.runQuestDirection).toHaveBeenCalledExactlyOnceWith("6");
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled();
+    f.input.dispose();
+  });
+  it("gripping the capsule moves the entire table at 2x without world pan or a context click", () => {
+    const f = fixture(true);
+    f.tableMove!.place(new THREE.Vector3(0,.035,-1.14),new THREE.Quaternion(),0,true);
+    f.right.gamepad.buttons[1].pressed=true; f.input.update(0,null);
+    f.pose.makeTranslation(.1,.2,1.3); f.input.update(100,null);
+    expect(f.tableMove!.offset.x).toBeCloseTo(.2); expect(f.tableMove!.offset.y).toBeCloseTo(.4); expect(f.tableMove!.offset.z).toBeCloseTo(.6);
+    f.right.gamepad.buttons[1].pressed=false; f.input.update(200,null);
+    expect(f.pan).not.toHaveBeenCalled(); expect(f.controller.activateQuestTile).not.toHaveBeenCalled();
+    f.input.dispose(); f.tableMove!.dispose();
+  });
+  it("left Y searches once per press and does not search through prompts", () => {
+    const f = fixture();
+    f.left.gamepad.buttons[5].pressed = true; f.input.update(0,null); f.input.update(50,null);
+    expect(f.controller.sendInput).toHaveBeenCalledExactlyOnceWith("s");
+    f.left.gamepad.buttons[5].pressed = false; f.input.update(100,null);
+    game.current.question = { text: "Really?" };
+    f.left.gamepad.buttons[5].pressed = true; f.input.update(150,null);
+    expect(f.controller.sendInput).toHaveBeenCalledOnce(); f.input.dispose();
+  });
+  it("uses a direction-arrow mesh before the world beneath it", () => {
+    const f = fixture();
+    f.controller.chooseDirection = vi.fn();
+    game.current.directionQuestion = "In what direction?";
+    const arrow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial());
+    arrow.position.z = .1; arrow.userData.directionPromptOverlayButtonId = "northwest"; f.scene.add(arrow);
+    f.scene.updateMatrixWorld(true);
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(0, null);
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(100, null);
+    expect(f.controller.chooseDirection).toHaveBeenCalledExactlyOnceWith("7");
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled(); f.input.dispose();
+  });
+  it("quantizes any world-object hit from the prompt player tile in X/Y, including self", () => {
+    const f = fixture();
+    f.controller.chooseDirection = vi.fn();
+    game.current.directionQuestion = "In what direction?";
+    f.scene.userData.nh3dDirectionPromptPlayerTileX = 4;
+    f.scene.userData.nh3dDirectionPromptPlayerTileY = 6;
+    const monsterRoot = new THREE.Group(); monsterRoot.userData = { tileX: 5, tileY: 5 };
+    const monster = new THREE.Mesh(new THREE.BoxGeometry(.4, .4, .4), new THREE.MeshBasicMaterial()); monster.position.set(0, 0, .4);
+    monsterRoot.add(monster); f.scene.add(monsterRoot); f.scene.updateMatrixWorld(true);
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(0, null);
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(100, null);
+    expect(f.controller.chooseDirection).toHaveBeenCalledExactlyOnceWith("9");
+    f.controller.chooseDirection.mockClear(); monsterRoot.userData = { tileX: 4, tileY: 6 }; f.scene.updateMatrixWorld(true);
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(200, null);
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(300, null);
+    expect(f.controller.chooseDirection).toHaveBeenCalledExactlyOnceWith("s");
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled(); f.input.dispose();
+  });
+  it("uses the bounded logical floor plane for FPS void clicks and direction prompts", () => {
+    const f = fixture(); f.tile.visible = false; f.pose.makeTranslation(4, -6, 1);
+    const fps = new THREE.Vector3(0, 1, 0);
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(0, fps);
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(100, fps);
+    expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(4, 6);
+    f.controller.activateQuestTile.mockClear(); f.controller.chooseDirection = vi.fn();
+    game.current.directionQuestion = "In what direction?";
+    f.scene.userData.nh3dDirectionPromptPlayerTileX = 3;
+    f.scene.userData.nh3dDirectionPromptPlayerTileY = 6;
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(200, fps);
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(300, fps);
+    expect(f.controller.chooseDirection).toHaveBeenCalledExactlyOnceWith("6");
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled(); f.input.dispose();
+  });
+  it("grip captures the UI pane rather than panning or activating the world behind it", () => {
+    const f = fixture();
+    Object.assign(f.panel, { hit: () => ({ point: new THREE.Vector3(0,0,.5), distance: .5, x: 10,y: 10,target: {} }) });
+    f.right.gamepad.buttons[1].pressed = true; f.input.update(0,null);
+    f.pose.makeTranslation(.2,.1,1); f.input.update(100,null);
+    expect(f.panel.beginGrab).toHaveBeenCalledOnce(); expect(f.panel.moveGrab).toHaveBeenCalled();
+    expect(f.pan).not.toHaveBeenCalled();
+    f.right.gamepad.buttons[1].pressed = false; f.input.update(200,null);
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled(); f.input.dispose();
+  });
+  it("A performs a left click even when held, without confirming or opening context", () => {
+    const f = fixture();
+    f.right.gamepad.buttons[4].pressed = true; f.input.update(0, null);
+    f.input.update(800, null);
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled();
+    f.right.gamepad.buttons[4].pressed = false; f.input.update(900, null);
+    expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(4, 6);
+    expect(f.controller.sendInput).not.toHaveBeenCalled(); f.input.dispose();
+  });
+  it("grip tap opens context only on release, while grip drag pans without a click", () => {
+    const f = fixture();
+    f.right.gamepad.buttons[1].pressed = true; f.input.update(0, null); f.input.update(800, null);
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled();
+    f.right.gamepad.buttons[1].pressed = false; f.input.update(900, null);
+    expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(4, 6, true);
+    f.controller.activateQuestTile.mockClear();
+    f.right.gamepad.buttons[1].pressed = true; f.input.update(1000, null);
+    f.pose.makeTranslation(.2, .1, 1); f.input.update(1100, null);
+    expect(f.pan).toHaveBeenCalledWith(.2, .1);
+    f.right.gamepad.buttons[1].pressed = false; f.input.update(1200, null);
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled(); f.input.dispose();
+  });
+  it("cancels grip across tracking/visibility loss until the hand releases", () => {
+    const f = fixture();
+    f.right.gamepad.buttons[1].pressed = true; f.input.update(0, null);
+    f.session.visibilityState = "hidden"; f.input.update(10, null);
+    f.session.visibilityState = "visible"; f.input.update(20, null);
+    f.right.gamepad.buttons[1].pressed = false; f.input.update(30, null);
+    expect(f.pan).not.toHaveBeenCalled(); expect(f.controller.activateQuestTile).not.toHaveBeenCalled(); f.input.dispose();
+  });
   it("skips hidden raycasts while retaining child overlays and exact hit clipping", () => {
     const f = fixture();
     const clipped = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());

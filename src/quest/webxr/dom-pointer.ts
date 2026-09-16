@@ -1,15 +1,16 @@
-import { isVisibleUi } from "./visibility";
+import { isVisibleUi, clipUiBounds } from "./visibility";
 const controls = "button,a[href],input,textarea,select,label,summary,canvas,#stats-bar,#game-log,[tabindex]:not([tabindex='-1']),[role=button],[role=slider],[contenteditable=true],[data-xr-ui]";
 const surfaces = ".nh3d-dialog,.nh3d-context-menu,.nh3d-mobile-actions-sheet,.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=alertdialog]";
 
-export function uiHitRectangles(): number[] {
+export function uiHitRectangles({ excludeRendererCanvas = false }: { excludeRendererCanvas?: boolean } = {}): number[] {
   const regions: number[][] = [];
   const coveredSurfaces = new Set<Element>();
   for (const element of document.querySelectorAll<HTMLElement>(surfaces + "," + controls)) {
+    if (excludeRendererCanvas && element.matches(".nh3d-canvas-root > canvas")) continue;
     const surface = element.closest(surfaces);
     if (surface !== element && surface && coveredSurfaces.has(surface)) continue;
     const style = getComputedStyle(element);
-    if (!isVisibleUi(element) || style.pointerEvents === "none") continue;
+    if (!isVisibleUi(element) || style.pointerEvents === "none" || element.matches?.(":disabled,[aria-disabled=true]")) continue;
     const bounds = element.getBoundingClientRect();
     let left = Math.max(0, bounds.left), top = Math.max(0, bounds.top), right = Math.min(innerWidth, bounds.right), bottom = Math.min(innerHeight, bounds.bottom);
     for (let parent = element.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
@@ -30,15 +31,17 @@ export function uiHitRectangles(): number[] {
 export function pickUiTarget(x: number, y: number): HTMLElement | null {
   for (const element of document.elementsFromPoint(x, y)) {
     const target = element.closest<HTMLElement>(controls) ?? element.closest<HTMLElement>(surfaces);
-    if (!target || !isVisibleUi(target)) continue;
+    if (!target || !isVisibleUi(target) || target.matches(":disabled,[aria-disabled=true]") || getComputedStyle(target).pointerEvents === "none") continue;
+    const box = clipUiBounds(target, target.getBoundingClientRect());
+    if (!box || x<box.left || x>box.right || y<box.top || y>box.bottom) continue;
     return target;
   }
   return null;
 }
 
-export function pointerEvent(target: HTMLElement, type: string, x: number, y: number, id: number, down: boolean): void {
+export function pointerEvent(target: HTMLElement, type: string, x: number, y: number, id: number, down: boolean, button = 0): void {
   const init = { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: id,
-    pointerType: "mouse", isPrimary: id === 1, button: 0, buttons: down ? 1 : 0 };
+    pointerType: "mouse", isPrimary: id === 1, button, buttons: down ? (button === 2 ? 2 : 1) : 0 };
   target.dispatchEvent(new PointerEvent("pointer" + type, init));
   if (type !== "cancel") target.dispatchEvent(new MouseEvent("mouse" + type, init));
 }

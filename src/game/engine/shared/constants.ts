@@ -336,6 +336,8 @@ export const roundFpsHeldWeaponAnimationDebugNumber = (
   return Math.round(value * factor) / factor;
 };
 
+export const FPS_HELD_WEAPON_BASE_LOCAL_OFFSET = [0.38, -0.28, -0.72] as const;
+
 export const createDefaultFpsHeldWeaponBasePoseDefinition =
   (): FpsHeldWeaponBasePoseDefinition => ({
     position: {

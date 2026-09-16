@@ -26,6 +26,7 @@ export class NativePointerBridge {
   private pending = false;
   private disposed = false;
   private lastSend = -Infinity;
+  private lastLayout = -Infinity;
   private lastBody = "";
   private readonly hits = [-1, 0, 0, 1, -1, 0, 0, 1];
   private readonly abort = new AbortController();
@@ -36,11 +37,20 @@ export class NativePointerBridge {
     this.observer.observe(document.documentElement, { attributes: true });
     window.addEventListener("resize", this.resized, { signal: this.abort.signal });
     document.addEventListener("scroll", this.resized, { capture: true, signal: this.abort.signal });
+    for (const event of ["transitionend", "transitioncancel", "animationend", "animationcancel"]) {
+      document.addEventListener(event, this.resized, { capture: true, signal: this.abort.signal });
+    }
   }
   recenter(position: THREE.Vector3, heading: THREE.Quaternion): void {
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(heading);
     this.anchor = [position.x, position.y, position.z, Math.atan2(-forward.x, -forward.z)];
     this.revision = ++nextAnchor;
+  }
+  setTablePose(center: THREE.Vector3, heading: THREE.Quaternion): void {
+    // Reuse the host's anchor-relative board contract without limiting vertical placement.
+    const origin = center.clone().sub(new THREE.Vector3(0,-.65,-1.55).applyQuaternion(heading));
+    const forward = new THREE.Vector3(0,0,-1).applyQuaternion(heading);
+    this.anchor = [origin.x, origin.y, origin.z, Math.atan2(-forward.x,-forward.z)];
   }
   setBoard(firstPerson: boolean, pitch: number, boardY: number): void {
     if (this.firstPerson !== firstPerson) this.dirty = true;
@@ -57,7 +67,11 @@ export class NativePointerBridge {
   forget(hand: XRHandedness): void { if (hand === "left") this.hits[0] = -1; if (hand === "right") this.hits[4] = -1; }
   update(time: number): void {
     if (this.pending || this.disposed || time - this.lastSend < 1000 / 30) return;
-    if (this.dirty) { this.rects = uiHitRectangles(); this.panes = tableUiPanes(this.firstPerson, this.rects); this.dirty = false; }
+    // CSS animation/ancestor clipping changes need not mutate the DOM.
+    if (this.dirty || time-this.lastLayout >= 100) {
+      this.rects = uiHitRectangles(); this.panes = tableUiPanes(this.firstPerson, this.rects);
+      this.dirty = false; this.lastLayout = time;
+    }
     const settings = getXrSettings();
     const context = !!this.contextPoint && hasWorldContextAnchor();
     const point = this.contextPoint?.clone().applyMatrix4(this.gameToTracking) ?? new THREE.Vector3();

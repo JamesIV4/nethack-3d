@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 export type XrViewMode = "tabletop" | "first-person";
 const sourceToTrackingRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+export const TABLETOP_CLIPPING_INSET_TILES = 0.001;
 
 /**
  * The game scene stays in its original +Z-up coordinates (including custom shader uniforms).
@@ -13,11 +14,12 @@ export function createTrackingToGame(
   pitch = 0,
   viewYaw = 0,
   worldScale = 1,
+  tablePosition?: THREE.Vector3,
 ): { matrix: THREE.Matrix4; tabletop: THREE.Vector3; scale: number } {
   const scale = mode === "first-person"
     ? THREE.MathUtils.clamp(anchor.y / eyeHeight, 1 / tileSize, 3.5 / tileSize)
     : 0.11 * worldScale / tileSize;
-  const tabletop = new THREE.Vector3(0, THREE.MathUtils.clamp(anchor.y - 0.65, 0.45, 1.05), -1.55)
+  const tabletop = tablePosition?.clone() ?? new THREE.Vector3(0, THREE.MathUtils.clamp(anchor.y - 0.65, 0.45, 1.05), -1.55)
     .applyQuaternion(heading).add(new THREE.Vector3(anchor.x, 0, anchor.z));
   const center = mode === "first-person" ? new THREE.Vector3(anchor.x, 0, anchor.z) : tabletop;
   const rotation = heading.clone();
@@ -32,10 +34,11 @@ export function createTrackingToGame(
 }
 
 export function tabletopClippingPlanes(player: THREE.Vector3, tileSize: number, area = 1): THREE.Plane[] {
+  const inset = tileSize * TABLETOP_CLIPPING_INSET_TILES;
   return [
-    new THREE.Plane(new THREE.Vector3(1, 0, 0), -player.x + tileSize * 12.5 * area),
-    new THREE.Plane(new THREE.Vector3(-1, 0, 0), player.x + tileSize * 12.5 * area),
-    new THREE.Plane(new THREE.Vector3(0, 1, 0), -player.y + tileSize * 8.5 * area),
-    new THREE.Plane(new THREE.Vector3(0, -1, 0), player.y + tileSize * 8.5 * area),
+    new THREE.Plane(new THREE.Vector3(1, 0, 0), -player.x + tileSize * 12.5 * area - inset),
+    new THREE.Plane(new THREE.Vector3(-1, 0, 0), player.x + tileSize * 12.5 * area - inset),
+    new THREE.Plane(new THREE.Vector3(0, 1, 0), -player.y + tileSize * 8.5 * area - inset),
+    new THREE.Plane(new THREE.Vector3(0, -1, 0), player.y + tileSize * 8.5 * area - inset),
   ];
 }

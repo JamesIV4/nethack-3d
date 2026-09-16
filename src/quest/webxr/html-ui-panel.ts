@@ -5,10 +5,12 @@ import { TableControls } from "./TableControls";
 import { dragRange, pickUiTarget, pointerEvent } from "./dom-pointer";
 import { withoutWorldClipping } from "./overlay-material";
 import { NativePointerBridge } from "./native-pointer-bridge";
+import { isVisibleUi } from "./visibility";
 
 export interface UiHit { point: THREE.Vector3; distance: number; x: number; y: number; target: HTMLElement }
-export const UI_WIDTH = 3;
-export const UI_HEIGHT = UI_WIDTH * 1000 / 1600;
+// 1440p logical viewport, retaining the existing pixels-to-metres ratio.
+export const UI_WIDTH = 4.8;
+export const UI_HEIGHT = UI_WIDTH * 1440 / 2560;
 export const UI_DISTANCE = 1.45;
 
 /** One DOM owns both the native GPU pane and the wired development capture. */
@@ -20,7 +22,8 @@ export class HtmlUiPanel {
   private readonly inverse = new THREE.Matrix4();
   private readonly cursors = new Map<XRInputSource, HTMLDivElement>();
   private readonly hovered = new Map<XRInputSource, UiHit>();
-  private pressed: { source: XRInputSource; hit: UiHit; id: number } | null = null;
+  private pressed: { source: XRInputSource; hit: UiHit; id: number; button: number; startX: number; startY: number; moved: boolean } | null = null;
+  private grab: { source: XRInputSource; hand: THREE.Vector3; matrix: THREE.Matrix4 } | null = null;
   private ready = false;
   private disposed = false;
   private lastCapture = -Infinity;
@@ -37,7 +40,7 @@ export class HtmlUiPanel {
     this.controlsRoot = createRoot(this.controlsNode);
     this.controlsRoot.render(createElement(TableControls));
     this.nativePointer = native ? new NativePointerBridge() : null;
-    this.canvas = native ? null : Object.assign(document.createElement("canvas"), { width: 1600, height: 1000 });
+    this.canvas = native ? null : Object.assign(document.createElement("canvas"), { width: 2560, height: 1440 });
     this.texture = this.canvas ? new THREE.CanvasTexture(this.canvas) : null;
     if (this.texture) {
       this.texture.colorSpace = THREE.SRGBColorSpace;
@@ -49,6 +52,7 @@ export class HtmlUiPanel {
   }
 
   recenter(anchor: THREE.Vector3, heading: THREE.Quaternion): void {
+    this.grab = null;
     if (this.nativePointer) { this.nativePointer.recenter(anchor, heading); return; }
     this.matrix.compose(anchor, heading, new THREE.Vector3(1, 1, 1)).multiply(this.anchorOffset);
     this.inverse.copy(this.matrix).invert();
@@ -59,6 +63,17 @@ export class HtmlUiPanel {
     if (this.nativePointer) { this.nativePointer.setFirstPersonAnchor(anchor, yaw, revision); return; }
     this.recenter(anchor, new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw));
   }
+  beginGrab(source: XRInputSource, hand: THREE.Vector3): void {
+    if (this.native || this.grab || this.pressed) return;
+    this.grab = { source, hand: hand.clone(), matrix: this.matrix.clone() };
+  }
+  moveGrab(source: XRInputSource, hand: THREE.Vector3): void {
+    if (this.grab?.source !== source) return;
+    const position = new THREE.Vector3().setFromMatrixPosition(this.grab.matrix).add(hand.clone().sub(this.grab.hand));
+    this.matrix.copy(this.grab.matrix).setPosition(position); this.inverse.copy(this.matrix).invert();
+    if (this.mesh) this.matrix.decompose(this.mesh.position, this.mesh.quaternion, this.mesh.scale);
+  }
+  endGrab(source: XRInputSource): void { if (this.grab?.source === source) this.grab = null; }
 
   private coordinates(ray: THREE.Ray, outside = false): Omit<UiHit, "target"> | null {
     if (!this.ready) return null;
@@ -83,6 +98,7 @@ export class HtmlUiPanel {
 
   hover(source: XRInputSource, hit: UiHit | null, ray: THREE.Ray, id: number): void {
     if (this.native) return;
+    if (this.pressed?.source === source && !isVisibleUi(this.pressed.hit.target)) this.release(source, null, true);
     let cursor = this.cursors.get(source);
     if (!cursor) {
       cursor = document.createElement("div"); cursor.className = "nh3d-xr-pointer";
@@ -100,30 +116,35 @@ export class HtmlUiPanel {
     const point = captured ? this.coordinates(ray, true) : hit;
     if (captured && point) {
       captured.hit = { ...point, target: captured.hit.target };
-      dragRange(captured.hit.target, point.x);
+      captured.moved ||= Math.hypot(point.x - captured.startX, point.y - captured.startY) > 10;
+      if (captured.button === 0) dragRange(captured.hit.target, point.x);
     }
     const target = captured?.hit.target ?? hit?.target;
-    if (target && point) pointerEvent(target, "move", point.x, point.y, id, !!captured);
+    if (target && point) pointerEvent(target, "move", point.x, point.y, id, !!captured, captured?.button ?? 0);
   }
 
-  press(source: XRInputSource, hit: UiHit, id: number): void {
+  press(source: XRInputSource, hit: UiHit, id: number, button = 0): void {
     if (this.native) return;
     if (this.pressed) return;
-    this.pressed = { source, hit, id };
-    pointerEvent(hit.target, "down", hit.x, hit.y, id, true);
+    this.pressed = { source, hit, id, button, startX: hit.x, startY: hit.y, moved: false };
+    pointerEvent(hit.target, "down", hit.x, hit.y, id, true, button);
     hit.target.focus({ preventScroll: true });
-    dragRange(hit.target, hit.x);
+    if (button === 0) dragRange(hit.target, hit.x);
   }
 
   release(source: XRInputSource, hit: UiHit | null, cancel = false): void {
     if (this.pressed?.source !== source) return;
-    const { hit: initial, id } = this.pressed;
+    const { hit: initial, id, button, moved } = this.pressed;
     this.pressed = null;
-    pointerEvent(initial.target, cancel ? "cancel" : "up", initial.x, initial.y, id, false);
-    if (!cancel && hit && (initial.target === hit.target || initial.target.contains(hit.target))) initial.target.click();
+    pointerEvent(initial.target, cancel ? "cancel" : "up", initial.x, initial.y, id, false, button);
+    if (!cancel && hit && (initial.target === hit.target || initial.target.contains(hit.target))) {
+      if (button === 0) initial.target.click();
+      else if (!moved) initial.target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2, clientX: initial.x, clientY: initial.y }));
+    }
   }
 
   forget(source: XRInputSource): void {
+    this.endGrab(source);
     this.nativePointer?.forget(source.handedness);
     this.release(source, null, true);
     this.cursors.get(source)?.remove(); this.cursors.delete(source); this.hovered.delete(source);
@@ -138,7 +159,7 @@ export class HtmlUiPanel {
       .then(createImageBitmap).then((bitmap) => {
         if (!this.disposed) {
           const context = this.canvas!.getContext("2d")!;
-          context.clearRect(0, 0, 1600, 1000); context.drawImage(bitmap, 0, 0, 1600, 1000);
+          context.clearRect(0, 0, 2560, 1440); context.drawImage(bitmap, 0, 0, 2560, 1440);
           this.texture!.needsUpdate = true;
         }
         bitmap.close();

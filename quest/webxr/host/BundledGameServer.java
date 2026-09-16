@@ -18,6 +18,18 @@ public final class BundledGameServer {
     public static float[] getUiPose() { return uiPose; }
     private static volatile float[] pointerState;
     public static float[] getPointerState() { return pointerState; }
+    private static volatile float[] inputMode;
+    /** True only for a flat FPS target outside every HTML hit rectangle. */
+    public static boolean isFlatFpsWorldHover(float x, float y, float width, float height) {
+        float[] mode = inputMode;
+        if (mode == null || mode.length < 1 || mode[0] != 1 || width <= 0 || height <= 0) return false;
+        float nx = x / width, ny = y / height;
+        if (!Float.isFinite(nx) || !Float.isFinite(ny) || nx < 0 || nx > 1 || ny < 0 || ny > 1) return false;
+        for (int i = 1; i + 3 < mode.length; i += 4) {
+            if (nx >= mode[i] && ny >= mode[i + 1] && nx <= mode[i + 2] && ny <= mode[i + 3]) return false;
+        }
+        return true;
+    }
     private BundledGameServer() {}
 
     public static synchronized void start(Context context) {
@@ -54,6 +66,7 @@ public final class BundledGameServer {
         listener = null;
         uiPose = null;
         pointerState = null;
+        inputMode = null;
         if (workers != null) workers.shutdownNow();
         workers = null;
     }
@@ -82,7 +95,8 @@ public final class BundledGameServer {
             if (!host.equals("127.0.0.1:18973")) { status(socket, 403, "Forbidden"); return; }
             String path = new URI(parts[1]).getPath();
             if (parts[0].equals("POST")) {
-                if (!"/__xr/table-ui".equals(path) || !ORIGIN.equals(origin) || contentLength < 1 || contentLength > 16384) {
+                if (!ORIGIN.equals(origin) || contentLength < 1 || contentLength > 16384 ||
+                    (!"/__xr/table-ui".equals(path) && !"/__xr/input-mode".equals(path))) {
                     status(socket, 403, "Forbidden"); return;
                 }
                 char[] body = new char[contentLength];
@@ -93,6 +107,22 @@ public final class BundledGameServer {
                     offset += read;
                 }
                 JSONArray values = new JSONArray(new String(body));
+                if ("/__xr/input-mode".equals(path)) {
+                    if (values.length() < 1 || values.length() > 513 || (values.length() - 1) % 4 != 0) throw new IOException("Invalid input mode");
+                    float[] mode = new float[values.length()];
+                    for (int i = 0; i < mode.length; i++) {
+                        mode[i] = (float)values.getDouble(i);
+                        if (!Float.isFinite(mode[i])) throw new IOException("Invalid input mode");
+                    }
+                    if (mode[0] != 0 && mode[0] != 1) throw new IOException("Invalid input mode");
+                    for (int i = 1; i < mode.length; i += 4) {
+                        if (mode[i] < 0 || mode[i] > 1 || mode[i + 1] < 0 || mode[i + 1] > 1 ||
+                            mode[i + 2] < 0 || mode[i + 2] > 1 || mode[i + 3] < 0 || mode[i + 3] > 1 ||
+                            mode[i + 2] <= mode[i] || mode[i + 3] <= mode[i + 1]) throw new IOException("Invalid input region");
+                    }
+                    inputMode = mode;
+                    status(socket, 204, "No Content"); return;
+                }
                 int count = values.getInt(1);
                 int panels = values.getInt(13);
                 if (count < 0 || count > 128 || panels < 0 || panels > 8 || values.length() != 29 + count * 4 + panels * 5) throw new IOException("Invalid table UI snapshot");
@@ -105,7 +135,7 @@ public final class BundledGameServer {
                 if ((pose[10] != 0 && pose[10] != 1) || pose[11] < 0 || pose[11] > 1.5 || Math.abs(pose[12]) > 2) throw new IOException("Invalid board placement");
                 for (int i = 29; i < 29 + count * 4; i++) if (pose[i] < 0 || pose[i] > 1) throw new IOException("Invalid UI region");
                 for (int i = 29 + count * 4; i < pose.length; i += 5) {
-                    if (pose[i] < 0 || pose[i] > 11 || pose[i] != (int)pose[i]) throw new IOException("Invalid pane ID");
+                    if (pose[i] < 0 || pose[i] > 15 || pose[i] != (int)pose[i]) throw new IOException("Invalid pane ID");
                     for (int j = 1; j <= 4; j++) if (pose[i+j] < 0 || pose[i+j] > 1) throw new IOException("Invalid pane crop");
                     if (pose[i+3] <= pose[i+1] || pose[i+4] <= pose[i+2]) throw new IOException("Empty pane crop");
                 }

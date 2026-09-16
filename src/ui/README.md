@@ -21,6 +21,8 @@ The store retains references for unchanged primitive HUD snapshots and ordered m
 
 ## Ownership rules
 
+On WebXR hosts, `use-engine-lifecycle` creates a startup-only engine before character selection. It promotes that same engine with `startGame` and returns it with `returnToStartupMenu`, preserving the renderer and immersive session. The front end never starts a game worker until a character configuration is selected. Desktop/mobile browser lifecycle remains tied to that configuration.
+
 - Keep `App.tsx` and its composition layer focused on wiring. Add behavior to a feature owner and pass the exact dependencies that it consumes.
 - Keep hooks unconditional and preserve their order. Some feature hooks have separate state, derivation and effect sites because other features run between them. Combining those sites can change event-listener priority and layout-effect timing.
 - Preserve dependency-array semantics and callback identities. A dependency getter supports an existing deferred closure read; it does not make an eager read safe before initialization.

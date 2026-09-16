@@ -8,7 +8,7 @@ import { createInputController, validateInput, readJson } from "../wired/protoco
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const origin = "http://127.0.0.1:5177";
 const token = randomBytes(32).toString("base64url");
-const smoke = process.argv.includes("--smoke");
+const smoke = process.argv.includes("--smoke") || process.argv.includes("--menu-smoke");
 const profile = path.join(root, ".wired-dev", smoke ? "three-webxr-smoke" : "three-webxr");
 const chrome = process.env.QUEST_CHROME_PATH ?? [
   path.join(process.env.PROGRAMFILES ?? "", "Google/Chrome/Application/chrome.exe"),
@@ -57,7 +57,8 @@ browser.stdio[4].on("data", (chunk) => {
 });
 browser.on("error", (error) => { console.error(error.message); void shutdown(); });
 browser.on("exit", () => { void shutdown(); });
-let inputQueue = Promise.resolve(), capture = null;
+let inputQueue = Promise.resolve(), capture = null, viewportQueue = Promise.resolve();
+let logicalViewport = { width: 1920, height: 1080 };
 const input = createInputController((method, params) => cdp(method, params));
 function reply(response, code, data) {
   response.writeHead(code, { "Content-Type": "application/json", "Cache-Control": "no-store" });
@@ -73,6 +74,7 @@ async function api(request, response, next) {
   try {
     if (request.method === "GET" && url.pathname === "/__xr/frame") {
       if (!sessionId) { reply(response, 503, { error: "Browser starting." }); return; }
+      await viewportQueue;
       // Capture only our dedicated game tab's DOM surface. Three.js renders its world directly to WebXR.
       capture ??= cdp("Page.captureScreenshot", { format: "png", captureBeyondViewport: false, fromSurface: true })
         .finally(() => { capture = null; });
@@ -111,7 +113,28 @@ await vite.listen();
 const target = await cdp("Target.createTarget", { url: "about:blank" }, null);
 sessionId = (await cdp("Target.attachToTarget", { targetId: target.targetId, flatten: true }, null)).sessionId;
 await cdp("Page.enable");
-await cdp("Emulation.setDeviceMetricsOverride", { width: 1600, height: 1000, deviceScaleFactor: 1, mobile: false });
+await cdp("Runtime.enable");
+await cdp("Emulation.setDeviceMetricsOverride", { ...logicalViewport, deviceScaleFactor: 1, mobile: false });
+await cdp("Runtime.addBinding", { name: "nh3dViewportMode" });
+let immersiveViewport = false;
+events.set("Runtime.bindingCalled", ({ name, payload }) => {
+  if (name !== "nh3dViewportMode" || (payload !== "flat" && payload !== "immersive")) return;
+  const immersive = payload === "immersive";
+  if (immersive === immersiveViewport) return;
+  immersiveViewport = immersive;
+  const dimensions = immersive ? { width: 2560, height: 1440 } : { width: 1920, height: 1080 };
+  viewportQueue = viewportQueue.then(async () => {
+    await cdp("Emulation.setDeviceMetricsOverride", { ...dimensions, deviceScaleFactor: 1, mobile: false });
+    logicalViewport = dimensions;
+  });
+});
+await cdp("Page.addScriptToEvaluateOnNewDocument", { source: `
+  document.addEventListener('DOMContentLoaded', () => {
+    const update = () => nh3dViewportMode(document.documentElement.classList.contains('nh3d-webxr-active') ? 'immersive' : 'flat');
+    new MutationObserver(update).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    update();
+  }, { once: true });
+` });
 await cdp("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
 const loaded = new Promise((resolve) => events.set("Page.loadEventFired", resolve));
 await cdp("Page.navigate", { url: origin + "/?xrHost=wired#token=" + token });
@@ -125,6 +148,10 @@ if (smoke) {
       awaitPromise: true, returnByValue: true,
     });
     if (!result.result?.value?.roots) throw new Error("React game UI did not mount.");
+    if (process.argv.includes("--menu-smoke")) {
+      const { menuSmoke } = await import("./menu-smoke.mjs");
+      await menuSmoke(cdp);
+    }
     await cdp("Runtime.evaluate", {
       expression: "Promise.all(document.getAnimations().filter(a => a.effect?.getComputedTiming().endTime !== Infinity).map(a => a.finished.catch(() => {}))).then(() => document.fonts.ready).then(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))",
       awaitPromise: true,
@@ -134,12 +161,12 @@ if (smoke) {
     const response = await fetch(origin + "/__xr/frame", { headers: { Authorization: "Bearer " + token } });
     if (!response.ok) throw new Error("Live HTML capture failed.");
     const png = Buffer.from(await response.arrayBuffer());
-    if (png.readUInt32BE(16) !== 1600 || png.readUInt32BE(20) !== 1000) throw new Error("Unexpected UI capture size.");
+    if (png.readUInt32BE(16) !== logicalViewport.width || png.readUInt32BE(20) !== logicalViewport.height) throw new Error("Unexpected UI capture size.");
     writeFileSync(path.join(root, ".wired-dev/webxr-smoke.png"), png);
     const preview = await cdp("Page.captureScreenshot", { format: "jpeg", quality: 65, fromSurface: true,
-      clip: { x: 0, y: 0, width: 1600, height: 1000, scale: 0.5 } });
+      clip: { x: 0, y: 0, ...logicalViewport, scale: 0.5 } });
     writeFileSync(path.join(root, ".wired-dev/webxr-smoke-preview.jpg"), Buffer.from(preview.data, "base64"));
-    console.log("Wired smoke passed: React UI mounted, authenticated live capture is 1600x1000, unauthorized capture rejected.");
+    console.log(`Wired smoke passed: React UI mounted, authenticated live capture is ${logicalViewport.width}x${logicalViewport.height}, unauthorized capture rejected.`);
     console.log("Headless smoke does not validate headset stereo, tracking, or performance.");
   } catch (error) { console.error(error); process.exitCode = 1; }
   finally { clearTimeout(deadline); await shutdown(); }

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { withoutWorldClipping } from "./overlay-material";
 
-export const DEFAULT_BOARD_PITCH = Math.PI / 4;
+export const DEFAULT_BOARD_PITCH = Math.PI / 3;
 export class BoardTilt {
   pitch = DEFAULT_BOARD_PITCH;
   private readonly handle = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.024, 8, 36),

@@ -4,6 +4,8 @@ The Quest path renders the original game scene with Three.js WebXR. The native h
 
 Version `0.3.6-table-ui` splits the live HTML surface into tabletop edge panes: status at the far edge, left/right UI outside the matching edges, and bottom actions near the player. All panes share one browser texture, DOM and game instance. Modal dialogs use a center pane; first-person mode retains one anchored pane. First-person right-stick deflections snap-turn 45 degrees, LT + left stick uses the existing run mechanic, and holding RT opens the existing right-click/context action.
 
+The Quest launcher icon and system launch splash use the same `NetHack3D-splash.png` as the native app splash, staged as `assets/vr_splash.png` with `com.oculus.ossplash` enabled, following [Meta system splash instructions](https://developers.meta.com/horizon/documentation/native/android/mobile-splash/).
+
 ## Build the standalone APK
 
 The APK orchestration uses Node on Windows, macOS, and Linux. The separate patched-Gecko source build still uses Linux/WSL; stage its artifacts before building the APK. After those artifacts have been built once:
@@ -13,13 +15,17 @@ npm run quest:webxr:apk -- --check
 npm run quest:webxr:apk
 ```
 
-Sideload `quest/build/outputs/apk/nethack3d-webxr-proof-debug.apk` with Meta Quest Developer Hub. The build verifies its package ID, version, bundled NetHack runtimes, required Gecko permissions, and the custom HTML painting code and preference before copying it to that location. `quest:apk` still builds the earlier Meta Spatial experiment. Both commands use `scripts/quest/build-apk.mjs`; the `.bat` files are optional Windows shortcuts with no build logic. The Node runner invokes the pinned Gradle wrapper through Java directly, without a platform-specific shell.
+Sideload `quest/build/outputs/apk/nethack3d-vr.apk` with Meta Quest Developer Hub. The build verifies its package ID, version, bundled NetHack runtimes, required Gecko permissions, and the custom HTML painting code and preference before copying it to that location. `quest:apk` still builds the earlier Meta Spatial experiment. Both commands use `scripts/quest/build-apk.mjs`; the `.bat` files are optional Windows shortcuts with no build logic. The Node runner invokes the pinned Gradle wrapper through Java directly, without a platform-specific shell.
 
 The build also produces a versioned copy in `quest/build/outputs/apk/`. The publisher verifies that `libxul.so` matches the staged custom Gecko binary byte for byte and prints the APK's SHA256 on every build. Sideload this copy with Meta Quest Developer Hub.
 
-The package ID is `com.nethack3d.quest.webxrproof`, separate from the earlier app and its saves. The host serves only its bundled assets at `http://127.0.0.1:18973`. It does not depend on Quest Browser or a remote game server. A cold launch and game creation in airplane mode remain acceptance checks.
+The launcher name is **NetHack 3D VR**, including debug builds. The package ID is `com.nethack3d.quest.vr`; its private data directory is separate from the old WebXR Proof package, with no save migration. `package.json` supplies `versionName`; `versionCode` is `major * 1000000 + minor * 1000 + patch`. The publisher verifies both. The host serves only its bundled assets at `http://127.0.0.1:18973`. It does not depend on Quest Browser or a remote game server. A cold launch and game creation in airplane mode remain acceptance checks.
 
-The app defaults to VR after starting or resuming a game. It uses that normal user gesture; if startup outlasts the browser's transient activation, the next ordinary game interaction enters VR. Explicit Exit VR is respected. Enter/Exit VR is available in the mobile game actions, desktop actions, pause menu, and Display options.
+The app opens its main menu in VR. The dedicated offline Gecko host disables `dom.vr.require-gesture` so launch can request the session immediately; other hosts retain a normal Enter VR button. The front end creates the renderer without starting a NetHack worker, and starting/resuming a game or returning to the menu keeps that renderer and XR session. Explicit Exit VR is respected.
+
+The menu uses the same live HTML compositor and native pointer path as gameplay. Separate crops place the ASCII logo above the menu, with build information and Enter/Exit VR below. All VR dialogs use full-size content (`zoom: 1`). Native modal panes sit farther away (about 1.4 metres at the default table placement, 15 cm in front of the upright board plane), rather than shrinking their HTML controls. A single instanced draw surrounds the player with letters out to 48 metres and 45 metres above/below. The world background matches the page's `#000011`. Display settings expose letter count (default 1,000, maximum 12,000), fall speed (default 1.5 m/s), and glyph change rate (default 0.3 changes/s). The letters are four times their original size and crossfade between glyphs. Their faint blue cores and two soft glow widths match the desktop rain; the glow is baked into a padded atlas and still uses one instanced draw. Births, recycling at the bottom, and count reductions fade over two seconds. Previously saved rain counts are reduced to one-third once for this revision, in addition to the earlier halving migration.
+
+Flat view uses a 1920 by 1080 logical viewport; immersive HTML UI uses 2560 by 1440. At DPR 1.5 their native surfaces are 2880 by 1620 and 3840 by 2160 respectively. The native immersive-mode callback and wired preview switch dimensions on entry/exit. World-window resizing preserves the dimensions for the current mode. Pane dimensions preserve the existing pixels-to-metres ratio. Immersive gameplay centers the status-bar content within two-thirds of the viewport width, collapses the location stretch, and doubles HP/Pw minimum widths; flat view retains its existing styling. All modal controls retain their authored size; tabletop context actions retain their tile anchor. FPS context actions use a right-side HTML source slot and project above the selected laser point at normal modal depth. The FPS status/minimap pair sits 25 cm lower, and status crops exclude minimap pixels. The minimap is centered above the status bar in both immersive views; new Quest settings default to 200% scale, while saved choices are retained. Run `node scripts/quest/webxr/wired-host.mjs --menu-smoke` for front-end lifecycle, unclipped logo/menu crops, and real GPU rain checks in six viewing directions. APK compilation, automatic entry, and physical pane readability still require headset validation.
 
 ### Prerequisites
 
@@ -75,12 +81,17 @@ Initial XR controls:
 - RT: tap to select a world tile; hold for 450 ms to invoke the existing right-click/context action without an extra primary click. UI clicks and drags remain native. RT on the pitch ring grabs it.
 - Left stick: move; hold LT while moving to run through the existing run-command path. First-person movement follows the tracked head and snap-turn direction.
 - Left primary face button: inventory.
-- Right A: click the pointed UI control or grab the tilt ring; otherwise confirm.
+- Right A: left-click the pointed UI control/world tile or grab the tilt ring. It never falls back to Enter/Space, and holding A does not open context actions.
+- Grip: UI panes claim the grip first and move at normal hand speed. Over the tabletop world, drag to pan the map with heavy smoothing; releasing without crossing the deadzone opens context actions. Tracking loss cancels the gesture.
+- Minimap: click or drag to move the tabletop view using the desktop camera pan offsets and the same 500 ms half-life smoothing as world panning.
+- Left Y: search once per press, subject to the normal gameplay/prompt gates.
+- Cyan capsule: grab the horizontal handle between the table edge and scale controls to translate the entire table freely at 2x hand movement. This gain applies only to this handle. The table faces the viewer while keeping the chosen pitch.
+- Recenter: clear map pan and handle placement, put the table in front of the current head position/yaw, and reset UI-pane placements.
 - Right B: back.
 - First-person right stick: 45-degree snap turns, with neutral rearming between turns. Turns pivot around the current head position.
-- Board ring: hold trigger or A and rotate around the ring on the board side to adjust pitch from 0 to 81 degrees. The default is 45 degrees, with the far edge raised. The ring radius is 18 cm, lies in the side plane around the pitch axis, and is 80% transparent when idle.
+- Board ring: hold trigger or A and rotate around the ring on the board side to adjust pitch from 0 to 81 degrees. The default is 60 degrees, with the far edge raised. The ring radius is 18 cm, lies in the side plane around the pitch axis, and is 80% transparent when idle.
 
-Controller commands reuse the game's loading, dialog, inventory, direction, and position-selection gates. The page publishes normalized hit regions for controls, modal bodies, and UI canvases. Wolvic hit-tests them and sends its normal native mouse/touch/scroll events to Gecko. Transparent regions pass through to the game world. Native popups and the keyboard retain Wolvic input handling. The flat controller poller is suspended during XR to prevent duplicate button actions. Controller loss cancels captured UI/tilt interactions.
+Controller commands reuse the game's loading, dialog, inventory, direction, and position-selection gates. The page publishes normalized hit regions for controls, modal bodies, and UI canvases. Wolvic hit-tests them and sends its normal native touch/scroll events to Gecko. In flat FPS play only, a world target outside the HTML regions uses one latched native mouse gesture through release; only the Three.js renderer canvas is excluded, while minimap and other HTML canvases remain touch controls. Native popups and the keyboard retain Wolvic input handling. The flat controller poller is suspended during XR to prevent duplicate button actions. Controller loss cancels captured UI/tilt interactions.
 
 ## Design and ownership
 
@@ -88,7 +99,7 @@ Controller commands reuse the game's loading, dialog, inventory, direction, and 
 
 The world stays in its original +Z-up coordinates. An inverse tracking rig transforms headset and controller poses into game coordinates, preserving world-coordinate shader assumptions and geometry identities.
 
-- Tabletop centers the player over a board in front of the recenter pose. Its pitch defaults to 45 degrees. Four GPU clipping planes bound the dungeon; tracking-space overlays bypass those planes. The support surface stays 2 mm below the game floor along the board normal.
+- Tabletop centers the player over a board in front of the recenter pose. Its pitch defaults to 60 degrees. Four GPU clipping planes bound the dungeon, inset by 0.001 tiles on all sides to avoid exact block-edge intersections; tracking-space overlays bypass those planes. The support surface stays 2 mm below the game floor along the board normal.
 - First-person places the player below the tracked head, with stereo and room-scale viewing throughout the dungeon.
 - The existing first-person preference selects the view in both VR and the ordinary game. VR entry does not rewrite it.
 - `ScaledCameraSprites` extends existing sprite shader hooks to include the camera's uniform view scale, so sprites and mesh tiles keep the same physical proportions.
@@ -143,3 +154,27 @@ The 0.3.8 APK builds and passes packaged-library hash and preference checks. Bro
 ## 0.3.9 presentation controls
 
 See [the eleven-item polish checklist](quest-vr-polish.md) for current startup, pane placement, resolution, table sizing, sprite-facing behavior, and validation. This revision extends the transport to a 24-float header and seven panes, with the minimap and table controls independent of the action strip. It reuses the 0.3.8 Gecko runtime.
+
+## ASCII logo wave
+
+`StartupLogo` splits the existing ASCII artwork into rows on every platform. A twelve-second perspective animation cycle sweeps a band one-third of the logo height from top to bottom, moving the rows forward and back at the same speed, with a six-second pause between sweeps. VR uses the desktop line spacing and centers the visible ASCII columns rather than the trailing blank columns. Reduced-motion preference disables the wave. The logo includes padding for the maximum projection, and its VR crop uses that stable padded box.
+
+## Immersive movement and text entry
+
+FPS VR uses the standard cubic step animation by default. Display/VR options include **Instant movement** to switch to tile snapping. The XR rig samples the camera-owned ground step without including headset offset or eye height; the normal camera update still owns animation completion and tile flushing. The FPS HUD follows after a 46-degree turn, snaps to 45-degree dungeon-grid headings, and recenters when the player changes tiles or snap-turns. Fast-movement turns snap the view itself to the new grid direction. Entering immersive FPS and recentering reset headset X/Y offset to the current player grid; an active step is finished without losing the normal tile-flush lifecycle. Roomscale translation retains its 20 cm follow threshold.
+
+The Quest host reuses Wolvic's existing keyboard and Gecko InputConnection whenever an HTML input requests soft input. Gecko's viewless `restartInput` callback refreshes the connection before the visibility request. On activation or recenter, the immersive compositor caches a headset-facing keyboard pose, culls it from the transformed game-pane root, then uses that raw pose for both controller hit testing and eye rendering. It restores Wolvic's original placement after immersive exit.
+
+## Anchored select lists
+
+Select menus begin at the actual HTML input (flipping upward only when needed). The parent dialog crop stays fixed; native pane 15 shares its parent pane 4/13 transform and grip group, with a source-pixel-derived offset. The list renders in front and masks duplicate pixels in the parent.
+
+The current control/keyboard/table changes have TypeScript, browser/GPU, gesture, and source-patch validation. Rebuilding and checking the APK on Quest remains necessary for physical touch, keyboard and grab acceptance.
+
+## Quest resume and laser selection
+
+Quest remembers the requested flat/immersive mode independently of XR session lifetime. Visibility, focus/page restore and resumed frame activity restore immersive mode after idle; explicit Exit VR stays flat. Hidden, inert, exiting, fully clipped and effectively transparent HTML controls are excluded from hits, and removed native panes lose capture. Native widgets use logical placement visibility rather than temporary compositor hiding.
+
+During direction prompts, laser clicks on arrows or world targets (tiles, items, monsters and blocks) submit the matching direction. FPS void clicks resolve a ground target or horizontal ray direction and reuse fast directional movement. Repeat appears above the action bar when the existing repeat-action eligibility allows it.
+
+The keyboard now uses a GPU texture surface in the game host. Its prior native compositor layer was submitted behind the opaque WebXR projection; its GPU pass is drawn after modals using the same cached headset-facing pose as hit testing.

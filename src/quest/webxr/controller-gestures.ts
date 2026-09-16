@@ -13,14 +13,15 @@ export class SnapTurnLatch {
 export class WorldClickGesture {
   private started: number | null = null;
   private held = false;
-  press(time: number): void { this.started = time; this.held = false; }
+  private allowHold = true;
+  press(time: number, allowHold = true): void { this.started = time; this.held = false; this.allowHold = allowHold; }
   update(time: number): boolean {
-    if (this.started === null || this.held || time - this.started < 450) return false;
+    if (this.started === null || !this.allowHold || this.held || time - this.started < 450) return false;
     this.held = true; return true;
   }
   release(time: number): "primary" | "secondary" | null {
     if (this.started === null) return null;
-    const result = this.held ? null : time - this.started >= 450 ? "secondary" : "primary";
+    const result = this.held ? null : this.allowHold && time - this.started >= 450 ? "secondary" : "primary";
     this.cancel(); return result;
   }
   cancel(): void { this.started = null; this.held = false; }

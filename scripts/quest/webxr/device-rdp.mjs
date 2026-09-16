@@ -5,7 +5,7 @@ import path from "node:path";
 
 const adb = path.join(process.env.LOCALAPPDATA, "Android/Sdk/platform-tools/adb.exe");
 const serial = process.env.QUEST_SERIAL ?? "2G0YC5ZF9J05S8";
-const socketName = "com.nethack3d.quest.webxrproof/firefox-debugger-socket";
+const socketName = "com.nethack3d.quest.vr/firefox-debugger-socket";
 const port = Number(execFileSync(adb, ["-s", serial, "forward", "tcp:0", "localabstract:" + socketName], { encoding: "utf8", windowsHide: true }).trim());
 let connection;
 try {

@@ -55,6 +55,8 @@ The [world/runtime flow guide](../../../docs/engine-world-runtime.md) traces map
 
 ## Ownership and dependencies
 
+`WebXrPresentation` owns both the startup rain scene and gameplay XR presentation. The startup-only engine frame renders `MenuRain` and the existing HTML/native pointer bridge without gameplay updates. Starting a character moves the same tracking rig back into the game scene. `NativePointerBridge` sends menu logo/dialog/footer crops through the normal pane protocol; `GameUiPanels.h` owns their native placement.
+
 Atlas cell width remains `TilesetAssets.tileSourceSize`; height is
 `tileSourceHeight`. Rectangle-aware sampling, background masks, and legacy
 layout conversion must use both. Square tiles retain identical dimensions.
@@ -149,6 +151,8 @@ The shared animation frame always runs `Camera.updateCamera` before applying the
 
 ### VR controller weapons
 
-`quest/webxr/controller-weapons.ts` owns grip-mounted weapon cards and texture disposal; `HeldWeapon` remains the equipment and texture source. `quest/webxr/weapon-gesture.ts` owns strike/recovery recognition. Accepted gestures use the guarded `MouseInput.attackQuestDirection` entry and the existing `InputCommands.sendInputSequence` force-fight path. Attack sequences must not create movement prediction or footsteps. The native host controls controller-model/UI compositing order.
+`quest/webxr/controller-weapons.ts` owns target-ray-mounted voxel weapons and their resource disposal; `HeldWeapon` remains the equipment and texture source. The grip pose still supplies gesture motion. `quest/webxr/weapon-gesture.ts` owns strike/recovery recognition. Accepted gestures use the guarded `MouseInput.attackQuestDirection` entry and the existing `InputCommands.sendInputSequence` force-fight path. Attack sequences must not create movement prediction or footsteps. The native host controls controller-model/UI compositing order.
 
-Controller weapon visuals and gesture recognition are currently paused: `WebXrControllerInput` leaves their constructor commented out. The implementation and settings remain for revisit, but the gesture controls are not exposed in the VR options UI.
+`rendering/held-weapon-flips.ts` resolves the shared flat FPS/VR sprite base: authored per-sprite flips from `held-weapon-flip-defaults.ts` override the built-in per-tile table, then tileset defaults provide the fallback. Existing session edits in the flat FPS debug editor retain highest priority. The standalone utility edits Flip X/Y/Diagonal for each sprite, displays a corrected flat thumbnail, and saves shared defaults independently of the VR pose library.
+
+Controller weapon visuals run in first-person VR. `WEBXR_WEAPON_ATTACKS_ENABLED` in `quest/webxr/settings.ts` is currently false, disabling gesture attacks and hiding their options while preserving held weapons and saved gesture preferences. Run `npm run weapon:calibrate` for the separate desktop calibration utility at `http://127.0.0.1:5174/tools/weapon-calibrator/`. Its atlas browser and 3D preview live under `src/tools/weapon-calibrator/`; the loopback server lives under `scripts/weapon-calibrator/`. It shares the game's atlas background removal, weapon flips, voxel renderer, ray origin and pose math. The visible pixel bounds are centered automatically; attachment offsets are measured in pixels from that center. Global, tileset and sprite rotations add per axis, snap to 15 degrees and pivot around the attachment point. Flat FPS held-weapon translation and tilt are not applied. Save writes the complete library directly to `quest/webxr/weapon-pose-defaults.ts` for the next Quest package. Runtime reads that source table without browser-storage overrides. See [utility instructions](../../../tools/weapon-calibrator/README.md).

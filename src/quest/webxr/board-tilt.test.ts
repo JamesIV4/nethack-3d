@@ -20,13 +20,13 @@ describe("board pitch handle", () => {
     expect(control.surfaceHit(new THREE.Ray(new THREE.Vector3(10, 1, 0), new THREE.Vector3(0, 0, -1)))).toBeNull();
     control.dispose();
   });
-  it("starts at 45 degrees and captures a drag until release", () => {
+  it("starts at 60 degrees and captures a drag until release", () => {
     const root = new THREE.Group(), control = new BoardTilt(root);
     const source = {} as XRInputSource;
     control.place(new THREE.Vector3(0, 1, -1.5), new THREE.Quaternion(), true);
     const mesh = root.children[0] as THREE.Mesh<THREE.TorusGeometry, THREE.MeshBasicMaterial>;
     const ray = aim(mesh, 0);
-    expect(control.pitch).toBeCloseTo(Math.PI / 4);
+    expect(control.pitch).toBeCloseTo(Math.PI / 3);
     expect(control.hit(ray)).not.toBeNull();
     expect(mesh.geometry.parameters.radius).toBe(0.18);
     expect(new THREE.Vector3(0, 0, 1).applyQuaternion(mesh.quaternion).distanceTo(new THREE.Vector3(1, 0, 0))).toBeLessThan(0.00001);
@@ -34,7 +34,7 @@ describe("board pitch handle", () => {
     control.hover(source, true); expect(mesh.material.opacity).toBe(0.9);
     control.begin(source, ray);
     control.move(source, aim(mesh, 0.3));
-    expect(control.pitch).toBeGreaterThan(Math.PI / 4);
+    expect(control.pitch).toBeGreaterThan(Math.PI / 3);
     control.end(source);
     const stopped = control.pitch;
     control.move(source, aim(mesh, 0.6));

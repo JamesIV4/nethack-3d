@@ -1,3 +1,8 @@
+import { patchIdentity } from "./patch-identity.mjs";
+import { patchControllerMouse } from "./patch-controller-mouse.mjs";
+import { patchLaserTouch } from "./patch-laser-touch.mjs";
+import { patchVisibleInput } from "./patch-visible-input.mjs";
+import { patchKeyboard } from "./patch-keyboard.mjs";
 import { patchWeaponControls } from "./patch-weapon-controls.mjs";
 import { findAndroidSdk } from "../build-environment.mjs";
 import { patchPaneIsolation } from "./patch-pane-isolation.mjs";
@@ -69,9 +74,9 @@ if (!existsSync(marker)) {
   writeFileSync(path.join(checkout, "app/src/main/cpp/moz_external_vr.h"), header);
   const gradlePath = path.join(checkout, "app/build.gradle");
   let gradle = readFileSync(gradlePath, "utf8")
-    .replace('applicationId "com.igalia.wolvic"', 'applicationId "com.nethack3d.quest.webxrproof"');
+    .replace('applicationId "com.igalia.wolvic"', 'applicationId "com.nethack3d.quest.vr"');
   const assets = path.join(root, "quest/app/build/generated/gameAssets").replaceAll("\\", "/").replaceAll("'", "\\'");
-  gradle += `\nandroid.defaultConfig {\n buildConfigField "boolean", "NH3D_GAME_HOST", "true"\n resValue "string", "app_name", "NetHack 3D WebXR Proof"\n}\nandroid.sourceSets.main.assets.srcDir('${assets}')\n`;
+  gradle += `\nandroid.defaultConfig {\n buildConfigField "boolean", "NH3D_GAME_HOST", "true"\n resValue "string", "app_name", "NetHack 3D VR"\n}\nandroid.sourceSets.main.assets.srcDir('${assets}')\n`;
   writeFileSync(gradlePath, gradle);
   const enginePath = path.join(checkout, "app/src/common/shared/com/igalia/wolvic/browser/engine/EngineProvider.kt");
   let engine = readFileSync(enginePath, "utf8").replace(
@@ -95,8 +100,8 @@ if (!appBuild.includes("targets 'native-lib'")) {
   appBuild += "\n// Build the browser and its read-only KTX dependency; skip the unused texture encoder.\nandroid.defaultConfig.externalNativeBuild.cmake { targets 'native-lib' }\n";
   writeFileSync(appBuildPath, appBuild);
 }
-if (!appBuild.includes('applicationId = "com.nethack3d.quest.webxrproof"')) {
-  appBuild += '\nandroid.defaultConfig { applicationId = "com.nethack3d.quest.webxrproof" }\n';
+if (!appBuild.includes('applicationId = "com.nethack3d.quest.vr"')) {
+  appBuild += '\nandroid.defaultConfig { applicationId = "com.nethack3d.quest.vr" }\n';
   writeFileSync(appBuildPath, appBuild);
 }
 const engineDebugPath = path.join(checkout, "app/src/common/shared/com/igalia/wolvic/browser/engine/EngineProvider.kt");
@@ -112,10 +117,7 @@ for (const permission of ["WAKE_LOCK", "FOREGROUND_SERVICE"]) {
 manifest = manifest.replace("Requested by GeckoView but not needed in VR",
   "Required by GeckoView for audio and wake-lock lifecycle callbacks");
 writeFileSync(manifestPath, manifest);
-if (!appBuild.includes('versionName = "0.3.1-auto-vr"')) {
-  appBuild += '\nandroid.defaultConfig { versionName = "0.3.1-auto-vr"; resValue "string", "app_name", "NetHack 3D VR Auto" }\n';
-  writeFileSync(appBuildPath, appBuild);
-}
+
 appBuild = appBuild.replace(
   "select(candidates.find { it.id.module.contains(candidate) })",
   "select(candidates.find { it.id.module.contains(candidate) } ?: candidates.find { it.id.module == 'geckoview-default-omni' })");
@@ -137,12 +139,16 @@ configurations.configureEach {
     }
 }
 android.defaultConfig {
-    versionName = "0.3.21-vr-options"
     resValue "string", "app_name", "NetHack 3D VR"
 }
 `);
 const prefsPath = path.join(checkout, "app/src/main/res/raw/fxr_config.yaml");
 let prefs = readFileSync(prefsPath, "utf8");
+// This dedicated offline host opens its immersive front end on launch.
+if (!prefs.includes("dom.vr.require-gesture: false")) {
+  prefs = prefs.replace(/prefs:\r?\n/, "prefs:\n  dom.vr.require-gesture: false\n");
+  writeFileSync(prefsPath, prefs);
+}
 if (!prefs.includes("dom.vr.webxr.composite-document: true")) {
   prefs = prefs.replace(/prefs:\r?\n/, "prefs:\n  dom.vr.webxr.composite-document: true\n");
   writeFileSync(prefsPath, prefs);
@@ -177,4 +183,9 @@ patchActionGrip(checkout);
 patchPointerInput(checkout);
 patchPaneIsolation(checkout);
 patchWeaponControls(checkout);
+patchControllerMouse(checkout);
+patchLaserTouch(checkout);
+patchKeyboard(checkout);
+patchIdentity(checkout);
+patchVisibleInput(checkout);
 console.log("Prepared standalone WebXR host with patched GeckoView and its matching v19 native ABI.");

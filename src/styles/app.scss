@@ -1008,7 +1008,7 @@ canvas {
   .nh3d-stats-meter {
     display: flex;
     flex-direction: column;
-    min-width: 120px;
+    min-width: calc(120px * var(--nh3d-xr-meter-width-scale, 1));
   }
 
   .nh3d-stats-meter-label {
@@ -1158,7 +1158,7 @@ canvas {
 
     .nh3d-stats-meter {
       flex: 1 1 150px;
-      min-width: 130px;
+      min-width: calc(130px * var(--nh3d-xr-meter-width-scale, 1));
     }
 
     .nh3d-stats-group {
@@ -1249,7 +1249,7 @@ canvas {
 
     .nh3d-stats-meter {
       flex: 0 0 66px;
-      min-width: 60px;
+      min-width: calc(60px * var(--nh3d-xr-meter-width-scale, 1));
     }
 
     .nh3d-stats-group {
@@ -1484,6 +1484,9 @@ canvas {
     font-weight: 700;
     color: rgb(255, 0, 0);
     text-shadow: 0 0 8px rgba(255, 0, 119, 0.479);
+    perspective: 60em;
+    transform-style: preserve-3d;
+    padding: 3em 6em;
 
     @media (pointer: coarse) {
       font-size: nh3d-scale-font(5px);
@@ -1493,6 +1496,21 @@ canvas {
       font-size: nh3d-scale-font(5px);
     }
   }
+}
+
+.nh3d-logo-row {
+  display: block;
+  transform-origin: center center;
+  animation: nh3d-logo-depth-wave 12s ease-in-out var(--nh3d-logo-wave-delay, 0s) infinite both;
+}
+
+/* Same 1.5-second lift and 4.5-second sweep, with six extra seconds between waves. */
+@keyframes nh3d-logo-depth-wave {
+  0%, 12.5%, 100% { transform: translateZ(0); }
+  6.25% { transform: translateZ(4em); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nh3d-logo-row { animation: none; transform: none; }
 }
 
 .nh3d-startup-background-rain {
