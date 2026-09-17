@@ -147,6 +147,7 @@ export function QuestionDialog({
                   inputMode="numeric"
                   max={999999}
                   min={1}
+                  placeholder="-"
                   onChange={(event) => {
                     const nextValue = Number(event.currentTarget.value);
                     controller?.setQuestionSelectionCount(
@@ -158,7 +159,7 @@ export function QuestionDialog({
                     event.stopPropagation();
                   }}
                   type="number"
-                  value={displayedQuestionPendingCount ?? 1}
+                  value={displayedQuestionPendingCount ?? ""}
                 />
                 <button
                   aria-label={t.dialogs.question.increaseAmount}

@@ -1,5 +1,5 @@
 import { QuestWebXrSettings } from "../../../quest/webxr/QuestWebXrControls";
-import { getWebXrState } from "../../../quest/webxr/presentation";
+import { isQuestApk } from "../../../quest/webxr/host";
 import { ClientOptionsUpdates } from "./ClientOptionsUpdates";
 import { ClientOptionToggleControl } from "./ClientOptionToggleControl";
 import { ClientOptionSelectControl } from "./ClientOptionSelectControl";
@@ -174,7 +174,7 @@ export function ClientOptionsDialog({
             data-nh3d-overflow-glow-host="parent"
             role="tablist"
           >
-            {clientOptionsTabs.filter(tab => tab.id !== "vr" || getWebXrState().host).map((tab) => {
+            {clientOptionsTabs.filter(tab => tab.id !== "vr" || isQuestApk()).map((tab) => {
               const isSelected = tab.id === selectedClientOptionsTab.id;
               return (
                 <button
@@ -222,7 +222,7 @@ export function ClientOptionsDialog({
                 openGitHubReleases={openGitHubReleases}
               />) : null}
               {visibleClientOptions.map((option) => {
-                if (option.key === "vrPassthrough" && !getWebXrState().host) return null;
+                if (option.key === "vrPassthrough" && !isQuestApk()) return null;
                 if (option.developerOnly && !showDeveloperClientSettings) {
                   return null;
                 }

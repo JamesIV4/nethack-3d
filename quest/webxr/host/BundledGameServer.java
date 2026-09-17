@@ -17,6 +17,8 @@ public final class BundledGameServer {
     private static volatile float[] uiPose;
     public static float[] getUiPose() { return uiPose; }
     private static volatile float[] pointerState;
+    private static final java.util.concurrent.atomic.AtomicLong systemRecenter = new java.util.concurrent.atomic.AtomicLong();
+    public static void onSystemRecenter() { systemRecenter.incrementAndGet(); }
     public static float[] getPointerState() { return pointerState; }
     private static volatile float[] inputMode;
     /** True only for a flat FPS target outside every HTML hit rectangle. */
@@ -141,7 +143,8 @@ public final class BundledGameServer {
                 }
                 if (pose[2] < -1 || pose[2] > 100 || pose[6] < -1 || pose[6] > 100) throw new IOException("Invalid pointer distance");
                 pointerState = pose;
-                status(socket, 204, "No Content"); return;
+                socket.getOutputStream().write(("HTTP/1.1 204 No Content\r\nConnection: close\r\nX-NH3D-Recenter: " + systemRecenter.get() + "\r\n\r\n").getBytes(StandardCharsets.US_ASCII));
+                return;
             }
             if (path == null || !path.startsWith("/") || path.contains("\\") || path.indexOf('\0') >= 0) {
                 status(socket, 400, "Bad Request"); return;

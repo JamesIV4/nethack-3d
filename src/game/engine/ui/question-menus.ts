@@ -238,7 +238,18 @@ export class QuestionMenus {
     if (!normalized) {
       return false;
     }
+    const countedObject = /\bwhat (?:do you want|would you like) to (throw|charge|fire|ready|wield|adjust|stash|pawn)\b/.exec(normalized);
+    if (countedObject) {
+      // Match each bundled game's count-enabled getobj calls. SLASH'EM's
+      // wield/quiver prompts do not accept counts; its pawn prompt does.
+      const verb = countedObject[1];
+      if (verb === "throw" || verb === "charge") return true;
+      const version = this.dependencies.tilesetAssets.resolveRuntimeVersion();
+      if (version === "slashem") return verb === "pawn";
+      return verb !== "pawn" && (verb !== "fire" || version === "5.0");
+    }
     return (
+      normalized.includes("what would you like to pick up") ||
       normalized.includes("what do you want to drop") ||
       normalized.includes("what would you like to drop") ||
       normalized.includes("put in what") ||
@@ -251,6 +262,7 @@ export class QuestionMenus {
   }
 
   isCountableInventorySelectionQuestion(questionText: string): boolean {
+    if (this.isObjectTypeCategoryQuestion(questionText)) return false;
     return (
       this.isMultiSelectLootQuestion(questionText) ||
       this.isCountableSimpleInventoryQuestion(questionText)
@@ -1726,13 +1738,13 @@ export class QuestionMenus {
     if (!Number.isFinite(delta) || delta === 0) {
       return;
     }
-    const currentCount = this.getActiveQuestionPendingCount() ?? 1;
+    const currentCount = this.getActiveQuestionPendingCount() ?? 0;
     const nextCount = currentCount + Math.trunc(delta);
-    this.setActiveQuestionPendingCount(nextCount > 1 ? nextCount : null);
+    this.setActiveQuestionPendingCount(nextCount > 0 ? nextCount : null);
   }
 
   setQuestionSelectionCount(count: number | null): void {
-    if (count === null || !Number.isFinite(count) || count <= 1) {
+    if (count === null || !Number.isFinite(count) || count < 1) {
       this.setActiveQuestionPendingCount(null);
       return;
     }

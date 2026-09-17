@@ -47,6 +47,13 @@ class GameUiPanels {
   bool firstPerson = false;
   vrb::Vector viewerPosition;
   std::unordered_map<int, vrb::Vector> placements;
+  static vrb::Vector DefaultPlacement(int group) {
+    // Captured from the user's live immersive FPS layout. Table groups (0-15)
+    // retain their existing defaults. Offsets are in each pane's yaw frame.
+    if (group == 16) return vrb::Vector(.0597635992f, -.141145647f, -.298724353f);
+    if (group == 21) return vrb::Vector(-.00567860529f, -.309029520f, -.123058677f);
+    return vrb::Vector(0,0,0);
+  }
   int gripOwner = -1, gripGroup = -1;
   vrb::Matrix gripInverse;
   vrb::Vector gripStart, gripPlacement;
@@ -225,7 +232,7 @@ class GameUiPanels {
  private:
   void UpdatePose(Pane& p) {
     const auto placement = placements.find(p.group);
-    const auto offset = placement == placements.end() ? vrb::Vector(0,0,0) : placement->second;
+    const auto offset = placement == placements.end() ? DefaultPlacement(p.group) : placement->second;
     const auto anchor = p.base.PostMultiply(vrb::Matrix::Translation(offset));
     const auto toward = anchor.AfineInverse().MultiplyPosition(viewerPosition);
     const float pitch = -std::atan2(toward.y(), std::max(.001f, std::fabs(toward.z())));
@@ -324,7 +331,7 @@ class GameUiPanels {
       if (it == panes.end()) return false;
       gripOwner = controller; gripGroup = it->group;
       gripInverse = it->base.AfineInverse(); gripStart = gripInverse.MultiplyPosition(hand);
-      gripPlacement = placements.count(gripGroup) ? placements[gripGroup] : vrb::Vector(0,0,0);
+      gripPlacement = placements.count(gripGroup) ? placements[gripGroup] : DefaultPlacement(gripGroup);
     }
     if (gripOwner != controller) return false;
     if (std::none_of(panes.begin(),panes.end(),[this](const Pane& p){ return p.group == gripGroup; })) { EndGrip(controller); return false; }

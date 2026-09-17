@@ -36,10 +36,10 @@ export interface InventoryContextMenuProps {
 }
 
 export function shouldOpenInventoryDropTypeMenuOnHover(
-  documentElement: Pick<HTMLElement, "classList"> | null =
+  _documentElement: Pick<HTMLElement, "classList"> | null =
     typeof document === "undefined" ? null : document.documentElement,
 ): boolean {
-  return !documentElement?.classList.contains("nh3d-webxr-active");
+  return true;
 }
 
 export function InventoryContextMenu({

@@ -111,6 +111,7 @@ export const resolveInventoryContextMenuPosition = (
   const regionRight = scrollRegionRect?.right;
   const regionTop = scrollRegionRect?.top;
   const regionBottom = scrollRegionRect?.bottom;
+  const immersive = document.documentElement.classList.contains("nh3d-webxr-active");
   const hasRegionBounds =
     typeof regionLeft === "number" &&
     Number.isFinite(regionLeft) &&
@@ -135,13 +136,14 @@ export const resolveInventoryContextMenuPosition = (
       minX = boundedMinX;
       maxX = boundedMaxX;
     }
-    if (boundedMaxY >= boundedMinY) {
+    if (!immersive && boundedMaxY >= boundedMinY) {
       minY = boundedMinY;
       maxY = boundedMaxY;
     }
   }
   const preferredX = anchorCenterX - safeWidth * 0.5;
-  const preferredY = anchorBottomY;
+  const preferredY = immersive && typeof state.anchorTopY === "number" && Number.isFinite(state.anchorTopY)
+    ? state.anchorTopY - safeHeight : anchorBottomY;
   return {
     x: Math.min(Math.max(preferredX, minX), maxX),
     y: Math.min(Math.max(preferredY, minY), maxY),
@@ -158,10 +160,19 @@ export const resolveInventoryDropTypeMenuPosition = (
   const preferredX = anchorRect.left + anchorRect.width * 0.5 - safeWidth * 0.5;
   const preferredY =
     anchorRect.top - inventoryDropTypeMenuAnchorGapPx - safeHeight;
-  return clampInventoryContextMenuPosition(
+  const above = clampInventoryContextMenuPosition(
     preferredX,
     preferredY,
     safeWidth,
     safeHeight,
   );
+  if (above.y + safeHeight <= anchorRect.top) return above;
+  // Near the viewport ceiling, clamping an above-button menu can cover Drop.
+  // Prefer the clear space below, then beside the button.
+  const below = clampInventoryContextMenuPosition(preferredX, anchorRect.bottom + inventoryDropTypeMenuAnchorGapPx, safeWidth, safeHeight);
+  if (below.y >= anchorRect.bottom) return below;
+  const right = clampInventoryContextMenuPosition(anchorRect.right + inventoryDropTypeMenuAnchorGapPx, above.y, safeWidth, safeHeight);
+  if (right.x >= anchorRect.right) return right;
+  const left = clampInventoryContextMenuPosition(anchorRect.left - inventoryDropTypeMenuAnchorGapPx - safeWidth, above.y, safeWidth, safeHeight);
+  return left.x + safeWidth <= anchorRect.left ? left : above;
 };

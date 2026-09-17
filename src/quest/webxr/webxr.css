@@ -32,7 +32,7 @@
 /* Keep the authored dialog layout in the shared texture. The native modal
    pane supplies the comfortable viewing distance; CSS must not shrink its
    controls, including inventory and prompt dialogs. */
-:root.nh3d-webxr-active .nh3d-context-menu:not(.nh3d-tile-context-menu):not(.nh3d-fps-crosshair-context),
+:root.nh3d-webxr-active .nh3d-context-menu:not(.nh3d-tile-context-menu):not(.nh3d-fps-crosshair-context):not(.nh3d-inventory-context-menu):not(.nh3d-inventory-drop-type-menu),
 :root.nh3d-webxr-active .nh3d-dialog,
 :root.nh3d-webxr-active .nh3d-mobile-actions-sheet,
 :root.nh3d-webxr-active .nh3d-wizard-commands-sheet.is-visible,
@@ -165,7 +165,7 @@
 
 /* Native source atlas: keep modal pixels separate from the table controls.
    These document coordinates do not determine the panes' world poses. */
-:root.nh3d-xr-native-ui .nh3d-context-menu:not(.nh3d-tile-context-menu):not(.nh3d-fps-crosshair-context),
+:root.nh3d-xr-native-ui .nh3d-context-menu:not(.nh3d-tile-context-menu):not(.nh3d-fps-crosshair-context):not(.nh3d-inventory-context-menu):not(.nh3d-inventory-drop-type-menu),
 :root.nh3d-xr-native-ui .nh3d-dialog,
 :root.nh3d-xr-native-ui .nh3d-mobile-actions-sheet,
 :root.nh3d-xr-native-ui .nh3d-wizard-commands-sheet.is-visible,
@@ -182,6 +182,13 @@
   box-shadow: none !important;
 }
 :root.nh3d-xr-native-ui .nh3d-mobile-bottom-bar * { box-shadow: none !important; }
+/* Each native pane moves independently. Outer DOM shadows must not remain
+   painted on the full HUD or spill into an adjacent pane's source crop. */
+:root.nh3d-xr-native-ui :is(#stats-bar, .nh3d-minimap, .nh3d-mobile-repeat-button,
+  .nh3d-xr-table-controls, .top-left-ui, .floating-message-container,
+  .nh3d-mobile-log-collapsed, .nh3d-select-menu, .nh3d-context-menu) {
+  box-shadow: none !important;
+}
 :root.nh3d-webxr-active .nh3d-xr-table-controls {
   left: 50%; transform: translateX(-50%); width: max-content; max-width: 90vw;
 }

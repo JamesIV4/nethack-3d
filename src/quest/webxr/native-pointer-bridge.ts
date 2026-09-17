@@ -3,10 +3,13 @@ import { uiHitRectangles } from "./dom-pointer";
 import { tableUiPanes, type UiPane } from "./table-ui-layout";
 import { getXrSettings } from "./settings";
 import { hasWorldContextAnchor } from "./context-anchor";
+import { SystemRecenter } from "./system-recenter";
+import { recenterWebXr } from "./presentation";
 
 let nextAnchor = 0;
 /** Sends UI regions and hit distances only. Wolvic owns pointer rendering and HTML input. */
 export class NativePointerBridge {
+  private readonly systemRecenter = new SystemRecenter();
   private revision = ++nextAnchor;
   private rects: number[] = [];
   private panes: UiPane[] = [];
@@ -78,10 +81,17 @@ export class NativePointerBridge {
     const body = JSON.stringify([this.revision, this.rects.length / 4, ...this.hits,
       this.firstPerson ? 1 : 0, this.pitch, this.boardY, this.panes.length, ...this.anchor,
       settings.area, settings.scale, context ? 1 : 0, ...point.toArray(), ...this.firstPersonAnchor, ...this.rects, ...this.panes.flat()]);
-    if (body === this.lastBody) return;
+    // Keep a low-frequency heartbeat even when neither controller moves, so
+    // the system Meta-button recenter can reach a stationary player.
+    if (body === this.lastBody && time - this.lastSend < 500) return;
     this.pending = true; this.lastSend = time;
     void fetch("/__xr/table-ui", { method: "POST", headers: { "Content-Type": "application/json" }, body, signal: this.abort.signal })
-      .then((response) => { if (!response.ok) throw new Error("Native pointer bridge: " + response.status); this.lastBody = body; })
+      .then((response) => {
+        if (!response.ok) throw new Error("Native pointer bridge: " + response.status);
+        if (this.disposed) return;
+        this.lastBody = body;
+        if (this.systemRecenter.accept(response.headers.get("X-NH3D-Recenter"))) recenterWebXr();
+      })
       .catch((error) => { if (!this.disposed) console.warn(error); })
       .finally(() => { this.pending = false; });
   }

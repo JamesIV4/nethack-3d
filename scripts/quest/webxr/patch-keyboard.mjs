@@ -28,7 +28,29 @@ export function patchKeyboard(checkout) {
         mInputRestarted = false;
     }`;
   const patchedCallbacks = `    private void updateImmersiveInput() {
+        // onCreateInputConnection can itself enqueue focus/show notifications.
+        // Reusing a live connection breaks that feedback loop and preserves
+        // hover, Shift, and a key held between ACTION_DOWN and ACTION_UP.
+        if (mFocusedView == mAttachedWindow && mInputConnection != null) return;
         if (mAttachedWindow != null) updateFocusedView(mAttachedWindow);
+    }
+
+    private int mImmersiveInputRevision = 0;
+
+    private void queueImmersiveInput(boolean show) {
+        final int revision = mImmersiveInputRevision;
+        final WindowWidget window = mAttachedWindow;
+        post(() -> {
+            if (revision != mImmersiveInputRevision || window != mAttachedWindow || mIsInVoiceInput) return;
+            updateImmersiveInput();
+            // An explicit request can reopen the same focused field without
+            // replacing its keyboard. Focus notifications alone cannot.
+            if (show && mInputConnection != null && mFocusedView == mAttachedWindow && !mWidgetPlacement.visible) {
+                mWidgetManager.pushBackHandler(mBackHandler);
+                mWidgetPlacement.visible = true;
+                mWidgetManager.updateWidget(this);
+            }
+        });
     }
 
     @Override
@@ -36,8 +58,13 @@ export function patchKeyboard(checkout) {
         mInputRestarted = true;
         if (BuildConfig.NH3D_GAME_HOST && MotionEventGenerator.gameImmersive) {
             // Content changes must not reset a held key or reopen a dismissed keyboard.
-            if (reason == RESTART_REASON_FOCUS) post(this::updateImmersiveInput);
-            else if (reason == RESTART_REASON_BLUR) post(() -> updateFocusedView(null));
+            if (reason == RESTART_REASON_FOCUS) queueImmersiveInput(false);
+            else if (reason == RESTART_REASON_BLUR) {
+                final int revision = ++mImmersiveInputRevision;
+                post(() -> {
+                    if (revision == mImmersiveInputRevision) updateFocusedView(null);
+                });
+            }
         } else {
             resetKeyboardLayout();
         }
@@ -46,7 +73,7 @@ export function patchKeyboard(checkout) {
     @Override
     public void showSoftInput(@NonNull WSession session) {
         if (BuildConfig.NH3D_GAME_HOST && MotionEventGenerator.gameImmersive) {
-            post(this::updateImmersiveInput);
+            queueImmersiveInput(true);
         } else if (mFocusedView != mAttachedWindow || getVisibility() != View.VISIBLE || mInputRestarted) {
             post(() -> updateFocusedView(mAttachedWindow));
         }
@@ -86,6 +113,12 @@ export function patchKeyboard(checkout) {
   if (!source.includes(gameKeyboardSurface)) {
     source = replaceOnce(source, stockKeyboardSurface, gameKeyboardSurface, "game-host keyboard GPU surface");
   }
+  if (!source.includes("NH3D cancel queued input")) source = replaceOnce(source,
+    "    public void dismiss() {",
+    `    public void dismiss() {
+        // NH3D cancel queued input: closing must win over already posted shows.
+        if (BuildConfig.NH3D_GAME_HOST && MotionEventGenerator.gameImmersive) ++mImmersiveInputRevision;`,
+    "cancel queued keyboard requests on dismissal");
   writeFileSync(file, source);
 
   const motion = path.join(checkout, "app/src/common/shared/com/igalia/wolvic/input/MotionEventGenerator.java");
@@ -330,7 +363,7 @@ BrowserWorld::State::DrawImmersiveKeyboard(const vrb::Camera& camera) {
   const priorStateKeyboardDraw = keyboardDraw + "\n  if (drawImmersiveKeyboard) { m.immersiveKeyboard->ToggleWidget(true); m.DrawImmersiveKeyboard(*camera); }";
   const oldKeyboardDraw = "  WidgetPtr immersiveKeyboard;\n  for (const auto& widget : m.widgets) if (widget->GetPlacement()->name == \"KeyboardWidget\" && widget->IsVisible()) {\n    immersiveKeyboard = widget; widget->ToggleWidget(false); break;\n  }\n  m.drawList->Reset();\n  if (m.gamePanels) m.gamePanels->Cull(*m.cullVisitor, *m.drawList);\n  m.rootTransparent->Cull(*m.cullVisitor, *m.drawList); m.drawList->Draw(*camera);\n  if (immersiveKeyboard) { immersiveKeyboard->ToggleWidget(true); m.DrawImmersiveKeyboard(*camera); }";
   const stockDraw = "  m.drawList->Reset();\n  if (m.gamePanels) m.gamePanels->Cull(*m.cullVisitor, *m.drawList);\n  m.rootTransparent->Cull(*m.cullVisitor, *m.drawList); m.drawList->Draw(*camera);";
-  if (!source.includes(keyboardDraw)) source = source.includes(oldKeyboardDraw)
+  if (!source.includes("  const bool drawImmersiveKeyboard = m.immersiveKeyboardPlaced && m.immersiveKeyboard;")) source = source.includes(oldKeyboardDraw)
     ? replaceOnce(source, oldKeyboardDraw, keyboardDraw, "upgrade keyboard draw path")
     : source.includes(priorStateKeyboardDraw)
       ? replaceOnce(source, priorStateKeyboardDraw, keyboardDraw, "move keyboard above foreground modal")

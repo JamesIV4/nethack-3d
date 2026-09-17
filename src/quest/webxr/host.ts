@@ -6,3 +6,8 @@ export function isWebXrHost(): boolean {
 export function isQuestBrowser(): boolean {
   return typeof location !== "undefined" && (new URLSearchParams(location.search).get("xrHost") === "native" || location.origin === "http://127.0.0.1:18973");
 }
+
+/** User-facing Quest options belong only to the bundled APK, not wired previews. */
+export function isQuestApk(): boolean {
+  return typeof location !== "undefined" && location.origin === "http://127.0.0.1:18973";
+}

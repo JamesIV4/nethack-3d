@@ -10418,14 +10418,14 @@ button.nh3d-technique-row {
     grid-template-columns: repeat(5, minmax(0, 1fr));
 
     @media (orientation: landscape) and (pointer: coarse) {
-      height: var(--nh3d-mobile-actions-content-height);
+      height: auto;
       max-height: var(--nh3d-mobile-actions-content-height);
       overflow-y: auto;
       align-content: start;
     }
 
     :root.nh3d-force-touch-layout-landscape & {
-      height: var(--nh3d-mobile-actions-content-height);
+      height: auto;
       max-height: var(--nh3d-mobile-actions-content-height);
       overflow-y: auto;
       align-content: start;
@@ -10466,14 +10466,14 @@ button.nh3d-technique-row {
   padding-bottom: 8px;
 
   @media (orientation: landscape) and (pointer: coarse) {
-    height: var(--nh3d-mobile-actions-content-height);
+    height: auto;
     max-height: var(--nh3d-mobile-actions-content-height);
     overflow-y: auto;
     align-content: start;
   }
 
   :root.nh3d-force-touch-layout-landscape & {
-    height: var(--nh3d-mobile-actions-content-height);
+    height: auto;
     max-height: var(--nh3d-mobile-actions-content-height);
     overflow-y: auto;
     align-content: start;

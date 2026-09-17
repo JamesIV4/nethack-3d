@@ -1,6 +1,7 @@
 import { after, test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { patchKeyboard } from "./patch-keyboard.mjs";
@@ -328,4 +329,99 @@ test("speech dialogs render and receive foreground input, and the complete patch
   patchKeyboard(checkout);
   patchKeyboardDialogs(checkout);
   assert.deepEqual(paths.map(p => readFileSync(source(p), "utf8")), before);
+});
+
+test("real Java callbacks reuse a live connection through feedback, held keys, dismissal and dictation", t => {
+  const suffix = process.platform === "win32" ? ".exe" : "";
+  const homes = [process.env.JAVA_HOME, process.platform === "win32" ? "C:/Program Files/Android/Android Studio/jbr" : undefined].filter(Boolean);
+  const home = homes.find(p => existsSync(path.join(p, "bin", "javac" + suffix)));
+  const java = home ? path.join(home, "bin", "java" + suffix) : "java";
+  const javac = home ? path.join(home, "bin", "javac" + suffix) : "javac";
+  try { execFileSync(javac, ["-version"], { stdio: "pipe", windowsHide: true }); }
+  catch { t.skip("A JDK is required to execute the Android callback regression harness"); return; }
+  const patched = readFileSync(source("app/src/common/shared/com/igalia/wolvic/ui/widgets/KeyboardWidget.java"), "utf8");
+  const start = patched.indexOf("    private void updateImmersiveInput() {");
+  const end = patched.indexOf("    @Override\n    public void hideSoftInput", start);
+  assert.ok(start >= 0 && end > start);
+  const callbacks = patched.slice(start, end);
+  const dismissStart = patched.indexOf("    public void dismiss() {");
+  const dismissEnd = patched.indexOf("\n    }", dismissStart) + "\n    }".length;
+  const dismissal = patched.slice(dismissStart, dismissEnd);
+  const harness = `
+import java.util.ArrayDeque;
+@interface NonNull {}
+class WSession {}
+class BuildConfig { static boolean NH3D_GAME_HOST = true; }
+class MotionEventGenerator { static boolean gameImmersive = true; }
+class View { static final int VISIBLE = 0; }
+class WindowWidget extends View {}
+interface InputDelegate {
+ int RESTART_REASON_FOCUS=0, RESTART_REASON_BLUR=1, RESTART_REASON_CONTENT_CHANGE=2;
+ void restartInput(WSession session,int reason); void showSoftInput(WSession session);
+}
+public class KeyboardInputHarness implements InputDelegate {
+ WindowWidget mAttachedWindow=new WindowWidget(); View mFocusedView;
+ Object mInputConnection; boolean mInputRestarted, mIsInVoiceInput;
+ Runnable mBackHandler=()->{};
+ static class Placement { boolean visible; }
+ Placement mWidgetPlacement=new Placement();
+ static class Manager { void pushBackHandler(Runnable r){} void updateWidget(Object o){} }
+ Manager mWidgetManager=new Manager();
+ ArrayDeque<Runnable> queue=new ArrayDeque<>(); int resets, hover=-1, typed;
+ boolean pressed, abort;
+ void post(Runnable r){queue.add(r);}
+ int getVisibility(){return mWidgetPlacement.visible?View.VISIBLE:8;}
+ void resetKeyboardLayout(){resets++; hover=-1; abort=true;}
+ void hideOverlays(){}
+ void updateFocusedView(View view){
+   mFocusedView=view;
+   if(view==null){mInputConnection=null;mWidgetPlacement.visible=false;return;}
+   mInputConnection=new Object();resetKeyboardLayout();mWidgetPlacement.visible=true;
+   // Reproduce the real Gecko input-connection feedback observed on Quest.
+   restartInput(new WSession(),RESTART_REASON_FOCUS);showSoftInput(new WSession());
+ }
+ void drain(){int count=0;while(!queue.isEmpty()){if(++count>100)throw new AssertionError("input connection reset loop");queue.remove().run();}}
+ void require(boolean ok,String why){if(!ok)throw new AssertionError(why);}
+ ${callbacks}
+ ${dismissal}
+ public static void main(String[] args){
+  var k=new KeyboardInputHarness();var session=new WSession();
+  k.restartInput(session,RESTART_REASON_FOCUS);k.showSoftInput(session);k.drain();
+  k.require(k.resets==1,"one initial layout, despite feedback callbacks");
+  k.hover=3;k.pressed=true;k.abort=false;
+  for(int i=0;i<20;i++){k.restartInput(session,RESTART_REASON_FOCUS);k.showSoftInput(session);}
+  k.drain();
+  k.require(k.resets==1 && k.hover==3 && !k.abort,"hover and held alphabet key survive repeated focus/show");
+  if(k.pressed&&!k.abort)k.typed++;k.pressed=false;
+  k.require(k.typed==1,"letter activates on release");
+  k.showSoftInput(session);k.dismiss();k.mWidgetPlacement.visible=false;k.drain();
+  k.require(!k.mWidgetPlacement.visible,"queued show cannot undo Close/B");
+  k.restartInput(session,RESTART_REASON_FOCUS);k.drain();
+  k.require(!k.mWidgetPlacement.visible,"focus-only notifications cannot reopen keyboard");
+  k.showSoftInput(session);k.drain();
+  k.require(k.mWidgetPlacement.visible && k.resets==1,"explicit tap reopens same field without rebuilding");
+  k.mIsInVoiceInput=true;k.mWidgetPlacement.visible=false;
+  k.showSoftInput(session);k.restartInput(session,RESTART_REASON_FOCUS);k.drain();
+  k.require(!k.mWidgetPlacement.visible && k.resets==1,"dictation keeps its live connection and foreground");
+  k.mIsInVoiceInput=false;k.restartInput(session,RESTART_REASON_BLUR);k.drain();
+  k.require(k.mInputConnection==null,"blur releases the old editor");
+  k.restartInput(session,RESTART_REASON_FOCUS);k.drain();
+  k.require(k.resets==2 && k.mWidgetPlacement.visible,"new focus creates exactly one new connection");
+  k.showSoftInput(session);k.mAttachedWindow=new WindowWidget();k.mWidgetPlacement.visible=false;k.drain();
+  k.require(k.resets==2 && !k.mWidgetPlacement.visible,"stale window callback is ignored");
+  System.out.println("keyboard callback lifecycle passed");
+ }
+}
+`;
+  writeFileSync(source("KeyboardInputHarness.java"), harness);
+  execFileSync(javac, ["-d", checkout, source("KeyboardInputHarness.java")], { stdio: "pipe", windowsHide: true });
+  assert.match(execFileSync(java, ["-cp", checkout, "KeyboardInputHarness"], { encoding: "utf8", windowsHide: true }), /keyboard callback lifecycle passed/);
+  // Negative control: restoring the old unconditional connection creation must
+  // reproduce the observed feedback loop, not merely pass a structural check.
+  const broken = harness.replace("        if (mFocusedView == mAttachedWindow && mInputConnection != null) return;", "");
+  assert.notEqual(broken, harness);
+  writeFileSync(source("KeyboardInputHarness.java"), broken);
+  execFileSync(javac, ["-d", checkout, source("KeyboardInputHarness.java")], { stdio: "pipe", windowsHide: true });
+  assert.throws(() => execFileSync(java, ["-cp", checkout, "KeyboardInputHarness"], { stdio: "pipe", windowsHide: true }),
+    error => String(error.stderr).includes("input connection reset loop"));
 });

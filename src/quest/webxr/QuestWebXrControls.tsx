@@ -4,6 +4,7 @@ import { getWebXrState, subscribeWebXr, toggleWebXr, recenterWebXr } from "./pre
 import "./webxr.css";
 import { getXrSettings, setXrSettings, subscribeXrSettings, WEBXR_WEAPON_ATTACKS_ENABLED } from "./settings";
 import { OptionLabelWithInfo } from "../../ui/app/settings/OptionLabelWithInfo";
+import { isQuestApk } from "./host";
 
 export function QuestWebXrButton({
   className = "nh3d-desktop-bottom-button",
@@ -25,16 +26,11 @@ const vrSliders = [
   { key: "scale", label: "VR world scale", description: "Resize the game world without changing the visible map area or UI size.", min: 0.5, max: 2 },
   { key: "resolution", label: "VR render resolution", description: "Resolution changes apply when you next enter VR.", min: 0.5, max: 2 },
 ] as const;
-const rainSliders = [
-  { key: "rainCount", label: "Menu falling letter count", min: 0, max: 12000, step: 100, unit: "letters" },
-  { key: "rainFallSpeed", label: "Menu letter fall speed", min: .1, max: 8, step: .1, unit: "m/s" },
-  { key: "rainChangeRate", label: "Menu letter change rate", min: 0, max: 10, step: .1, unit: "changes/s" },
-] as const;
 
 export function QuestWebXrSettings(): JSX.Element | null {
   const settings = useSyncExternalStore(subscribeXrSettings, getXrSettings, getXrSettings);
   const state = useSyncExternalStore(subscribeWebXr, getWebXrState, getWebXrState);
-  if (!state.host) return null;
+  if (!isQuestApk()) return null;
   return <>
     <OptionSliderRow label="VR depth (stereo separation)"
       description="Adjust the depth of the 3D world immediately. 100% uses your headset's normal eye separation. UI depth stays unchanged."
@@ -81,13 +77,6 @@ export function QuestWebXrSettings(): JSX.Element | null {
         <span className="nh3d-option-switch-thumb" />
       </button>
     </div>
-    {rainSliders.map(option => <OptionSliderRow key={option.key} label={option.label}
-      description="Updates the surrounding VR menu rain immediately. Letters fade in and out over two seconds."
-      valueLabel={`${settings[option.key]} ${option.unit}`}>
-      <input aria-label={option.label} className="nh3d-option-slider" type="range"
-        min={option.min} max={option.max} step={option.step} value={settings[option.key]}
-        onChange={event => setXrSettings({ [option.key]: Number(event.currentTarget.value) })} />
-    </OptionSliderRow>)}
     <div className="nh3d-menu-actions">
       <QuestWebXrButton className="nh3d-menu-action-button" />
       <button type="button" className="nh3d-menu-action-button" disabled={!state.active}

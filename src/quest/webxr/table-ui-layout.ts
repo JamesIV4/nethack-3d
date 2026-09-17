@@ -4,9 +4,10 @@ import { isVisibleUi, clipUiBounds } from "./visibility";
 
 /** id, left, top, right, bottom in the one live HTML surface. */
 export type UiPane = [number, number, number, number, number];
-function bounds(selector: string, paint = false): [number, number, number, number] | null {
+function bounds(selector: string, paint = false, excludeInventoryPopups = false): [number, number, number, number] | null {
   let left = innerWidth, top = innerHeight, right = 0, bottom = 0;
   for (const node of document.querySelectorAll<HTMLElement>(selector)) {
+    if (excludeInventoryPopups && node.matches?.(".nh3d-inventory-context-menu,.nh3d-inventory-drop-type-menu")) continue;
     const rect = node.getBoundingClientRect();
     if (!isVisibleUi(node) || rect.width <= 0 || rect.height <= 0) continue;
     const box = clipUiBounds(node, paint ? paintBounds(node) : rect);
@@ -24,14 +25,15 @@ function bounds(selector: string, paint = false): [number, number, number, numbe
 export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles()): UiPane[] {
   const minimap = bounds(".nh3d-minimap");
   const status = bounds("#stats-bar", true);
-  // Shadow padding must not sample the separately positioned minimap.
-  if (status && minimap && minimap[1] > status[1] && minimap[1] < status[3]) {
-    status[3] = minimap[1];
+  // Leave two source pixels before the minimap: a shared boundary allows
+  // bilinear filtering to sample its border into the status pane.
+  if (status && minimap && minimap[1] > status[1] && minimap[1] <= status[3]) {
+    status[3] = minimap[1] - 2 / innerHeight;
   }
-  const modal = bounds("#loading,.nh3d-dialog,.nh3d-context-menu,.nh3d-mobile-actions-sheet,.nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=alertdialog],[role=menu]", true);
+  const modal = bounds("#loading,.nh3d-dialog,.nh3d-context-menu,.nh3d-mobile-actions-sheet,.nh3d-mobile-log:not(.nh3d-mobile-log-collapsed),.nh3d-wizard-commands-sheet.is-visible,[role=dialog],[role=alertdialog],[role=menu]", true, true);
   // The native host attaches this crop to pane 4 at its source-pixel offset,
   // leaving the parent dialog crop and its physical placement unchanged.
-  const selectMenu = bounds(".nh3d-select-menu", true);
+  const selectMenu = bounds(".nh3d-select-menu,.nh3d-inventory-context-menu,.nh3d-inventory-drop-type-menu", true);
   // These crops share the game's live DOM texture and native hit-testing path.
   if (document.documentElement?.classList.contains("nh3d-xr-menu")) {
     const panes: UiPane[] = [];
@@ -59,7 +61,7 @@ export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles())
   const panes: UiPane[] = [];
   selectors.forEach(([id, selector]) => { const rect = id === 0 ? status : bounds(selector, true); if (rect) panes.push([id, ...rect]); });
   for (const [id, selector] of [[5, ".nh3d-minimap"], [6, ".nh3d-xr-table-controls"]] as const) {
-    const rect = bounds(selector); if (rect) panes.push([id, ...rect]);
+    const rect = bounds(selector, id === 6); if (rect) panes.push([id, ...rect]);
   }
   const messages = bounds(".top-left-ui,.floating-message-container,.nh3d-mobile-log-collapsed", true);
   if (messages) panes.push([11, ...messages]);

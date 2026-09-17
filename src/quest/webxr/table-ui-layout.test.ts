@@ -17,12 +17,20 @@ function fixture() {
 }
 afterEach(() => vi.unstubAllGlobals());
 
+it("leaves a sampling gap when status padding exactly meets the minimap", () => {
+  const f = fixture();
+  f.add(".nh3d-minimap", 500, 84, 600, 160);
+  const panes = tableUiPanes(true, []);
+  expect(panes.find(p => p[0] === 0)![4]).toBe(.082);
+  expect(panes.find(p => p[0] === 5)![2]).toBe(.084);
+});
+
 it("trims status shadow padding before the separate minimap source", () => {
   const f = fixture();
   f.add(".nh3d-minimap", 500, 82, 600, 160);
   for (const firstPerson of [false, true]) {
     const panes = tableUiPanes(firstPerson, []);
-    expect(panes.find(p => p[0] === 0)![4]).toBe(.082);
+    expect(panes.find(p => p[0] === 0)![4]).toBe(.08);
     expect(panes.find(p => p[0] === 5)![2]).toBe(.082);
   }
 });
@@ -65,6 +73,20 @@ it("keeps an input-anchored select list in a child pane without enlarging its di
   expect(panes.find(p => p[0] === 4)).toEqual(before.find(p => p[0] === 4));
   expect(panes.find(p => p[0] === 15)).toEqual([15, .51, .406, .665, .674]);
 });
+
+it("anchors inventory context and Drop popups to the inventory pane without recentering it", () => {
+  const f = fixture();
+  f.add(".nh3d-dialog", 400, 300, 800, 600);
+  const parent = tableUiPanes(true, []).find(p => p[0] === 4);
+  f.add(".nh3d-inventory-context-menu", 650, 200, 260, 180);
+  const popup = f.nodes.get(".nh3d-inventory-context-menu")![0];
+  Object.assign(popup, { matches: () => true });
+  f.nodes.set(".nh3d-context-menu", [popup]);
+  f.add(".nh3d-inventory-drop-type-menu", 650, 40, 220, 150);
+  const panes = tableUiPanes(true, []);
+  expect(panes.find(p => p[0] === 4)).toEqual(parent);
+  expect(panes.find(p => p[0] === 15)).toEqual([15, .40375, .036, .57125, .384]);
+});
 it("keeps a full first-person HUD source pane beside the dedicated status pane", () => {
   const f=fixture(); f.nodes.delete(".nh3d-mobile-bottom-bar"); f.nodes.delete(".nh3d-desktop-bottom-actions");
   const panes = tableUiPanes(true, []);
@@ -84,7 +106,7 @@ it("assigns separate panes to the minimap, actions, and table controls", () => {
   const panes = tableUiPanes(false, []);
   expect(panes.find(p => p[0] === 2)).toEqual([2, .81, .096, 1, .804]);
   expect(panes.find(p => p[0] === 5)).toEqual([5, .8125, 0, 1, .08]);
-  expect(panes.find(p => p[0] === 6)).toEqual([6, .375, .8, .625, .9]);
+  expect(panes.find(p => p[0] === 6)).toEqual([6, .3725, .796, .6275, .904]);
 });
 it("unions the repeat action above the bottom bar into the existing action pane", () => {
   const f = fixture();
