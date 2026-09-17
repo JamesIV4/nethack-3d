@@ -1,17 +1,17 @@
+import { useActionLayout } from "./action-layout";
+import { ActionLabel } from "./ActionLabel";
+import { actionCatalog, formatActionLabel, runCustomCommand } from "./action-catalog";
+import { useHotbarHeight } from "./use-hotbar-height";
 import { QuestWebXrButton } from "../../../quest/webxr/QuestWebXrControls";
 import type { Nh3dClientOptions, InventoryDialogState, Nethack3DEngineController } from "../../../game/ui-types";
 import type * as React from "react";
 import type {
   MobileActionSheetMode
 } from "../menus/mobile-actions";
-import {
-  t
-} from "../shared/translations";
-import {
-  mobileActions
-} from "../menus/mobile-actions";
 
 export interface MobileBottomBarProps {
+  actionCommandNames: string[];
+  openButtonCustomization: () => void;
   mobileTouchUiVisible: boolean;
   isCharacterSheetVisible: boolean;
   openCharacterDialog: () => void;
@@ -27,6 +27,8 @@ export interface MobileBottomBarProps {
 }
 
 export function MobileBottomBar({
+  actionCommandNames,
+  openButtonCustomization,
   mobileTouchUiVisible,
   isCharacterSheetVisible,
   openCharacterDialog,
@@ -40,97 +42,37 @@ export function MobileBottomBar({
   setMobileActionSheetMode,
   isMobileActionSheetVisible,
 }: MobileBottomBarProps) {
-  return (
-    mobileTouchUiVisible ? (
-      <div className="nh3d-mobile-bottom-bar" data-xr-ui>
-        <QuestWebXrButton className="nh3d-mobile-bottom-button" hideWhenActive />
-        <button
-          className={`nh3d-mobile-bottom-button${isCharacterSheetVisible ? " is-active" : ""
-            }`}
-          onClick={openCharacterDialog}
-          type="button"
-        >
-          {t.dialogs.mobileActions.character}
-        </button>
-        <button
-          className={`nh3d-mobile-bottom-button${inventory.visible ? " is-active" : ""
-            }`}
-          onClick={() => {
-            controller?.dismissFpsCrosshairContextMenu();
-            closeWizardCommands();
-            controller?.toggleInventoryDialog();
-          }}
-          type="button"
-        >
-          {t.dialogs.mobileActions.inventory}
-        </button>
-        <button
-          aria-expanded={isMobileLogVisible}
-          className={`nh3d-mobile-bottom-button${isMobileLogVisible ? " is-active" : ""
-            }`}
-          disabled={!clientOptions.liveMessageLog}
-          onClick={() => {
-            controller?.dismissFpsCrosshairContextMenu();
-            if (!clientOptions.liveMessageLog) {
-              return;
-            }
-            setIsMobileLogVisible((visible) => {
-              const next = !visible;
-              if (next) {
-                setIsMobileActionSheetVisible(false);
-                setMobileActionSheetMode("quick");
-                closeWizardCommands();
-              }
-              return next;
-            });
-          }}
-          type="button"
-        >
-          {t.dialogs.mobileActions.log}
-        </button>
-        <button
-          className="nh3d-mobile-bottom-button"
-          onClick={() => {
-            controller?.dismissFpsCrosshairContextMenu();
-            controller?.runQuickAction("pickup");
-          }}
-          type="button"
-        >
-          {t.dialogs.mobileActions.pickUp}
-        </button>
-        <button
-          className="nh3d-mobile-bottom-button"
-          onClick={() => {
-            controller?.dismissFpsCrosshairContextMenu();
-            controller?.runQuickAction("search");
-          }}
-          type="button"
-        >
-          {t.dialogs.mobileActions.search}
-        </button>
-        <button
-          aria-label={`${t.dialogs.mobileActions.menu} / ${t.dialogs.mobileActions.actions}`}
-          className={`nh3d-mobile-bottom-button${isMobileActionSheetVisible ? " is-active" : ""
-            }`}
-          onClick={() => {
-            controller?.dismissFpsCrosshairContextMenu();
-            setIsMobileActionSheetVisible((visible) => {
-              const next = !visible;
-              if (next) {
-                setMobileActionSheetMode("quick");
-                setIsMobileLogVisible(false);
-                closeWizardCommands();
-              }
-              return next;
-            });
-          }}
-          type="button"
-        >
-          {t.dialogs.mobileActions.menu} /
-          <br />
-          {t.dialogs.mobileActions.actions}
-        </button>
-      </div>
-    ) : null
-  );
+  const layout = useActionLayout();
+  const catalog = actionCatalog(actionCommandNames);
+  const barRef = useHotbarHeight(mobileTouchUiVisible);
+  const openActions = (extended = false) => {
+    controller?.dismissFpsCrosshairContextMenu();
+    setIsMobileActionSheetVisible(visible => extended || !visible);
+    setMobileActionSheetMode(extended ? "extended" : "quick");
+    setIsMobileLogVisible(false);
+    closeWizardCommands();
+  };
+  if (!mobileTouchUiVisible) return null;
+  return <div className="nh3d-mobile-bottom-bar" data-xr-ui ref={barRef}>
+    <QuestWebXrButton className="nh3d-mobile-bottom-button" hideWhenActive />
+    {layout.mobileHotbar.map(id => {
+      const action = catalog.find(a => a.id === id);
+      const active = id === "character" ? isCharacterSheetVisible : id === "inventory" ? inventory.visible : id === "log" ? isMobileLogVisible : id === "menu" ? isMobileActionSheetVisible : false;
+      return <button key={id} type="button" className={`nh3d-mobile-bottom-button${active ? " is-active" : ""}`}
+        disabled={!action || (id === "log" && !clientOptions.liveMessageLog)}
+        aria-expanded={id === "menu" ? isMobileActionSheetVisible : id === "log" ? isMobileLogVisible : undefined}
+        onClick={() => {
+          if (!action) return;
+          controller?.dismissFpsCrosshairContextMenu();
+          if (id === "character") openCharacterDialog();
+          else if (id === "inventory") { closeWizardCommands(); controller?.toggleInventoryDialog(); }
+          else if (id === "log") {
+            setIsMobileLogVisible(visible => !visible);
+            setIsMobileActionSheetVisible(false); setMobileActionSheetMode("quick"); closeWizardCommands();
+          } else if (id === "menu" || id === "extended") openActions(id === "extended");
+          else runCustomCommand(controller, action);
+        }}><ActionLabel>{action?.label ?? formatActionLabel(id.replace(/^command:/, ""))}</ActionLabel></button>;
+    })}
+    {!layout.mobileHotbar.includes("menu") ? <button className="nh3d-mobile-bottom-button" type="button" onClick={openButtonCustomization} aria-label="Customize hotbar">Hotbar</button> : null}
+  </div>;
 }

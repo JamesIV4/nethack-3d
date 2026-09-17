@@ -2085,6 +2085,7 @@ export function useAppModel() {
       visibleLocationLabel,
     },
     clientOptionsDialog: {
+      actionCommandNames: mobileExtendedCommandNames,
       isClientOptionsVisible,
       handleClientOptionsDialogBlurCapture,
       handleClientOptionsDialogChangeCapture,
@@ -2455,6 +2456,7 @@ export function useAppModel() {
       mobileExtendedCommandNames,
     },
     mobileActionSheet: {
+      openButtonCustomization: () => { setIsMobileActionSheetVisible(false); openClientOptionsDialog(); setActiveClientOptionsTab("buttons"); },
       mobileTouchUiVisible,
       isMobileActionSheetVisible,
       mobileActionSheetMode,
@@ -2492,6 +2494,7 @@ export function useAppModel() {
       manualSafeZonePreview,
     },
     desktopActions: {
+      actionCommandNames: mobileExtendedCommandNames,
       isDesktopGameRunning,
       clientOptions,
       wizardCommandsSupported,
@@ -2505,6 +2508,8 @@ export function useAppModel() {
       closeWizardCommands,
     },
     mobileBottomBar: {
+      openButtonCustomization: () => { setIsMobileActionSheetVisible(false); openClientOptionsDialog(); setActiveClientOptionsTab("buttons"); },
+      actionCommandNames: mobileExtendedCommandNames,
       mobileTouchUiVisible,
       isCharacterSheetVisible,
       openCharacterDialog,

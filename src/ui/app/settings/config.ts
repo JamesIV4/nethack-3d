@@ -676,13 +676,14 @@ export const clientOptionsConfig: ClientOption[] = [
 export const clientOptionsDefaultTabId: ClientOptionsTabId = "display";
 
 export const clientOptionsTabs: ClientOptionsTab[] = [
-  { id: "vr", label: "VR", description: "Headset presentation and tabletop settings.", groupKey: "group-vr" },
   {
     id: "display",
     label: t.clientOptions.tabs.display.label,
     description: t.clientOptions.tabs.display.description,
     groupKey: "group-interface",
   },
+  { id: "buttons", label: "Hotbar", description: "Customize hotbars and Menu / Actions shortcuts.", groupKey: "group-buttons" },
+  { id: "vr", label: "VR", description: "Headset presentation and tabletop settings.", groupKey: "group-vr" },
   {
     id: "controls",
     label: t.clientOptions.tabs.controls.label,

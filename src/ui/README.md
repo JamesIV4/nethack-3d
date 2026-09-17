@@ -95,3 +95,16 @@ Run `npm run check:tsc` and focused tests for the feature being changed. UI regr
 For dialog changes, check open, close, Escape, Enter and focus restoration in the browser. Inventory changes also need row activation, context actions, drop amount and scroll checks. Status/layout changes need the desktop and mobile presentation. Controller changes need release/neutral behavior and dialog priority, beyond merely rendering the buttons.
 
 Build and packaging validation remain user-run under the [repository guidance](../../.agents/rules/AGENTS.md).
+
+Hotbar and Menu / Actions customization lives in `app/actions/action-layout.ts`
+(saved ID lists and normalization), `action-catalog.ts` (labels and existing
+command dispatch), and `app/settings/ActionLayoutSettings.tsx` (search, ordering,
+add/remove, restore). It uses the existing resolved runtime command list from
+`use-command-actions`, including compatibility commands. Settings are saved
+immediately under `nh3d-action-layout-v1`, separately from client-option drafts.
+Mobile/VR, desktop, and the action sheet retain separate default layouts. The
+Hotbar category is the second options tab. Action labels use title case without
+changing command IDs, and unbroken labels shrink to 8px before emergency wrapping.
+`use-hotbar-height` tracks the wrapped portrait bar so nearby overlays remain
+above it, and caps the bar below the stats panel. If Menu / Actions is removed, a Hotbar shortcut keeps customization
+reachable without requiring a hardware keyboard.

@@ -95,6 +95,7 @@ export type ClientOption =
   | ClientOptionColor;
 
 export type ClientOptionsTabId =
+  | "buttons"
   | "display"
   | "mobile"
   | "controls"

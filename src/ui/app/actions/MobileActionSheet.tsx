@@ -1,3 +1,6 @@
+import { useActionLayout } from "./action-layout";
+import { actionCatalog, formatActionLabel } from "./action-catalog";
+import { ActionLabel } from "./ActionLabel";
 import type * as React from "react";
 import type {
   MobileActionSheetMode
@@ -6,13 +9,11 @@ import {
   commonStrings,
   t
 } from "../shared/translations";
-import {
-  mobileActions
-} from "../menus/mobile-actions";
 import type { Nethack3DEngineController } from "../../../game/ui-types";
 
 
 export interface MobileActionSheetProps {
+  openButtonCustomization: () => void;
   mobileTouchUiVisible: boolean;
   isMobileActionSheetVisible: boolean;
   mobileActionSheetMode: MobileActionSheetMode;
@@ -25,6 +26,7 @@ export interface MobileActionSheetProps {
 }
 
 export function MobileActionSheet({
+  openButtonCustomization,
   mobileTouchUiVisible,
   isMobileActionSheetVisible,
   mobileActionSheetMode,
@@ -35,6 +37,9 @@ export function MobileActionSheet({
   mobileCommonExtendedCommandNames,
   mobileExtendedCommandNames,
 }: MobileActionSheetProps) {
+  const layout = useActionLayout();
+  const catalog = actionCatalog(mobileExtendedCommandNames);
+  const actions = layout.menuActions.map(id => catalog.find(a => a.id === id)).filter((a): a is NonNullable<typeof a> => !!a);
   return (
     mobileTouchUiVisible && isMobileActionSheetVisible ? (
       <div className="nh3d-mobile-actions-sheet">
@@ -45,6 +50,7 @@ export function MobileActionSheet({
               : t.dialogs.mobileActions.extendedCommands}
           </div>
           <div className="nh3d-mobile-actions-controls">
+            {mobileActionSheetMode === "quick" ? <button type="button" className="nh3d-mobile-actions-back" onClick={openButtonCustomization}>Customize</button> : null}
             {mobileActionSheetMode === "extended" ? (
               <button
                 className="nh3d-mobile-actions-back"
@@ -84,7 +90,7 @@ export function MobileActionSheet({
               data-nh3d-overflow-glow
               data-nh3d-overflow-glow-host="parent"
             >
-              {mobileActions.map((action) => (
+              {actions.map((action) => (
                 <button
                   className="nh3d-mobile-actions-button"
                   key={action.id}
@@ -104,7 +110,7 @@ export function MobileActionSheet({
                   }}
                   type="button"
                 >
-                  {action.label}
+                  <ActionLabel>{action.label}</ActionLabel>
                 </button>
               ))}
             </div>
@@ -134,7 +140,7 @@ export function MobileActionSheet({
                         }}
                         type="button"
                       >
-                        {command}
+                        <ActionLabel>{formatActionLabel(command)}</ActionLabel>
                       </button>
                     ))}
                   </div>
@@ -157,7 +163,7 @@ export function MobileActionSheet({
                       }}
                       type="button"
                     >
-                      {command}
+                      <ActionLabel>{formatActionLabel(command)}</ActionLabel>
                     </button>
                   ))}
                 </div>

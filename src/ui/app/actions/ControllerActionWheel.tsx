@@ -1,3 +1,4 @@
+import { formatActionLabel } from "./action-catalog";
 import {
   Fragment,
   type CSSProperties
@@ -117,13 +118,13 @@ export function ControllerActionWheel({
                     {mobileCommonExtendedCommandNames.map((command) => (
                       <button
                         className="nh3d-mobile-actions-button"
-                        key={`wheel-common-${command}`}
+                        key={`wheel-common-${formatActionLabel(command)}`}
                         onClick={() =>
                           runControllerWheelExtendedCommand(command)
                         }
                         type="button"
                       >
-                        {command}
+                        {formatActionLabel(command)}
                       </button>
                     ))}
                   </div>
@@ -137,13 +138,13 @@ export function ControllerActionWheel({
                   {mobileExtendedCommandNames.map((command) => (
                     <button
                       className="nh3d-mobile-actions-button"
-                      key={`wheel-all-${command}`}
+                      key={`wheel-all-${formatActionLabel(command)}`}
                       onClick={() =>
                         runControllerWheelExtendedCommand(command)
                       }
                       type="button"
                     >
-                      {command}
+                      {formatActionLabel(command)}
                     </button>
                   ))}
                 </div>

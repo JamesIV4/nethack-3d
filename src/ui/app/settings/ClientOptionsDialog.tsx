@@ -1,4 +1,5 @@
 import { QuestWebXrSettings } from "../../../quest/webxr/QuestWebXrControls";
+import { ActionLayoutSettings } from "./ActionLayoutSettings";
 import { isQuestApk } from "../../../quest/webxr/host";
 import { ClientOptionsUpdates } from "./ClientOptionsUpdates";
 import { ClientOptionToggleControl } from "./ClientOptionToggleControl";
@@ -52,6 +53,7 @@ import type { ConfirmationDialogRequest } from "../../modals/useConfirmationDial
 
 
 export interface ClientOptionsDialogProps {
+  actionCommandNames: string[];
   isClientOptionsVisible: boolean;
   handleClientOptionsDialogBlurCapture: (event: React.FocusEvent<HTMLDivElement, Element>) => void;
   handleClientOptionsDialogChangeCapture: (event: React.FormEvent<HTMLDivElement>) => void;
@@ -101,6 +103,7 @@ export interface ClientOptionsDialogProps {
 }
 
 export function ClientOptionsDialog({
+  actionCommandNames,
   isClientOptionsVisible,
   handleClientOptionsDialogBlurCapture,
   handleClientOptionsDialogChangeCapture,
@@ -286,6 +289,7 @@ export function ClientOptionsDialog({
                 return null;
               })}
               {selectedClientOptionsTab.id === "vr" ? <QuestWebXrSettings /> : null}
+              {selectedClientOptionsTab.id === "buttons" ? <ActionLayoutSettings commands={actionCommandNames} /> : null}
               <SoundPackSettings
                 onDialogActionsChange={(actions) => {
                   soundPackDialogActionsRef.current = actions;
