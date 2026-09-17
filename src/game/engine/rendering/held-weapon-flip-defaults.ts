@@ -85,7 +85,37 @@ export const authoredHeldWeaponTileFlips: FpsHeldWeaponTileFlipOverridesByTilese
       "flipY": true,
       "flipDiagonal": true
     },
+    "458": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "592": {
+      "flipX": true,
+      "flipY": false,
+      "flipDiagonal": true
+    },
+    "598": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "599": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "600": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
     "613": {
+      "flipX": false,
+      "flipY": false,
+      "flipDiagonal": false
+    },
+    "630": {
       "flipX": false,
       "flipY": false,
       "flipDiagonal": false

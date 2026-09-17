@@ -8783,8 +8783,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|456|-1": {
       "attachmentOffsetPixels": {
-        "x": 21.5,
-        "y": -14.5,
+        "x": 18.5,
+        "y": -13.5,
         "z": 0
       },
       "rotationDeg": {
@@ -8807,14 +8807,14 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|458|-1": {
       "attachmentOffsetPixels": {
-        "x": -15,
-        "y": -18,
+        "x": 16,
+        "y": -15,
         "z": 0
       },
       "rotationDeg": {
         "x": 0,
         "y": 0,
-        "z": 0
+        "z": 105
       }
     },
     "assets/3.6/Absurdly Evil.png|459|-1": {
@@ -13597,6 +13597,90 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
       "attachmentOffsetPixels": {
         "x": 3,
         "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|592|-1": {
+      "attachmentOffsetPixels": {
+        "x": -0.5,
+        "y": 1.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|598|-1": {
+      "attachmentOffsetPixels": {
+        "x": 17.5,
+        "y": 10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|599|-1": {
+      "attachmentOffsetPixels": {
+        "x": 17.5,
+        "y": 10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|630|-1": {
+      "attachmentOffsetPixels": {
+        "x": 14.5,
+        "y": -13,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|631|-1": {
+      "attachmentOffsetPixels": {
+        "x": 13,
+        "y": -3,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|627|-1": {
+      "attachmentOffsetPixels": {
+        "x": 17,
+        "y": -10.5,
+        "z": 0
+      },
+      "rotationDeg": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "assets/3.6/Absurdly Evil.png|608|-1": {
+      "attachmentOffsetPixels": {
+        "x": 8,
+        "y": -0.5,
         "z": 0
       },
       "rotationDeg": {
