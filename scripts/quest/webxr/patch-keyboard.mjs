@@ -61,6 +61,17 @@ export function patchKeyboard(checkout) {
     "import com.igalia.wolvic.R;",
     "import com.igalia.wolvic.R;\nimport com.igalia.wolvic.BuildConfig;\nimport com.igalia.wolvic.input.MotionEventGenerator;",
   );
+  const keyboardMultiDeviceInput = `    @Override
+    public boolean supportsMultipleInputDevices() {
+        // Keep hover feedback alive while the native ray transfers focus.
+        return BuildConfig.NH3D_GAME_HOST && MotionEventGenerator.gameImmersive;
+    }
+
+`;
+  if (!source.includes("public boolean supportsMultipleInputDevices()")) source = replaceOnce(source,
+    "    public KeyboardWidget(Context aContext) {",
+    keyboardMultiDeviceInput + "    public KeyboardWidget(Context aContext) {",
+    "immersive keyboard hover devices");
   const stockKeyboardSurface = `        // FIXME: keyboard is misplaced when rendered in a cylinder layer.
         aPlacement.cylinder = false;
         aPlacement.layerPriority = 1;`;
@@ -74,6 +85,43 @@ export function patchKeyboard(checkout) {
     source = replaceOnce(source, stockKeyboardSurface, gameKeyboardSurface, "game-host keyboard GPU surface");
   }
   writeFileSync(file, source);
+
+  const motion = path.join(checkout, "app/src/common/shared/com/igalia/wolvic/input/MotionEventGenerator.java");
+  source = readFileSync(motion, "utf8").replaceAll("\r\n", "\n");
+  if (!source.includes("isGameKeyboardWidget")) {
+    source = source.replace("import com.igalia.wolvic.ui.widgets.WindowWidget;", "import com.igalia.wolvic.ui.widgets.WindowWidget;\nimport com.igalia.wolvic.ui.widgets.KeyboardWidget;");
+    source = replaceOnce(source,
+      "    static final String LOGTAG = SystemUtils.createLogtag(MotionEventGenerator.class);",
+      `    private static boolean isGameKeyboardWidget(Widget widget) {
+        return BuildConfig.NH3D_GAME_HOST && gameImmersive && widget instanceof KeyboardWidget;
+    }
+    static final String LOGTAG = SystemUtils.createLogtag(MotionEventGenerator.class);`,
+      "immersive keyboard touch classifier");
+    source = replaceOnce(source,
+      "        if (aPressed && aButtons == MotionEvent.BUTTON_SECONDARY && !isGameMouseWidget(aWidget)) return;",
+      "        // A keyboard squeeze is still a touchscreen gesture, never an HTML right click.\n        if (aPressed && aButtons == MotionEvent.BUTTON_SECONDARY && !isGameMouseWidget(aWidget) && !isGameKeyboardWidget(aWidget)) return;",
+      "immersive keyboard secondary touch");
+    writeFileSync(motion, source);
+  }
+
+  const activity = path.join(checkout, "app/src/common/shared/com/igalia/wolvic/VRBrowserActivity.java");
+  source = readFileSync(activity, "utf8").replaceAll("\r\n", "\n");
+  if (!source.includes("NH3D keyboard back priority")) {
+    source = replaceOnce(source,
+      "        if (mIsPresentingImmersive.getValue()) {\n            queueRunnable(this::exitImmersiveNative);\n            return;\n        }",
+      `        // NH3D keyboard back priority: this keyboard is a host overlay,
+        // so dismiss it before Wolvic interprets back as Exit VR.
+        if (BuildConfig.NH3D_GAME_HOST && mIsPresentingImmersive.getValue() && mKeyboard != null && mKeyboard.isVisible()) {
+            mKeyboard.dismiss();
+            return;
+        }
+        if (mIsPresentingImmersive.getValue()) {
+            queueRunnable(this::exitImmersiveNative);
+            return;
+        }`,
+      "keyboard back priority");
+    writeFileSync(activity, source);
+  }
 
   const world = path.join(checkout, "app/src/main/cpp/BrowserWorld.cpp");
   source = readFileSync(world, "utf8").replaceAll("\r\n", "\n");
@@ -158,7 +206,7 @@ BrowserWorld::State::PrepareImmersiveKeyboard() {
     // Match the current game UI yaw. Wolvic's flat keyboard is 3.25m wide
     // and tilted down; halve it here and remove that unrelated flat pose.
     immersiveKeyboardTransform = vrb::Matrix::Translation(center).PostMultiply(yaw)
-        .PostMultiply(vrb::Matrix::Identity().Scale(vrb::Vector(0.5f, 0.5f, 0.5f)));
+        .PostMultiply(vrb::Matrix::Identity().Scale(vrb::Vector(0.25f, 0.25f, 0.25f)));
     immersiveKeyboard->SetTransform(immersiveKeyboardTransform);
     immersiveKeyboardAnchorRevision = revision;
     immersiveKeyboardPlaced = true;
@@ -263,10 +311,40 @@ BrowserWorld::State::DrawImmersiveKeyboard(const vrb::Camera& camera) {
         }
       } else if (!pressed && wasPressed) {`,
     "move detached immersive keyboard");
+  if (!source.includes("NH3D raw keyboard focus")) {
+    const start = source.search(/BrowserWorld::(?:State::)?UpdateControllers\([^;]*\) \{/);
+    if (start < 0) throw new Error("Missing controller update implementation");
+    const end = source.indexOf("\nvoid\n", start);
+    const boundary = end < 0 ? source.length : end;
+    const body = replaceOnce(source.slice(start, boundary),
+    "    if (wasGoBackButtonClicked(controller, externalVR->IsPresenting())) {",
+    `    // NH3D raw keyboard focus: generic Android hover is delivered only
+    // to the focused controller, so claim focus before hover/down dispatch.
+    const bool keyboardForeground = externalVR->IsPresenting() &&
+        ImmersiveKeyboardHit(controller.StartPoint(), controller.Direction());
+    if (keyboardForeground && !controller.focused) ChangeControllerFocus(controller);
+    const bool keyboardVisible = externalVR->IsPresenting() && immersiveKeyboard && immersiveKeyboard->IsVisible();
+    const bool keyboardBack = keyboardVisible &&
+        !(controller.lastButtonState & ControllerDelegate::BUTTON_B) &&
+        (controller.buttonState & ControllerDelegate::BUTTON_B);
+    const bool keyboardBackHeld = (keyboardVisible || controller.gameKeyboardCaptured) &&
+        ((controller.lastButtonState | controller.buttonState) & ControllerDelegate::BUTTON_B);
+    if (keyboardBack) {
+      SimulateBack();
+    } else if (wasGoBackButtonClicked(controller, externalVR->IsPresenting())) {`,
+    "focus and close immersive keyboard");
+    source = source.slice(0, start) + body + source.slice(boundary);
+  }
+  source = source.replace("    const bool keyboardForeground = externalVR->IsPresenting() &&\n        ImmersiveKeyboardHit(controller.StartPoint(), controller.Direction());\n    const bool grabbing =",
+    "    const bool grabbing =");
+  source = source.replace(
+    "    const bool keyboardBack = keyboardForeground &&\n        !(controller.lastButtonState & ControllerDelegate::BUTTON_B) &&\n        (controller.buttonState & ControllerDelegate::BUTTON_B);",
+    "    const bool keyboardVisible = externalVR->IsPresenting() && immersiveKeyboard && immersiveKeyboard->IsVisible();\n    const bool keyboardBack = keyboardVisible &&\n        !(controller.lastButtonState & ControllerDelegate::BUTTON_B) &&\n        (controller.buttonState & ControllerDelegate::BUTTON_B);\n    const bool keyboardBackHeld = (keyboardVisible || controller.gameKeyboardCaptured) &&\n        ((controller.lastButtonState | controller.buttonState) & ControllerDelegate::BUTTON_B);",
+  );
   if (!source.includes("NH3D raw keyboard grip")) {
     source = replaceOnce(source,
       "    const auto clickButtons = ControllerDelegate::BUTTON_TRIGGER | ControllerDelegate::BUTTON_A |\n        ControllerDelegate::BUTTON_X | ControllerDelegate::BUTTON_TOUCHPAD;\n    const bool grabbing = externalVR->IsPresenting() && controller.hasAim && gamePanels && gamePanels->Grip(",
-      "    const auto clickButtons = ControllerDelegate::BUTTON_TRIGGER | ControllerDelegate::BUTTON_A |\n        ControllerDelegate::BUTTON_X | ControllerDelegate::BUTTON_TOUCHPAD;\n    const bool keyboardForeground = externalVR->IsPresenting() &&\n        ImmersiveKeyboardHit(controller.StartPoint(), controller.Direction());\n    const bool grabbing = externalVR->IsPresenting() && !keyboardForeground && controller.hasAim && gamePanels && gamePanels->Grip(",
+      "    const auto clickButtons = ControllerDelegate::BUTTON_TRIGGER | ControllerDelegate::BUTTON_A |\n        ControllerDelegate::BUTTON_X | ControllerDelegate::BUTTON_TOUCHPAD;\n    const bool grabbing = externalVR->IsPresenting() && !keyboardForeground && controller.hasAim && gamePanels && gamePanels->Grip(",
       "keep pane grip behind immersive keyboard");
     source = replaceOnce(source,
       "    const bool gameSecondary = !controller.gameUiGrip && !wasUiGrip && gripDown;\n    const bool wasGameSecondary = externalVR->IsPresenting() && !wasUiGrip && (controller.lastButtonState & ControllerDelegate::BUTTON_SQUEEZE);",
@@ -322,12 +400,16 @@ BrowserWorld::State::DrawImmersiveKeyboard(const vrb::Camera& camera) {
   }
 
   source = readFileSync(world, "utf8").replaceAll("\r\n", "\n");
+  source = source.replace(
+    "    if (externalVR->IsPresenting() && immersiveKeyboard && hitWidget == immersiveKeyboard) controller.gameKeyboardCaptured = true;",
+    "    if (externalVR->IsPresenting() && (keyboardBackHeld || (immersiveKeyboard && hitWidget == immersiveKeyboard))) controller.gameKeyboardCaptured = true;",
+  );
   if (!source.includes("NH3D keyboard controller ownership")) {
     source = replaceOnce(source,
       "    controller.gameActionHover = hitWidget && gamePanels && gamePanels->Owns(hitWidget) && gamePanels->IsAction(controller.index);",
       `    // NH3D keyboard controller ownership reaches ExternalVR before it
     // publishes this frame's gamepad state, including the left trigger.
-    if (externalVR->IsPresenting() && immersiveKeyboard && hitWidget == immersiveKeyboard) controller.gameKeyboardCaptured = true;
+    if (externalVR->IsPresenting() && (keyboardBackHeld || (immersiveKeyboard && hitWidget == immersiveKeyboard))) controller.gameKeyboardCaptured = true;
     else if (!pressed) controller.gameKeyboardCaptured = false;
     controller.gameActionHover = hitWidget && gamePanels && gamePanels->Owns(hitWidget) && gamePanels->IsAction(controller.index);`,
       "record immersive keyboard controller ownership");
@@ -335,13 +417,18 @@ BrowserWorld::State::DrawImmersiveKeyboard(const vrb::Camera& camera) {
   }
 
   source = readFileSync(external, "utf8").replaceAll("\r\n", "\n");
+  source = source.replace(
+    "    const uint64_t gameUiEffectiveMask = controller.leftHanded && !controller.gameKeyboardCaptured\n        ? gameUiButtonMask & ~(uint64_t(1) << device::kImmersiveButtonTrigger) : gameUiButtonMask;",
+    "    const uint64_t gameUiEffectiveMask = controller.gameKeyboardCaptured\n        ? gameUiButtonMask | (uint64_t(1) << device::kImmersiveButtonB)\n        : controller.leftHanded ? gameUiButtonMask & ~(uint64_t(1) << device::kImmersiveButtonTrigger) : gameUiButtonMask;",
+  );
   if (!source.includes("NH3D keyboard controller mask")) {
     source = replaceOnce(source,
       "    const uint64_t gameUiEffectiveMask = controller.leftHanded ? gameUiButtonMask & ~(uint64_t(1) << device::kImmersiveButtonTrigger) : gameUiButtonMask;",
       `    // NH3D keyboard controller mask: preserve left-trigger running except
     // while that controller is captured by the foreground native keyboard.
-    const uint64_t gameUiEffectiveMask = controller.leftHanded && !controller.gameKeyboardCaptured
-        ? gameUiButtonMask & ~(uint64_t(1) << device::kImmersiveButtonTrigger) : gameUiButtonMask;
+    const uint64_t gameUiEffectiveMask = controller.gameKeyboardCaptured
+        ? gameUiButtonMask | (uint64_t(1) << device::kImmersiveButtonB)
+        : controller.leftHanded ? gameUiButtonMask & ~(uint64_t(1) << device::kImmersiveButtonTrigger) : gameUiButtonMask;
     const bool gameUiCapture = controller.widget || controller.gameKeyboardCaptured;`,
       "mask left trigger while keyboard owns controller");
     source = replaceOnce(source,

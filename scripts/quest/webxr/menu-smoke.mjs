@@ -1,4 +1,66 @@
 /** Real DOM layout and GPU coverage; run wired-host.mjs --menu-smoke. */
+async function waitForSelector(cdp, selector) {
+  const result = await cdp("Runtime.evaluate", {
+    awaitPromise: true,
+    returnByValue: true,
+    expression: `new Promise((resolve, reject) => {
+      const find = () => document.querySelector(${JSON.stringify(selector)});
+      if (find()) { resolve(true); return; }
+      const timer = setTimeout(() => { observer.disconnect(); reject(new Error("Timed out waiting for ${selector}")); }, 3000);
+      const observer = new MutationObserver(() => { if (find()) { clearTimeout(timer); observer.disconnect(); resolve(true); } });
+      observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+    })`,
+  });
+  if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);
+}
+
+async function clickSelector(cdp, selector) {
+  const result = await cdp("Runtime.evaluate", {
+    returnByValue: true,
+    expression: `(() => {
+      const element = document.querySelector(${JSON.stringify(selector)});
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : null;
+    })()`,
+  });
+  const point = result.result?.value;
+  if (!point) throw new Error(`Cannot click ${selector}: no rendered element`);
+  await cdp("Input.dispatchMouseEvent", { type: "mouseMoved", x: point.x, y: point.y });
+  await cdp("Input.dispatchMouseEvent", { type: "mousePressed", x: point.x, y: point.y, button: "left", clickCount: 1 });
+  await cdp("Input.dispatchMouseEvent", { type: "mouseReleased", x: point.x, y: point.y, button: "left", clickCount: 1 });
+}
+
+async function enterStartupName(cdp, selector, value) {
+  await clickSelector(cdp, selector);
+  const focused = await cdp("Runtime.evaluate", {
+    returnByValue: true,
+    expression: `document.activeElement === document.querySelector(${JSON.stringify(selector)})`,
+  });
+  if (focused.result?.value !== true) throw new Error(`Pointer click did not focus ${selector}`);
+  await cdp("Input.dispatchKeyEvent", { type: "rawKeyDown", key: "a", code: "KeyA", windowsVirtualKeyCode: 65, modifiers: 2 });
+  await cdp("Input.dispatchKeyEvent", { type: "keyUp", key: "a", code: "KeyA", windowsVirtualKeyCode: 65, modifiers: 2 });
+  await cdp("Input.insertText", { text: value });
+  const edited = await cdp("Runtime.evaluate", {
+    returnByValue: true,
+    expression: `document.querySelector(${JSON.stringify(selector)})?.value`,
+  });
+  if (edited.result?.value !== value) throw new Error(`Text entry did not update ${selector}`);
+}
+
+async function smokeStartupNameInputs(cdp) {
+  await clickSelector(cdp, "#character-setup-dialog-variant .nh3d-choice-button");
+  await waitForSelector(cdp, "#character-setup-dialog-choose.is-visible");
+  await clickSelector(cdp, "#character-setup-dialog-choose .nh3d-choice-button:nth-of-type(2)");
+  await waitForSelector(cdp, "#character-setup-dialog-create.is-visible .nh3d-startup-config-input");
+  await enterStartupName(cdp, "#character-setup-dialog-create .nh3d-startup-config-input", "VR Create");
+  await clickSelector(cdp, "#character-setup-dialog-create .nh3d-menu-action-cancel");
+  await waitForSelector(cdp, "#character-setup-dialog-choose.is-visible");
+  await clickSelector(cdp, "#character-setup-dialog-choose .nh3d-choice-button:nth-of-type(1)");
+  await waitForSelector(cdp, "#character-setup-dialog-random.is-visible .nh3d-startup-config-input");
+  await enterStartupName(cdp, "#character-setup-dialog-random .nh3d-startup-config-input", "VR Random");
+}
+
 export async function menuSmoke(cdp) {
   const evaluated = await cdp("Runtime.evaluate", {
     awaitPromise: true, returnByValue: true,
@@ -237,5 +299,6 @@ export async function menuSmoke(cdp) {
     })()`,
   });
   if (evaluated.exceptionDetails) throw new Error(evaluated.exceptionDetails.exception?.description ?? evaluated.exceptionDetails.text);
+  await smokeStartupNameInputs(cdp);
   console.log("VR menu DOM/GPU smoke:", JSON.stringify(evaluated.result.value));
 }

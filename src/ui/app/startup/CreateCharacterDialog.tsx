@@ -114,6 +114,7 @@ export function CreateCharacterDialog({
             className="nh3d-startup-config-input"
             maxLength={30}
             onChange={(event) => setCreateCharacterName(event.target.value)}
+            onPointerDown={(event) => event.currentTarget.focus({ preventScroll: true })}
             placeholder={startupDefaultCharacterName}
             type="text"
             value={createCharacterName}

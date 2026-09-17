@@ -35,6 +35,13 @@ export interface InventoryContextMenuProps {
   inventoryDropActionButtonRef: React.MutableRefObject<HTMLButtonElement | null>;
 }
 
+export function shouldOpenInventoryDropTypeMenuOnHover(
+  documentElement: Pick<HTMLElement, "classList"> | null =
+    typeof document === "undefined" ? null : document.documentElement,
+): boolean {
+  return !documentElement?.classList.contains("nh3d-webxr-active");
+}
+
 export function InventoryContextMenu({
   resolveInventoryContextNavigationDirection,
   moveInventoryContextMenuActionFocus,
@@ -59,6 +66,7 @@ export function InventoryContextMenu({
   inventoryDropTypeHoldStateRef,
   inventoryDropActionButtonRef,
 }: InventoryContextMenuProps) {
+  const openDropTypeMenuOnHover = shouldOpenInventoryDropTypeMenuOnHover();
   return (
     <AnimatedDialog
       className="nh3d-context-menu nh3d-inventory-context-menu nh3d-overflow-glow-frame"
@@ -169,7 +177,7 @@ export function InventoryContextMenu({
                     setInventoryContextMenu(null);
                   }}
                   onMouseEnter={
-                    isDropAction
+                    isDropAction && openDropTypeMenuOnHover
                       ? () => openInventoryDropTypeMenu()
                       : undefined
                   }

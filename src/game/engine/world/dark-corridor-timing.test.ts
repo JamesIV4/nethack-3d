@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getDefaultDarkFloorGlyph, getDefaultFloorGlyph } from "../../glyphs/behavior";
-import { setActiveGlyphCatalog } from "../../glyphs/registry";
+import { getGlyphCatalogRanges, setActiveGlyphCatalog } from "../../glyphs/registry";
 import { DarkCorridorInference, type DarkCorridorInferenceDependencies } from "./dark-corridor-inference";
 import { WorldClassification, type WorldClassificationDependencies } from "./world-classification";
 import { TileUpdates, type TileUpdatesDependencies } from "./tile-updates";
@@ -24,13 +24,13 @@ async function fixture(version: "3.6.7" | "5.0" | "slashem") {
     parseTileKey: (key: string) => { const [x, y] = key.split(",").map(Number); return { x, y }; },
   };
   const tilesetAssets = { resolveRuntimeVersion: () => version, isVultureTilesActive: () => false };
-  const world = new WorldClassification({ levelTerrainCache: levels, tilesetAssets } as unknown as WorldClassificationDependencies);
+  const player = { hasSeenPlayerPosition: true, playerPos: { x: 5, y: 5 } };
+  const world = new WorldClassification({ levelTerrainCache: levels, tilesetAssets, playerMovement: player } as unknown as WorldClassificationDependencies);
   const tileMap = new Map<string, { userData: { isInferredDarkCorridorWall: boolean } }>();
   const rendering = {
     tileMap, tileRevealStartMs: new Map(), activeEffectTileKeys: new Set(),
     updateTile: vi.fn((x: number, y: number) => { tileMap.set(`${x},${y}`, { userData: { isInferredDarkCorridorWall: true } }); }),
   };
-  const player = { hasSeenPlayerPosition: true, playerPos: { x: 5, y: 5 } };
   const status = { statusConditionMask: 0 };
   const tileBatch = { beginTileBatch: vi.fn(), endTileBatch: vi.fn() };
   const updates = new TileUpdates({
@@ -65,6 +65,21 @@ async function fixture(version: "3.6.7" | "5.0" | "slashem") {
 }
 
 describe.each(["3.6.7", "slashem"] as const)("%s corridor observation timing", version => {
+  it("retains observed corridor terrain when a later actor covers it before cliparound", async () => {
+    const f = await fixture(version);
+    f.updates.pendingTileUpdates.clear();
+    f.levels.lastKnownTerrain.clear();
+    f.inference.newlyDiscoveredDarkCorridorTilesForCurrentInput.clear();
+    const petGlyph = getGlyphCatalogRanges().find(range => range.kind === "pet")!.start;
+    f.updates.enqueueTileUpdate({ x: 6, y: 5, glyph: f.corridor, char: "#" });
+    f.updates.enqueueTileUpdate({ x: 6, y: 5, glyph: petGlyph, char: "d", monsterId: 46 });
+    // The actor is the latest display, but must not erase observed terrain.
+    expect(f.updates.pendingTileUpdates.get("6,5").glyph).toBe(petGlyph);
+    expect(f.levels.lastKnownTerrain.get("6,5")?.glyph).toBe(f.corridor);
+    f.player.playerPos = { x: 6, y: 5 };
+    f.updates.flushPendingDarkCorridorInference(true);
+    expect(f.rendering.tileMap.has("7,6")).toBe(true);
+  });
   it("creates walls on each fast step before the terrain queue or animation finishes", async () => {
     const f = await fixture(version);
     for (let i = 0; i < 500; i++) f.updates.enqueueTileUpdate({ x: 30 + i % 50, y: 10 + Math.floor(i / 50), glyph: f.floor, char: "." });

@@ -30,7 +30,7 @@ function fixture(withTableHandle = false, withNavigation = false, withWeapons = 
   const renderer = { clippingPlanes: [] as THREE.Plane[], xr: { getReferenceSpace: () => ({}), getCamera: () => camera,
     getFrame: () => ({ getPose: () => ({ transform: { matrix: pose.elements } }),
       getViewerPose: () => ({ transform: { position: { x: 0, y: 1.6, z: 0 } } }) }) } };
-  const panel = { native: true, hit: () => null, hover: vi.fn(), forget: vi.fn(), beginGrab: vi.fn(), moveGrab: vi.fn(), endGrab: vi.fn() };
+  const panel = { native: true, nativePointer: { hit: vi.fn(), setContextTarget: vi.fn() }, hit: () => null, hover: vi.fn(), forget: vi.fn(), beginGrab: vi.fn(), moveGrab: vi.fn(), endGrab: vi.fn() };
   const tilt = { hit: () => null, hover: vi.fn(), surfaceHit: () => null, end: vi.fn() };
   const pan = vi.fn();
   const tableMove = withTableHandle ? new TableMoveHandle(root) : undefined;
@@ -46,6 +46,21 @@ function fixture(withTableHandle = false, withNavigation = false, withWeapons = 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("WebXR trigger to game command integration", () => {
+  it.each(["hold", "grip"])("anchors a %s context at the precise press hit rather than the tile center", (activation) => {
+    const f = fixture();
+    f.pose.makeTranslation(.7, -.4, 1);
+    const button = activation === "hold" ? 0 : 1;
+    f.right.gamepad.buttons[button].pressed = true;
+    f.input.update(0, new THREE.Vector3(0, 1, 0));
+    // Hand drift must not change the selected point while the gesture matures.
+    f.pose.makeTranslation(1.1, -.1, 1);
+    if (activation === "hold") f.input.update(500, new THREE.Vector3(0, 1, 0));
+    f.right.gamepad.buttons[button].pressed = false;
+    f.input.update(510, new THREE.Vector3(0, 1, 0));
+    expect(f.panel.nativePointer.setContextTarget).toHaveBeenCalledExactlyOnceWith(new THREE.Vector3(.7, -.4, 0));
+    expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(4, 6, true);
+    f.input.dispose();
+  });
   it("keeps a billboard's owning tile for FPS secondary hits through a scaled tracking rig", () => {
     const f = fixture();
     f.tile.visible = false;

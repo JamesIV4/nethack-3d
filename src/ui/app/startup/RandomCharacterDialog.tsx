@@ -103,6 +103,7 @@ export function RandomCharacterDialog({
             className="nh3d-startup-config-input"
             maxLength={30}
             onChange={(event) => setRandomCharacterName(event.target.value)}
+            onPointerDown={(event) => event.currentTarget.focus({ preventScroll: true })}
             placeholder={startupDefaultCharacterName}
             type="text"
             value={randomCharacterName}

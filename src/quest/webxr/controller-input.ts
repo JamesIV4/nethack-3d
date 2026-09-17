@@ -48,7 +48,7 @@ interface PointerState {
   buttons: boolean[];
   gesture: WorldClickGesture;
   pressedTile: { x: number; y: number } | null;
-  contextHeight: number;
+  contextPoint: THREE.Vector3 | null;
   directionInput: string | null; capturedDirectionInput: string | null;
   fpsVoidTargeting: boolean;
   voidDirection: {dx:number;dy:number} | null;
@@ -110,7 +110,7 @@ export class WebXrControllerInput {
       this.root.add(line, circle);
     }
     state = { source, id: this.nextId++, ray: new THREE.Ray(), line, circle, trigger: false, a: false,
-      down: false, tracked: false, capture: null, ui: null, ring: null, world: null, buttons: [], gesture: new WorldClickGesture(), pressedTile: null, contextHeight: 0,
+      down: false, tracked: false, capture: null, ui: null, ring: null, world: null, buttons: [], gesture: new WorldClickGesture(), pressedTile: null, contextPoint: null,
       directionInput: null, capturedDirectionInput: null, fpsVoidTargeting: false, voidDirection: null, voidTarget: false, grip: false, gripCapture: null, primaryBlocked: false, gripBlocked: false, pan: new TablePanGesture(), tableHandle: null, hand: new THREE.Vector3() };
     this.pointers.set(source, state);
     return state;
@@ -206,7 +206,11 @@ export class WebXrControllerInput {
   private captureTile(state: PointerState): void {
     const tile = this.getRayTile(state);
     state.pressedTile = tile?.tile ?? null;
-    state.contextHeight = tile?.height ?? 0;
+    // Freeze the exact visible hit at press time, independently of the tile
+    // owning a billboard and of later controller motion during a long press.
+    state.contextPoint = state.world?.point.clone() ?? (state.supportPoint
+      ? this.scene.localToWorld(state.supportPoint.clone())
+      : tile ? this.scene.localToWorld(new THREE.Vector3(tile.tile.x * this.tileSize, -tile.tile.y * this.tileSize, tile.height)) : null);
     const player = this.navigation?.playerTile();
     state.voidTarget = !!tile?.empty && !!player;
     state.voidDirection = tile?.empty && player ? this.navigation!.direction(tile.tile.x-player.x,tile.tile.y-player.y) : null;
@@ -312,8 +316,7 @@ export class WebXrControllerInput {
   private worldClick(state: PointerState, secondary: boolean): void {
     if (!secondary && state.voidTarget) { if (state.voidDirection) this.command({type:"move",...state.voidDirection,run:true}); return; }
     if (!state.pressedTile) return;
-    if (secondary && state.pressedTile) this.panel()?.nativePointer?.setContextTarget(
-      this.scene.localToWorld(new THREE.Vector3(state.pressedTile.x * this.tileSize, -state.pressedTile.y * this.tileSize, state.contextHeight)));
+    if (secondary && state.contextPoint) this.panel()?.nativePointer?.setContextTarget(state.contextPoint);
     this.command({ type: "tile", ...state.pressedTile, ...(secondary ? { secondary: true } : {}) });
   }
   update(time: number, forward: THREE.Vector3 | null): void {
@@ -370,7 +373,7 @@ export class WebXrControllerInput {
   private cancel(state: PointerState): void {
     this.panel()?.forget(state.source); this.tilt.end(state.source);
     this.panel()?.endGrab(state.source); this.tableMove?.end(state.source);
-    state.gesture.cancel(); state.pressedTile = null; state.voidDirection = null; state.voidTarget = false; this.weapons?.reset(state.source);
+    state.gesture.cancel(); state.pressedTile = null; state.contextPoint = null; state.voidDirection = null; state.voidTarget = false; this.weapons?.reset(state.source);
     state.gripBlocked ||= state.grip;
     state.primaryBlocked ||= state.down || state.grip;
     state.grip = false; state.gripCapture = null; state.pan.cancel();

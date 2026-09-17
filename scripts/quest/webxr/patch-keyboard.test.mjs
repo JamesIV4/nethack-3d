@@ -15,6 +15,7 @@ after(() => {
 
 const source = (...parts) => path.join(checkout, ...parts);
 mkdirSync(source("app/src/common/shared/com/igalia/wolvic/ui/widgets"), { recursive: true });
+mkdirSync(source("app/src/common/shared/com/igalia/wolvic/input"), { recursive: true });
 mkdirSync(source("app/src/main/cpp"), { recursive: true });
 
 writeFileSync(source("app/src/common/shared/com/igalia/wolvic/ui/widgets/KeyboardWidget.java"), `
@@ -43,6 +44,37 @@ class KeyboardWidget {
 
     @Override
     public void hideSoftInput(@NonNull WSession session) {}
+
+    public KeyboardWidget(Context aContext) {}
+}
+`);
+
+writeFileSync(source("app/src/common/shared/com/igalia/wolvic/input/MotionEventGenerator.java"), `
+import com.igalia.wolvic.ui.widgets.WindowWidget;
+class MotionEventGenerator {
+    public static volatile boolean gameImmersive = false;
+    private static boolean isGameMouseWidget(Widget widget) { return false; }
+    static final String LOGTAG = SystemUtils.createLogtag(MotionEventGenerator.class);
+    public static void dispatch(Widget aWidget, boolean aPressed, int aButtons) {
+        if (aPressed && aButtons == MotionEvent.BUTTON_SECONDARY && !isGameMouseWidget(aWidget)) return;
+    }
+}
+`);
+
+writeFileSync(source("app/src/common/shared/com/igalia/wolvic/VRBrowserActivity.java"), `
+class VRBrowserActivity {
+    public void onBackPressed() {
+        if (mPlatformPlugin != null && mPlatformPlugin.onBackPressed()) {
+            return;
+        }
+        if (mIsPresentingImmersive.getValue()) {
+            queueRunnable(this::exitImmersiveNative);
+            return;
+        }
+        if (mBackHandlers.size() > 0) {
+            mBackHandlers.getLast().run();
+        }
+    }
 }
 `);
 
@@ -73,7 +105,16 @@ void BrowserWorld::TickImmersive() {
   }
 }
 
+void BrowserWorld::CheckBackButton() {
+    if (wasGoBackButtonClicked(controller, externalVR->IsPresenting())) {
+      SimulateBack();
+    }
+}
+
 void BrowserWorld::UpdateControllers() {
+    if (wasGoBackButtonClicked(controller, externalVR->IsPresenting())) {
+      SimulateBack();
+    }
     const auto clickButtons = ControllerDelegate::BUTTON_TRIGGER | ControllerDelegate::BUTTON_A |
         ControllerDelegate::BUTTON_X | ControllerDelegate::BUTTON_TOUCHPAD;
     const bool grabbing = externalVR->IsPresenting() && controller.hasAim && gamePanels && gamePanels->Grip(
@@ -132,6 +173,8 @@ void ExternalVR::PushFramePoses() {
 test("game-host keyboard upgrades from an OpenXR layer to a GPU surface and remains idempotent", () => {
   patchKeyboard(checkout);
   const keyboard = readFileSync(source("app/src/common/shared/com/igalia/wolvic/ui/widgets/KeyboardWidget.java"), "utf8");
+  const motion = readFileSync(source("app/src/common/shared/com/igalia/wolvic/input/MotionEventGenerator.java"), "utf8");
+  const activity = readFileSync(source("app/src/common/shared/com/igalia/wolvic/VRBrowserActivity.java"), "utf8");
   const world = readFileSync(source("app/src/main/cpp/BrowserWorld.cpp"), "utf8");
   const controller = readFileSync(source("app/src/main/cpp/Controller.h"), "utf8");
   const controllerCpp = readFileSync(source("app/src/main/cpp/Controller.cpp"), "utf8");
@@ -142,7 +185,16 @@ test("game-host keyboard upgrades from an OpenXR layer to a GPU surface and rema
   assert.match(world, /DrawImmersiveKeyboard\(\*camera\);/);
   assert.match(world, /NH3D raw keyboard root/);
   assert.match(world, /GetRoot\(\)->RemoveFromParents\(\)/);
-  assert.match(world, /PostMultiply\(vrb::Matrix::Identity\(\)\.Scale\(vrb::Vector\(0\.5f, 0\.5f, 0\.5f\)\)\)/);
+  assert.match(world, /PostMultiply\(vrb::Matrix::Identity\(\)\.Scale\(vrb::Vector\(0\.25f, 0\.25f, 0\.25f\)\)\)/);
+  assert.match(world, /NH3D raw keyboard focus/);
+  assert.match(world, /keyboardBack/);
+  assert.match(world, /keyboardVisible/);
+  assert.match(world, /keyboardBackHeld/);
+  assert.match(keyboard, /supportsMultipleInputDevices/);
+  assert.match(motion, /isGameKeyboardWidget/);
+  assert.match(motion, /!isGameMouseWidget\(aWidget\) && !isGameKeyboardWidget\(aWidget\)/);
+  assert.match(activity, /NH3D keyboard back priority/);
+  assert.match(activity, /mKeyboard\.dismiss\(\);[\s\S]*return;[\s\S]*mIsPresentingImmersive/);
   assert.match(world, /NH3D raw keyboard move/);
   assert.match(world, /NH3D raw keyboard grip/);
   assert.match(world, /keyboardForeground/);
@@ -155,11 +207,12 @@ test("game-host keyboard upgrades from an OpenXR layer to a GPU surface and rema
   assert.match(controllerCpp, /gameKeyboardCaptured = aController\.gameKeyboardCaptured/);
   assert.match(controllerCpp, /gameKeyboardCaptured = false/);
   assert.match(external, /NH3D keyboard controller mask/);
-  assert.match(external, /controller\.leftHanded && !controller\.gameKeyboardCaptured/);
+  assert.match(external, /controller\.gameKeyboardCaptured[\s\S]*kImmersiveButtonB/);
   assert.match(external, /const bool gameUiCapture = controller\.widget \|\| controller\.gameKeyboardCaptured/);
 
   patchKeyboard(checkout);
   assert.equal(readFileSync(source("app/src/common/shared/com/igalia/wolvic/ui/widgets/KeyboardWidget.java"), "utf8"), keyboard);
+  assert.equal(readFileSync(source("app/src/common/shared/com/igalia/wolvic/VRBrowserActivity.java"), "utf8"), activity);
   assert.equal(readFileSync(source("app/src/main/cpp/BrowserWorld.cpp"), "utf8"), world);
   assert.equal(readFileSync(source("app/src/main/cpp/Controller.h"), "utf8"), controller);
   assert.equal(readFileSync(source("app/src/main/cpp/Controller.cpp"), "utf8"), controllerCpp);

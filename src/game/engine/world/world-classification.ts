@@ -807,18 +807,24 @@ export class WorldClassification {
     }
     const isPlayerTile =
       nextTile.x === this.dependencies.playerMovement.playerPos.x && nextTile.y === this.dependencies.playerMovement.playerPos.y;
-    if (!isPlayerTile) {
-      return;
-    }
     const previousBehavior = this.classifyTilePayload(previousTile);
-    const shouldSuppressPreviousFlatFeatureSeed =
-      previousBehavior !== null &&
-      this.isLootLikeBehavior(previousBehavior) &&
-      this.suppressedLootLikeUnderPlayerCacheKeys.has(key);
     const previousTerrain = this.snapshotPersistentTerrainFromTile(
       previousTile,
       previousBehavior,
     );
+    // A later actor/item observation must not erase terrain that was actually
+    // observed earlier in the same batch. cliparound can follow the whole map
+    // update, so this also applies to destinations not yet marked as the player.
+    if (previousTerrain) {
+      this.dependencies.levelTerrainCache.lastKnownTerrain.set(key, previousTerrain);
+    }
+    if (!isPlayerTile) {
+      return;
+    }
+    const shouldSuppressPreviousFlatFeatureSeed =
+      previousBehavior !== null &&
+      this.isLootLikeBehavior(previousBehavior) &&
+      this.suppressedLootLikeUnderPlayerCacheKeys.has(key);
     if (!previousTerrain) {
       const previousFlatFeature = this.snapshotFlatFeatureUnderPlayerFromTile(
         previousTile,
@@ -829,7 +835,6 @@ export class WorldClassification {
       }
       return;
     }
-    this.dependencies.levelTerrainCache.lastKnownTerrain.set(key, previousTerrain);
     const previousFlatFeature = this.snapshotFlatFeatureUnderPlayerFromTile(
       previousTile,
       previousBehavior,

@@ -9,6 +9,7 @@
 #include "vrb/RenderState.h"
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -187,21 +188,20 @@ class GameUiPanels {
       p.base = vrb::Matrix::Translation(hudSlice ? hud.GetTranslation() : p.pose.GetTranslation()).PostMultiply(p.base);
       p.local = hudSlice ? hud.AfineInverse().PostMultiply(p.pose) : vrb::Matrix::Identity();
       if (p.id == 4 && state[20] == 1) {
-        p.base = vrb::Matrix::Translation(center.GetTranslation()).PostMultiply(yaw.Translate(-yaw.GetTranslation()));
-        p.local = vrb::Matrix::Translation(vrb::Vector(0,height/2,0));
-        if (firstPerson) {
-          // Project the selected laser point onto the normal modal plane.
-          // The HTML crop stays in its atlas slot; only this 3D pane moves.
-          const auto inverse = hud.AfineInverse();
-          const auto eye = inverse.MultiplyPosition(viewer);
-          const auto target = inverse.MultiplyPosition(center.GetTranslation());
-          const auto direction = target - eye;
-          const float depth = -.45f;
-          const float t = direction.z() < -.001f ? (depth - eye.z()) / direction.z() : 0;
-          const auto projected = t > 0 ? eye + direction * t : vrb::Vector(0,0,depth);
-          p.base = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(projected.x(),projected.y(),depth)));
-          p.local = vrb::Matrix::Translation(vrb::Vector(0,height/2+.04f,0));
-        }
+        // Preserve the hit's screen direction even when looking straight down
+        // or away from the HUD. A fixed forward plane loses those directions.
+        // Both immersive modes use the same 1.4m modal viewing distance.
+        auto direction = center.GetTranslation() - viewer;
+        if (direction.Magnitude() < .001f) direction = yaw.MultiplyDirection(vrb::Vector(0,0,-1));
+        direction = direction.Normalize();
+        const auto projected = viewer + direction * 1.4f;
+        const auto facing = std::hypot(direction.x(), direction.z()) > .001f
+            ? vrb::Matrix::Rotation(vrb::Vector(0,1,0), std::atan2(-direction.x(),-direction.z()))
+            : yaw.Translate(-yaw.GetTranslation());
+        p.base = vrb::Matrix::Translation(projected).PostMultiply(facing);
+        // UpdatePose faces the pane toward the eye, so this raises its bottom
+        // edge in screen space, rather than lifting it to ordinary modal height.
+        p.local = vrb::Matrix::Translation(vrb::Vector(0,height/2+.04f,0));
       }
       if (p.id == 15) {
         // The dropdown is a child of the already-placed dialog. Expanding the
