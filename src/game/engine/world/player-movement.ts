@@ -6,6 +6,7 @@ import type { EntityMovement } from "./entity-movement";
 import type { FpsDiagnostics } from "../diagnostics/fps-diagnostics";
 import type { LevelTerrainCache } from "./level-terrain-cache";
 import type { MovementInput } from "../input/movement-input";
+import type { InputCommands } from "../input/input-commands";
 import type { PositionSelection } from "../input/position-selection";
 import type { PromptDialogs } from "../ui/prompt-dialogs";
 import type { QuestionMenus } from "../ui/question-menus";
@@ -13,6 +14,7 @@ import type { RuntimeEntityTracking } from "./runtime-entity-tracking";
 import type { TileRendering } from "../rendering/tile-rendering";
 
 export interface PlayerMovementDependencies {
+  readonly inputCommands: Pick<InputCommands, "clearRepeatableAction">;
   readonly camera: Pick<
     Camera,
     "beginFpsStepCameraTransition"
@@ -468,6 +470,7 @@ export class PlayerMovement {
     }
 
     if (moved) {
+      this.dependencies.inputCommands.clearRepeatableAction();
       const stepDurationMs = this.dependencies.camera.reserveSharedStepMotionDurationMs();
       if (this.dependencies.movementInput.isFpsMode()) {
         const nowMs = Date.now();

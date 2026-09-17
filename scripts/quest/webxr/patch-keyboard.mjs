@@ -35,8 +35,9 @@ export function patchKeyboard(checkout) {
     public void restartInput(@NonNull WSession session, int reason) {
         mInputRestarted = true;
         if (BuildConfig.NH3D_GAME_HOST && MotionEventGenerator.gameImmersive) {
-            // Gecko guarantees this focus callback for viewless sessions.
-            post(this::updateImmersiveInput);
+            // Content changes must not reset a held key or reopen a dismissed keyboard.
+            if (reason == RESTART_REASON_FOCUS) post(this::updateImmersiveInput);
+            else if (reason == RESTART_REASON_BLUR) post(() -> updateFocusedView(null));
         } else {
             resetKeyboardLayout();
         }
@@ -51,8 +52,9 @@ export function patchKeyboard(checkout) {
         }
         mInputRestarted = false;
     }`;
-  if (!source.includes(patchedCallbacks) && source.includes("NH3D immersive page input")) {
-    const begin = source.indexOf("    @Override\n    public void restartInput(@NonNull WSession session, int reason) {");
+  if (!source.includes(patchedCallbacks) && (source.includes("NH3D immersive page input") || source.includes("private void updateImmersiveInput()"))) {
+    const helper = source.indexOf("    private void updateImmersiveInput() {");
+    const begin = helper >= 0 ? helper : source.indexOf("    @Override\n    public void restartInput(@NonNull WSession session, int reason) {");
     const end = source.indexOf("\n\n    @Override\n    public void hideSoftInput", begin);
     if (begin < 0 || end <= begin) throw new Error("Missing prior keyboard callbacks");
     source = replaceOnce(source, source.slice(begin, end), patchedCallbacks, "upgrade Wolvic keyboard input callbacks");
@@ -125,6 +127,11 @@ export function patchKeyboard(checkout) {
 
   const world = path.join(checkout, "app/src/main/cpp/BrowserWorld.cpp");
   source = readFileSync(world, "utf8").replaceAll("\r\n", "\n");
+  // CheckBackButton also advances lastButtonState. Running it before the
+  // immersive UI pass eats stationary trigger DOWN/UP and B edges. Delete
+  // repeats on DOWN, whereas letters and Android buttons need the missing UP.
+  source = source.replace("    m.CheckBackButton();\n    createPassthroughLayerIfNeeded();",
+    "    // NH3D input edges belong to UpdateGameControls, except in the loading interstitial.\n    if (m.webXRInterstialState != WebXRInterstialState::HIDDEN) m.CheckBackButton();\n    createPassthroughLayerIfNeeded();");
   const foregroundKeyboard = "  if (drawImmersiveKeyboard) {\n    VRB_GL_CHECK(glDepthMask(GL_TRUE));\n    VRB_GL_CHECK(glClear(GL_DEPTH_BUFFER_BIT));\n    VRB_GL_CHECK(glDepthMask(GL_FALSE));\n    m.immersiveKeyboard->ToggleWidget(true);\n    m.DrawImmersiveKeyboard(*camera);\n  }";
   if (source.includes("PrepareImmersiveKeyboard") && !source.includes("NH3D raw keyboard root")) {
     const priorDraw = "  const bool drawImmersiveKeyboard = m.immersiveKeyboardPlaced && m.immersiveKeyboard;\n  if (drawImmersiveKeyboard) m.immersiveKeyboard->ToggleWidget(false);\n  m.drawList->Reset();\n  if (m.gamePanels) m.gamePanels->Cull(*m.cullVisitor, *m.drawList);\n  m.rootTransparent->Cull(*m.cullVisitor, *m.drawList); m.drawList->Draw(*camera);\n  if (drawImmersiveKeyboard) { m.immersiveKeyboard->ToggleWidget(true); m.DrawImmersiveKeyboard(*camera); }";
@@ -147,8 +154,12 @@ export function patchKeyboard(checkout) {
   bool immersiveKeyboardPlaced = false;
   bool immersiveKeyboardDetached = false;
   bool immersiveKeyboardGrabActive = false;
+  float immersiveKeyboardGrabDistance = 1.0f;
   vrb::Vector immersiveKeyboardGrabLocal = vrb::Vector::Zero();
   void PrepareImmersiveKeyboard();
+  vrb::Matrix ImmersiveKeyboardFacing(const vrb::Vector& center) const;
+  bool KeyboardIntersection(const WidgetPtr& widget, const vrb::Vector& start, const vrb::Vector& direction,
+      vrb::Vector& point, vrb::Vector& normal, bool& inside, float& distance) const;
   bool ImmersiveKeyboardHit(const vrb::Vector& start, const vrb::Vector& direction) const;
   void MoveImmersiveKeyboard(const vrb::Vector& start, const vrb::Vector& direction);
   void SyncImmersiveKeyboard();
@@ -157,7 +168,7 @@ export function patchKeyboard(checkout) {
   void UpdateTrackedKeyboard();`;
   const oldKeyboardState = "  // The game pane root is transformed independently; keep Wolvic's keyboard in its own native pass.\n  void DrawImmersiveKeyboard(const vrb::Camera& camera);\n  void UpdateTrackedKeyboard();";
   if (source.includes("PrepareImmersiveKeyboard")) {
-    if (!source.includes("  bool ImmersiveKeyboardHit(const vrb::Vector& start, const vrb::Vector& direction) const;")) {
+    if (!source.includes("  bool KeyboardIntersection(") || !source.includes("NH3D raw keyboard root") || !source.includes("  bool ImmersiveKeyboardHit(")) {
       const stateStart = source.indexOf("  // The game pane root is transformed independently");
       const stateEnd = source.indexOf("  void UpdateTrackedKeyboard();", stateStart) + "  void UpdateTrackedKeyboard();".length;
       if (stateStart < 0 || stateEnd <= stateStart) throw new Error("Missing prior immersive keyboard state");
@@ -187,11 +198,20 @@ BrowserWorld::State::RestoreImmersiveKeyboard() {
   immersiveKeyboardAnchorRevision = -1;
 }
 
+vrb::Matrix
+BrowserWorld::State::ImmersiveKeyboardFacing(const vrb::Vector& center) const {
+  const auto toHead = device->GetHeadTransform().GetTranslation() - center;
+  const float horizontal = std::sqrt(toHead.x() * toHead.x() + toHead.z() * toHead.z());
+  return vrb::Matrix::Rotation(vrb::Vector(0, 1, 0), std::atan2(toHead.x(), toHead.z()))
+      .PostMultiply(vrb::Matrix::Rotation(vrb::Vector(1, 0, 0), -std::atan2(toHead.y(), horizontal)))
+      .PostMultiply(vrb::Matrix::Identity().Scale(vrb::Vector(0.25f, 0.25f, 0.25f)));
+}
+
 void
 BrowserWorld::State::PrepareImmersiveKeyboard() {
   WidgetPtr keyboard;
   for (const auto& widget : widgets) if (widget->GetPlacement()->name == "KeyboardWidget") { keyboard = widget; break; }
-  if (!keyboard || !keyboard->IsVisible()) { RestoreImmersiveKeyboard(); return; }
+  if (!keyboard || !keyboard->GetPlacement()->visible) { RestoreImmersiveKeyboard(); return; }
   const float revision = gamePointerState.empty() ? 0 : gamePointerState[0];
   if (!immersiveKeyboardPlaced || immersiveKeyboard != keyboard || revision != immersiveKeyboardAnchorRevision) {
     RestoreImmersiveKeyboard();
@@ -205,15 +225,44 @@ BrowserWorld::State::PrepareImmersiveKeyboard() {
     const auto center = head.GetTranslation() + yaw.MultiplyDirection(vrb::Vector(0, -0.35f, -1.0f));
     // Match the current game UI yaw. Wolvic's flat keyboard is 3.25m wide
     // and tilted down; halve it here and remove that unrelated flat pose.
-    immersiveKeyboardTransform = vrb::Matrix::Translation(center).PostMultiply(yaw)
-        .PostMultiply(vrb::Matrix::Identity().Scale(vrb::Vector(0.25f, 0.25f, 0.25f)));
+    immersiveKeyboardTransform = vrb::Matrix::Translation(center).PostMultiply(ImmersiveKeyboardFacing(center));
     immersiveKeyboard->SetTransform(immersiveKeyboardTransform);
     immersiveKeyboardAnchorRevision = revision;
     immersiveKeyboardPlaced = true;
-  } else immersiveKeyboard->SetTransform(immersiveKeyboardTransform);
+  } else {
+    const auto center = immersiveKeyboardTransform.GetTranslation();
+    immersiveKeyboardTransform = vrb::Matrix::Translation(center).PostMultiply(ImmersiveKeyboardFacing(center));
+    immersiveKeyboard->SetTransform(immersiveKeyboardTransform);
+  }
   // The game-root cull would apply gameUiTransform a second time. Hide the
   // keyboard there, then cull its raw root before controller hit testing.
   immersiveKeyboard->ToggleWidget(false);
+}
+
+bool
+BrowserWorld::State::KeyboardIntersection(const WidgetPtr& widget, const vrb::Vector& start,
+    const vrb::Vector& direction, vrb::Vector& point, vrb::Vector& normal, bool& inside, float& distance) const {
+  inside = false; distance = -1;
+  if (!widget || !widget->GetPlacement()->visible || !widget->GetQuad()) return false;
+  // Use the exact quad transform used for drawing and coordinate conversion.
+  // The keyboard is visible from both sides, and a hand can cross its plane.
+  // Stock Quad::TestIntersection rejects the back face and checks transient
+  // root visibility, so visible keys can otherwise become unclickable.
+  const auto transform = widget->GetQuad()->GetTransformNode()->GetWorldTransform();
+  const auto inverse = transform.AfineInverse();
+  const auto origin = inverse.MultiplyPosition(start);
+  const auto ray = inverse.MultiplyDirection(direction);
+  if (std::abs(ray.z()) < 0.000001f) return false;
+  const float t = -origin.z() / ray.z();
+  if (t < 0) return false;
+  const auto local = origin + ray * t;
+  vrb::Vector min, max;
+  widget->GetWidgetMinAndMax(min, max);
+  inside = local.x() >= min.x() && local.x() <= max.x() && local.y() >= min.y() && local.y() <= max.y();
+  point = transform.MultiplyPosition(local);
+  normal = transform.MultiplyDirection(vrb::Vector(0, 0, ray.z() < 0 ? 1 : -1)).Normalize();
+  distance = (point - start).Magnitude();
+  return true;
 }
 
 bool
@@ -222,7 +271,7 @@ BrowserWorld::State::ImmersiveKeyboardHit(const vrb::Vector& start, const vrb::V
   vrb::Vector point, normal;
   float distance = -1.0f;
   bool inside = false;
-  return immersiveKeyboard->TestControllerIntersection(start, direction, point, normal, false, inside, distance) && inside;
+  return KeyboardIntersection(immersiveKeyboard, start, direction, point, normal, inside, distance) && inside;
 }
 
 void
@@ -231,12 +280,16 @@ BrowserWorld::State::MoveImmersiveKeyboard(const vrb::Vector& start, const vrb::
   vrb::Vector point, normal;
   float distance = -1.0f;
   bool inside = false;
-  if (!immersiveKeyboard->TestControllerIntersection(start, direction, point, normal, false, inside, distance)) return;
-  const auto local = immersiveKeyboardTransform.Translate(-immersiveKeyboardTransform.GetTranslation());
   if (!immersiveKeyboardGrabActive) {
+    if (!KeyboardIntersection(immersiveKeyboard, start, direction, point, normal, inside, distance)) return;
     immersiveKeyboardGrabLocal = immersiveKeyboardTransform.AfineInverse().MultiplyPosition(point);
+    immersiveKeyboardGrabDistance = distance;
     immersiveKeyboardGrabActive = true;
   }
+  // Preserve ray depth, not the old plane: moving the hand towards/away from
+  // the headset now moves the keyboard in depth as well as vertically/laterally.
+  point = start + direction.Normalize() * immersiveKeyboardGrabDistance;
+  const auto local = ImmersiveKeyboardFacing(immersiveKeyboardTransform.GetTranslation());
   const auto grabOffset = local.MultiplyDirection(immersiveKeyboardGrabLocal);
   immersiveKeyboardTransform = vrb::Matrix::Translation(point - grabOffset).PostMultiply(local);
   immersiveKeyboard->SetTransform(immersiveKeyboardTransform);
@@ -263,7 +316,8 @@ BrowserWorld::State::DrawImmersiveKeyboard(const vrb::Camera& camera) {
 `;
   const oldDrawStart = source.indexOf("void\nBrowserWorld::State::DrawImmersiveKeyboard(const vrb::Camera& camera) {");
   const restoreStart = source.indexOf("void\nBrowserWorld::State::RestoreImmersiveKeyboard() {");
-  const trackedStart = source.indexOf("void\nBrowserWorld::State::UpdateTrackedKeyboard() {", oldDrawStart);
+  const auxiliaryStart = source.indexOf("// NH3D keyboard dialog methods begin", oldDrawStart);
+  const trackedStart = auxiliaryStart >= 0 ? auxiliaryStart : source.indexOf("void\nBrowserWorld::State::UpdateTrackedKeyboard() {", oldDrawStart);
   if (restoreStart >= 0 && trackedStart > restoreStart) {
     source = replaceOnce(source, source.slice(restoreStart, trackedStart), drawKeyboard, "upgrade immersive keyboard draw implementation");
   } else if (oldDrawStart >= 0 && trackedStart > oldDrawStart) {
@@ -289,11 +343,11 @@ BrowserWorld::State::DrawImmersiveKeyboard(const vrb::Camera& camera) {
     "  rootTransparent->SetTransform(gameUiTransform);\n  drawList->Reset(); rootTransparent->Cull(*cullVisitor, *drawList);\n  if (!controllers->IsVisible()) controllers->SetVisible(true);",
     "  PrepareImmersiveKeyboard();\n  rootTransparent->SetTransform(gameUiTransform);\n  drawList->Reset(); rootTransparent->Cull(*cullVisitor, *drawList);\n  SyncImmersiveKeyboard();\n  if (!controllers->IsVisible()) controllers->SetVisible(true);",
     "synchronize raw keyboard before controller rays");
-  if (!source.includes("    RestoreImmersiveKeyboard();\n    externalVR->StopPresenting();")) source = replaceOnce(source,
+  if (!source.includes("    RestoreImmersiveKeyboard();")) source = replaceOnce(source,
     "    externalVR->StopPresenting();",
     "    RestoreImmersiveKeyboard();\n    externalVR->StopPresenting();",
     "restore keyboard on immersive exit");
-  if (!source.includes("  } else {\n    m.RestoreImmersiveKeyboard();\n    m.gameUiAnchored = false;")) source = replaceOnce(source,
+  if (!source.includes("    m.RestoreImmersiveKeyboard();")) source = replaceOnce(source,
     "  } else {\n    m.gameUiAnchored = false;",
     "  } else {\n    m.RestoreImmersiveKeyboard();\n    m.gameUiAnchored = false;",
     "restore keyboard outside immersive mode");
@@ -382,6 +436,12 @@ BrowserWorld::State::DrawImmersiveKeyboard(const vrb::Camera& camera) {
   }
   source = source.replace("(hitWidget != immersiveKeyboard || keyboardForeground)",
     "(!immersiveKeyboard || hitWidget != immersiveKeyboard || keyboardForeground)");
+  if (!source.includes("NH3D move-bar release")) source = replaceOnce(source,
+    "          immersiveKeyboardGrabActive = false;\n          movingWidget->EndMoving();",
+    "          immersiveKeyboardGrabActive = false;\n          movingWidget->EndMoving();\n          // NH3D move-bar release: finish the Android touch capture too.\n          VRBrowser::HandleMotionEvent(immersiveKeyboard->GetHandle(), controller.index, jboolean(controller.focused),\n              false, controller.pointerX, controller.pointerY, 1);",
+    "release Android move bar capture");
+  source = source.replace("const bool keyboardVisible = externalVR->IsPresenting() && immersiveKeyboard && immersiveKeyboard->IsVisible();",
+    "const bool keyboardVisible = externalVR->IsPresenting() && immersiveKeyboard && immersiveKeyboard->GetPlacement()->visible;");
   writeFileSync(world, source);
 
   const controllerHeader = path.join(checkout, "app/src/main/cpp/Controller.h");
@@ -413,8 +473,9 @@ BrowserWorld::State::DrawImmersiveKeyboard(const vrb::Camera& camera) {
     else if (!pressed) controller.gameKeyboardCaptured = false;
     controller.gameActionHover = hitWidget && gamePanels && gamePanels->Owns(hitWidget) && gamePanels->IsAction(controller.index);`,
       "record immersive keyboard controller ownership");
-    writeFileSync(world, source);
   }
+  // Persist upgrades even when the ownership marker already exists.
+  writeFileSync(world, source);
 
   source = readFileSync(external, "utf8").replaceAll("\r\n", "\n");
   source = source.replace(
@@ -447,6 +508,6 @@ BrowserWorld::State::DrawImmersiveKeyboard(const vrb::Camera& camera) {
       "      immersiveController.axisValue[j] = controller.gameUiGrip ? 0.0f : controller.widget && !controller.gameActionHover && !(controller.leftHanded && (controller.buttonState & ControllerDelegate::BUTTON_TRIGGER)) ? 0.0f : controller.immersiveAxes[j];",
       "      immersiveController.axisValue[j] = controller.gameUiGrip ? 0.0f : gameUiCapture && !controller.gameActionHover && !(controller.leftHanded && (controller.buttonState & ControllerDelegate::BUTTON_TRIGGER) && !controller.gameKeyboardCaptured) ? 0.0f : controller.immersiveAxes[j];",
       "mask keyboard axes from WebXR");
-    writeFileSync(external, source);
   }
+  writeFileSync(external, source);
 }

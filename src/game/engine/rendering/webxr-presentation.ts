@@ -19,6 +19,7 @@ import type { MovementInput } from "../input/movement-input";
 import { createTrackingToGame, tabletopClippingPlanes } from "./webxr-rig";
 import { registerWebXrOwner, updateWebXrState } from "../../../quest/webxr/presentation";
 import { getXrSettings } from "../../../quest/webxr/settings";
+import { StereoDepth } from "../../../quest/webxr/stereo-depth";
 import { LaggingUiAnchor } from "../../../quest/webxr/lagging-ui-anchor";
 import { MenuRain } from "../../../quest/webxr/menu-rain";
 import { TableMoveHandle } from "../../../quest/webxr/table-move-handle";
@@ -48,6 +49,7 @@ export class WebXrPresentation {
   private readonly scaledSprites = new ScaledCameraSprites();
   private readonly worldClipCulling = new WorldClipCulling();
   private readonly terrainBatches = new XrTerrainBatches();
+  private readonly stereoDepth = new StereoDepth();
   private readonly trackingRoot = new THREE.Group();
   private readonly xrCamera = new THREE.PerspectiveCamera(75, 1, 0.03, 150);
   private readonly anchor = new THREE.Vector3(0, 1.6, 0);
@@ -121,7 +123,9 @@ export class WebXrPresentation {
     this.input?.update(time, null);
     this.htmlPanel?.update(time);
     this.menuRain.update(time);
-    this.dependencies.renderPipeline.renderer.render(this.menuRain.scene, this.xrCamera);
+    const { renderer } = this.dependencies.renderPipeline;
+    this.stereoDepth.render(renderer.xr, this.xrCamera, getXrSettings().depth,
+      () => renderer.render(this.menuRain!.scene, this.xrCamera));
   }
 
   constructor(private readonly dependencies: WebXrPresentationDependencies) {
@@ -502,9 +506,9 @@ export class WebXrPresentation {
 
   render(camera: THREE.Camera): void {
     const { renderer, scene } = this.dependencies.renderPipeline;
-    this.terrainBatches.render(renderer, scene, camera, this.trackingRoot,
+    this.stereoDepth.render(renderer.xr, this.xrCamera, getXrSettings().depth, () => this.terrainBatches.render(renderer, scene, camera, this.trackingRoot,
       this.dependencies.tileRendering.tileMap, this.dependencies.tileRendering.floorGeometry,
-      this.dependencies.glyphTextures.glyphOverlayMap, this.worldClipCulling);
+      this.dependencies.glyphTextures.glyphOverlayMap, this.worldClipCulling));
   }
 
   dispose(): void {

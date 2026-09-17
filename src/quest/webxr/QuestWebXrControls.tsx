@@ -36,6 +36,20 @@ export function QuestWebXrSettings(): JSX.Element | null {
   const state = useSyncExternalStore(subscribeWebXr, getWebXrState, getWebXrState);
   if (!state.host) return null;
   return <>
+    <OptionSliderRow label="VR depth (stereo separation)"
+      description="Adjust the depth of the 3D world immediately. 100% uses your headset's normal eye separation. UI depth stays unchanged."
+      valueLabel={`${Math.round(settings.depth * 100)}%${settings.depth === 1 ? " (default)" : ""}`}>
+      <div className="nh3d-xr-depth-slider">
+        <input aria-label="VR depth (stereo separation)" className="nh3d-option-slider" type="range"
+          min="0.5" max="1.5" step="0.05" value={settings.depth} list="nh3d-xr-depth-default"
+          aria-valuetext={`${Math.round(settings.depth * 100)} percent${settings.depth === 1 ? ", default" : ""}`}
+          onInput={event => setXrSettings({ depth: Number(event.currentTarget.value) })}
+          onChange={event => setXrSettings({ depth: Number(event.currentTarget.value) })} />
+        <datalist id="nh3d-xr-depth-default"><option value="1" label="Default" /></datalist>
+        <button type="button" className="nh3d-xr-depth-default" aria-label="Reset VR depth to 100 percent"
+          onClick={() => setXrSettings({ depth: 1 })}>Default</button>
+      </div>
+    </OptionSliderRow>
     {WEBXR_WEAPON_ATTACKS_ENABLED ? <><div className="nh3d-option-row nh3d-option-row-inline-toggle">
       <div className="nh3d-option-copy"><OptionLabelWithInfo label="Weapon gestures"
         description="Swing a held weapon to attack in first-person VR. Recover to a quiet position before the next attack." /></div>

@@ -4,6 +4,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import os from "node:os";
 import path from "node:path";
 import { patchKeyboard } from "./patch-keyboard.mjs";
+import { patchKeyboardDialogs } from "./patch-keyboard-dialogs.mjs";
 
 const checkout = mkdtempSync(path.join(os.tmpdir(), "nh3d-keyboard-"));
 after(() => {
@@ -17,10 +18,20 @@ const source = (...parts) => path.join(checkout, ...parts);
 mkdirSync(source("app/src/common/shared/com/igalia/wolvic/ui/widgets"), { recursive: true });
 mkdirSync(source("app/src/common/shared/com/igalia/wolvic/input"), { recursive: true });
 mkdirSync(source("app/src/main/cpp"), { recursive: true });
+mkdirSync(source("app/src/common/shared/com/igalia/wolvic/ui/widgets/dialogs"), { recursive: true });
+writeFileSync(source("app/src/common/shared/com/igalia/wolvic/ui/widgets/dialogs/UIDialog.java"), `
+class UIDialog {
+    void initialize() {
+        mWidgetPlacement.cylinder = false;
+    }
+}
+`);
 
 writeFileSync(source("app/src/common/shared/com/igalia/wolvic/ui/widgets/KeyboardWidget.java"), `
 import com.igalia.wolvic.R;
 class KeyboardWidget {
+    public void dismiss() {
+    }
     @Override
     protected void initializeWidgetPlacement(WidgetPlacement aPlacement) {
         // FIXME: keyboard is misplaced when rendered in a cylinder layer.
@@ -63,6 +74,11 @@ class MotionEventGenerator {
 
 writeFileSync(source("app/src/common/shared/com/igalia/wolvic/VRBrowserActivity.java"), `
 class VRBrowserActivity {
+    void handleBack() {
+        runOnUiThread(() -> {
+            dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
+        });
+    }
     public void onBackPressed() {
         if (mPlatformPlugin != null && mPlatformPlugin.onBackPressed()) {
             return;
@@ -96,6 +112,8 @@ void BrowserWorld::DrawImmersive() {
 }
 
 void BrowserWorld::TickImmersive() {
+    m.CheckBackButton();
+    createPassthroughLayerIfNeeded();
   rootTransparent->SetTransform(gameUiTransform);
   drawList->Reset(); rootTransparent->Cull(*cullVisitor, *drawList);
   if (!controllers->IsVisible()) controllers->SetVisible(true);
@@ -112,6 +130,11 @@ void BrowserWorld::CheckBackButton() {
 }
 
 void BrowserWorld::UpdateControllers() {
+      const bool hit = panel ? true :
+            widget->TestControllerIntersection(start, direction, result, normal, clamp, isInWidget, distance);
+      if (panel ? true :
+          previousWidget->TestControllerIntersection(start, direction, result, normal, false, isInWidget, distance)) {
+      }
     if (wasGoBackButtonClicked(controller, externalVR->IsPresenting())) {
       SimulateBack();
     }
@@ -255,4 +278,54 @@ test("prior raw keyboard patch upgrades its root, ray, move, and grip lifecycle"
 
   patchKeyboard(checkout);
   assert.equal(readFileSync(worldFile, "utf8"), upgraded);
+});
+
+test("stationary button edges are handled once and keyboard rays/drag use the visible quad", () => {
+  const world = readFileSync(source("app/src/main/cpp/BrowserWorld.cpp"), "utf8");
+  assert.match(world, /if \(m.webXRInterstialState != WebXRInterstialState::HIDDEN\) m.CheckBackButton\(\);/);
+  assert.doesNotMatch(world, /\n    m.CheckBackButton\(\);/);
+  assert.match(world, /GetQuad\(\)->GetTransformNode\(\)->GetWorldTransform\(\)/);
+  assert.match(world, /std::abs\(ray.z\(\)\)/);
+  assert.match(world, /if \(t < 0\) return false/);
+  assert.match(world, /point = start \+ direction.Normalize\(\) \* immersiveKeyboardGrabDistance/);
+  assert.match(world, /NH3D move-bar release[\s\S]*VRBrowser::HandleMotionEvent/);
+  assert.match(world, /std::atan2\(toHead.y\(\), horizontal\)/);
+});
+
+test("existing ownership markers still receive B capture and button-mask upgrades", () => {
+  const worldFile = source("app/src/main/cpp/BrowserWorld.cpp");
+  const externalFile = source("app/src/main/cpp/ExternalVR.cpp");
+  writeFileSync(worldFile, readFileSync(worldFile, "utf8").replace(
+    "(keyboardBackHeld || (immersiveKeyboard && hitWidget == immersiveKeyboard))",
+    "immersiveKeyboard && hitWidget == immersiveKeyboard"));
+  writeFileSync(externalFile, readFileSync(externalFile, "utf8").replace(
+    `controller.gameKeyboardCaptured
+        ? gameUiButtonMask | (uint64_t(1) << device::kImmersiveButtonB)
+        : controller.leftHanded ? gameUiButtonMask & ~(uint64_t(1) << device::kImmersiveButtonTrigger) : gameUiButtonMask;`,
+    `controller.leftHanded && !controller.gameKeyboardCaptured
+        ? gameUiButtonMask & ~(uint64_t(1) << device::kImmersiveButtonTrigger) : gameUiButtonMask;`));
+  patchKeyboard(checkout);
+  assert.match(readFileSync(worldFile, "utf8"), /keyboardBackHeld \|\|/);
+  assert.match(readFileSync(externalFile, "utf8"), /controller.gameKeyboardCaptured[\s\S]*kImmersiveButtonB/);
+});
+
+test("speech dialogs render and receive foreground input, and the complete patch chain can run twice", () => {
+  patchKeyboardDialogs(checkout);
+  const paths = ["app/src/main/cpp/BrowserWorld.cpp", "app/src/main/cpp/ExternalVR.cpp",
+    "app/src/common/shared/com/igalia/wolvic/ui/widgets/KeyboardWidget.java",
+    "app/src/common/shared/com/igalia/wolvic/VRBrowserActivity.java",
+    "app/src/common/shared/com/igalia/wolvic/ui/widgets/dialogs/UIDialog.java"];
+  const before = paths.map(p => readFileSync(source(p), "utf8"));
+  assert.match(before[0], /KeyboardPriority\(widget\) > 0 \? KeyboardIntersection/);
+  assert.match(before[0], /KeyboardPriority\(previousWidget\) > 0 \? KeyboardIntersection/);
+  assert.match(before[0], /KeyboardForegroundHit\(controller.StartPoint/);
+  assert.match(before[0], /placement->name != "VoiceSearchWidget" && placement->name != "PermissionWidget"/);
+  assert.match(before[0], /m.DrawKeyboardDialogs\(\*camera\)/);
+  assert.match(before[2], /gameImmersive\) hideOverlays\(\)/);
+  assert.match(before[2], /reason == RESTART_REASON_FOCUS/);
+  assert.match(before[3], /NH3D direct keyboard back/);
+  assert.match(before[4], /NH3D_GAME_HOST\) mWidgetPlacement.layer = false/);
+  patchKeyboard(checkout);
+  patchKeyboardDialogs(checkout);
+  assert.deepEqual(paths.map(p => readFileSync(source(p), "utf8")), before);
 });

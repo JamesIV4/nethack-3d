@@ -218,6 +218,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get worldClassification() { return worldClassification; },
   });
   const playerMovement: PlayerMovement = new PlayerMovement({
+    get inputCommands() { return inputCommands; },
     get camera() { return camera; },
     get directionPrompts() { return directionPrompts; },
     get engineState() { return engineState; },
