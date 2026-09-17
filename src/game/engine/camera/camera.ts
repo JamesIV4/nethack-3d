@@ -1,3 +1,4 @@
+import { CAMERA_FOLLOW_HALF_LIFE_MS, cameraFollowAlpha } from "./camera-smoothing";
 import * as THREE from "three";
 import { TILE_SIZE, WALL_HEIGHT } from "../../constants";
 import {
@@ -294,11 +295,11 @@ export class Camera {
   // Manual overhead pan inertia only.
   readonly cameraPanHalfLifeMs: number = 135;
 
-  // Idle overhead follow when centered on the player.
-  cameraFollowHalfLifeMs: number = 85;
+  // Shared overhead follow on every platform, including idle/pan and terminal views.
+  cameraFollowHalfLifeMs: number = CAMERA_FOLLOW_HALF_LIFE_MS;
 
-  // The single normal-mode player-move camera speed knob.
-  normalModePlayerMoveCameraFollowHalfLifeMs: number = 150;
+  // Player steps use the same response, without speeding up when a step settles.
+  normalModePlayerMoveCameraFollowHalfLifeMs: number = CAMERA_FOLLOW_HALF_LIFE_MS;
 
   cameraFollowInitialized: boolean = false;
 
@@ -938,11 +939,7 @@ export class Camera {
       this.cameraFollowCurrent.copy(this.cameraFollowTarget);
       this.cameraFollowInitialized = true;
     } else {
-      const alpha =
-        1 -
-        Math.exp(
-          (-Math.LN2 * deltaSeconds * 1000) / this.cameraFollowHalfLifeMs,
-        );
+      const alpha = cameraFollowAlpha(deltaSeconds * 1000, this.cameraFollowHalfLifeMs);
       this.cameraFollowCurrent.lerp(this.cameraFollowTarget, alpha);
     }
 
@@ -1243,8 +1240,7 @@ export class Camera {
       const followHalfLifeMs = normalModePlayerMoveCameraFollowActive
         ? this.normalModePlayerMoveCameraFollowHalfLifeMs
         : this.cameraFollowHalfLifeMs;
-      const alpha =
-        1 - Math.exp((-Math.LN2 * deltaSeconds * 1000) / followHalfLifeMs);
+      const alpha = cameraFollowAlpha(deltaSeconds * 1000, followHalfLifeMs);
       this.cameraFollowCurrent.lerp(this.cameraFollowTarget, alpha);
     }
     if (

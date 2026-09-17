@@ -1,3 +1,7 @@
+import { patchStartupVisibility } from "./patch-startup-visibility.mjs";
+import { patchControllerFade } from "./patch-controller-fade.mjs";
+import { patchStoreRelease } from "./patch-store-release.mjs";
+import { patchRuntimeControllerModels } from "./patch-runtime-controller-models.mjs";
 import { patchIdentity } from "./patch-identity.mjs";
 import { patchControllerMouse } from "./patch-controller-mouse.mjs";
 import { patchLaserTouch } from "./patch-laser-touch.mjs";
@@ -6,6 +10,8 @@ import { patchKeyboard } from "./patch-keyboard.mjs";
 import { patchKeyboardDialogs } from "./patch-keyboard-dialogs.mjs";
 import { patchSystemUi } from "./patch-system-ui.mjs";
 import { patchWeaponControls } from "./patch-weapon-controls.mjs";
+import { stageControllerModels } from "./stage-controller-models.mjs";
+import { patchAppQuit } from "./patch-app-quit.mjs";
 import { findAndroidSdk } from "../build-environment.mjs";
 import { patchPaneIsolation } from "./patch-pane-isolation.mjs";
 import { execFileSync } from "node:child_process";
@@ -172,7 +178,13 @@ execFileSync("git", ["-C", checkout, "submodule", "update", "--init", "--recursi
 cpSync(path.join(root, "quest/webxr/host/BundledGameServer.java"), path.join(checkout, "app/src/common/shared/com/igalia/wolvic/BundledGameServer.java"));
 cpSync(platform, path.join(checkout, "third_party/OVRPlatformSDK"), { recursive: true });
 writeFileSync(path.join(checkout, "local.properties"), "sdk.dir=" + sdk.replaceAll("\\", "/").replaceAll(":", "\\:") + "\n");
-writeFileSync(path.join(checkout, "user.properties"), "useStaticVersionCode=true\nuseDebugSigningOnRelease=true\n");
+const userPropertiesPath = path.join(checkout, "user.properties");
+let userProperties = existsSync(userPropertiesPath) ? readFileSync(userPropertiesPath, "utf8") : "";
+for (const [name, value] of [["useStaticVersionCode", "true"], ["useDebugSigningOnRelease", "false"]]) {
+  const setting = new RegExp("^" + name + "=.*$", "m");
+  userProperties = setting.test(userProperties) ? userProperties.replace(setting, name + "=" + value) : userProperties + "\n" + name + "=" + value + "\n";
+}
+writeFileSync(userPropertiesPath, userProperties);
 patchHostInteraction(checkout);
 patchWolvicPointer(checkout);
 patchTableUi(checkout);
@@ -192,4 +204,10 @@ patchKeyboardDialogs(checkout);
 patchSystemUi(checkout);
 patchIdentity(checkout);
 patchVisibleInput(checkout);
+stageControllerModels(checkout);
+patchAppQuit(checkout);
+patchRuntimeControllerModels(checkout);
+patchControllerFade(checkout);
+patchStartupVisibility(checkout);
+patchStoreRelease(checkout);
 console.log("Prepared standalone WebXR host with patched GeckoView and its matching v19 native ABI.");

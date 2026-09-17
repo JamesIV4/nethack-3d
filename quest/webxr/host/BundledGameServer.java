@@ -14,8 +14,26 @@ public final class BundledGameServer {
     public static final String ORIGIN = "http://127.0.0.1:18973";
     private static ServerSocket listener;
     private static ExecutorService workers;
+    private static volatile boolean startupFlatReady;
+    public static boolean isStartupFlatReady() { return startupFlatReady; }
+    private static volatile Runnable quitHandler;
+    public static void setQuitHandler(Runnable handler) { quitHandler = handler; }
+    private static final class ControllerModel {
+        final byte[] bytes;
+        final String tag;
+        ControllerModel(byte[] bytes, String tag) { this.bytes = bytes; this.tag = tag; }
+    }
+    private static final java.util.concurrent.atomic.AtomicReferenceArray<ControllerModel> controllerModels =
+        new java.util.concurrent.atomic.AtomicReferenceArray<>(2);
+    public static void setControllerModel(int hand, byte[] bytes, String tag) {
+        if (hand < 0 || hand > 1 || tag == null || !tag.matches("[a-z0-9:-]{1,96}") || (bytes != null && bytes.length > 16777216)) return;
+        controllerModels.set(hand, new ControllerModel(bytes, tag));
+    }
     private static volatile float[] uiPose;
     public static float[] getUiPose() { return uiPose; }
+    private static volatile int controllerOpacity;
+    public static int getControllerOpacity() { return controllerOpacity; }
+    public static void resetControllerOpacity() { controllerOpacity = 0; }
     private static volatile float[] pointerState;
     private static final java.util.concurrent.atomic.AtomicLong systemRecenter = new java.util.concurrent.atomic.AtomicLong();
     public static void onSystemRecenter() { systemRecenter.incrementAndGet(); }
@@ -68,7 +86,11 @@ public final class BundledGameServer {
         listener = null;
         uiPose = null;
         pointerState = null;
+        controllerOpacity = 0;
         inputMode = null;
+        quitHandler = null;
+        startupFlatReady = false;
+        controllerModels.set(0, null); controllerModels.set(1, null);
         if (workers != null) workers.shutdownNow();
         workers = null;
     }
@@ -85,20 +107,35 @@ public final class BundledGameServer {
             }
             String host = "", header;
             String origin = "";
+            int opacity = 0;
             int contentLength = 0;
             int headerCount = 0;
             while ((header = line(reader)) != null && !header.isEmpty()) {
                 if (++headerCount > 64) throw new IOException("Too many headers");
                 int colon = header.indexOf(':');
                 if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("Host")) host = header.substring(colon + 1).trim();
+                if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("X-NH3D-Controller-Opacity")) opacity = Integer.parseInt(header.substring(colon + 1).trim());
                 if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("Origin")) origin = header.substring(colon + 1).trim();
                 if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("Content-Length")) contentLength = Integer.parseInt(header.substring(colon + 1).trim());
             }
             if (!host.equals("127.0.0.1:18973")) { status(socket, 403, "Forbidden"); return; }
             String path = new URI(parts[1]).getPath();
+            if ((parts[0].equals("GET") || parts[0].equals("HEAD")) &&
+                ("/__xr/controller-model/left.glb".equals(path) || "/__xr/controller-model/right.glb".equals(path))) {
+                ControllerModel model = controllerModels.get(path.contains("/left.") ? 0 : 1);
+                if (model == null || model.bytes == null) {
+                    String state = model == null ? "pending" : model.tag;
+                    socket.getOutputStream().write(("HTTP/1.1 202 Accepted\r\nContent-Length: 0\r\nCache-Control: no-store\r\nX-NH3D-Model-State: " + state + "\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));
+                    return;
+                }
+                socket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: model/gltf-binary\r\nContent-Length: " + model.bytes.length +
+                    "\r\nETag: \"" + model.tag + "\"\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));
+                if (parts[0].equals("GET")) socket.getOutputStream().write(model.bytes);
+                return;
+            }
             if (parts[0].equals("POST")) {
                 if (!ORIGIN.equals(origin) || contentLength < 1 || contentLength > 16384 ||
-                    (!"/__xr/table-ui".equals(path) && !"/__xr/input-mode".equals(path))) {
+                    (!"/__xr/table-ui".equals(path) && !"/__xr/input-mode".equals(path) && !"/__xr/quit".equals(path) && !"/__xr/startup-flat-ready".equals(path))) {
                     status(socket, 403, "Forbidden"); return;
                 }
                 char[] body = new char[contentLength];
@@ -109,6 +146,19 @@ public final class BundledGameServer {
                     offset += read;
                 }
                 JSONArray values = new JSONArray(new String(body));
+                if ("/__xr/startup-flat-ready".equals(path)) {
+                    if (values.length() != 0) { status(socket, 400, "Bad Request"); return; }
+                    startupFlatReady = true;
+                    status(socket, 204, "No Content"); return;
+                }
+                if ("/__xr/quit".equals(path)) {
+                    if (values.length() != 0) { status(socket, 400, "Bad Request"); return; }
+                    Runnable quit = quitHandler;
+                    if (quit == null) { status(socket, 503, "Service Unavailable"); return; }
+                    status(socket, 204, "No Content");
+                    quit.run();
+                    return;
+                }
                 if ("/__xr/input-mode".equals(path)) {
                     if (values.length() < 1 || values.length() > 513 || (values.length() - 1) % 4 != 0) throw new IOException("Invalid input mode");
                     float[] mode = new float[values.length()];
@@ -142,6 +192,8 @@ public final class BundledGameServer {
                     if (pose[i+3] <= pose[i+1] || pose[i+4] <= pose[i+2]) throw new IOException("Empty pane crop");
                 }
                 if (pose[2] < -1 || pose[2] > 100 || pose[6] < -1 || pose[6] > 100) throw new IOException("Invalid pointer distance");
+                if (opacity < 0 || opacity > 65535) throw new IOException("Invalid controller opacity");
+                controllerOpacity = opacity;
                 pointerState = pose;
                 socket.getOutputStream().write(("HTTP/1.1 204 No Content\r\nConnection: close\r\nX-NH3D-Recenter: " + systemRecenter.get() + "\r\n\r\n").getBytes(StandardCharsets.US_ASCII));
                 return;

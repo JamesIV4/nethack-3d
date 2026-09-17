@@ -1,6 +1,7 @@
+import { assertStoreManifest, geckoConfigResourcePath } from "./store-manifest.mjs";
 import { findAndroidSdk } from "../build-environment.mjs";
 import { execFileSync } from "node:child_process";
-import { readFileSync, mkdirSync, copyFileSync, readdirSync } from "node:fs";
+import { readFileSync, mkdirSync, copyFileSync, readdirSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,10 +9,13 @@ import { unzipSync } from "three/examples/jsm/libs/fflate.module.js";
 import { readGeckoArtifact, PAINT_PREFERENCE } from "./gecko-artifact.mjs";
 import { questAppVersion } from "./app-version.mjs";
 
+const args = process.argv.slice(2);
+if (args.some(arg => arg !== "--debug")) throw new Error("Usage: publish-apk.mjs [--debug]");
+const debug = args.includes("--debug"), type = debug ? "debug" : "release";
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const apk = path.join(
   root,
-  "quest/runtime/wolvic/app/build/outputs/apk/oculusvrArm64GeckoGeneric/debug/Wolvic-oculusvr-arm64-gecko-generic-debug.apk",
+  `quest/runtime/wolvic/app/build/outputs/apk/oculusvrArm64GeckoGeneric/${type}/Wolvic-oculusvr-arm64-gecko-generic-${type}.apk`,
 );
 const sdk = findAndroidSdk({
   properties: [path.join(root, "quest/runtime/wolvic/local.properties")],
@@ -34,11 +38,18 @@ if (!details.includes("package: name='com.nethack3d.quest.vr'"))
 const appVersion = questAppVersion();
 if (!details.includes(`versionName='${appVersion.name}'`) || !details.includes(`versionCode='${appVersion.code}'`))
   throw new Error("Unexpected APK version.");
-if (!details.includes("application-label:'NetHack 3D VR'")) throw new Error("Incorrect Quest launcher name.");
+if (!details.includes("application-label:'NetHack 3D'")) throw new Error("Incorrect Quest launcher name.");
 for (const permission of ["WAKE_LOCK", "FOREGROUND_SERVICE"]) {
   if (!details.includes("name='android.permission." + permission + "'"))
     throw new Error("Missing Gecko runtime permission: " + permission);
 }
+if (!debug) {
+  assertStoreManifest(execFileSync(aapt, ["dump", "xmltree", apk, "AndroidManifest.xml"], {encoding:"utf8", windowsHide:true}));
+  const signer = path.join(sdk,"build-tools",versions[0],"lib/apksigner.jar");
+  const result = execFileSync(process.env.JAVA_HOME ? path.join(process.env.JAVA_HOME,"bin",process.platform === "win32" ? "java.exe" : "java") : "java", ["-jar",signer,"verify","--verbose","--print-certs",apk], {encoding:"utf8",windowsHide:true});
+  if (/CN=Android Debug/i.test(result)) throw new Error("Store APK uses the Android debug signing certificate.");
+}
+const configResourcePath = geckoConfigResourcePath(execFileSync(aapt, ["dump", "--values", "resources", apk], {encoding:"utf8",windowsHide:true,maxBuffer:32*1024*1024}));
 const bytes = readFileSync(apk),
   names = new Set();
 const inspected = unzipSync(bytes, {
@@ -49,7 +60,7 @@ const inspected = unzipSync(bytes, {
       "assets/vr_splash.png",
       "lib/arm64-v8a/libxul.so",
       "lib/arm64-v8a/libnative-lib.so",
-      "res/raw/fxr_config.yaml",
+      configResourcePath,
     ].includes(entry.name);
   },
 });
@@ -84,13 +95,13 @@ if (
   !Buffer.from(inspected["lib/arm64-v8a/libxul.so"] ?? []).includes(
     Buffer.from("dom.vr.webxr.composite-document"),
   ) ||
-  !Buffer.from(inspected["res/raw/fxr_config.yaml"] ?? []).includes(
+  !Buffer.from(inspected[configResourcePath] ?? []).includes(
     Buffer.from("dom.vr.webxr.composite-document: true"),
   ) ||
-  !Buffer.from(inspected["res/raw/fxr_config.yaml"] ?? []).includes(
+  !Buffer.from(inspected[configResourcePath] ?? []).includes(
     Buffer.from("dom.vr.webxr.transparent-document: true"),
   ) ||
-  !Buffer.from(inspected["res/raw/fxr_config.yaml"] ?? []).includes(
+  !Buffer.from(inspected[configResourcePath] ?? []).includes(
     Buffer.from(PAINT_PREFERENCE + ": true"),
   )
 ) {
@@ -125,9 +136,12 @@ copyFileSync(apk, output);
 // Keep the stable sideloading path while also producing a desktop-style release artifact.
 copyFileSync(apk, path.join(path.dirname(output), "nethack3d-webxr.apk"));
 const { version } = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
-const versionedOutput = path.join(root, "release", `NetHack 3D ${version} Quest.apk`);
+const versionedOutput = path.join(root, "release", `NetHack 3D ${version} Quest${debug ? " Debug" : ""}.apk`);
 mkdirSync(path.dirname(versionedOutput), { recursive: true });
 copyFileSync(apk, versionedOutput);
 console.log("Verified standalone APK: " + versionedOutput);
 console.log("Latest APK: " + output);
 console.log("SHA256: " + createHash("sha256").update(bytes).digest("hex"));
+console.log("APK binary modified: " + statSync(apk).mtime.toLocaleString());
+console.log("Verified/copied at: " + new Date().toLocaleString());
+console.log("Unchanged builds reuse the existing APK; its file timestamp and SHA256 can stay the same.");

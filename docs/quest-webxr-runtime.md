@@ -95,6 +95,29 @@ Controller commands reuse the game's loading, dialog, inventory, direction, and 
 
 ## Design and ownership
 
+### Native Quest controller models
+
+Quest 3/Touch Plus uses Meta's official XR Core SDK controller meshes and textures,
+staged by `scripts/quest/webxr/stage-controller-models.mjs` during host preparation.
+The original FBX/PNG inputs, license, pinned source and conversion receipt live in
+[`quest/webxr/controllers/meta-touch-plus`](../quest/webxr/controllers/meta-touch-plus/README.md).
+Static native OBJ meshes retain the authored metre-scale grip coordinates, with
+one material and a 512-square opaque KTX texture per hand. The source texture alpha
+stores roughness and is intentionally excluded from opacity. Other controller
+profiles, tracked poses, weapons and input bindings keep their existing paths.
+The foreground controller pass explicitly enables depth testing/writing and resets
+the depth range and clear value after UI
+composition. Changes require an APK rebuild and headset checks for fit/occlusion.
+
+Both startup and pause-menu Quit Game actions use the shared platform handler.
+On the VR APK's fixed loopback origin only, it posts to `/__xr/quit`; the native
+host checks the request origin and schedules `finishAndRemoveTask` on Android's
+UI thread. This ends the app task instead of closing the Gecko tab and exposing
+the browser shell. Desktop, ordinary Android, web and wired-preview exit paths
+remain unchanged. This app-exit action is separate from NetHack's in-game `#quit`.
+
+### World presentation
+
 `WebXrPresentation` participates in the engine's existing `renderer.setAnimationLoop`. It supplies the XR camera to the original engine render dispatch, which draws the same scene through Three's [WebXRManager](https://threejs.org/docs/pages/WebXRManager.html), bypassing desktop postprocessing and the legacy native scene exporter while in XR.
 
 The world stays in its original +Z-up coordinates. An inverse tracking rig transforms headset and controller poses into game coordinates, preserving world-coordinate shader assumptions and geometry identities.
@@ -190,3 +213,101 @@ FPS status and minimap default offsets are captured from the user's live Septemb
 Inventory action/drop popups reuse child pane 15 and the inventory pane's source-pixel transform; their crops do not resize or recenter the parent modal. VR positioning puts the action popup above the selected item, and Drop opens on hover while retaining the existing non-overlapping submenu positioning. The user-facing VR options tab is restricted to the bundled APK origin; menu rain settings remain internal.
 
 System recenter is handled through OpenXR's reference-space-change event at its effective display time. The native host increments a revision returned in the UI bridge response, and the page invokes the same world recenter path as the manual button. A stationary UI heartbeat detects changes without requiring controller movement. Immersive drawing and ray tests exclude flat Wolvic browser chrome; keyboard, speech and permission surfaces remain explicitly composed. Verify Meta-button recenter and native overlays on the next APK.
+
+## Runtime controller models
+
+Immersive controller rendering now uses runtime GLBs supplied by Meta through
+`XR_FB_render_model`, with a bundled animated Touch Plus fallback. The host loads
+models asynchronously and exposes them on its local asset server; Three.js renders
+and animates them in tracked grip space after the world. See
+[the rendering audit](quest-controller-rendering-audit.md) for diagnostics,
+compatibility limits, validation results, and the pending headset checks.
+
+## Store release APKs
+
+`npm run quest:webxr:apk` now builds the **signed release** variant. It validates
+release signing before building the web assets. The existing Android release key
+is reused by default (`android/keystore.properties`); an optional ignored
+`quest/keystore.properties` overrides it. Environment variables `NH3D_QUEST_*`
+(and the existing `NH3D_ANDROID_*` fallback) are supported. See
+`quest/keystore.properties.example`. Keep the same signing key for app updates.
+
+The release output remains `release/NetHack 3D <version> Quest.apk`. For a
+sideloadable development build use `npm run quest:webxr:apk -- --debug`; its
+versioned filename ends in `Quest Debug.apk`. Publishing an existing release
+uses `npm run quest:webxr:publish-apk`; pass `-- --debug` explicitly for debug.
+Publication here only verifies/copies locally; it does not upload to Meta.
+
+The final release APK is checked for a valid non-debug signature, debuggable
+flags, unsupported install/package-query permissions, eye-tracking feature
+pairing, and a MAIN/VR intent filter before copying it to the release directory.
+Eye tracking is optional so devices without it remain supported. Release code
+shrinking is disabled to preserve the tested host's JNI/reflection behavior.
+
+The launcher name is **NetHack 3D**. Android's application description is:
+
+> Explore the dungeons of NetHack in immersive 3D and virtual reality, with classic roguelike gameplay, tabletop and first-person views, and multiple supported game variants.
+
+This description is packaged as an Android string resource. The Meta store
+listing title and description are separate dashboard fields; use the same text
+there if desired. Manifest rules: https://developers.meta.com/horizon/resources/publish-mobile-manifest/
+
+Release verification (September 17): built and signed version 1.6.0, passed
+release lint, final binary-manifest checks, apksigner verification, and Gecko
+library hash/preference checks. Release resource paths are resolved from aapt's
+resource table because resource optimization renames `fxr_config.yaml`.
+Six focused store-packaging regression tests pass. Output:
+`release/NetHack 3D 1.6.0 Quest.apk`.
+SHA-256: `7e9efe1292d6a94b010aa2e0170a2f459507cd29bb874c1bcce51a1e780dd901`.
+This validates the reported packaging blockers; the APK has not been uploaded
+to Meta or installed for a headset smoke test in this pass.
+
+
+Controller startup: loading markers are removed. Each ready, tracked controller
+fades in over 250 ms, with the wired laser and native Quest beam/pointer using the
+same opacity. The native opacity uses an optional packed two-byte HTTP header on
+existing UI snapshots; their array layout and input routing are unchanged. Native
+beams have independent materials for per-hand fading. New immersive sessions
+reset native opacity; tracking loss hides the model and recovery restarts its fade.
+Included in the verified signed APK above. TypeScript, 30 controller/input/weapon
+tests, the Java HTTP handoff tests, and native compilation passed. The visual
+transition still needs headset confirmation.
+
+## Clean Quest startup and menu placement
+
+After the native splash, the bundled host submits a blank frame instead of
+showing the flat browser UI or WebXR loading interstitial. Gecko and the XR
+frame exchange continue running. The one-time gate opens when a completed
+immersive frame and usable menu pane geometry are available. Hidden browser
+widgets do not receive native controller clicks. Their logical visibility and
+surface lifecycle remain intact so loading can complete behind the blank frame.
+
+The player-selected flat startup mode and explicit XR errors can reveal the flat
+recovery UI through a same-origin endpoint. Once the app has shown its initial
+presentation, the gate stays open for normal session endings and resume behavior.
+The existing native splash is retained.
+
+The startup logo, menu and footer now share a vertical plane 2.5 m forward of the
+default anchor. The logo remains above the menu; these startup panes no longer
+pitch independently toward the viewer. Menu dropdowns retain their parent plane
+and slight foreground offset. In-game pane positions and tilting are unchanged.
+
+Validated with TypeScript, startup/recovery HTTP tests, native patch idempotence,
+resume/session tests and native compilation. These presentation changes still
+need headset confirmation.
+
+### Installing over an earlier development build
+
+The old Quest APKs used the Android debug certificate. The default build now uses
+the configured release certificate. Android rejects an in-place update between
+them with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, even when the package name and
+version match. This is a signing identity change, not a manifest or timestamp bug.
+
+For continued testing with existing development-install data, use
+`npm run quest:webxr:apk -- --debug` and install the versioned `Quest Debug.apk`.
+It must use the same debug key as the existing installation.
+
+To switch a test headset to release signing, export/verify any saves and settings
+first, then remove the debug installation and install the signed `Quest.apk`.
+Uninstalling clears application data. Keep the chosen release key stable for
+future updates; do not change store signing back to the Android debug key.

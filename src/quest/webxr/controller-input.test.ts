@@ -30,7 +30,7 @@ function fixture(withTableHandle = false, withNavigation = false, withWeapons = 
   const renderer = { clippingPlanes: [] as THREE.Plane[], xr: { getReferenceSpace: () => ({}), getCamera: () => camera,
     getFrame: () => ({ getPose: () => ({ transform: { matrix: pose.elements } }),
       getViewerPose: () => ({ transform: { position: { x: 0, y: 1.6, z: 0 } } }) }) } };
-  const panel = { native: true, nativePointer: { hit: vi.fn(), setContextTarget: vi.fn() }, hit: () => null, hover: vi.fn(), forget: vi.fn(), beginGrab: vi.fn(), moveGrab: vi.fn(), endGrab: vi.fn() };
+  const panel = { native: true, nativePointer: { setControllerOpacity: vi.fn(), hit: vi.fn(), setContextTarget: vi.fn() }, hit: () => null, hover: vi.fn(), forget: vi.fn(), beginGrab: vi.fn(), moveGrab: vi.fn(), endGrab: vi.fn() };
   const tilt = { hit: () => null, hover: vi.fn(), surfaceHit: () => null, end: vi.fn() };
   const pan = vi.fn();
   const tableMove = withTableHandle ? new TableMoveHandle(root) : undefined;
@@ -246,7 +246,7 @@ describe("WebXR trigger to game command integration", () => {
     f.pose.makeTranslation(4 * 0.6, -6, 1);
     f.scene.updateMatrixWorld(true);
     const context = vi.fn();
-    Object.assign(f.panel, { nativePointer: { hit: vi.fn(), setContextTarget: context } });
+    Object.assign(f.panel, { nativePointer: { setControllerOpacity: vi.fn(), hit: vi.fn(), setContextTarget: context } });
     f.right.gamepad.buttons[0].pressed = true; f.input.update(0, null);
     f.input.update(450, null);
     expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(4, 6, true);

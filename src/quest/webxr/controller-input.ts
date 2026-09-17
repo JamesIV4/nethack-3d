@@ -59,6 +59,7 @@ interface PointerState {
   supportPoint?: THREE.Vector3;
 }
 export class WebXrControllerInput {
+  controllerOpacity: (source: XRInputSource) => number = () => 1;
   private readonly pointers = new Map<XRInputSource, PointerState>();
   private nextId = 1;
   private nextMove = 0;
@@ -120,7 +121,9 @@ export class WebXrControllerInput {
     const reference = this.renderer.xr.getReferenceSpace();
     const pose = reference && frame.getPose(state.source.targetRaySpace, reference);
     state.tracked = !!pose;
-    if (state.line) state.line.visible = !!pose;
+    const opacity = this.controllerOpacity(state.source);
+    if (state.line) { state.line.visible = !!pose && opacity > 0; state.line.material.opacity = .7 * opacity; }
+    if (state.circle) state.circle.material.opacity = opacity;
     if (state.circle) state.circle.visible = false;
     if (!pose) { this.cancel(state); return; }
     const transform = new THREE.Matrix4().fromArray(pose.transform.matrix);
@@ -166,7 +169,7 @@ export class WebXrControllerInput {
     const positions = state.line.geometry.getAttribute("position") as THREE.BufferAttribute;
     positions.setXYZ(0, state.ray.origin.x, state.ray.origin.y, state.ray.origin.z);
     positions.setXYZ(1, end.x, end.y, end.z); positions.needsUpdate = true;
-    state.circle.visible = !!point && !state.ui;
+    state.circle.visible = !!point && !state.ui && opacity > 0;
     if (point) {
       state.circle.position.copy(point).addScaledVector(normal, 0.001);
       state.circle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
@@ -320,6 +323,8 @@ export class WebXrControllerInput {
     this.command({ type: "tile", ...state.pressedTile, ...(secondary ? { secondary: true } : {}) });
   }
   update(time: number, forward: THREE.Vector3 | null): void {
+    const opacity = (hand: XRHandedness) => Math.max(0, ...Array.from(this.session.inputSources).filter(source => source.handedness === hand).map(source => this.controllerOpacity(source)));
+    this.panel()?.nativePointer?.setControllerOpacity(opacity("left"), opacity("right"));
     this.clock = time;
     const frame = this.renderer.xr.getFrame();
     if (this.session.visibilityState !== "visible" || !frame) {

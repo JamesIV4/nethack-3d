@@ -1,3 +1,5 @@
+import { revealFlatStartup } from "../../../quest/webxr/startup-visibility";
+import { ControllerModels } from "../../../quest/webxr/controller-models";
 import * as THREE from "three";
 import { ScaledCameraSprites } from "./scaled-camera-sprites";
 import { WorldClipCulling } from "./world-clip-culling";
@@ -94,6 +96,7 @@ export class WebXrPresentation {
   private readonly tilt = new BoardTilt(this.trackingRoot);
   private readonly tableMove = new TableMoveHandle(this.trackingRoot);
   private input: WebXrControllerInput | null = null;
+  controllerModels: ControllerModels | null = null;
   private startupMenu = false;
   private menuRain: MenuRain | null = null;
 
@@ -120,12 +123,14 @@ export class WebXrPresentation {
     this.menuRain ??= new MenuRain();
     if (this.trackingRoot.parent !== this.menuRain.scene) this.menuRain.scene.add(this.trackingRoot);
     this.updateCamera();
+    this.updateControllerModels(time);
     this.input?.update(time, null);
     this.htmlPanel?.update(time);
     this.menuRain.update(time);
     const { renderer } = this.dependencies.renderPipeline;
     this.stereoDepth.render(renderer.xr, this.xrCamera, getXrSettings().depth,
       () => renderer.render(this.menuRain!.scene, this.xrCamera));
+    this.controllerModels?.render(this.xrCamera, this.trackingRoot);
   }
 
   constructor(private readonly dependencies: WebXrPresentationDependencies) {
@@ -155,10 +160,11 @@ export class WebXrPresentation {
         isImmersiveActive: () => this.active,
         enterImmersive: async () => {
           updateWebXrState({ busy: true });
-          try { await this.enter(); } finally { if (this.started) updateWebXrState({ busy: false }); }
+          try { await this.enter(); } catch (error) { void revealFlatStartup(); throw error; } finally { if (this.started) updateWebXrState({ busy: false }); }
         },
         exitImmersive: async () => { await this.session?.end(); },
       });
+      if (this.resumeMode.desired === "flat") void revealFlatStartup();
     }
     this.dependencies.renderPipeline.renderer.xr.enabled = true;
     this.dependencies.renderPipeline.renderer.xr.setReferenceSpaceType("local-floor");
@@ -169,6 +175,7 @@ export class WebXrPresentation {
     });
     updateWebXrState({ host: true, available: false, error: "" });
     if (!navigator.xr) {
+      void revealFlatStartup();
       updateWebXrState({ available: false, error: "This host does not expose WebXR. Use the WebXR runtime build." });
       return;
     }
@@ -190,10 +197,11 @@ export class WebXrPresentation {
       const available = await navigator.xr.isSessionSupported("immersive-vr");
       if (!this.started) return;
       this.xrAvailable = available;
+      if (!available) void revealFlatStartup();
       updateWebXrState({ available, error: available ? "" : "No active XR headset/runtime was found." });
       this.tryAutomaticEntry();
     } catch (error) {
-      if (this.started) updateWebXrState({ error: String(error) });
+      if (this.started) { void revealFlatStartup(); updateWebXrState({ error: String(error) }); }
     } finally { this.availabilityPending = false; }
   };
 
@@ -258,6 +266,8 @@ export class WebXrPresentation {
           playerTile: () => this.dependencies.playerMovement.playerPos,
           direction: (dx,dy) => this.dependencies.movementInput.resolveDirectionKeyFromDelta(dx,dy,.25),
         });
+      if (renderer instanceof THREE.WebGLRenderer) this.controllerModels = new ControllerModels(renderer);
+      this.input.controllerOpacity = source => this.controllerModels?.opacity(source) ?? 1;
       this.needsRecenter = true;
       this.lastRigKey = "";
       document.documentElement.classList.add("nh3d-webxr-active");
@@ -280,6 +290,7 @@ export class WebXrPresentation {
     this.endListener = null;
     this.session = null;
     this.input?.dispose(); this.input = null;
+    this.controllerModels?.dispose(); this.controllerModels = null;
     this.htmlPanel?.dispose(); this.htmlPanel = null;
     const { renderer, scene } = this.dependencies.renderPipeline;
     renderer.clippingPlanes = this.previousClipPlanes;
@@ -310,7 +321,7 @@ export class WebXrPresentation {
     document.documentElement.classList.remove("nh3d-webxr-active");
     updateWebXrState({ active: false });
     if (this.started && !this.entering) void this.resumeMode?.onSessionEnded().catch(error => {
-      if (this.started) updateWebXrState({ error: String(error) });
+      if (this.started) { void revealFlatStartup(); updateWebXrState({ error: String(error) }); }
     });
   };
 
@@ -490,7 +501,15 @@ export class WebXrPresentation {
     return true;
   }
 
+  private updateControllerModels(time: number): void {
+    if (!this.controllerModels) return;
+    const xr = this.dependencies.renderPipeline.renderer.xr;
+    const frame = xr.getFrame?.(), reference = xr.getReferenceSpace();
+    if (frame && reference && this.session) this.controllerModels?.update(frame, reference, Array.from(this.session.inputSources), time);
+  }
+
   updateInput(time: number): void {
+    if (this.active) this.updateControllerModels(time);
     if (this.active) this.input?.update(time, this.dependencies.engineState.playMode === "fps" ? this.forward : null);
   }
 
@@ -509,6 +528,7 @@ export class WebXrPresentation {
     this.stereoDepth.render(renderer.xr, this.xrCamera, getXrSettings().depth, () => this.terrainBatches.render(renderer, scene, camera, this.trackingRoot,
       this.dependencies.tileRendering.tileMap, this.dependencies.tileRendering.floorGeometry,
       this.dependencies.glyphTextures.glyphOverlayMap, this.worldClipCulling));
+    this.controllerModels?.render(camera, this.trackingRoot);
   }
 
   dispose(): void {

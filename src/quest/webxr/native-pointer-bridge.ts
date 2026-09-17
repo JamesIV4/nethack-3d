@@ -25,6 +25,11 @@ export class NativePointerBridge {
   private gameToTracking = new THREE.Matrix4();
   setContextTarget(point: THREE.Vector3): void { this.contextPoint = point; }
   setWorldTransform(matrix: THREE.Matrix4): void { this.gameToTracking.copy(matrix); }
+  private controllerOpacity = 0;
+  setControllerOpacity(left: number, right: number): void {
+    const byte = (value: number) => Math.round(THREE.MathUtils.clamp(Number.isFinite(value) ? value : 0, 0, 1) * 255);
+    this.controllerOpacity = byte(left) | (byte(right) << 8);
+  }
   private dirty = true;
   private pending = false;
   private disposed = false;
@@ -83,13 +88,14 @@ export class NativePointerBridge {
       settings.area, settings.scale, context ? 1 : 0, ...point.toArray(), ...this.firstPersonAnchor, ...this.rects, ...this.panes.flat()]);
     // Keep a low-frequency heartbeat even when neither controller moves, so
     // the system Meta-button recenter can reach a stationary player.
-    if (body === this.lastBody && time - this.lastSend < 500) return;
+    const snapshot = body + ":" + this.controllerOpacity;
+    if (snapshot === this.lastBody && time - this.lastSend < 500) return;
     this.pending = true; this.lastSend = time;
-    void fetch("/__xr/table-ui", { method: "POST", headers: { "Content-Type": "application/json" }, body, signal: this.abort.signal })
+    void fetch("/__xr/table-ui", { method: "POST", headers: { "Content-Type": "application/json", "X-NH3D-Controller-Opacity": String(this.controllerOpacity) }, body, signal: this.abort.signal })
       .then((response) => {
         if (!response.ok) throw new Error("Native pointer bridge: " + response.status);
         if (this.disposed) return;
-        this.lastBody = body;
+        this.lastBody = snapshot;
         if (this.systemRecenter.accept(response.headers.get("X-NH3D-Recenter"))) recenterWebXr();
       })
       .catch((error) => { if (!this.disposed) console.warn(error); })

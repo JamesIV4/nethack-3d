@@ -441,3 +441,16 @@ describe("Three.js owns the Quest world", () => {
     f.presentation.dispose();
   });
 });
+
+it("renders controller overlays in menu and game and releases them with the session", async () => {
+  const f=fixture();f.presentation.start();await Promise.resolve();await toggleWebXr();
+  Object.assign(f.session, {inputSources:[]});
+  const models={render:vi.fn(),update:vi.fn(),dispose:vi.fn()};
+  f.presentation.controllerModels=models as unknown as import("../../../quest/webxr/controller-models").ControllerModels;
+  f.presentation.renderStartupFrame(0);
+  expect(models.render).toHaveBeenCalledOnce();
+  f.presentation.setStartupMenu(false);
+  f.presentation.render(new THREE.PerspectiveCamera());
+  expect(models.render).toHaveBeenCalledTimes(2);
+  f.presentation.dispose();expect(models.dispose).toHaveBeenCalledOnce();expect(f.presentation.controllerModels).toBeNull();
+});

@@ -143,8 +143,10 @@ class GameUiPanels {
         p.quad->SetTextureRect(device::EyeRect(crop[0], crop[1], crop[2]-crop[0], crop[3]-crop[1]));
       }
       p.id = int(state[at]);
+      // Startup logo, menu and footer share a vertical plane 2.5 m from the
+      // default anchor (center is already 0.95 m forward).
       if (p.id >= 12) p.pose = center.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
-          0, p.id == 12 ? 1.0f : p.id == 14 ? -0.7f : 0.0f, p.id == 13 ? -0.45f : -0.8f)));
+          0, p.id == 12 ? 1.0f : p.id == 14 ? -0.7f : 0.0f, p.id <= 14 ? -1.55f : -0.8f)));
       else if (p.id == 0 && firstPerson) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
           4.8f * ((crop[0] + crop[2]) / 2 - 0.5f),
           4.8f * float(textureHeight) / textureWidth * (0.5f - (crop[1] + crop[3]) / 2) - .25f, 0)));
@@ -235,7 +237,11 @@ class GameUiPanels {
     const auto offset = placement == placements.end() ? DefaultPlacement(p.group) : placement->second;
     const auto anchor = p.base.PostMultiply(vrb::Matrix::Translation(offset));
     const auto toward = anchor.AfineInverse().MultiplyPosition(viewerPosition);
-    const float pitch = -std::atan2(toward.y(), std::max(.001f, std::fabs(toward.z())));
+    const int paneGroup = p.group % 16;
+    const bool startupPlane = paneGroup >= 12 && paneGroup <= 14;
+    // Keep the logo and menu coplanar instead of independently tilting toward
+    // the eye. Dropdowns inherit the menu group and retain their tiny front offset.
+    const float pitch = startupPlane ? 0 : -std::atan2(toward.y(), std::max(.001f, std::fabs(toward.z())));
     p.pose = anchor.PostMultiply(vrb::Matrix::Rotation(vrb::Vector(1,0,0), pitch)).PostMultiply(p.local);
     p.quad->GetTransformNode()->SetTransform(p.pose);
     p.quad->GetRenderState()->SetTintColor(p.group == gripGroup && gripOwner >= 0 ? vrb::Color(.65f,1,1,1) : vrb::Color(1,1,1,1));

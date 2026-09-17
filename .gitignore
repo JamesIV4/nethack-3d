@@ -21,3 +21,5 @@ build/linux-libs/
 
 # Pinned WebXR runtime checkout and native build dependencies
 quest/runtime/
+
+quest/keystore.properties
