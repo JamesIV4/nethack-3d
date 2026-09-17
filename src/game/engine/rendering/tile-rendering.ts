@@ -354,11 +354,15 @@ export class TileRendering {
         tileRelation.isPlayerMaterial ||
         isRuntimeTrackedPlayerTileInFps);
     const isPredictedFpsPlayerTile = tileRelation.isPredictedPlayerTile;
+    // Prediction is not terrain authority. An inferred wall rendered during
+    // a step must remain a wall (including its movement-highlight metadata).
+    // A later real player/floor observation clears the inference normally.
     const shouldKeepVisiblePlayerBillboardInFarLook =
       this.dependencies.tileUpdates.shouldKeepFarLookPlayerBillboardVisible() &&
       tileRelation.isCurrentPlayerTile &&
       this.dependencies.tileUpdates.hasExplicitPlayerVisual(behavior, char);
     const shouldSuppressPlayerTileVisualInFps =
+      !isInferredDarkCorridorWall &&
       this.dependencies.movementInput.isFpsMode() &&
       ((isRuntimeTrackedPlayerTileInFps &&
         !shouldKeepVisiblePlayerBillboardInFarLook) ||
@@ -756,6 +760,7 @@ export class TileRendering {
       tileTextColor = renderBehavior.textColor;
     }
     const isPlayerRelatedTileInFps =
+      !isInferredDarkCorridorWall &&
       this.dependencies.movementInput.isFpsMode() &&
       (isRuntimeTrackedPlayerTileInFps ||
         tileRelation.isPlayerGlyph ||

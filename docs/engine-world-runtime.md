@@ -43,6 +43,8 @@ player suppression and deferred movement checks still apply.
 
 Dark corridor observations are recorded when they enter the queue. Inference evaluates every authoritative player step and again on `map_update_complete`, which the bridge delivers after the runtime's ordered map-display or snapshot-complete boundary. It reads a temporary view of pending terrain, with newer arrivals overriding the unfinished visual queue; render caches stay untouched until their tiles are processed. Queued floors suppress inferred walls immediately. Camera/player motion and distant mesh rebuilding do not delay this evaluation. The shared frame also checks dirty observations for legacy delivery paths.
 
+Inferred walls must bypass FPS player-floor suppression, including predicted and animated step destinations. Otherwise a reconciliation during movement can leave a tile flagged as inferred but rendered as a passable floor, enabling the movement glow until another action redraws it. Real runtime player/floor observations still replace inferred walls normally. `inferred-wall-prediction.test.ts` checks wall geometry, passability, highlight visibility and subsequent authoritative replacement.
+
 ## Features and loot under the player
 
 Three pieces of state have different roles:
