@@ -4,7 +4,7 @@ import { TabletopPan } from "./tabletop-pan";
 it("starts at the current tabletop center and then applies a heavy time-based follow", () => {
   const pan = new TabletopPan();
   expect(pan.update({ x: 4, y: -3 }, 100)).toMatchObject({ x: 4, y: -3 });
-  expect(pan.update({ x: 12, y: 5 }, 600)).toMatchObject({ x: 8, y: 1 });
+  expect(pan.update({ x: 12, y: 5 }, 350)).toMatchObject({ x: 8, y: 1 });
 });
 
 it("produces the same follow amount across different XR frame cadences", () => {

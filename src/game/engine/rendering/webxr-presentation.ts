@@ -525,9 +525,10 @@ export class WebXrPresentation {
 
   render(camera: THREE.Camera): void {
     const { renderer, scene } = this.dependencies.renderPipeline;
-    this.stereoDepth.render(renderer.xr, this.xrCamera, getXrSettings().depth, () => this.terrainBatches.render(renderer, scene, camera, this.trackingRoot,
+    const drawWorld = () => this.stereoDepth.render(renderer.xr, this.xrCamera, getXrSettings().depth, () => this.terrainBatches.render(renderer, scene, camera, this.trackingRoot,
       this.dependencies.tileRendering.tileMap, this.dependencies.tileRendering.floorGeometry,
       this.dependencies.glyphTextures.glyphOverlayMap, this.worldClipCulling));
+    if (this.controllerModels) this.controllerModels.renderWorld(drawWorld, this.trackingRoot); else drawWorld();
     this.controllerModels?.render(camera, this.trackingRoot);
   }
 

@@ -44,6 +44,10 @@ class GameUiPanels {
   std::array<float, 4> dropdown{};
   float anchorRevision = -1;
   static bool IsModal(int id) { return id == 4 || id == 13 || id == 15; }
+  bool resourcesChanged = false;
+  bool menuButtonActive = false;
+  std::array<float,3> menuButtonKey{};
+  vrb::Vector menuButtonPoint;
   bool firstPerson = false;
   vrb::Vector viewerPosition;
   std::unordered_map<int, vrb::Vector> placements;
@@ -85,6 +89,7 @@ class GameUiPanels {
     }
   }
  public:
+  bool ConsumeResourceChanges() { return std::exchange(resourcesChanged, false); }
   explicit GameUiPanels(vrb::CreationContextPtr value) : context(value) {}
   bool Owns(const WidgetPtr& widget) const { return window == widget && SourceIsActive(window) && !panes.empty(); }
   bool HasCapture(int controller) const {
@@ -95,6 +100,20 @@ class GameUiPanels {
               const vrb::Matrix& board, const vrb::Matrix& center, const vrb::Vector& viewer, const vrb::Matrix& hud) {
     if (state.size() < 29 || !SourceIsActive(source) || !source->GetSurfaceTexture()) {
       panes.clear(); window.reset(); ClearInput(); return;
+    }
+    if (state[20] != 2 || window != source || anchorRevision != state[0]) menuButtonActive = false;
+    if (state[20] == 2) {
+      const std::array<float,3> key{state[21],state[22],state[23]};
+      if (!menuButtonActive || menuButtonKey != key) {
+        const auto parent = std::find_if(panes.begin(),panes.end(),[&](const Pane& pane) { return pane.id == int(state[23]); });
+        if (parent != panes.end()) {
+          const float x = parent->width * ((state[21]-parent->crop[0])/(parent->crop[2]-parent->crop[0])-.5f);
+          const float y = parent->height * (.5f-(state[22]-parent->crop[1])/(parent->crop[3]-parent->crop[1]));
+          menuButtonPoint = parent->pose.MultiplyPosition(vrb::Vector(x,y,0));
+          menuButtonKey = key; menuButtonActive = true;
+          placements.erase((state[10] == 1 ? 16 : 0) + 4);
+        }
+      }
     }
     if (window != source) ClearInput();
     if (anchorRevision != state[0]) {
@@ -128,8 +147,9 @@ class GameUiPanels {
       const float paneScale = scale * 1.6f;
       const float width = 3.0f * paneScale * (crop[2] - crop[0]);
       const float height = 3.0f * paneScale * float(textureHeight) / textureWidth * (crop[3] - crop[1]);
-      if (!p.quad) p.quad = Quad::Create(context, width, height);
+      if (!p.quad) { p.quad = Quad::Create(context, width, height); resourcesChanged = true; }
       if (p.crop != crop || p.width != width || p.height != height || p.texture != source->GetSurfaceTexture() || p.textureWidth != textureWidth || p.textureHeight != textureHeight) {
+        resourcesChanged = true;
         p.quad->SetWorldSize(width, height);
         p.quad->SetScaleMode(Quad::ScaleMode::Fill);
         p.crop = crop; p.width = width; p.height = height;
@@ -212,6 +232,10 @@ class GameUiPanels {
         // edge in screen space, rather than lifting it to ordinary modal height.
         p.local = vrb::Matrix::Translation(vrb::Vector(0,height/2+.04f,0));
       }
+      if (p.id == 4 && state[20] == 2 && menuButtonActive) {
+        p.base = vrb::Matrix::Translation(menuButtonPoint).PostMultiply(yaw.Translate(-yaw.GetTranslation()));
+        p.local = vrb::Matrix::Translation(vrb::Vector(0,height/2+.04f,0));
+      }
       if (p.id == 15) {
         // The dropdown is a child of the already-placed dialog. Expanding the
         // list must not recenter or move its originating select in the world.
@@ -272,6 +296,7 @@ class GameUiPanels {
     std::vector<float> key{p.crop[0],p.crop[1],p.crop[2],p.crop[3],p.width,p.height};
     for (const auto& cut : cuts) key.insert(key.end(), cut.begin(), cut.end());
     if (!p.masked || p.maskKey != key || p.maskTexture != p.texture) {
+      resourcesChanged = true;
       p.maskKey = key; p.maskTexture = p.texture; p.pieces.clear();
       std::vector<std::array<float,4>> regions{p.crop};
       for (const auto& cut : cuts) {

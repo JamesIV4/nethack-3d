@@ -55,6 +55,7 @@
     "quest:webxr:check": "node scripts/quest/webxr/prepare-gecko-runtime.mjs --check",
     "quest:webxr:prepare": "node scripts/quest/webxr/prepare-gecko-runtime.mjs",
     "quest:webxr:publish-apk": "node scripts/quest/webxr/publish-apk.mjs",
+    "quest:controllers:bake": "node scripts/quest/webxr/bake-controller-ao.mjs",
     "quest:webxr:apk": "node scripts/quest/build-apk.mjs"
   },
   "keywords": [],

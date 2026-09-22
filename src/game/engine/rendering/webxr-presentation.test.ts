@@ -445,7 +445,7 @@ describe("Three.js owns the Quest world", () => {
 it("renders controller overlays in menu and game and releases them with the session", async () => {
   const f=fixture();f.presentation.start();await Promise.resolve();await toggleWebXr();
   Object.assign(f.session, {inputSources:[]});
-  const models={render:vi.fn(),update:vi.fn(),dispose:vi.fn()};
+  const models={render:vi.fn(),renderWorld:(draw:()=>void)=>draw(),update:vi.fn(),dispose:vi.fn()};
   f.presentation.controllerModels=models as unknown as import("../../../quest/webxr/controller-models").ControllerModels;
   f.presentation.renderStartupFrame(0);
   expect(models.render).toHaveBeenCalledOnce();

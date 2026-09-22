@@ -183,7 +183,8 @@ public final class BundledGameServer {
                     pose[i] = (float)values.getDouble(i);
                     if (!Float.isFinite(pose[i]) || Math.abs(pose[i]) > 10000) throw new IOException("Invalid pane coordinate");
                 }
-                if (pose[18] < 1 || pose[18] > 2 || pose[19] < .5 || pose[19] > 2 || (pose[20] != 0 && pose[20] != 1)) throw new IOException("Invalid table controls");
+                if (pose[18] < 1 || pose[18] > 2 || pose[19] < .5 || pose[19] > 2 || (pose[20] != 0 && pose[20] != 1 && pose[20] != 2)) throw new IOException("Invalid table controls");
+                if (pose[20] == 2 && (pose[21] < 0 || pose[21] > 1 || pose[22] < 0 || pose[22] > 1 || pose[23] < 0 || pose[23] > 15 || pose[23] != (int)pose[23])) throw new IOException("Invalid menu button anchor");
                 if ((pose[10] != 0 && pose[10] != 1) || pose[11] < 0 || pose[11] > 1.5 || Math.abs(pose[12]) > 2) throw new IOException("Invalid board placement");
                 for (int i = 29; i < 29 + count * 4; i++) if (pose[i] < 0 || pose[i] > 1) throw new IOException("Invalid UI region");
                 for (int i = 29 + count * 4; i < pose.length; i += 5) {

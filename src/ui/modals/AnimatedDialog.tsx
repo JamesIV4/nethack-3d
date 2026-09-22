@@ -111,7 +111,9 @@ const AnimatedDialog = forwardRef<HTMLDivElement, AnimatedDialogProps>(
       [onAnimationEnd, open],
     );
 
-    if (!shouldRender) {
+    // Immediate VR mounts let parent layout effects measure the real popup
+    // before its first paint instead of positioning it with an estimated height.
+    if (disableAnimations ? !open : !shouldRender) {
       return null;
     }
 

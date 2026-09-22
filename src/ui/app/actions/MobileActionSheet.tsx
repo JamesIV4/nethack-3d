@@ -65,6 +65,7 @@ export function MobileActionSheet({
 
             <button
               className="nh3d-mobile-actions-back"
+              data-nh3d-menu-anchor="pause"
               onClick={openPauseMenu}
               type="button"
             >

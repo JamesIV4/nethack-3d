@@ -1,7 +1,7 @@
 /* Camera follow tuning mirrored from the Three.js engine for CSS/debug access */
 :root {
-  --camera-follow-half-life-ms: 500;
-  --camera-normal-player-move-follow-half-life-ms: 500;
+  --camera-follow-half-life-ms: 250;
+  --camera-normal-player-move-follow-half-life-ms: 250;
   --nh3d-safe-area-top: var(
     --safe-area-inset-top,
     env(safe-area-inset-top, 0px)

@@ -14,7 +14,7 @@ it("normal player follow matches the VR table response across frame rates",()=>{
   camera.updateCamera(0);table.update(camera.getOverheadCameraFollowTargetWorldPosition(),0);
   playerPos.x=4;playerPos.y=2;camera.normalModePlayerMoveCameraFollowActive=true;
   const target=camera.getOverheadCameraFollowTargetWorldPosition();
-  for(let frame=1;frame<=frames;frame++) {camera.updateCamera(.5/frames);table.update(target,frame*500/frames);}
+  for(let frame=1;frame<=frames;frame++) {camera.updateCamera(.25/frames);table.update(target,frame*250/frames);}
   expect(camera.cameraFollowCurrent.x).toBeCloseTo(target.x/2);
   expect(camera.cameraFollowCurrent.y).toBeCloseTo(target.y/2);
   expect(camera.cameraFollowCurrent.x).toBeCloseTo(table.center.x);
@@ -25,6 +25,6 @@ it("idle/pan follow uses the same response and initialization still snaps to the
  const {camera,playerPos}=fixture();playerPos.x=10;camera.updateCamera(0);
  const start=camera.cameraFollowCurrent.x;
  camera.cameraPanX=8;camera.isCameraCenteredOnPlayer=false;
- camera.updateCamera(.5);expect(camera.cameraFollowCurrent.x).toBeCloseTo(start+4);
+ camera.updateCamera(.25);expect(camera.cameraFollowCurrent.x).toBeCloseTo(start+4);
  camera.cameraFollowInitialized=false;camera.updateCamera(.01);expect(camera.cameraFollowCurrent.x).toBeCloseTo(start+8);
 });

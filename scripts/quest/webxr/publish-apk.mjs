@@ -55,7 +55,7 @@ const bytes = readFileSync(apk),
 const inspected = unzipSync(bytes, {
   filter: (entry) => {
     names.add(entry.name);
-    return [
+    return entry.name.startsWith("assets/game/quest-controllers/") || [
       "assets/nh3d-gecko-runtime.json",
       "assets/vr_splash.png",
       "lib/arm64-v8a/libxul.so",
@@ -123,6 +123,11 @@ if (
   ).length < 3
 ) {
   throw new Error("The bundled NetHack runtimes are incomplete.");
+}
+// Offline AO must ship intact; matching only the JavaScript bundle is insufficient.
+const controllerManifest = JSON.parse(readFileSync(path.join(root, "public/quest-controllers/prebaked.json"), "utf8"));
+for (const asset of ["/quest-controllers/prebaked.json", "/quest-controllers/meta-quest-touch-plus/left.glb", "/quest-controllers/meta-quest-touch-plus/right.glb", ...Object.values(controllerManifest.runtime)]) {
+  if (!Buffer.from(inspected["assets/game" + asset] ?? []).equals(readFileSync(path.join(root, "public", asset)))) throw new Error("Missing or stale prebaked controller asset: " + asset);
 }
 const output = path.join(
   root,

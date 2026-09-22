@@ -21,7 +21,7 @@ it("thumbstick blending preserves neutral, cardinal and diagonal poses", () => {
   expect(stickBlend(.25,1)).toEqual({a:0,b:1,wa:.75,wb:.25});
 });
 function fixture(load = vi.fn(async ():Promise<LoadedController> => ({scene:new THREE.Group(),animation:{update:vi.fn(),channels:5},meshes:2,triangles:10,dispose:vi.fn()}))) {
-  const renderer = {autoClear:true, clippingPlanes:[new THREE.Plane()], clearDepth:vi.fn(), render:vi.fn()};
+  const renderer = {xr:{getCamera:()=>({cameras:[{viewport:new THREE.Vector4(0,0,100,100)}]})},autoClear:true, clippingPlanes:[new THREE.Plane()], clearDepth:vi.fn(), render:vi.fn()};
   const loader={load,dispose:vi.fn()};
   const models=new ControllerModels(renderer as unknown as THREE.WebGLRenderer,loader,true);
   const source={handedness:"left",gripSpace:{},gamepad:pad(0)} as XRInputSource;
@@ -32,7 +32,7 @@ it("host failure still loads offline fallback, loss of tracking hides it, and re
   vi.stubGlobal("fetch",vi.fn(async (_url:string,options?:RequestInit) => {if(options?.method==="HEAD") throw new Error("offline"); return new Response(new ArrayBuffer(8));}));
   const f=fixture(); f.update(); await vi.waitFor(()=>expect(f.models.diagnostics[0].source).toBe("fallback"));
   const clipping=f.renderer.clippingPlanes;
-  f.renderer.render.mockImplementation((scene:THREE.Scene)=>{expect(scene.children[0].children[0].position.x).toBe(0);throw new Error("draw failed");});
+  f.renderer.render.mockImplementation((scene:THREE.Scene)=>{if(scene.getObjectByName("Controller grip left")){expect(scene.getObjectByName("Controller grip left")!.position.x).toBe(0);throw new Error("draw failed");}});
   expect(()=>f.models.render(new THREE.Camera(),new THREE.Group())).toThrow("draw failed");
   expect(f.renderer.autoClear).toBe(true); expect(f.renderer.clippingPlanes).toBe(clipping);
   vi.mocked(f.frame.getPose).mockReturnValue(undefined); f.update(1); expect(f.models.diagnostics[0].tracked).toBe(false);
@@ -77,7 +77,7 @@ it("keeps loading grips empty, fades model and laser opacity together, and resta
   let finish!:(model:LoadedController)=>void;
   const f=fixture(vi.fn(()=>new Promise(resolve=>{finish=resolve;})));
   f.update();expect(f.models.opacity(f.source)).toBe(0);
-  f.renderer.render.mockImplementation((root:THREE.Scene)=>{expect(root.children[0].children[0].children).toHaveLength(0);expect(root.children[0].children[0].visible).toBe(false);});
+  f.renderer.render.mockImplementation((root:THREE.Scene)=>{const grip=root.getObjectByName("Controller grip left");if(grip){expect(grip.children).toHaveLength(0);expect(grip.visible).toBe(false);}});
   f.models.render(new THREE.Camera(),new THREE.Group());
   await vi.waitFor(()=>expect(finish).toBeTypeOf("function"));
   finish({scene,animation:{update:vi.fn(),channels:1},meshes:1,triangles:12,dispose:vi.fn()});
@@ -89,4 +89,13 @@ it("keeps loading grips empty, fades model and laser opacity together, and resta
   vi.mocked(f.frame.getPose).mockReturnValue(undefined);f.update(1300);expect(f.models.opacity(f.source)).toBe(0);
   vi.mocked(f.frame.getPose).mockImplementation(tracked);f.update(1400);expect(f.models.opacity(f.source)).toBe(0);
   f.models.dispose();material.dispose();
+});
+
+it("renders held weapons only in the foreground and restores their owner after errors",()=>{
+ const f=fixture(),root=new THREE.Group(),weapon=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial());
+ weapon.name="held weapon";weapon.userData.nh3dForeground=true;weapon.position.set(1,2,3);root.add(weapon);
+ f.models.renderWorld(()=>expect(weapon.visible).toBe(false),root);expect(weapon.visible).toBe(true);
+ f.renderer.render.mockImplementation((scene:THREE.Scene)=>{if(scene.getObjectByName("held weapon")){expect(weapon.position.toArray()).toEqual([1,2,3]);throw Error("draw");}});
+ expect(()=>f.models.render(new THREE.Camera(),root)).toThrow("draw");expect(weapon.parent).toBe(root);expect(weapon.visible).toBe(true);
+ f.models.dispose();weapon.geometry.dispose();(weapon.material as THREE.Material).dispose();
 });

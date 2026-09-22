@@ -13,7 +13,7 @@ export const mobileDefaultFpsLookSensitivity = 1.35;
 export const nh3dClientOptionsStorageKey = "nh3d-client-options:v1";
 
 export function resolveDeviceDefaultClientOptions(): Nh3dClientOptions {
-  const questDefaults = isQuestBrowser() ? { minimapScale: 2 } : {};
+  const questDefaults = isQuestBrowser() ? { minimapScale: 1 } : {};
   if (
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&

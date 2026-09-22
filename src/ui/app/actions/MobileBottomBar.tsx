@@ -58,7 +58,7 @@ export function MobileBottomBar({
     {layout.mobileHotbar.map(id => {
       const action = catalog.find(a => a.id === id);
       const active = id === "character" ? isCharacterSheetVisible : id === "inventory" ? inventory.visible : id === "log" ? isMobileLogVisible : id === "menu" ? isMobileActionSheetVisible : false;
-      return <button key={id} type="button" className={`nh3d-mobile-bottom-button${active ? " is-active" : ""}`}
+      return <button key={id} data-nh3d-menu-anchor={id === "menu" || id === "extended" ? "actions" : undefined} type="button" className={`nh3d-mobile-bottom-button${active ? " is-active" : ""}`}
         disabled={!action || (id === "log" && !clientOptions.liveMessageLog)}
         aria-expanded={id === "menu" ? isMobileActionSheetVisible : id === "log" ? isMobileLogVisible : undefined}
         onClick={() => {

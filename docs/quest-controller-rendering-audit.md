@@ -90,7 +90,7 @@ the session handle is destroyed and clears published models.
 Three.js renders controllers in a separate tracked-grip overlay after the world,
 with fresh depth and without dungeon clipping or artificial stereo-depth changes.
 It loads hierarchy, skinned/morph geometry and KTX2 textures through GLTFLoader,
-and uses unlit textured materials for consistent visibility. Runtime animation
+and uses matte lit materials with source normal/AO textures and baked vertex ambient occlusion for readable controller details. Runtime animation
 channels support the recognized Meta node names and pose layouts; unsupported
 layouts use the bundled articulated Touch Plus fallback. Optional missing fallback
 menu-button nodes are skipped. System-reserved buttons cannot animate without

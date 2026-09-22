@@ -89,6 +89,10 @@ public class QuitHarness {
   controllerHeader="X-NH3D-Controller-Opacity: 32896\r\n";
   check(requestPath("POST","/__xr/table-ui",origin,pose).contains("204"));
   check(BundledGameServer.getControllerOpacity()==32896);
+  String buttonPose="[1,0,-1,0,0,1,-1,0,0,1,0,0.7,-0.65,0,0,1.6,0,0,1,1,2,0.45,0.82,2,0,1.6,0,0,1]";
+  check(requestPath("POST","/__xr/table-ui",origin,buttonPose).contains("204"));
+  check(BundledGameServer.getPointerState()[20]==2);
+
   BundledGameServer.resetControllerOpacity();check(BundledGameServer.getControllerOpacity()==0);
   controllerHeader="";
   BundledGameServer.stop();check(requestPath("GET",url,origin,"").contains("202 Accepted"));

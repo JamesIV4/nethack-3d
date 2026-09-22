@@ -258,7 +258,7 @@ library hash/preference checks. Release resource paths are resolved from aapt's
 resource table because resource optimization renames `fxr_config.yaml`.
 Six focused store-packaging regression tests pass. Output:
 `release/NetHack 3D 1.6.0 Quest.apk`.
-SHA-256: `7e9efe1292d6a94b010aa2e0170a2f459507cd29bb874c1bcce51a1e780dd901`.
+SHA-256: `3a5882abc416bc3a4ba4fbf133cee580b5df2398adf8566c7bf42ff5580116b1`.
 This validates the reported packaging blockers; the APK has not been uploaded
 to Meta or installed for a headset smoke test in this pass.
 
@@ -311,3 +311,83 @@ To switch a test headset to release signing, export/verify any saves and setting
 first, then remove the debug installation and install the signed `Quest.apk`.
 Uninstalling clears application data. Keep the chosen release key stable for
 future updates; do not change store signing back to the Android debug key.
+
+
+## Controller shading and inventory popup stabilization
+
+Controller models use soft tracking-space lighting and matte materials, preserving
+source normal/AO textures. A bounded 12-ray hemisphere bake darkens nearby occluded
+surfaces once at load time. It yields between batches, supports cancellation,
+preserves existing vertex colors and skin/morph data, and skips unexpectedly large
+models above 30,000 triangles. There is no ongoing AO render pass or screen buffer.
+
+VR dialogs now mount synchronously when animation is disabled. This lets the
+inventory layout effect measure actual popup dimensions before the first paint,
+so an estimated 260px height does not leave a short popup far above its row.
+Animated desktop dialog behavior is retained.
+
+Native pane cutout geometry now commits its GL resources before the same frame's
+draw. Previously popup/Drop changes could replace visible pane pieces after the
+regular resource update, leaving the new pieces unavailable for one frame. The
+extra resource commit is conditional and does not advance the frame clock.
+
+AO tests include the bundled Touch Plus GLB, exposed/occluded surfaces,
+cancellation and geometry preservation. Controller, positioning and pane tests,
+TypeScript, native compilation and the signed release packaging checks passed.
+The updated APK has not been installed during this pass; visual confirmation of
+controller detail, popup placement and the flash fix remains a headset check.
+
+
+### Offline controller AO
+
+AO now runs only through `npm run quest:controllers:bake` during asset authoring.
+Both original Touch Plus fallback models and exact runtime GLBs captured from the
+running Quest are retained as inputs. The command appends baked vertex-color
+streams to new GLBs while preserving existing binary data, materials, animations,
+skins and node identities. Output is deterministic and bundled in `public/quest-controllers`.
+
+At runtime a source SHA-256 selects its exact pre-baked copy. Unknown runtime
+geometry keeps normal lighting/source AO maps and never triggers an on-device
+bake. The app bundle no longer includes the AO baker. Release verification checks
+that the generated assets and lookup manifest are included byte-for-byte.
+Tests verify reproducible output, original GLB contracts and lookup fallback.
+The signed 7:00 PM Quest APK includes these assets; it has not been installed in
+this pass, so the currently running app remains undisturbed.
+
+
+## Tracked foreground, minimap default and button-anchored menus
+
+Controllers and held weapons share a tracking-space foreground draw. Weapons are
+excluded from the dungeon draw and restored to their owner after the foreground
+pass. In the APK, native HTML/keyboard surfaces are followed by a foreground-only
+redraw from the same completed WebXR frame, so the UI cannot cover those objects.
+Wired VR draws the same foreground after its Three.js UI.
+
+The compositor protocol reserves the upper half of projection alpha for the
+foreground mask. The world alpha is halved without changing RGB, foreground
+geometry stamps alpha=1, and four alpha-only corner texels identify each encoded
+eye frame. Native drawing restores world alpha before composition and recognizes
+both producer Y orientations. Frames without the signature use the legacy path.
+This avoids CPU readback and extra full-resolution render targets; it adds an
+alpha-encoding pass, foreground mask draw and native foreground redraw. Four
+corner alpha texels per eye are reserved, and world transparency has one less bit
+of precision. High-precision shader coordinates are required for the header at
+high eye resolutions. Nothing is encoded when no tracked foreground is visible.
+
+UI snapshot context mode 2 reuses header fields 21-23 for the invoking button's
+normalized top-center X/Y and source pane ID. Mode 1 retains world-point anchoring.
+The native host resolves the button against the preceding pane geometry before
+replacing it, then holds the popup's bottom edge 4 cm above that point. Actions and
+Menu buttons opt in explicitly; closed popups clear their anchor. Existing input
+routing and hit testing are retained.
+
+Fresh Quest settings now use a 100% minimap. Saved user choices are preserved.
+
+Validation: TypeScript, foreground ownership/session and menu-anchor tests,
+settings hydration tests, Java snapshot parsing, native compilation, release lint
+and package checks. `node scripts/quest/webxr/test-foreground-on-device.mjs` compiles
+and links the actual compositor shader on the connected Quest and runs GPU pixel
+tests for both eyes and Y orientations at 8192-pixel source width, including
+foreground-over-UI, world-under-UI, MR alpha and legacy-frame behavior. The signed
+7:37 PM APK includes these changes. Full headset appearance/performance still
+needs confirmation; this pass did not replace the running app.

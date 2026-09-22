@@ -1,0 +1,31 @@
+
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
+#include <cstdio>
+#include <cstdlib>
+GLuint shader(GLenum type,const char* source){GLuint id=glCreateShader(type);glShaderSource(id,1,&source,nullptr);glCompileShader(id);GLint ok;glGetShaderiv(id,GL_COMPILE_STATUS,&ok);if(!ok){char log[8192];glGetShaderInfoLog(id,sizeof(log),nullptr,log);puts(log);exit(2);}return id;}
+int main(){EGLDisplay d=eglGetDisplay(EGL_DEFAULT_DISPLAY);EGLint major,minor;if(!eglInitialize(d,&major,&minor)){printf("EGL init failed %x\n",eglGetError());return 3;}EGLint cfg[]={EGL_SURFACE_TYPE,EGL_PBUFFER_BIT,EGL_RENDERABLE_TYPE,EGL_OPENGL_ES2_BIT,EGL_RED_SIZE,8,EGL_GREEN_SIZE,8,EGL_BLUE_SIZE,8,EGL_ALPHA_SIZE,8,EGL_NONE};EGLConfig c;EGLint n;eglChooseConfig(d,cfg,&c,1,&n);EGLint size[]={EGL_WIDTH,8,EGL_HEIGHT,4,EGL_NONE},ver[]={EGL_CONTEXT_CLIENT_VERSION,2,EGL_NONE};auto surf=eglCreatePbufferSurface(d,c,size);auto ctx=eglCreateContext(d,c,EGL_NO_CONTEXT,ver);if(!eglMakeCurrent(d,surf,surf,ctx))return 4;
+GLuint v=shader(GL_VERTEX_SHADER,R"SRC(@NH3D_VERTEX@)SRC"),f=shader(GL_FRAGMENT_SHADER,R"SRC(@NH3D_FRAGMENT@)SRC");GLuint p=glCreateProgram();glAttachShader(p,v);glAttachShader(p,f);glLinkProgram(p);GLint ok;glGetProgramiv(p,GL_LINK_STATUS,&ok);if(!ok){char log[8192];glGetProgramInfoLog(p,sizeof(log),nullptr,log);puts(log);return 5;}puts("Quest foreground shader compiled and linked");
+GLuint f2=shader(GL_FRAGMENT_SHADER,R"SRC(@NH3D_FRAGMENT_2D@)SRC");GLuint test=glCreateProgram();glAttachShader(test,v);glAttachShader(test,f2);glLinkProgram(test);glUseProgram(test);
+float vertices[]={-1,1,0,-1,-1,0,1,1,0,1,-1,0},uvs[]={0,0,0,1,.5,0,.5,1};
+auto pos=glGetAttribLocation(test,"a_position"),uv=glGetAttribLocation(test,"a_uv");glVertexAttribPointer(pos,3,GL_FLOAT,0,0,vertices);glEnableVertexAttribArray(pos);glVertexAttribPointer(uv,2,GL_FLOAT,0,0,uvs);glEnableVertexAttribArray(uv);
+glUniform2f(glGetUniformLocation(test,"u_texel"),1.f/8192,1.f/4);glUniform4f(glGetUniformLocation(test,"u_eyeRect"),0,0,.5,1);glUniform1i(glGetUniformLocation(test,"u_texture0"),0);
+GLuint tex;glGenTextures(1,&tex);glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,tex);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);glViewport(0,0,4,4);
+static unsigned char bytes[8192*4*4],pixel[4];
+for(int eye=0;eye<2;eye++)for(int flip=0;flip<2;flip++)for(int mode=0;mode<3;mode++){
+ glUniform4f(glGetUniformLocation(test,"u_eyeRect"),eye*.5f,0,.5f,1);
+ uvs[0]=uvs[2]=eye*.5f;uvs[4]=uvs[6]=eye*.5f+.5f;
+ for(int i=0;i<8192*4;i++){bytes[i*4]=40;bytes[i*4+1]=60;bytes[i*4+2]=80;bytes[i*4+3]=mode==2?255:mode==1?32:128;}
+ if(mode<2){int tag[]={159,191,223,159};for(int eye=0;eye<2;eye++)for(int i=0;i<4;i++)bytes[(flip*3*8192+eye*4096+i)*4+3]=tag[i];}
+ for(int hand=0;hand<2;hand++){ bytes[(hand*4096+1536+8192)*4]=180;bytes[(hand*4096+1536+8192)*4+1]=80;bytes[(hand*4096+1536+8192)*4+2]=30;bytes[(hand*4096+1536+8192)*4+3]=255;}
+
+ glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,8192,4,0,GL_RGBA,GL_UNSIGNED_BYTE,bytes);
+ glDisable(GL_BLEND);glUniform1i(glGetUniformLocation(test,"u_foregroundOnly"),0);glDrawArrays(GL_TRIANGLE_STRIP,0,4);glReadPixels(2,2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+ if(pixel[0]!=40||abs(int(pixel[3])-(mode==1?64:255))>1){printf("Base decode failed mode %d: %d %d\n",mode,pixel[0],pixel[3]);return 6;}
+ glClearColor(0,1,0,1);glClear(GL_COLOR_BUFFER_BIT);glUniform1i(glGetUniformLocation(test,"u_foregroundOnly"),1);glEnable(GL_BLEND);glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);glDrawArrays(GL_TRIANGLE_STRIP,0,4);glReadPixels(2,2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+ if(pixel[1]!=255||pixel[0]!=0){puts("World incorrectly overwrote UI");return 7;}
+ glReadPixels(1,2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+ if(mode<2 ? pixel[0]!=180 : pixel[1]!=255){printf("Foreground or legacy gate failed: %d %d %d\n",mode,pixel[0],pixel[1]);return 8;}
+}
+puts("Quest pixel tests passed: foreground over UI, world under UI, MR alpha restored, legacy frame ignored");
+return 0;}

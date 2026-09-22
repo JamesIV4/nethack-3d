@@ -1,3 +1,4 @@
+import { NativeForeground } from "./native-foreground";
 import * as THREE from "three";
 import { isQuestApk } from "./host";
 import { GlbControllerModelLoader, type ControllerModelLoader, type LoadedController } from "./controller-model-loader";
@@ -17,9 +18,14 @@ export class ControllerModels {
   private readonly entries = new Map<XRInputSource, Entry>();
   private readonly lifetime = new AbortController();
   private disposed = false;
+  private readonly foreground = new NativeForeground();
   constructor(private readonly renderer: THREE.WebGLRenderer, private readonly loader: ControllerModelLoader = new GlbControllerModelLoader(renderer), private readonly native = isQuestApk()) {
     this.tracking.matrixAutoUpdate = false;
     this.scene.add(this.tracking);
+    // Lighting stays in tracking space, independent of the dungeon and rig scale.
+    this.tracking.add(new THREE.HemisphereLight(0xffffff, 0x6d778a, 1.1));
+    const key = new THREE.DirectionalLight(0xffffff, 2);
+    key.position.set(-.8, 1.5, 1); this.tracking.add(key, key.target);
   }
   private add(source: XRInputSource, hand: Hand): Entry {
     const group = new THREE.Group(); group.name = `Controller grip ${hand}`; group.matrixAutoUpdate = false;
@@ -113,16 +119,27 @@ export class ControllerModels {
     } catch (error) { if (valid() && !signal.aborted) { entry.diagnostic.error = String(error); entry.diagnostic.state = "load-error"; } }
     finally { entry.loading = false; }
   }
+  renderWorld(draw: () => void, root: THREE.Object3D): void {
+    const weapons = root.children.filter(child => child.userData.nh3dForeground);
+    const visible = weapons.map(child => child.visible);
+    try { weapons.forEach(child => { child.visible = false; }); draw(); }
+    finally { weapons.forEach((child, index) => { child.visible = visible[index]; }); }
+  }
   /** Draw after the world, with a fresh depth buffer so model parts self-occlude. */
   render(camera: THREE.Camera, trackingRoot: THREE.Object3D): void {
-    if (this.disposed || !this.entries.size) return;
+    if (this.disposed) return;
     trackingRoot.updateWorldMatrix(true, false);
     this.tracking.matrix.copy(trackingRoot.matrixWorld); this.tracking.matrixWorldNeedsUpdate = true;
+    const weapons = trackingRoot.children.filter(child => child.userData.nh3dForeground);
+    weapons.forEach(child => this.tracking.add(child));
     const autoClear = this.renderer.autoClear, clipping = this.renderer.clippingPlanes;
     try {
       this.renderer.autoClear = false; this.renderer.clippingPlanes = [];
+      const encode = this.native && (weapons.some(child => child.visible) || [...this.entries.values()].some(entry => entry.group.visible));
+      if (encode) this.foreground.begin(this.renderer, camera);
       this.renderer.clearDepth(); this.renderer.render(this.scene, camera);
-    } finally { this.renderer.autoClear = autoClear; this.renderer.clippingPlanes = clipping; }
+      if (encode) this.foreground.finish(this.renderer, camera, this.scene);
+    } finally { weapons.forEach(child => trackingRoot.add(child)); this.renderer.autoClear = autoClear; this.renderer.clippingPlanes = clipping; }
   }
   private remove(source: XRInputSource, entry: Entry): void {
     entry.model?.dispose();
@@ -133,6 +150,6 @@ export class ControllerModels {
     if (this.disposed) return;
     this.disposed = true; this.lifetime.abort();
     for (const [source, entry] of this.entries) this.remove(source, entry);
-    this.loader.dispose();
+    this.loader.dispose(); this.foreground.dispose();
   }
 }

@@ -19,6 +19,7 @@ export class ControllerWeapons {
     if (!hand) {
       const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1),
         new THREE.MeshBasicMaterial({ toneMapped: false }), 0);
+      mesh.userData.nh3dForeground = true;
       mesh.matrixAutoUpdate = false; mesh.frustumCulled = false;
       this.root.add(mesh);
       hand = { mesh, signature: "", gesture: new WeaponGesture(), pixelSize: 1 };
@@ -64,6 +65,7 @@ export class ControllerWeapons {
     this.root.remove(old);
     old.geometry.dispose(); (old.material as THREE.Material).dispose();
     old.dispose();
+    mesh.userData.nh3dForeground = true;
     mesh.matrixAutoUpdate = false; mesh.frustumCulled = false; mesh.visible = old.visible;
     this.root.add(mesh);
     hand.mesh = mesh;

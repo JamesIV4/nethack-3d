@@ -1,3 +1,5 @@
+import { menuButtonAnchor } from "./menu-button-anchor";
+import { isVisibleUi } from "./visibility";
 import * as THREE from "three";
 import { uiHitRectangles } from "./dom-pointer";
 import { tableUiPanes, type UiPane } from "./table-ui-layout";
@@ -21,6 +23,16 @@ export class NativePointerBridge {
   setFirstPersonAnchor(position: THREE.Vector3, yaw: number, revision: number): void {
     this.firstPersonAnchor = [position.x, position.y, position.z, yaw, revision];
   }
+  private buttonAnchorShown = false;
+  private buttonAnchor: { kind: string; x: number; y: number; pane: number } | null = null;
+  private readonly captureMenuButton = (event: Event): void => {
+    const button = (event.target as Element | null)?.closest<HTMLElement>("[data-nh3d-menu-anchor]");
+    if (!button) return;
+    this.buttonAnchorShown = false;
+    if (button.dataset.nh3dMenuAnchor === "actions" && button.getAttribute("aria-expanded") === "true") { this.buttonAnchor = null; return; }
+    const anchor = menuButtonAnchor(this.panes, button.getBoundingClientRect(), innerWidth, innerHeight);
+    this.buttonAnchor = anchor ? { kind: button.dataset.nh3dMenuAnchor!, ...anchor } : null;
+  };
   private contextPoint: THREE.Vector3 | null = null;
   private gameToTracking = new THREE.Matrix4();
   setContextTarget(point: THREE.Vector3): void { this.contextPoint = point; }
@@ -41,6 +53,7 @@ export class NativePointerBridge {
   private readonly observer = new MutationObserver(() => { this.dirty = true; });
   private readonly resized = (): void => { this.dirty = true; };
   constructor() {
+    document.addEventListener("click", this.captureMenuButton, { capture: true, signal: this.abort.signal });
     this.observer.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
     this.observer.observe(document.documentElement, { attributes: true });
     window.addEventListener("resize", this.resized, { signal: this.abort.signal });
@@ -81,11 +94,15 @@ export class NativePointerBridge {
       this.dirty = false; this.lastLayout = time;
     }
     const settings = getXrSettings();
+    const anchoredMenu = this.buttonAnchor && document.querySelector<HTMLElement>(this.buttonAnchor.kind === "pause" ? "#pause-menu-dialog.is-visible" : ".nh3d-mobile-actions-sheet");
+    const buttonAnchor = anchoredMenu && isVisibleUi(anchoredMenu) ? this.buttonAnchor : null;
+    if (buttonAnchor) this.buttonAnchorShown = true;
+    else if (this.buttonAnchorShown) { this.buttonAnchor = null; this.buttonAnchorShown = false; }
     const context = !!this.contextPoint && hasWorldContextAnchor();
     const point = this.contextPoint?.clone().applyMatrix4(this.gameToTracking) ?? new THREE.Vector3();
     const body = JSON.stringify([this.revision, this.rects.length / 4, ...this.hits,
       this.firstPerson ? 1 : 0, this.pitch, this.boardY, this.panes.length, ...this.anchor,
-      settings.area, settings.scale, context ? 1 : 0, ...point.toArray(), ...this.firstPersonAnchor, ...this.rects, ...this.panes.flat()]);
+      settings.area, settings.scale, buttonAnchor ? 2 : context ? 1 : 0, ...(buttonAnchor ? [buttonAnchor.x, buttonAnchor.y, buttonAnchor.pane] : point.toArray()), ...this.firstPersonAnchor, ...this.rects, ...this.panes.flat()]);
     // Keep a low-frequency heartbeat even when neither controller moves, so
     // the system Meta-button recenter can reach a stationary player.
     const snapshot = body + ":" + this.controllerOpacity;

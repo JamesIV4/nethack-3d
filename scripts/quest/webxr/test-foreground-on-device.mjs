@@ -1,0 +1,21 @@
+// Explicit device GPU check. No app data is accessed or modified.
+import {readFileSync,writeFileSync,mkdirSync,readdirSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {findAndroidSdk} from '../build-environment.mjs';
+const root=fileURLToPath(new URL('../../../',import.meta.url)),sdk=findAndroidSdk(),windows=process.platform==='win32';
+const run=(file,args)=>execFileSync(file,args,{cwd:root,windowsHide:true,stdio:'inherit'});
+const native=readFileSync(path.join(root,'quest/runtime/wolvic/app/src/main/cpp/ExternalBlitter.cpp'),'utf8');
+const vertex=/sVertexShader = R"SHADER\(([\s\S]*?)\)SHADER"/.exec(native)[1];
+const fragment=[...native.matchAll(/sFragmentShader = R"SHADER\(([\s\S]*?)\)SHADER"/g)].at(-1)[1];
+const template=readFileSync(new URL('./foreground-shader.cpp.in',import.meta.url),'utf8');
+const source=template.replace('@NH3D_VERTEX@',vertex).replace('@NH3D_FRAGMENT@',fragment).replace('@NH3D_FRAGMENT_2D@',fragment.replace('#extension GL_OES_EGL_image_external : require','').replaceAll('samplerExternalOES','sampler2D'));
+const output=path.join(root,'quest/build/foreground-check');mkdirSync(output,{recursive:true});writeFileSync(path.join(output,'shader.cpp'),source);
+const version=readdirSync(path.join(sdk,'ndk')).sort((a,b)=>b.localeCompare(a,undefined,{numeric:true}))[0];
+const ndk=process.env.ANDROID_NDK_HOME??path.join(sdk,'ndk',version),host=windows?'windows-x86_64':process.platform==='darwin'?'darwin-x86_64':'linux-x86_64';
+run(path.join(ndk,'toolchains/llvm/prebuilt',host,'bin','clang++'+(windows?'.exe':'')),['--target=aarch64-linux-android26','-static-libstdc++',path.join(output,'shader.cpp'),'-lEGL','-lGLESv2','-o',path.join(output,'shader')]);
+const adb=path.join(sdk,'platform-tools','adb'+(windows?'.exe':'')),serial=process.env.QUEST_SERIAL?['-s',process.env.QUEST_SERIAL]:[];
+run(adb,[...serial,'push',path.join(output,'shader'),'/data/local/tmp/nh3d-foreground-shader']);
+run(adb,[...serial,'shell','chmod','700','/data/local/tmp/nh3d-foreground-shader']);
+run(adb,[...serial,'shell','/data/local/tmp/nh3d-foreground-shader']);
