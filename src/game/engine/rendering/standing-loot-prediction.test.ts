@@ -8,7 +8,7 @@ import { getDefaultFloorGlyph, classifyTileBehavior } from "../../glyphs/behavio
 afterEach(() => vi.restoreAllMocks());
 afterAll(() => vi.unstubAllGlobals());
 
-it.each(["prediction", "step"])("keeps known loot standing during %s when flattening is disabled", mode => {
+it.each(["prediction", "step"].flatMap(mode => [true,false].map(tracked => ({mode,tracked}))))("keeps known loot standing during $mode (tracked player: $tracked)", ({mode,tracked}) => {
   const s = createEngineSystems({} as EngineCoordinator);
   s.engineState.playMode = "fps";
   s.engineState.clientOptions.tilesetMode = "tiles";
@@ -28,9 +28,30 @@ it.each(["prediction", "step"])("keeps known loot standing during %s when flatte
   s.tileRendering.updateTile(21,8,loot);
   expect(ensure.mock.calls.some(call => call[0] === "21,8" && call[6] === "loot")).toBe(true);
   expect(s.tileRendering.tileMap.get("21,8")!.userData.tileTextureSourceGlyph).not.toBe(loot);
-  // Explicit player glyphs still cannot turn into a duplicate player billboard.
+  // Replay the captured ordering: the player glyph arrives before playerPos.
   ensure.mockClear();
   const player = getGlyphCatalogRanges().find(range => range.kind === "mon")!.start;
-  s.tileRendering.updateTile(21,8,player,"@",15,{ runtimeTrackedEntityId: 0 });
-  expect(ensure.mock.calls.some(call => call[0] === "21,8")).toBe(false);
+  s.tileRendering.updateTile(21,8,player,"@",15,{ runtimeTrackedEntityId: tracked ? 0 : undefined });
+  expect(ensure.mock.calls.some(call => call[0] === "21,8" && call[8] === loot && call[6] === "loot")).toBe(true);
+  expect(ensure.mock.calls.some(call => call[8] === player)).toBe(false);
+  expect(s.tileRendering.tileMap.get("21,8")!.userData.tileTextureSourceGlyph).not.toBe(loot);
+  // Repeated payloads use another path; it must retain the same presentation.
+  s.camera.fpsStepCameraActive = false;
+  s.playerMovement.fpsPredictedPlayerTile = {x:21,y:8,expiresAtMs:Date.now()+1000};
+  s.entityBillboards.monsterBillboards.set("21,8",new THREE.Sprite());
+  const repeated = {x:21,y:8,glyph:player,char:"@",color:15,monsterId:tracked?0:undefined};
+  s.tileUpdates.tileStateCache.set("21,8",s.tileUpdates.buildTileStateSignatureFromPayload(repeated));
+  const remove = vi.spyOn(s.entityBillboards,"removeMonsterBillboard");
+  s.tileUpdates.processPendingTileUpdate(repeated);
+  expect(remove).not.toHaveBeenCalled();
+  // Arrival keeps the same standing object instead of switching from a flat tile.
+  ensure.mockClear(); s.playerMovement.playerPos = {x:21,y:8};
+  s.tileRendering.updateTile(21,8,player,"@",15,{runtimeTrackedEntityId:0});
+  expect(ensure.mock.calls.some(call=>call[8]===loot)).toBe(true);
+  expect(s.tileRendering.tileMap.get("21,8")!.userData.tileTextureSourceGlyph).not.toBe(loot);
+  // Authoritative removal still wins; do not resurrect previously seen loot.
+  ensure.mockClear(); s.worldClassification.flatFeatureUnderPlayerCache.delete("21,8");
+  s.worldClassification.suppressedLootLikeUnderPlayerCacheKeys.add("21,8");
+  s.tileRendering.updateTile(21,8,player,"@",15,{runtimeTrackedEntityId:0});
+  expect(ensure.mock.calls.some(call=>call[8]===loot)).toBe(false);
 });

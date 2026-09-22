@@ -161,6 +161,8 @@ Quest far-look primary clicks use `PositionSelection.handleFarLookPositionTileSe
 
 FPS prediction/step suppression still hides player glyphs, but preserves an authoritative loot billboard when flattening is disabled. Do not replace that loot with a cached flat tile while waiting for the player-position update. Current-player underlay reconciliation remains authoritative after arrival.
 
+The Quest movement trace confirmed that a destination player glyph can precede `player_position` by several frames. Both `TileRendering.updateTile` and `TileUpdates`' unchanged-signature path must preserve cached standing loot for that predicted/step destination when the payload is explicitly a player visual. Use the cached loot glyph, never the incoming player glyph. This presentation allowance does not promote the destination to the authoritative player tile for hotbar foreground priority.
+
 `TileUpdates.flushPendingDarkCorridorInference` runs on every authoritative player step and on `map_update_complete`, emitted by the bridge after ordered map-display or snapshot-complete boundaries. The shared frame provides a fallback for late legacy observations. Inference reads the latest pending terrain without committing render caches or draining the visual queue; it must not wait for camera/player animation to finish. Preserve superseded-payload terrain when coalescing arrivals, and evaluate after complete map delivery rather than per glyph.
 
 ### VR controller weapons

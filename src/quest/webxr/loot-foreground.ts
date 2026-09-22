@@ -1,5 +1,10 @@
 import * as THREE from "three";
 
+export function isPlayerTileLoot(object: THREE.Object3D | undefined, player: { x: number; y: number } | null | undefined): boolean {
+  return !!object && !!player && object.userData.entityType === "loot" &&
+    object.userData.tileX === player.x && object.userData.tileY === player.y;
+}
+
 /** Alpha-only loot mask for the native hotbar, drawn against world depth before controllers. */
 export class LootForeground {
   private readonly scene = new THREE.Scene();
@@ -7,11 +12,11 @@ export class LootForeground {
   private readonly materials = new Map<THREE.Material, { mask: THREE.Material; version: number }>();
   constructor() { this.scene.matrixAutoUpdate = false; }
   get active(): boolean { return this.targets.length > 0; }
-  prepare(sprites: ReadonlyMap<string, THREE.Sprite>, enabled: boolean): void {
+  prepare(sprites: ReadonlyMap<string, THREE.Sprite>, enabled: boolean, player: { x: number; y: number } | null): void {
     this.targets.length = 0;
     if (!enabled) { this.dispose(); return; }
     for (const sprite of sprites.values()) {
-      if (sprite.userData.entityType !== "loot") continue;
+      if (!isPlayerTileLoot(sprite, player)) continue;
       const proxy = sprite.userData.fpsPitchLockedProxyMesh as THREE.Mesh | undefined;
       const object = proxy?.visible ? proxy : sprite;
       if (object.visible && object.parent?.visible && !Array.isArray(object.material) && object.material.visible && object.material.opacity > 0) this.targets.push(object);

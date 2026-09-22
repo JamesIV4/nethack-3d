@@ -344,9 +344,18 @@ export class TileUpdates {
         behavior,
         typeof tile?.char === "string" ? tile.char : null,
       );
-    const fpsPlayerTileBillboardBehavior = tileRelation.isCurrentPlayerTile
+    const keepStandingLootDuringStep = this.dependencies.movementInput.isFpsMode() && behavior !== null &&
+      this.dependencies.worldClassification.isLootLikeBehavior(behavior) && !this.dependencies.engineState.clientOptions.fpsFlattenEntityBillboards;
+    const pendingPlayerLootTile = this.dependencies.movementInput.isFpsMode() &&
+      !this.dependencies.engineState.clientOptions.fpsFlattenEntityBillboards &&
+      (tileRelation.isStepDestinationTile || tileRelation.isPredictedPlayerTile) &&
+      (isRuntimeTrackedPlayerTileInFps || this.hasExplicitPlayerVisual(behavior, tile.char));
+    const cachedFpsBillboardBehavior = tileRelation.isCurrentPlayerTile || pendingPlayerLootTile
       ? this.dependencies.worldClassification.getFpsPlayerTileBillboardBehaviorFromCache(key, behavior)
       : null;
+    const fpsPlayerTileBillboardBehavior = tileRelation.isCurrentPlayerTile ||
+      (cachedFpsBillboardBehavior && this.dependencies.worldClassification.isLootLikeBehavior(cachedFpsBillboardBehavior))
+      ? cachedFpsBillboardBehavior : null;
     if (
       this.dependencies.movementInput.isFpsMode() &&
       this.dependencies.camera.fpsStepCameraActive &&
@@ -373,8 +382,7 @@ export class TileUpdates {
           !isRuntimeTrackedPlayerTileInFps &&
           !tileRelation.isPlayerGlyph &&
           !tileRelation.isPlayerMaterial &&
-          !tileRelation.isStepDestinationTile &&
-          !tileRelation.isPredictedPlayerTile &&
+          (keepStandingLootDuringStep || (!tileRelation.isStepDestinationTile && !tileRelation.isPredictedPlayerTile)) &&
           !shouldSuppressRecentPreviousPlayerTileInFps &&
           (this.dependencies.worldClassification.isMonsterLikeBehavior(behavior) ||
             this.dependencies.worldClassification.isLootLikeBehavior(behavior) ||

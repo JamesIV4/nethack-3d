@@ -11,6 +11,7 @@ import type { BoardTilt } from "./board-tilt";
 import { withoutWorldClipping } from "./overlay-material";
 import { SnapTurnLatch, WorldClickGesture } from "./controller-gestures";
 import { WorldRaycast } from "./world-raycast";
+import { isPlayerTileLoot } from "./loot-foreground";
 import { TablePanGesture } from "./table-pan-gesture";
 import type { TableMoveHandle } from "./table-move-handle";
 
@@ -165,7 +166,8 @@ export class WebXrControllerInput {
     }
     state.directionInput = this.resolveDirectionPromptRayInput(state);
     const end = point ?? state.ray.at(5, new THREE.Vector3());
-    this.panel()?.nativePointer?.hit(state.source.handedness, state.ray, point, normal, transform, state.world?.object.userData.entityType === "loot");
+    this.panel()?.nativePointer?.hit(state.source.handedness, state.ray, point, normal, transform,
+      isPlayerTileLoot(state.world?.object, this.navigation?.playerTile()));
     if (!state.line || !state.circle) return;
     const positions = state.line.geometry.getAttribute("position") as THREE.BufferAttribute;
     positions.setXYZ(0, state.ray.origin.x, state.ray.origin.y, state.ray.origin.z);

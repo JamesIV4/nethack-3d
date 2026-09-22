@@ -1,15 +1,16 @@
 import * as THREE from "three";
 import { expect, it, vi } from "vitest";
-import { LootForeground } from "./loot-foreground";
+import { LootForeground, isPlayerTileLoot } from "./loot-foreground";
 
 it("masks visible loot with its alpha texture and restores original ownership on failure", () => {
   const world = new THREE.Scene(); world.scale.x = .6; world.updateMatrixWorld();
   const sprite = new THREE.Sprite(); sprite.visible = false; sprite.userData.entityType = "loot";
+  sprite.userData.tileX = 1; sprite.userData.tileY = 1;
   const texture = new THREE.Texture();
   const material = new THREE.MeshBasicMaterial({map:texture,transparent:true});
   const proxy = new THREE.Mesh(new THREE.PlaneGeometry(),material); world.add(proxy);
   sprite.userData.fpsPitchLockedProxyMesh = proxy;
-  const mask = new LootForeground(); mask.prepare(new Map([["1,1",sprite]]),true);
+  const mask = new LootForeground(); mask.prepare(new Map([["1,1",sprite]]),true,{x:1,y:1});
   expect(mask.active).toBe(true);
   let derived: THREE.Material | null = null;
   const renderer = { render: (scene: THREE.Scene) => {
@@ -29,13 +30,26 @@ it("masks visible loot with its alpha texture and restores original ownership on
   expect(()=>mask.render(renderer as unknown as THREE.WebGLRenderer,new THREE.Camera(),world)).toThrow("draw failure");
   expect(proxy.material).toBe(material); expect(proxy.parent).toBe(world);
   const dispose=vi.spyOn(derived!,"dispose");
-  mask.prepare(new Map(),false); expect(mask.active).toBe(false); expect(dispose).toHaveBeenCalledOnce();
+  mask.prepare(new Map(),false,null); expect(mask.active).toBe(false); expect(dispose).toHaveBeenCalledOnce();
   expect(material.map).toBe(texture); mask.dispose();
 });
 
 it("excludes hidden loot and monsters from the hotbar layer", () => {
   const world=new THREE.Scene(), loot=new THREE.Sprite(), monster=new THREE.Sprite();
   loot.userData.entityType="loot";loot.visible=false;world.add(loot,monster);
-  const layer=new LootForeground();layer.prepare(new Map([["a",loot],["b",monster]]),true);
+  const layer=new LootForeground();layer.prepare(new Map([["a",loot],["b",monster]]),true,{x:1,y:1});
   expect(layer.active).toBe(false); layer.dispose();
+});
+
+it("switches hotbar render and hit priority only at the authoritative player tile", () => {
+  const world=new THREE.Scene(), loot=new THREE.Sprite();
+  loot.userData={entityType:"loot",tileX:3,tileY:6}; world.add(loot);
+  const layer=new LootForeground(), sprites=new Map([["3,6",loot]]);
+  for (const player of [{x:2,y:6},{x:3,y:6},{x:4,y:6},{x:3,y:7}]) {
+    layer.prepare(sprites,true,player);
+    expect(layer.active).toBe(player.x===3 && player.y===6);
+    expect(isPlayerTileLoot(loot,player)).toBe(layer.active);
+  }
+  layer.prepare(sprites,true,null);expect(layer.active).toBe(false);
+  layer.dispose();
 });

@@ -1,6 +1,7 @@
 import { revealFlatStartup } from "../../../quest/webxr/startup-visibility";
 import { ControllerModels } from "../../../quest/webxr/controller-models";
 import { LootForeground } from "../../../quest/webxr/loot-foreground";
+import { spriteTrace, traceSpritePresentation } from "../../../quest/webxr/sprite-trace";
 import type { EntityBillboards } from "./entity-billboards";
 import * as THREE from "three";
 import { ScaledCameraSprites } from "./scaled-camera-sprites";
@@ -541,6 +542,10 @@ export class WebXrPresentation {
 
   prepareRender(): THREE.Camera | null {
     if (!this.active) return null;
+    traceSpritePresentation(this.dependencies.entityBillboards.monsterBillboards,this.dependencies.tileRendering.tileMap,
+      this.dependencies.playerMovement.playerPos,{mode:this.dependencies.engineState.playMode,flatten:this.dependencies.engineState.clientOptions.fpsFlattenEntityBillboards,
+        farLook:this.farLook.active,returning:this.dependencies.camera.fpsPositionCursorReturnActive});
+    spriteTrace.flush(performance.now());
     this.htmlPanel?.nativePointer?.setWorldTransform(this.trackingRoot.matrixWorld.clone().invert());
     this.htmlPanel?.update(performance.now());
     const firstPerson = this.dependencies.engineState.playMode === "fps";
@@ -556,7 +561,8 @@ export class WebXrPresentation {
       this.dependencies.tileRendering.tileMap, this.dependencies.tileRendering.floorGeometry,
       this.dependencies.glyphTextures.glyphOverlayMap, this.worldClipCulling);
     if (this.controllerModels) this.controllerModels.renderWorld(drawWorld, this.trackingRoot); else drawWorld();
-    this.lootForeground.prepare(this.dependencies.entityBillboards.monsterBillboards, this.nativeHost && this.dependencies.engineState.playMode === "fps");
+    this.lootForeground.prepare(this.dependencies.entityBillboards.monsterBillboards, this.nativeHost && this.dependencies.engineState.playMode === "fps",
+      this.dependencies.playerMovement.hasSeenPlayerPosition === false ? null : this.dependencies.playerMovement.playerPos);
     this.controllerModels?.render(camera, this.trackingRoot, this.lootForeground.active
       ? () => this.lootForeground.render(renderer, camera, scene) : undefined);
   }

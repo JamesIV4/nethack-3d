@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { spriteTrace, spriteTraceEnabled } from "../../../quest/webxr/sprite-trace";
 import { TILE_SIZE, WALL_HEIGHT } from "../../constants";
 import {
   classifyTileBehavior,
@@ -376,9 +377,18 @@ export class TileRendering {
         (tileRelation.isCurrentPlayerTile &&
           !shouldKeepVisiblePlayerBillboardInFarLook) ||
         shouldSuppressRecentPreviousPlayerTileInFps);
-    const fpsPlayerTileBillboardBehavior = tileRelation.isCurrentPlayerTile
+    // The runtime can print the destination player glyph before cliparound
+    // commits playerPos. Keep its known loot standing throughout that gap.
+    const pendingPlayerLootTile = !isInferredDarkCorridorWall && this.dependencies.movementInput.isFpsMode() &&
+      !this.dependencies.engineState.clientOptions.fpsFlattenEntityBillboards &&
+      (isFpsStepDestinationTile || isPredictedFpsPlayerTile) &&
+      (isRuntimeTrackedPlayerTileInFps || this.dependencies.tileUpdates.hasExplicitPlayerVisual(behavior, char));
+    const cachedFpsBillboardBehavior = tileRelation.isCurrentPlayerTile || pendingPlayerLootTile
       ? this.dependencies.worldClassification.getFpsPlayerTileBillboardBehaviorFromCache(key, behavior)
       : null;
+    const fpsPlayerTileBillboardBehavior = tileRelation.isCurrentPlayerTile ||
+      (cachedFpsBillboardBehavior && this.dependencies.worldClassification.isLootLikeBehavior(cachedFpsBillboardBehavior))
+      ? cachedFpsBillboardBehavior : null;
     const farLookPlayerBillboardBehavior =
       shouldKeepVisiblePlayerBillboardInFarLook ? behavior : null;
     const shouldKeepFpsPlayerTileBillboard =
@@ -1131,7 +1141,7 @@ export class TileRendering {
       this.dependencies.playerMovement.hasSeenPlayerPosition &&
       shouldSuppressPlayerTileVisualInFps;
     const shouldKeepBillboardOnFpsPlayerTile =
-      tileRelation.isCurrentPlayerTile &&
+      (tileRelation.isCurrentPlayerTile || pendingPlayerLootTile) &&
       ((isFpsPlayerTile && shouldKeepFpsPlayerTileBillboard) ||
         farLookPlayerBillboardBehavior !== null);
     const shouldRenderPlayerUnderlayBillboard =
@@ -1223,6 +1233,13 @@ export class TileRendering {
     const billboardEntityType = this.dependencies.worldClassification.isLootLikeBehavior(billboardBehavior)
       ? "loot"
       : "monster";
+    if (spriteTraceEnabled() && Math.abs(x-this.dependencies.playerMovement.playerPos.x)<=2 && Math.abs(y-this.dependencies.playerMovement.playerPos.y)<=2) {
+      spriteTrace.record("tile-decision",key,{glyph,char,kind:behavior.effective.kind,player:{...this.dependencies.playerMovement.playerPos},
+        relation:tileRelation,flatten:this.dependencies.engineState.clientOptions.fpsFlattenEntityBillboards,
+        suppress:shouldSuppressPlayerTileVisualInFps,keepStandingLootDuringStep,shouldRenderEntityBillboard,
+        billboardEntityType,billboardGlyph:billboardBehavior.effective.glyph,floorGlyph:renderBehavior.effective.glyph,
+        cachedUnderPlayer:this.dependencies.worldClassification.flatFeatureUnderPlayerCache.get(key)?.glyph??null});
+    }
     const billboardIsWall = shouldKeepBillboardOnFpsPlayerTile
       ? billboardBehavior.isWall
       : renderBehavior.isWall;
