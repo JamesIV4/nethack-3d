@@ -7,6 +7,7 @@ export type RuntimeCoordinator = Pick<
   | "emitRuntimeTerminated"
   | "eventHandler"
   | "handleUICallback"
+  | "logRoutine"
   | "isClosed"
   | "nethackInstance"
   | "nethackModule"

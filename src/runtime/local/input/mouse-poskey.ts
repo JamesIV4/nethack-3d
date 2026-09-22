@@ -11,7 +11,8 @@ import type { RuntimeTileContextMenus } from "../menus/tile-context";
 export interface RuntimeMouseInputDependencies {
   readonly coordinator: Pick<
     RuntimeCoordinator,
-    "nethackModule"
+    "logRoutine"
+    | "nethackModule"
     | "runtimeVersion"
   >;
   readonly inputRequests: Pick<
@@ -202,7 +203,7 @@ export class RuntimeMouseInput {
     this.writePoskeyTargetValue(xTargetPtr, mouseX, "x", coordStoreType);
     this.writePoskeyTargetValue(yTargetPtr, mouseY, "y", coordStoreType);
     this.writePoskeyTargetValue(modTargetPtr, mouseMod, "mod", "i32");
-    console.log(
+    this.deps.coordinator.logRoutine(
       `Delivered mouse input to nh_poskey: (${mouseX}, ${mouseY}) mod=${mouseMod} (xPtr=${xTargetPtr}, yPtr=${yTargetPtr}, modPtr=${modTargetPtr}, coordType=${coordStoreType})`,
     );
     if (this.deps.coordinator.runtimeVersion === "5.0" && mouseMod > 0) {

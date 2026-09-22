@@ -15,11 +15,12 @@ import type { RuntimeTextInput } from "../input/text-input";
 export interface RuntimeMessagesDependencies {
   readonly contextualLook: Pick<
     RuntimeContextualLook,
-    "shouldSuppressLegacyContextualLookInfoRawPrint"
+    "isContextualInfoQuiet"
   >;
   readonly coordinator: Pick<
     RuntimeCoordinator,
-    "emit"
+    "logRoutine"
+    | "emit"
     | "eventHandler"
     | "runtimeVersion"
   >;
@@ -80,13 +81,14 @@ export class RuntimeMessages {
 
   handleShimPutstr(args) {
     const [win, textAttr, textStr] = args;
-    console.log(`💬 TEXT [Win ${win}]: "${textStr}"`);
+    this.deps.coordinator.logRoutine(`💬 TEXT [Win ${win}]: "${textStr}"`);
     if (this.deps.windows.shouldSuppressRedundantStatusWindowText(win)) {
       return 0;
     }
     this.deps.windowText.appendWindowTextBuffer(win, textStr);
     if (this.deps.windows.isMessageWindow(win)) {
       this.deps.promptContext.rememberPromptContextMessage(textStr, "message_window");
+      if (this.deps.contextualLook.isContextualInfoQuiet() && !this.deps.gameOver.gameOverSequenceActive) return 0;
     }
 
     if (!this.deps.windowText.shouldCaptureWindowTextForDialog(win)) {
@@ -113,10 +115,9 @@ export class RuntimeMessages {
 
   handleShimRawPrint(args) {
     const [rawText] = args;
-    const suppressLegacyContextualLookInfoRawPrint =
-      this.deps.contextualLook.shouldSuppressLegacyContextualLookInfoRawPrint();
-    if (!suppressLegacyContextualLookInfoRawPrint) {
-      console.log(`📢 RAW PRINT: "${rawText}"`);
+    const suppressContextualInfo = this.deps.contextualLook.isContextualInfoQuiet() && !this.deps.gameOver.gameOverSequenceActive;
+    if (!suppressContextualInfo) {
+      this.deps.coordinator.logRoutine(`📢 RAW PRINT: "${rawText}"`);
     }
     const normalizedRawText = this.deps.promptContext.normalizePromptContextMessage(rawText);
     if (normalizedRawText) {
@@ -127,7 +128,7 @@ export class RuntimeMessages {
     }
     if (!normalizedRawText && this.deps.gameOver.gameOverSequenceActive) {
       this.deps.gameOver.gameOverEmptyRawPrintCount += 1;
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Game-over empty raw_print (${this.deps.gameOver.gameOverEmptyRawPrintCount}/3)`,
       );
       if (this.deps.gameOver.gameOverEmptyRawPrintCount >= 3) {
@@ -166,7 +167,7 @@ export class RuntimeMessages {
       if (isRawRecoverPrompt) {
         this.deps.textInput.queueStdinTextInput("r", "autosave raw recover prompt");
         this.deps.recovery.didAutoQueueRawRecoverChoice = true;
-        console.log(
+        this.deps.coordinator.logRoutine(
           'Auto-queued "r" for raw startup recovery prompt during autosave resume',
         );
       }
@@ -176,7 +177,7 @@ export class RuntimeMessages {
     if (
       this.deps.coordinator.eventHandler &&
       normalizedRawText &&
-      !suppressLegacyContextualLookInfoRawPrint
+      !suppressContextualInfo
     ) {
       this.deps.coordinator.emit({
         type: "raw_print",
@@ -188,7 +189,7 @@ export class RuntimeMessages {
 
   handleShimRawPrintBold(args) {
     const [rawBoldText] = args;
-    console.log(`RAW PRINT BOLD: "${rawBoldText}"`);
+    this.deps.coordinator.logRoutine(`RAW PRINT BOLD: "${rawBoldText}"`);
     const normalizedRawBoldText =
       this.deps.promptContext.normalizePromptContextMessage(rawBoldText);
     if (normalizedRawBoldText) {
@@ -203,7 +204,8 @@ export class RuntimeMessages {
         "raw_print_bold",
       );
     }
-    if (this.deps.coordinator.eventHandler && normalizedRawBoldText) {
+    if (this.deps.coordinator.eventHandler && normalizedRawBoldText &&
+        (!this.deps.contextualLook.isContextualInfoQuiet() || this.deps.gameOver.gameOverSequenceActive)) {
       this.deps.coordinator.emit({
         type: "raw_print",
         text: normalizedRawBoldText,
@@ -215,11 +217,12 @@ export class RuntimeMessages {
 
   handleShimMessageMenu(args) {
     const [menuLet, menuHow, menuMessage] = args;
-    console.log(
+    this.deps.coordinator.logRoutine(
       `NetHack message_menu: let=${menuLet}, how=${menuHow}, message="${menuMessage}"`,
     );
     if (this.deps.coordinator.eventHandler && menuMessage && String(menuMessage).trim()) {
       this.deps.promptContext.rememberPromptContextMessage(String(menuMessage), "message_menu");
+      if (this.deps.contextualLook.isContextualInfoQuiet() && !this.deps.gameOver.gameOverSequenceActive) return 0;
       this.deps.coordinator.emit({
         type: "text",
         text: String(menuMessage),
@@ -234,7 +237,7 @@ export class RuntimeMessages {
 
   handleShimGetmsghistory(args) {
     const [init] = args;
-    console.log(`Getting message history, init: ${init}`);
+    this.deps.coordinator.logRoutine(`Getting message history, init: ${init}`);
     if (init) {
       this.deps.windowText.messageHistorySnapshot = [];
       this.deps.windowText.messageHistorySnapshotIndex = 0;
@@ -246,7 +249,7 @@ export class RuntimeMessages {
 
   handleShimPutmsghistory(args) {
     const [msg, is_restoring] = args;
-    console.log(
+    this.deps.coordinator.logRoutine(
       `Putting message history: "${msg}", restoring: ${is_restoring}`,
     );
     if (typeof msg === "string" && msg.trim()) {
@@ -272,11 +275,11 @@ export class RuntimeMessages {
   }
 
   handleShimDoprevMessage() {
-    console.log("Handling previous-message request");
+    this.deps.coordinator.logRoutine("Handling previous-message request");
     if (this.deps.coordinator.eventHandler) {
       const historyLines = this.deps.windowText.getRecallableMessageHistoryLines();
       if (historyLines.length > 0) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           `Emitting info_menu for previous-message request (${historyLines.length} lines)`,
         );
         this.deps.coordinator.emit({

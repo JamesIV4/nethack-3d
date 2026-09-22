@@ -451,7 +451,7 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
   fpsLookSensitivityY: isMobile.matches ? 1.5 : 1,
   fpsWasdKeyboardMovementEnabled: true,
   lightingEnabled: true,
-  fpsFlattenEntityBillboards: true,
+  fpsFlattenEntityBillboards: false,
   showItemsUnderPlayerInOverheadTilesMode: true,
   controllerEnabled: false,
   controllerFpsMoveRepeatMs: 190,

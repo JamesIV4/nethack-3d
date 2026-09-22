@@ -34,6 +34,7 @@ export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles())
   // The native host attaches this crop to pane 4 at its source-pixel offset,
   // leaving the parent dialog crop and its physical placement unchanged.
   const selectMenu = bounds(".nh3d-select-menu,.nh3d-inventory-context-menu,.nh3d-inventory-drop-type-menu", true);
+  const instructions = bounds("#position-dialog", true);
   // These crops share the game's live DOM texture and native hit-testing path.
   if (document.documentElement?.classList.contains("nh3d-xr-menu")) {
     const panes: UiPane[] = [];
@@ -51,6 +52,7 @@ export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles())
       ...(status ? [[0, ...status] as UiPane] : []),
       ...(actions ? [[2, ...actions] as UiPane] : []),
       ...(minimap ? [[5, ...minimap] as UiPane] : []),
+      ...(instructions ? [[1, ...instructions] as UiPane] : []),
     ];
     // GameUiPanels subtracts these exact dedicated crops from the full HUD.
     // Retaining the complete source pane preserves messages and every other
@@ -65,6 +67,7 @@ export function tableUiPanes(firstPerson: boolean, hitRects = uiHitRectangles())
   }
   const messages = bounds(".top-left-ui,.floating-message-container,.nh3d-mobile-log-collapsed", true);
   if (messages) panes.push([11, ...messages]);
+  if (instructions) panes.push([1, ...instructions]);
   // Only explicit UI surfaces become panes; arbitrary hit boxes are not windows.
   if (modal) panes.push([4, ...modal]);
   if (modal && selectMenu) panes.push([15, ...selectMenu]);

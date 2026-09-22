@@ -9,6 +9,26 @@ function near(actual: THREE.Vector3, expected: THREE.Vector3): void {
   expect(actual.distanceTo(expected)).toBeLessThan(0.00001);
 }
 describe("direct WebXR tracking rig", () => {
+  it.each([.5, 1, 2])("resizes the FPS world at %s while preserving the eye anchor and physical hands", fpsScale => {
+    const base = createTrackingToGame("first-person", player, anchor, heading, 1, .62);
+    const rig = createTrackingToGame("first-person", player, anchor, heading, 1, .62, 0, 0, 1, undefined, fpsScale);
+    expect(rig.scale).toBeCloseTo(base.scale * fpsScale);
+    near(anchor.clone().applyMatrix4(rig.matrix), anchor.clone().applyMatrix4(base.matrix));
+    const world = rig.matrix.clone().invert();
+    const tileWidth = player.clone().add(new THREE.Vector3(1,0,0)).applyMatrix4(world).distanceTo(player.clone().applyMatrix4(world));
+    expect(tileWidth).toBeCloseTo((1.7 / .62) * fpsScale);
+    const hand = new THREE.Matrix4().compose(anchor.clone().add(new THREE.Vector3(.3,-.25,-.4)),
+      new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), .4), new THREE.Vector3(1,1,1));
+    for (const x of [-.032, .032]) {
+      const eye = new THREE.Matrix4().makeTranslation(anchor.x+x,anchor.y,anchor.z);
+      const view = rig.matrix.clone().multiply(eye).invert();
+      const renderedHand = view.multiply(rig.matrix).multiply(hand);
+      const physicalHand = eye.clone().invert().multiply(hand);
+      renderedHand.elements.forEach((v,i) => expect(v).toBeCloseTo(physicalHand.elements[i], 8));
+    }
+    const table = (value: number) => createTrackingToGame("tabletop",player,anchor,heading,1,.62,0,0,1,undefined,value);
+    expect(table(fpsScale).matrix.elements).toEqual(table(1).matrix.elements);
+  });
   it("snap-turns right by 45 degrees without translating a room-scale viewer", () => {
     const viewer = anchor.clone().add(new THREE.Vector3(0.3, 0, 0.2));
     const before = createTrackingToGame("first-person", player, anchor, heading, 1, 0.62);

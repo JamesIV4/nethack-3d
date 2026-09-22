@@ -3,6 +3,21 @@ import { describe, expect, it, vi } from "vitest";
 import { WorldRaycast } from "./world-raycast";
 
 describe("XR board ray ranges", () => {
+  it.each(["sprite", "proxy"])("passes transparent %s pixels through to the floor", kind => {
+    const scene = new THREE.Scene(), root = new THREE.Group(); scene.add(root);
+    const texture = new THREE.DataTexture(new Uint8Array([0,0,0,255, 0,0,0,0]), 2, 1);
+    const object = kind === "sprite" ? new THREE.Sprite(new THREE.SpriteMaterial({ map: texture }))
+      : new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshBasicMaterial({ map: texture, transparent: true }));
+    object.userData.isEntityBillboardProxy = kind === "proxy";
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(10,10), new THREE.MeshBasicMaterial()); floor.position.z = -1;
+    scene.add(object, floor); scene.scale.x = .6; scene.updateMatrixWorld(true);
+    const caster = new THREE.Raycaster(new THREE.Vector3(-.15,0,2), new THREE.Vector3(0,0,-1));
+    const camera = new THREE.PerspectiveCamera(); camera.position.z = 2; camera.updateMatrixWorld(); caster.camera = camera;
+    const picker = new WorldRaycast();
+    expect(picker.intersect(caster,scene,root,[])?.object).toBe(object);
+    caster.ray.origin.x = .15;
+    expect(picker.intersect(caster,scene,root,[])?.object).toBe(floor);
+  });
   function fixture() {
     const scene = new THREE.Scene(), root = new THREE.Group(); scene.add(root);
     const caster = new THREE.Raycaster(new THREE.Vector3(-5, 0, 0), new THREE.Vector3(1, 0, 0), 0, 20);

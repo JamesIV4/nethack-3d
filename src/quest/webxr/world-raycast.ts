@@ -1,7 +1,9 @@
 import * as THREE from "three";
+import { VisibleSpriteHits } from "../../game/engine/input/visible-sprite-hit";
 
 /** Retain exact visible-world picking while bounding rays by the rendered board. */
 export class WorldRaycast {
+  private readonly spriteHits = new VisibleSpriteHits();
   private readonly targets: THREE.Object3D[] = [];
   private readonly intersections: THREE.Intersection[] = [];
 
@@ -34,7 +36,7 @@ export class WorldRaycast {
       // Keep the original point-level test for tiles crossing the board edge.
       return this.intersections.find(hit => {
         for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
-        return planes.every(plane => plane.distanceToPoint(hit.point) >= 0);
+        return planes.every(plane => plane.distanceToPoint(hit.point) >= 0) && this.spriteHits.accepts(hit);
       }) ?? null;
     } finally {
       caster.near = originalNear; caster.far = originalFar;

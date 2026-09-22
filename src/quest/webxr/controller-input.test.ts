@@ -46,6 +46,53 @@ function fixture(withTableHandle = false, withNavigation = false, withWeapons = 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("WebXR trigger to game command integration", () => {
+  it.each([[-.4, 12, 8, .5], [.4, 4, 6, 0]])("uses visible sprite pixels for the Info target and laser at ray x=%s", (x, tileX, tileY, z) => {
+    const f = fixture();
+    const texture = new THREE.DataTexture(new Uint8Array([0,0,0,255, 0,0,0,0]), 2, 1);
+    const sprite = new THREE.Mesh(new THREE.PlaneGeometry(2,2), new THREE.MeshBasicMaterial({ map: texture, transparent: true }));
+    sprite.userData = { isEntityBillboardProxy: true, tileX: 12, tileY: 8 }; sprite.position.z = .5;
+    f.scene.add(sprite); f.scene.updateMatrixWorld(true);
+    f.pose.makeTranslation(x,0,1);
+    f.right.gamepad.buttons[1].pressed = true; f.input.update(0,new THREE.Vector3(0,1,0));
+    f.right.gamepad.buttons[1].pressed = false; f.input.update(100,new THREE.Vector3(0,1,0));
+    expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(tileX,tileY,true);
+    expect(f.panel.nativePointer.setContextTarget).toHaveBeenCalledExactlyOnceWith(new THREE.Vector3(x,0,z));
+    const rightHits = f.panel.nativePointer.hit.mock.calls.filter(call => call[0] === "right");
+    const rightHit = rightHits[rightHits.length - 1];
+    expect(rightHit[2]).toEqual(new THREE.Vector3(x,0,z));
+    f.input.dispose();
+  });
+  it("routes repeated far-look floor clicks to the exact cell, including a held trigger", () => {
+    const f = fixture(false, true); f.tile.visible = false;
+    game.current.positionInputActive = true;
+    f.pose.makeTranslation(7, -8, 1);
+    const forward = new THREE.Vector3(0, 1, 0);
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(0, forward);
+    f.input.update(600, forward);
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled();
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(610, forward);
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(700, forward);
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(800, forward);
+    expect(f.controller.activateQuestTile.mock.calls).toEqual([[7, 8], [7, 8]]);
+    expect(f.controller.runQuestDirection).not.toHaveBeenCalled();
+    expect(f.controller.sendInput).not.toHaveBeenCalled();
+    f.input.dispose();
+  });
+  it("does not turn a cancelled far-look press into a gameplay click", () => {
+    const f = fixture(); game.current.positionInputActive = true;
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(0, new THREE.Vector3(0, 1, 0));
+    game.current.positionInputActive = false;
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(100, new THREE.Vector3(0, 1, 0));
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled(); f.input.dispose();
+  });
+  it("does not invent a far-look tile for a horizontal void ray", () => {
+    const f = fixture(false, true); f.tile.visible = false; game.current.positionInputActive = true;
+    f.pose.compose(new THREE.Vector3(3, -6, .62), new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, -1), new THREE.Vector3(1, 0, 0)), new THREE.Vector3(1, 1, 1));
+    f.right.gamepad.buttons[0].pressed = true; f.input.update(0, new THREE.Vector3(1, 0, 0));
+    f.right.gamepad.buttons[0].pressed = false; f.input.update(100, new THREE.Vector3(1, 0, 0));
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled();
+    expect(f.controller.sendInput).not.toHaveBeenCalled(); f.input.dispose();
+  });
   it.each(["hold", "grip"])("anchors a %s context at the precise press hit rather than the tile center", (activation) => {
     const f = fixture();
     f.pose.makeTranslation(.7, -.4, 1);

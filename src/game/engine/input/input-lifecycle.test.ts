@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { InputCommands, type InputCommandsDependencies } from "./input-commands";
 import { PositionSelection, type PositionSelectionDependencies } from "./position-selection";
 import { QuestionMenus, type QuestionMenusDependencies } from "../ui/question-menus";
+import { Camera, type CameraDependencies } from "../camera/camera";
 
 // This module's default options read window.matchMedia during import; command
 // lifecycle tests only need its character-sheet event constant.
@@ -55,6 +56,48 @@ function positionFixture() {
 }
 
 describe("position selection lifecycle", () => {
+  it("keeps FPS and overhead camera targets fixed while contextual Info selects a distant tile", () => {
+    const f = positionFixture();
+    const camera = new Camera({
+      positionSelection: f.position, playerMovement: { playerPos: { x: 5, y: 6 } },
+      movementInput: { isFpsMode: () => true }, terminalRendering: { isTerminalDisplayMode: () => false },
+    } as unknown as CameraDependencies);
+    camera.camera = f.camera.camera; camera.camera.up.set(0, 0, 1);
+    camera.cameraYaw = .4; camera.cameraPitch = .2;
+    camera.updateCamera(1 / 72);
+    const before = camera.camera.position.clone(), rotation = camera.camera.quaternion.toArray();
+    f.position.suppressNextPositionCamera(); f.position.setPositionInputMode(true, "look_menu");
+    f.position.setPositionCursorPosition(40, 15);
+    camera.updateCamera(1 / 72);
+    expect(camera.camera.position).toEqual(before);
+    expect(camera.camera.quaternion.toArray()).toEqual(rotation);
+    expect(camera.getOverheadCameraFollowTargetWorldPosition()).toEqual({ x: 5, y: -6 });
+    f.position.setPositionInputMode(false); camera.updateCamera(1 / 72);
+    expect(camera.camera.position).toEqual(before);
+    expect(camera.camera.quaternion.toArray()).toEqual(rotation);
+  });
+  it.each(["glance", "info"])("keeps %s position input out of camera presentation until the flow ends", kind => {
+    const f = positionFixture();
+    if (kind === "glance") f.tileContextActions.fpsCrosshairGlancePending = { sawPositionInput: false, positionResolvedAtMs: null };
+    else f.position.suppressNextPositionCamera();
+    f.position.setPositionInputMode(true, "look_menu");
+    expect(f.position.positionInputModeActive).toBe(true);
+    expect(f.position.isFpsFarLookViewActive()).toBe(false);
+    expect(f.requestPlayerTileRefresh).not.toHaveBeenCalled();
+    // Cache expiry while input is in flight must not change its presentation.
+    f.tileContextActions.fpsCrosshairGlancePending = null;
+    f.position.setPositionInputMode(true, "legacy_cursor_prompt");
+    expect(f.position.isFpsFarLookViewActive()).toBe(false);
+    f.position.setPositionInputMode(false);
+    expect(f.camera.fpsPositionCursorReturnActive).toBe(false);
+    expect(f.camera.cameraYaw).toBe(.4); expect(f.camera.cameraPitch).toBe(.2);
+    f.position.setPositionInputMode(true, "direct");
+    expect(f.position.isFpsFarLookViewActive()).toBe(true);
+    f.position.setPositionInputMode(false);
+    expect(f.camera.fpsPositionCursorReturnActive).toBe(true);
+    f.position.setPositionInputMode(false);
+    expect(f.camera.fpsPositionCursorReturnActive).toBe(false);
+  });
   it("preserves an early runtime cursor when the active-state event arrives", () => {
     const f = positionFixture();
     f.position.setPositionCursorPosition(12, 9);
@@ -73,8 +116,8 @@ describe("position selection lifecycle", () => {
 
   it("clears position state before reacquiring pointer lock and retains the camera return pose", () => {
     const f = positionFixture();
-    f.tileContextActions.fpsCrosshairGlancePending = { sawPositionInput: false, positionResolvedAtMs: null };
     f.position.setPositionInputMode(true, "far-look");
+    f.tileContextActions.fpsCrosshairGlancePending = { sawPositionInput: true, positionResolvedAtMs: null };
     expect(f.position.positionCursor).toEqual({ x: 5, y: 6 });
     f.position.positionCursorOutline = new THREE.Group();
     f.position.positionCursorOutline.visible = true;

@@ -27,6 +27,9 @@ export interface RuntimeInventoryContextDependencies {
   readonly positionInput: Pick<
     RuntimePositionInput,
     "isLookAtMapMenuSelection"
+    | "farLookMode"
+    | "farLookOrigin"
+    | "pendingLookMenuFarLookArm"
   >;
 }
 
@@ -790,6 +793,11 @@ export class RuntimeInventoryContext {
             `${reason} (look map route)`,
           )
         ) {
+          // Automatic menu selection bypasses the ordinary input-dispatch arm.
+          // getpos clips to its cursor before its first position-key request.
+          this.deps.positionInput.farLookMode = "armed";
+          this.deps.positionInput.farLookOrigin = "look_menu";
+          this.deps.positionInput.pendingLookMenuFarLookArm = false;
           return true;
         }
         this.deps.contextualLook.clearContextualLookInfoAutoFlow("look map route unavailable");

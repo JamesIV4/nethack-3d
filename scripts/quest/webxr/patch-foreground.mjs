@@ -45,4 +45,14 @@ bool validTag(vec4 a) { return all(lessThan(abs(a-vec4(.625,.75,.875,.625)),vec4
   const body=replaceOnce(s.slice(start,end),'  m.DrawGamePointers(*camera);','  // NH3D redraw tracked foreground after every native HTML/keyboard surface.\n  m.blitter->Draw(aEye, true);\n  m.DrawGamePointers(*camera);','foreground composition order');
   return s.slice(0,start)+body+s.slice(end);
  });
+ // Migrate existing prepared checkouts as well as fresh ones.
+ edit('app/src/main/cpp/BrowserWorld.cpp','NH3D foreground occludes pointers',s=>{
+   const start=s.indexOf('BrowserWorld::DrawImmersive(device::Eye aEye)'),end=s.indexOf('\nvoid\nBrowserWorld::TickWebXRInterstitial',start);
+   let body=replaceOnce(s.slice(start,end),
+     '  // NH3D redraw tracked foreground after every native HTML/keyboard surface.\n  m.blitter->Draw(aEye, true);\n','', 'remove previous foreground pass');
+   body=replaceOnce(body,'  m.DrawGamePointers(*camera);',
+     '  m.DrawGamePointers(*camera);\n  // NH3D redraw tracked foreground after every native HTML/keyboard surface.\n  // NH3D foreground occludes pointers: hands and held weapons cover the laser.\n  m.blitter->Draw(aEye, true);',
+     'foreground over controller laser');
+   return s.slice(0,start)+body+s.slice(end);
+ });
 }

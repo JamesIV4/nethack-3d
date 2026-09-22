@@ -126,7 +126,7 @@ export class ControllerModels {
     finally { weapons.forEach((child, index) => { child.visible = visible[index]; }); }
   }
   /** Draw after the world, with a fresh depth buffer so model parts self-occlude. */
-  render(camera: THREE.Camera, trackingRoot: THREE.Object3D): void {
+  render(camera: THREE.Camera, trackingRoot: THREE.Object3D, lootMask?: () => void): void {
     if (this.disposed) return;
     trackingRoot.updateWorldMatrix(true, false);
     this.tracking.matrix.copy(trackingRoot.matrixWorld); this.tracking.matrixWorldNeedsUpdate = true;
@@ -135,10 +135,11 @@ export class ControllerModels {
     const autoClear = this.renderer.autoClear, clipping = this.renderer.clippingPlanes;
     try {
       this.renderer.autoClear = false; this.renderer.clippingPlanes = [];
-      const encode = this.native && (weapons.some(child => child.visible) || [...this.entries.values()].some(entry => entry.group.visible));
+      const encode = this.native && (!!lootMask || weapons.some(child => child.visible) || [...this.entries.values()].some(entry => entry.group.visible));
       if (encode) this.foreground.begin(this.renderer, camera);
+      if (encode) lootMask?.();
       this.renderer.clearDepth(); this.renderer.render(this.scene, camera);
-      if (encode) this.foreground.finish(this.renderer, camera, this.scene);
+      if (encode) this.foreground.finish(this.renderer, camera, this.scene, !!lootMask);
     } finally { weapons.forEach(child => trackingRoot.add(child)); this.renderer.autoClear = autoClear; this.renderer.clippingPlanes = clipping; }
   }
   private remove(source: XRInputSource, entry: Entry): void {

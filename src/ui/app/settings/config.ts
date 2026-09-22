@@ -11,6 +11,7 @@ import {
   supportedLocaleOptions,
   t
 } from "../shared/translations";
+import { isQuestApk } from "../../../quest/webxr/host";
 
 /** Ordered option descriptors and tabs with module-time labels and catalog choices. */
 export const clientOptionsConfig: ClientOption[] = [
@@ -674,8 +675,10 @@ export const clientOptionsConfig: ClientOption[] = [
 ];
 
 export const clientOptionsDefaultTabId: ClientOptionsTabId = "display";
+export const resolveClientOptionsDefaultTabId = (): ClientOptionsTabId => isQuestApk() ? "vr" : clientOptionsDefaultTabId;
 
 export const clientOptionsTabs: ClientOptionsTab[] = [
+  { id: "vr", label: "VR", description: "Headset presentation and tabletop settings.", groupKey: "group-vr" },
   {
     id: "display",
     label: t.clientOptions.tabs.display.label,
@@ -683,7 +686,6 @@ export const clientOptionsTabs: ClientOptionsTab[] = [
     groupKey: "group-interface",
   },
   { id: "buttons", label: "Hotbar", description: "Customize hotbars and Menu / Actions shortcuts.", groupKey: "group-buttons" },
-  { id: "vr", label: "VR", description: "Headset presentation and tabletop settings.", groupKey: "group-vr" },
   {
     id: "controls",
     label: t.clientOptions.tabs.controls.label,

@@ -11,7 +11,8 @@ import type { RuntimeInputRequests } from "../input/input-requests";
 export interface RuntimeWindowTextDependencies {
   readonly coordinator: Pick<
     RuntimeCoordinator,
-    "emit"
+    "logRoutine"
+    | "emit"
     | "eventHandler"
     | "protocol"
   >;
@@ -62,7 +63,7 @@ export class RuntimeWindowText {
         ? rawName.trim()
         : String(rawName ?? "").trim();
     const mustExist = Boolean(complain);
-    console.log(
+    this.deps.coordinator.logRoutine(
       `DISPLAY FILE request: "${fileName || "<empty>"}" (mustExist=${mustExist})`,
     );
 
@@ -82,7 +83,7 @@ export class RuntimeWindowText {
     }
 
     if (!mustExist && fileName.toLowerCase() === "news") {
-      console.log(
+      this.deps.coordinator.logRoutine(
         'DISPLAY FILE optional startup "news" file is not bundled; continuing without it.',
       );
       return 0;
@@ -238,7 +239,7 @@ export class RuntimeWindowText {
   handleShimCreateNhwindow(args) {
     const [windowType] = args;
     this.resetWindowTextBuffer(windowType);
-    console.log(
+    this.deps.coordinator.logRoutine(
       `Creating window [ ${windowType} ] returning ${windowType}`,
     );
     return windowType;
@@ -247,7 +248,7 @@ export class RuntimeWindowText {
   handleShimDisplayNhwindow(args) {
     const [winid, blocking] = args;
     if (this.deps.windows.isMapWindow(winid)) this.deps.coordinator.protocol.boundary("map-display");
-    console.log(`DISPLAY WINDOW [Win ${winid}], blocking: ${blocking}`);
+    this.deps.coordinator.logRoutine(`DISPLAY WINDOW [Win ${winid}], blocking: ${blocking}`);
     const displayLines = this.consumeWindowTextBuffer(winid);
     const hasDisplayText = displayLines.some(
       (line) => String(line || "").trim().length > 0,
@@ -262,7 +263,7 @@ export class RuntimeWindowText {
         "display_nhwindow",
       );
       if (this.shouldLogWindowTextInsteadOfDialog(normalizedLines)) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           `Routing window ${winid} text to message log (${normalizedLines.length} lines)`,
         );
         this.emitWindowTextLinesToLog(normalizedLines, winid);
@@ -271,7 +272,7 @@ export class RuntimeWindowText {
       if (!this.deps.coordinator.eventHandler) {
         return 0;
       }
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Emitting info dialog for window ${winid} with ${normalizedLines.length} lines`,
       );
       this.deps.coordinator.emit({
@@ -292,12 +293,12 @@ export class RuntimeWindowText {
 
   handleShimClearNhwindow(args) {
     const [clearWinId] = args;
-    console.log(`🗑️ Clearing window ${clearWinId}`);
+    this.deps.coordinator.logRoutine(`🗑️ Clearing window ${clearWinId}`);
     this.resetWindowTextBuffer(clearWinId);
 
     // If clearing the map window, clear the 3D scene
     if (this.deps.windows.isMapWindow(clearWinId)) {
-      console.log("Map window cleared - clearing 3D scene");
+      this.deps.coordinator.logRoutine("Map window cleared - clearing 3D scene");
       this.deps.coordinator.emit({
         type: "clear_scene",
         // message: "Level transition - clearing display",
@@ -308,7 +309,7 @@ export class RuntimeWindowText {
 
   handleShimDestroyNhwindow(args) {
     const [destroyWinId] = args;
-    console.log(`🗑️ Destroying window ${destroyWinId}`);
+    this.deps.coordinator.logRoutine(`🗑️ Destroying window ${destroyWinId}`);
     this.resetWindowTextBuffer(destroyWinId);
     return 0;
   }

@@ -17,6 +17,18 @@ function fixture() {
 }
 afterEach(() => vi.unstubAllGlobals());
 
+it("gives shared position instructions their own bounded crop in both VR views", () => {
+  const f = fixture(); f.add("#position-dialog", 500, 750, 600, 100);
+  for (const fps of [true, false]) {
+    const panes = tableUiPanes(fps, []);
+    expect(panes.find(p => p[0] === 1)).toEqual([1, .31, .746, .69, .854]);
+    expect(panes.filter(p => p[0] === 1)).toHaveLength(1);
+    expect(panes.find(p => p[0] === 4)).toBeUndefined();
+  }
+  f.nodes.delete("#position-dialog");
+  expect(tableUiPanes(true, []).some(p => p[0] === 1)).toBe(false);
+});
+
 it("leaves a sampling gap when status padding exactly meets the minimap", () => {
   const f = fixture();
   f.add(".nh3d-minimap", 500, 84, 600, 160);

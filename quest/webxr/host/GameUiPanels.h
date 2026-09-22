@@ -26,6 +26,7 @@ class GameUiPanels {
     vrb::Matrix pose, base, local;
     int group = -1;
     float width = 1, height = 1;
+    float facingCenterY = 0;
     bool masked = false;
     std::vector<float> maskKey;
     std::vector<std::array<float,4>> maskRects;
@@ -37,6 +38,7 @@ class GameUiPanels {
   WidgetPtr window;
   int32_t textureWidth = 0, textureHeight = 0;
   std::unordered_map<int, int> selected;
+  std::unordered_map<int, bool> lootHits;
   std::unordered_map<int, std::pair<float, float>> pixels;
   bool hasModal = false;
   std::array<float, 4> modal{};
@@ -89,6 +91,7 @@ class GameUiPanels {
     }
   }
  public:
+  void SetLootHit(int controller, bool value) { lootHits[controller] = value; }
   bool ConsumeResourceChanges() { return std::exchange(resourcesChanged, false); }
   explicit GameUiPanels(vrb::CreationContextPtr value) : context(value) {}
   bool Owns(const WidgetPtr& widget) const { return window == widget && SourceIsActive(window) && !panes.empty(); }
@@ -101,7 +104,10 @@ class GameUiPanels {
     if (state.size() < 29 || !SourceIsActive(source) || !source->GetSurfaceTexture()) {
       panes.clear(); window.reset(); ClearInput(); return;
     }
-    if (state[20] != 2 || window != source || anchorRevision != state[0]) menuButtonActive = false;
+    if (state[20] != 2 || window != source || anchorRevision != state[0]) {
+      if (menuButtonActive) { placements.erase(4); placements.erase(20); }
+      menuButtonActive = false;
+    }
     if (state[20] == 2) {
       const std::array<float,3> key{state[21],state[22],state[23]};
       if (!menuButtonActive || menuButtonKey != key) {
@@ -124,7 +130,7 @@ class GameUiPanels {
     if (textureWidth <= 0 || textureHeight <= 0) { panes.clear(); ClearInput(); return; }
     const size_t start = 29 + size_t(state[1]) * 4;
     const size_t count = size_t(state[13]);
-    if (count > 8 || state.size() != start + count * 5) { panes.clear(); ClearInput(); return; }
+    if (count > 9 || state.size() != start + count * 5) { panes.clear(); ClearInput(); return; }
     const float worldScale = state[10] == 1 ? 1 : state[19];
     const float extent = state[18] * worldScale;
     const float scale = 1; // UI dimensions are independent of game-world scale.
@@ -167,6 +173,9 @@ class GameUiPanels {
       // default anchor (center is already 0.95 m forward).
       if (p.id >= 12) p.pose = center.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
           0, p.id == 12 ? 1.0f : p.id == 14 ? -0.7f : 0.0f, p.id <= 14 ? -1.55f : -0.8f)));
+      // Shared position/travel instructions sit below the map at modal depth.
+      // Use the HUD anchor even while a context popup has its own world anchor.
+      else if (p.id == 1) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0, -.85f - height / 2, -.45f)));
       else if (p.id == 0 && firstPerson) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
           4.8f * ((crop[0] + crop[2]) / 2 - 0.5f),
           4.8f * float(textureHeight) / textureWidth * (0.5f - (crop[1] + crop[3]) / 2) - .25f, 0)));
@@ -216,6 +225,7 @@ class GameUiPanels {
       p.base = yaw.Translate(-yaw.GetTranslation());
       p.base = vrb::Matrix::Translation(hudSlice ? hud.GetTranslation() : p.pose.GetTranslation()).PostMultiply(p.base);
       p.local = hudSlice ? hud.AfineInverse().PostMultiply(p.pose) : vrb::Matrix::Identity();
+      p.facingCenterY = 0;
       if (p.id == 4 && state[20] == 1) {
         // Preserve the hit's screen direction even when looking straight down
         // or away from the HUD. A fixed forward plane loses those directions.
@@ -233,8 +243,9 @@ class GameUiPanels {
         p.local = vrb::Matrix::Translation(vrb::Vector(0,height/2+.04f,0));
       }
       if (p.id == 4 && state[20] == 2 && menuButtonActive) {
-        p.base = vrb::Matrix::Translation(menuButtonPoint).PostMultiply(yaw.Translate(-yaw.GetTranslation()));
-        p.local = vrb::Matrix::Translation(vrb::Vector(0,height/2+.04f,0));
+        p.base = vrb::Matrix::Translation(menuButtonPoint + vrb::Vector(0,.04f,0)).PostMultiply(yaw.Translate(-yaw.GetTranslation()));
+        p.local = vrb::Matrix::Translation(vrb::Vector(0,height/2,0));
+        p.facingCenterY = height/2;
       }
       if (p.id == 15) {
         // The dropdown is a child of the already-placed dialog. Expanding the
@@ -244,6 +255,7 @@ class GameUiPanels {
           const float x = parent->width * (((crop[0]+crop[2])/2-parent->crop[0])/(parent->crop[2]-parent->crop[0])-.5f);
           const float y = parent->height * (.5f-((crop[1]+crop[3])/2-parent->crop[1])/(parent->crop[3]-parent->crop[1]));
           p.group = parent->group; p.base = parent->base;
+          p.facingCenterY = parent->facingCenterY;
           p.local = parent->local.PostMultiply(vrb::Matrix::Translation(vrb::Vector(x,y,.004f)));
         }
       }
@@ -265,7 +277,11 @@ class GameUiPanels {
     const bool startupPlane = paneGroup >= 12 && paneGroup <= 14;
     // Keep the logo and menu coplanar instead of independently tilting toward
     // the eye. Dropdowns inherit the menu group and retain their tiny front offset.
-    const float pitch = startupPlane ? 0 : -std::atan2(toward.y(), std::max(.001f, std::fabs(toward.z())));
+    // Keep the bottom pivot fixed, but aim the panel's center at the viewer.
+    // Facing from the low button alone would copy the hotbar's steep pitch.
+    const float distance = std::max(.001f, std::hypot(toward.y(), toward.z()));
+    const float centerAngle = std::asin(std::min(.99f, p.facingCenterY / distance));
+    const float pitch = startupPlane ? 0 : centerAngle - std::atan2(toward.y(), std::max(.001f, std::fabs(toward.z())));
     p.pose = anchor.PostMultiply(vrb::Matrix::Rotation(vrb::Vector(1,0,0), pitch)).PostMultiply(p.local);
     p.quad->GetTransformNode()->SetTransform(p.pose);
     p.quad->GetRenderState()->SetTintColor(p.group == gripGroup && gripOwner >= 0 ? vrb::Color(.65f,1,1,1) : vrb::Color(1,1,1,1));
@@ -278,7 +294,7 @@ class GameUiPanels {
     if (firstPerson && p.id >= 7 && p.id <= 10) {
       // The first-person HUD keeps its full source crop so ordinary messages
       // remain visible. Subtract only panes that the host renders separately.
-      for (const auto& pane : panes) if (pane.id == 0 || pane.id == 2 || pane.id == 5) holes.push_back(pane.crop);
+      for (const auto& pane : panes) if (pane.id == 0 || pane.id == 1 || pane.id == 2 || pane.id == 5) holes.push_back(pane.crop);
       if (hasModal) holes.push_back(modal);
     } else if (hasModal && p.id != 15) {
       if (IsModal(p.id)) {
@@ -345,6 +361,7 @@ class GameUiPanels {
       // still use only the interactive regions and pass through empty space.
       for (const auto& p : panes) {
         if (p.id >= 7 && p.id <= 10) continue;
+        if (p.id == 2 && lootHits[controller]) continue;
         if (IsModal(id) && !IsModal(p.id)) continue;
         const auto inverse = p.pose.AfineInverse();
         const auto o = inverse.MultiplyPosition(rayOrigin), d = inverse.MultiplyDirection(rayDirection);
@@ -380,6 +397,7 @@ class GameUiPanels {
     distance = 10000;
     for (const auto& p : panes) {
       if (captured && selected.count(controller) && selected[controller] != p.id) continue;
+      if (!captured && p.id == 2 && lootHits[controller]) continue;
       const auto inverse = p.pose.AfineInverse();
       const auto o = inverse.MultiplyPosition(origin), d = inverse.MultiplyDirection(direction);
       if (std::fabs(d.z()) < 0.00001f) continue;
@@ -411,10 +429,11 @@ class GameUiPanels {
   void Coordinates(int controller, float& x, float& y) const {
     auto it = pixels.find(controller); if (it != pixels.end()) { x = it->second.first; y = it->second.second; }
   }
-  void Cull(vrb::CullVisitor& visitor, vrb::DrawableList& list, bool modalPass = false) {
+  void Cull(vrb::CullVisitor& visitor, vrb::DrawableList& list, bool modalPass = false, bool actionsPass = false) {
     if (!SourceIsActive(window)) return;
     for (const auto& p : panes) {
       if (IsModal(p.id) != modalPass) continue;
+      if (!modalPass && (p.id == 2) != actionsPass) continue;
       if (p.masked) { for (const auto& piece : p.pieces) piece.quad->GetRoot()->Cull(visitor,list); }
       else p.quad->GetRoot()->Cull(visitor, list);
     }

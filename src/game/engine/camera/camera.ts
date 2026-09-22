@@ -71,6 +71,7 @@ export interface CameraDependencies {
     | "positionCursor"
     | "positionCursorColumnHeight"
     | "positionInputModeActive"
+    | "positionInputCameraSuppressed"
   >;
   readonly promptDialogs: Pick<
     PromptDialogs,
@@ -493,7 +494,7 @@ export class Camera {
     x: number;
     y: number;
   } {
-    if (this.dependencies.positionSelection.positionInputModeActive) {
+    if (this.dependencies.positionSelection.positionInputModeActive && !this.dependencies.positionSelection.positionInputCameraSuppressed) {
       return {
         x: this.dependencies.positionSelection.positionCursor.x * TILE_SIZE,
         y: -this.dependencies.positionSelection.positionCursor.y * TILE_SIZE,

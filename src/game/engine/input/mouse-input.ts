@@ -1,5 +1,6 @@
 import type { HeldWeapon } from "../rendering/held-weapon";
 import { questDirectionKey } from "../../../quest/native/input";
+import { MINIMAP_WIDTH_TILES, MINIMAP_HEIGHT_TILES } from "../shared/constants";
 import { isQuestBrowser } from "../../../quest/webxr/host";
 import * as THREE from "three";
 import type { AudioHapticsPlatform } from "../audio/audio-haptics-platform";
@@ -350,7 +351,7 @@ export class MouseInput {
 
   /** Native rays arrive as tiles; the ordinary UI/prompt gates still apply. */
   activateQuestTile(x: number, y: number, secondary = false): boolean {
-    if (!Number.isInteger(x) || !Number.isInteger(y) ||
+    if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || x >= MINIMAP_WIDTH_TILES || y < 0 || y >= MINIMAP_HEIGHT_TILES ||
         !this.dependencies.engineState.session || this.dependencies.promptDialogs.isUiInputBlocked() ||
         this.dependencies.promptDialogs.isAnyModalVisible() || this.dependencies.questionMenus.isInQuestion ||
         this.dependencies.directionPrompts.isInDirectionQuestion || this.dependencies.extendedCommands.metaCommandModeActive) {
@@ -358,6 +359,8 @@ export class MouseInput {
     }
     if (secondary && this.dependencies.positionSelection.positionInputModeActive) return false;
     this.dependencies.audioHapticsPlatform.resumeFmodFromUserGesture();
+    // A position cursor can select unexplored cells without a rendered mesh.
+    if (!secondary && this.dependencies.positionSelection.handleFarLookPositionTileSelection(x, y, "quest-ray")) return true;
     if (secondary && this.dependencies.movementInput.isFpsMode()) {
       if (this.dependencies.tileContextActions.fpsCrosshairContextMenuOpen) this.dependencies.tileContextActions.closeFpsCrosshairContextMenu(true);
       else this.dependencies.tileContextActions.openFpsCrosshairContextMenu({ x, y });
@@ -371,7 +374,6 @@ export class MouseInput {
       this.dependencies.tileContextActions.openNormalTileContextMenuAtTarget({ key: `${x},${y}`, x, y, mesh: tile });
       return true;
     }
-    if (this.dependencies.positionSelection.handleFarLookPositionTileSelection(x, y, "quest-ray")) return true;
     return this.activateMapTileTarget({ x, y }, 0, "quest-ray");
   }
 

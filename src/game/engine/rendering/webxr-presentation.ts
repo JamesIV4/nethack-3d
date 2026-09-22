@@ -1,7 +1,11 @@
 import { revealFlatStartup } from "../../../quest/webxr/startup-visibility";
 import { ControllerModels } from "../../../quest/webxr/controller-models";
+import { LootForeground } from "../../../quest/webxr/loot-foreground";
+import type { EntityBillboards } from "./entity-billboards";
 import * as THREE from "three";
 import { ScaledCameraSprites } from "./scaled-camera-sprites";
+import { XrFarLook, type FarLookCamera } from "./xr-far-look";
+import type { PositionSelection } from "../input/position-selection";
 import { WorldClipCulling } from "./world-clip-culling";
 import { XrTerrainBatches } from "./xr-terrain-batches";
 import type { TileRendering } from "./tile-rendering";
@@ -21,7 +25,6 @@ import type { MovementInput } from "../input/movement-input";
 import { createTrackingToGame, tabletopClippingPlanes } from "./webxr-rig";
 import { registerWebXrOwner, updateWebXrState } from "../../../quest/webxr/presentation";
 import { getXrSettings } from "../../../quest/webxr/settings";
-import { StereoDepth } from "../../../quest/webxr/stereo-depth";
 import { LaggingUiAnchor } from "../../../quest/webxr/lagging-ui-anchor";
 import { MenuRain } from "../../../quest/webxr/menu-rain";
 import { TableMoveHandle } from "../../../quest/webxr/table-move-handle";
@@ -30,8 +33,10 @@ import { QuestResumeMode } from "../../../quest/webxr/quest-resume-mode";
 import { gridUiHeading } from "../../../quest/webxr/grid-ui-heading";
 
 export interface WebXrPresentationDependencies {
+  readonly entityBillboards: Pick<EntityBillboards, "monsterBillboards">;
+  readonly positionSelection: Pick<PositionSelection, "isFpsFarLookViewActive">;
   readonly movementInput: Pick<MovementInput,"resolveDirectionKeyFromDelta">;
-  readonly camera: Pick<Camera, "camera" | "cameraYaw" | "cameraPitch" | "firstPersonEyeHeight" | "sampleFpsStepCameraGroundPosition" | "snapFpsStepToPlayer" | "fpsAutoTurnTargetYaw" | "cameraPanX" | "cameraPanY" | "cameraPanTargetX" | "cameraPanTargetY" | "isCameraCenteredOnPlayer" | "getOverheadCameraFollowTargetWorldPosition" | "applyStandardCameraPresetForTopDownModes">;
+  readonly camera: FarLookCamera & Pick<Camera, "camera" | "sampleFpsStepCameraGroundPosition" | "snapFpsStepToPlayer" | "fpsAutoTurnTargetYaw" | "cameraPanX" | "cameraPanY" | "cameraPanTargetX" | "cameraPanTargetY" | "isCameraCenteredOnPlayer" | "getOverheadCameraFollowTargetWorldPosition" | "applyStandardCameraPresetForTopDownModes">;
   readonly engineState: Pick<EngineState, "clientOptions" | "playMode" | "disposed">;
   readonly playerMovement: Pick<PlayerMovement, "playerPos" | "hasSeenPlayerPosition">;
   readonly renderPipeline: Pick<RenderPipeline, "renderer" | "scene">;
@@ -49,9 +54,11 @@ export class WebXrPresentation {
   private canvasPresentation: XrCanvasPresentation | null = null;
   private unregister: (() => void) | null = null;
   private readonly scaledSprites = new ScaledCameraSprites();
+  private readonly lootForeground = new LootForeground();
+  private readonly farLook = new XrFarLook();
+  private readonly playerEyeGround = new THREE.Vector3();
   private readonly worldClipCulling = new WorldClipCulling();
   private readonly terrainBatches = new XrTerrainBatches();
-  private readonly stereoDepth = new StereoDepth();
   private readonly trackingRoot = new THREE.Group();
   private readonly xrCamera = new THREE.PerspectiveCamera(75, 1, 0.03, 150);
   private readonly anchor = new THREE.Vector3(0, 1.6, 0);
@@ -63,6 +70,7 @@ export class WebXrPresentation {
   private readonly orientation = new THREE.Quaternion();
   private readonly forward = new THREE.Vector3();
   private readonly headPosition = new THREE.Vector3();
+  private readonly spriteOrigin = new THREE.Vector3();
   private readonly sceneInverse = new THREE.Matrix4();
   private readonly cameraBasis = new THREE.Matrix4();
   private readonly logicalUp = new THREE.Vector3();
@@ -101,6 +109,7 @@ export class WebXrPresentation {
   private menuRain: MenuRain | null = null;
 
   setStartupMenu(visible: boolean): void {
+    this.farLook.reset();
     this.lastPlayerPositionReady = false;
     this.startupMenu = visible;
     document.documentElement.classList.toggle("nh3d-xr-menu", visible);
@@ -128,8 +137,7 @@ export class WebXrPresentation {
     this.htmlPanel?.update(time);
     this.menuRain.update(time);
     const { renderer } = this.dependencies.renderPipeline;
-    this.stereoDepth.render(renderer.xr, this.xrCamera, getXrSettings().depth,
-      () => renderer.render(this.menuRain!.scene, this.xrCamera));
+    renderer.render(this.menuRain.scene, this.xrCamera);
     this.controllerModels?.render(this.xrCamera, this.trackingRoot);
   }
 
@@ -282,6 +290,8 @@ export class WebXrPresentation {
   }
 
   private readonly ended = (): void => {
+    this.lootForeground.dispose();
+    this.farLook.reset();
     this.terrainBatches.dispose();
     this.uiFirstPerson = false; this.uiRecenter = true; this.lastFpsPlayerTileKey = "";
     this.scaledSprites.disable(this.dependencies.renderPipeline.scene);
@@ -384,6 +394,7 @@ export class WebXrPresentation {
       this.orientation.set(orientation.x, orientation.y, orientation.z, orientation.w);
       this.forward.set(0, 0, -1).applyQuaternion(this.orientation);
       this.heading.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(-this.forward.x, -this.forward.z));
+      this.tableHeading.copy(this.heading);
       this.htmlPanel?.recenter(this.anchor, this.heading);
       this.uiRecenter = true;
       this.needsRecenter = false; this.lastRigKey = "";
@@ -404,8 +415,12 @@ export class WebXrPresentation {
     scene.updateWorldMatrix(true, false);
     this.sceneInverse.copy(scene.matrixWorld).invert();
     const firstPerson = this.dependencies.engineState.playMode === "fps";
+    const selecting = firstPerson && this.dependencies.positionSelection.isFpsFarLookViewActive();
+    this.playerEyeGround.set(player.x * TILE_SIZE, -player.y * TILE_SIZE, 0);
+    if (firstPerson) this.farLook.prepare(this.dependencies.camera, selecting, this.playerEyeGround);
+    else this.farLook.reset();
     const turnTarget = this.dependencies.camera.fpsAutoTurnTargetYaw;
-    if (firstPerson && typeof turnTarget === "number" && Number.isFinite(turnTarget)) {
+    if (firstPerson && !this.farLook.active && typeof turnTarget === "number" && Number.isFinite(turnTarget)) {
       const o = pose.transform.orientation;
       const headForward = new THREE.Vector3(0,0,-1).applyQuaternion(new THREE.Quaternion(o.x,o.y,o.z,o.w));
       const gridForward = new THREE.Vector3(0,0,-1).applyQuaternion(this.heading);
@@ -452,13 +467,13 @@ export class WebXrPresentation {
     this.tablePosition.set(0, THREE.MathUtils.clamp(this.anchor.y-.65,.45,1.05), -1.55).applyQuaternion(this.heading)
       .add(new THREE.Vector3(this.anchor.x,0,this.anchor.z)).add(this.tableMove.offset);
     const towardX = this.tablePosition.x-pose.transform.position.x, towardZ = this.tablePosition.z-pose.transform.position.z;
-    this.tableHeading.copy(this.heading);
-    if (Math.hypot(towardX,towardZ) > .05) this.tableHeading.setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(-towardX,-towardZ));
+    if (this.tableMove.active && Math.hypot(towardX,towardZ) > .05) this.tableHeading.setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(-towardX,-towardZ));
     const heading = firstPerson ? this.heading : this.tableHeading;
-    const key = [this.position.x, this.position.y, this.position.z, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.area, settings.scale, ...this.tablePosition.toArray(), ...heading.toArray(), ...scene.matrixWorld.elements].join(":");
-    if (key !== this.lastRigKey) {
+    const key = [this.position.x, this.position.y, this.position.z, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.area, settings.scale, settings.fpsScale, ...this.tablePosition.toArray(), ...heading.toArray(), ...scene.matrixWorld.elements].join(":");
+    if (key !== this.lastRigKey || this.farLook.active) {
       const rig = createTrackingToGame(firstPerson ? "first-person" : "tabletop", this.position, this.anchor,
-        heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.scale, firstPerson ? undefined : this.tablePosition);
+        heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.scale, firstPerson ? undefined : this.tablePosition, settings.fpsScale);
+      this.farLook.apply(this.dependencies.camera, rig.matrix, scene.matrixWorld, this.playerEyeGround);
       this.trackingRoot.matrix.multiplyMatrices(this.sceneInverse, rig.matrix);
       this.trackingRoot.updateMatrixWorld(true);
       this.board.quaternion.copy(heading).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.tilt.pitch));
@@ -472,7 +487,8 @@ export class WebXrPresentation {
       renderer.clippingPlanes = firstPerson ? [] : tabletopClippingPlanes(this.position, TILE_SIZE, settings.area);
       this.dependencies.renderPipeline.scene.background = this.session?.environmentBlendMode === "opaque"
         ? new THREE.Color(0x000000) : null;
-      this.lastRigKey = key;
+      // Rebuild the ordinary FPS rig on the frame the return settles, too.
+      this.lastRigKey = this.farLook.active ? "" : key;
     }
     xr.updateCamera(this.xrCamera);
     // Engine aim/billboards use logical coordinates; rendered sprite shaders
@@ -483,8 +499,18 @@ export class WebXrPresentation {
     // useful for culling, but is not the viewer's position for billboard facing.
     this.headPosition.set(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z).applyMatrix4(this.trackingRoot.matrixWorld);
     camera.position.copy(this.headPosition).applyMatrix4(this.sceneInverse);
-    this.scaledSprites.setOrigin(this.headPosition);
+    // Sprite facing follows the virtual eye before roomscale/head offsets.
+    // Ordinary FPS stays grid-centered even during a smoothed walking step.
+    if (firstPerson) {
+      this.spriteOrigin.copy(this.farLook.active
+        ? this.dependencies.camera.fpsPositionCursorCameraCurrent
+        : this.playerEyeGround);
+      if (!this.farLook.active) this.spriteOrigin.z = this.dependencies.camera.firstPersonEyeHeight;
+      this.spriteOrigin.applyMatrix4(scene.matrixWorld);
+    } else this.spriteOrigin.copy(this.headPosition);
+    this.scaledSprites.setOrigin(this.spriteOrigin);
     this.scaledSprites.setTabletop(!firstPerson);
+    this.scaledSprites.setUpright(firstPerson && !this.farLook.active);
     tracked.getWorldQuaternion(camera.quaternion);
     if (scene.scale.x !== 1 || scene.scale.y !== 1 || scene.scale.z !== 1) {
       this.forward.set(0, 0, -1).applyQuaternion(camera.quaternion).transformDirection(this.sceneInverse);
@@ -494,7 +520,7 @@ export class WebXrPresentation {
     }
     camera.updateMatrixWorld(true);
     this.forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
-    if (firstPerson) {
+    if (firstPerson && !this.farLook.active) {
       this.dependencies.camera.cameraYaw = Math.atan2(-this.forward.x, -this.forward.y);
       this.dependencies.camera.cameraPitch = Math.asin(THREE.MathUtils.clamp(this.forward.z, -1, 1));
     }
@@ -517,7 +543,8 @@ export class WebXrPresentation {
     if (!this.active) return null;
     this.htmlPanel?.nativePointer?.setWorldTransform(this.trackingRoot.matrixWorld.clone().invert());
     this.htmlPanel?.update(performance.now());
-    this.scaledSprites.prepare(this.dependencies.renderPipeline.scene, this.headPosition, this.dependencies.engineState.playMode !== "fps");
+    const firstPerson = this.dependencies.engineState.playMode === "fps";
+    this.scaledSprites.prepare(this.dependencies.renderPipeline.scene, this.spriteOrigin, !firstPerson, firstPerson && !this.farLook.active);
     // The screen-space held weapon is not an XR hand/controller prop.
     if (this.dependencies.heldWeapon.fpsHeldWeaponMesh) this.dependencies.heldWeapon.fpsHeldWeaponMesh.visible = false;
     return this.xrCamera;
@@ -525,11 +552,13 @@ export class WebXrPresentation {
 
   render(camera: THREE.Camera): void {
     const { renderer, scene } = this.dependencies.renderPipeline;
-    const drawWorld = () => this.stereoDepth.render(renderer.xr, this.xrCamera, getXrSettings().depth, () => this.terrainBatches.render(renderer, scene, camera, this.trackingRoot,
+    const drawWorld = () => this.terrainBatches.render(renderer, scene, camera, this.trackingRoot,
       this.dependencies.tileRendering.tileMap, this.dependencies.tileRendering.floorGeometry,
-      this.dependencies.glyphTextures.glyphOverlayMap, this.worldClipCulling));
+      this.dependencies.glyphTextures.glyphOverlayMap, this.worldClipCulling);
     if (this.controllerModels) this.controllerModels.renderWorld(drawWorld, this.trackingRoot); else drawWorld();
-    this.controllerModels?.render(camera, this.trackingRoot);
+    this.lootForeground.prepare(this.dependencies.entityBillboards.monsterBillboards, this.nativeHost && this.dependencies.engineState.playMode === "fps");
+    this.controllerModels?.render(camera, this.trackingRoot, this.lootForeground.active
+      ? () => this.lootForeground.render(renderer, camera, scene) : undefined);
   }
 
   dispose(): void {

@@ -14,11 +14,14 @@ import type { RuntimeTileContextMenus } from "./tile-context";
 import type { RuntimeInventoryContext } from "./inventory-context";
 import type { RuntimeInputRequests } from "../input/input-requests";
 import type { RuntimePostActionRefresh } from "../world/post-action-refresh";
+import type { RuntimeContextualLook } from "../input/contextual-look";
 
 export interface RuntimeMenuCaptureDependencies {
+  readonly contextualLook: Pick<RuntimeContextualLook, "shouldSuppressContextualGlanceTip">;
   readonly coordinator: Pick<
     RuntimeCoordinator,
-    "emit"
+    "logRoutine"
+    | "emit"
     | "eventHandler"
     | "runtimeVersion"
   >;
@@ -101,7 +104,7 @@ export class RuntimeMenuCapture {
 
   handleShimStartMenu(args) {
     const [menuWinId, menuOptions] = args;
-    console.log("NetHack starting menu:", args);
+    this.deps.coordinator.logRoutine("NetHack starting menu:", args);
     this.deps.menuSelection.currentMenuItems = []; // Clear previous menu items
     this.deps.menuSelection.currentWindow = menuWinId;
     this.deps.menuSelection.currentMenuQuestionText = "";
@@ -118,7 +121,7 @@ export class RuntimeMenuCapture {
     this.deps.menuSelection.menuSelectionReadyCount = null;
 
     if (this.deps.menuSelection.pendingMenuSelection) {
-      console.log("Clearing previous pending menu selection resolver");
+      this.deps.coordinator.logRoutine("Clearing previous pending menu selection resolver");
       this.deps.menuSelection.pendingMenuSelection = null;
     }
 
@@ -211,13 +214,13 @@ export class RuntimeMenuCapture {
           if (menuItemTileIndex === null && decodedGlyphInfo.tileIndex !== null) {
             menuItemTileIndex = decodedGlyphInfo.tileIndex;
           }
-          console.log(
+          this.deps.coordinator.logRoutine(
             `Decoded menu glyphinfo pointer: ptr=0x${decodedGlyphInfo.pointer.toString(
               16,
             )} -> glyph=${decodedGlyphInfo.glyph}`,
           );
         } else {
-          console.log(
+          this.deps.coordinator.logRoutine(
             `Could not decode menu glyphinfo pointer for value ${menuGlyph}`,
           );
         }
@@ -342,12 +345,12 @@ export class RuntimeMenuCapture {
         menuChar = alphabet[existingItems.length % alphabet.length];
       }
 
-      console.log(
+      this.deps.coordinator.logRoutine(
         `📋 MENU ITEM: "${menuText}" (key: ${menuChar}) glyph: ${resolvedMenuGlyph} -> "${glyphChar}" tile: ${menuItemTileIndex !== null ? menuItemTileIndex : "n/a"
         } - accelerator code: ${accelerator}, itemflags: ${menuItemFlags}`,
       );
     } else {
-      console.log(
+      this.deps.coordinator.logRoutine(
         `📋 CATEGORY HEADER: "${menuText}" - accelerator code: ${accelerator}, itemflags: ${menuItemFlags}`,
       );
     }
@@ -401,7 +404,7 @@ export class RuntimeMenuCapture {
 
   handleShimEndMenu(args) {
     const [endMenuWinid, menuQuestion] = args;
-    console.log("NetHack ending menu:", args);
+    this.deps.coordinator.logRoutine("NetHack ending menu:", args);
 
     // Check if this is just an inventory update vs an actual question
     const isInventoryWindow = this.deps.windows.isInventoryWindow(endMenuWinid);
@@ -416,7 +419,7 @@ export class RuntimeMenuCapture {
     this.deps.inventorySnapshots.lastEndedInventoryMenuKind = null;
 
     // Log the menu details for debugging
-    console.log(
+    this.deps.coordinator.logRoutine(
       `📋 Menu ending - Window: ${endMenuWinid}, Question: "${menuQuestion}", Items: ${this.deps.menuSelection.currentMenuItems.length}`,
     );
 
@@ -438,7 +441,7 @@ export class RuntimeMenuCapture {
       const categoryHeaders = this.deps.menuSelection.currentMenuItems.filter(
         (item) => item.isCategory,
       );
-      console.log(
+      this.deps.coordinator.logRoutine(
         `WIN_INVEN no-question menu classified as ${classification.kind} (${actualItems.length} items, ${categoryHeaders.length} categories)`,
       );
 
@@ -454,6 +457,7 @@ export class RuntimeMenuCapture {
           });
         } else {
           const infoLines = classification.lines;
+          if (this.deps.contextualLook.shouldSuppressContextualGlanceTip(infoLines)) return 0;
           const explicitInfoTitle =
             typeof classification.title === "string" &&
               classification.title.trim().length > 0
@@ -488,7 +492,7 @@ export class RuntimeMenuCapture {
       );
       if (classification.kind === "info_menu") {
         this.deps.inventorySnapshots.lastEndedInventoryMenuKind = classification.kind;
-        console.log(
+        this.deps.coordinator.logRoutine(
           `WIN_INVEN question menu classified as ${classification.kind} (${this.deps.menuSelection.currentMenuItems.length} items, title="${normalizedMenuQuestion}")`,
         );
         if (this.deps.coordinator.eventHandler) {
@@ -528,7 +532,7 @@ export class RuntimeMenuCapture {
       }
 
       this.deps.inventorySnapshots.lastEndedInventoryMenuKind = "inventory";
-      console.log(
+      this.deps.coordinator.logRoutine(
         `📋 Inventory action question detected: "${menuQuestion}" with ${this.deps.menuSelection.currentMenuItems.length} items`,
       );
       // Contextual inventory actions can arm a pending accelerator. For #name,
@@ -548,7 +552,7 @@ export class RuntimeMenuCapture {
       const isMultiSelectQuestion =
         this.deps.menuSelection.isMultiSelectLootQuestion(menuQuestion);
       if (isMultiSelectQuestion) {
-        console.log("Multi-select loot dialog detected");
+        this.deps.coordinator.logRoutine("Multi-select loot dialog detected");
         this.deps.menuSelection.isInMultiPickup = true;
       }
       // Send the inventory question to web client
@@ -563,7 +567,7 @@ export class RuntimeMenuCapture {
       }
 
       // Wait for actual user input for inventory questions
-      console.log("📋 Waiting for inventory action selection (async)...");
+      this.deps.coordinator.logRoutine("📋 Waiting for inventory action selection (async)...");
       return this.deps.inputRequests.waitForQuestionInput();
     }
 
@@ -579,12 +583,12 @@ export class RuntimeMenuCapture {
         // Skip question emission/wait so the clicked action resolves immediately.
         return 0;
       }
-      console.log(
+      this.deps.coordinator.logRoutine(
         `📋 Menu question detected: "${menuQuestion}" with ${this.deps.menuSelection.currentMenuItems.length} items`,
       );
 
       if (this.deps.menuSelection.isMultiSelectLootQuestion(menuQuestion)) {
-        console.log("Multi-select loot menu detected");
+        this.deps.coordinator.logRoutine("Multi-select loot menu detected");
         this.deps.menuSelection.isInMultiPickup = true;
       }
 
@@ -600,7 +604,7 @@ export class RuntimeMenuCapture {
       }
 
       // Wait for actual user input for menu questions
-      console.log("📋 Waiting for menu selection (async)...");
+      this.deps.coordinator.logRoutine("📋 Waiting for menu selection (async)...");
       return this.deps.inputRequests.waitForQuestionInput();
     }
 
@@ -610,7 +614,7 @@ export class RuntimeMenuCapture {
       !hasMenuQuestion &&
       !isInventoryWindow
     ) {
-      console.log(
+      this.deps.coordinator.logRoutine(
         `📋 Menu expansion detected with ${this.deps.menuSelection.currentMenuItems.length} items (window ${endMenuWinid})`,
       );
 
@@ -621,7 +625,7 @@ export class RuntimeMenuCapture {
       const selectableItems = this.deps.menuSelection.currentMenuItems.filter(
         (item) => !item.isCategory,
       );
-      console.log(
+      this.deps.coordinator.logRoutine(
         `📋 Found ${selectableItems.length} selectable items out of ${this.deps.menuSelection.currentMenuItems.length} total`,
       );
 
@@ -662,7 +666,7 @@ export class RuntimeMenuCapture {
       // Only show dialog if we have actual selectable items
       if (selectableItems.length > 0) {
         if (this.deps.menuSelection.isMultiSelectLootQuestion(contextualQuestion)) {
-          console.log("Expanded multi-select loot menu detected");
+          this.deps.coordinator.logRoutine("Expanded multi-select loot menu detected");
           this.deps.menuSelection.isInMultiPickup = true;
         }
 
@@ -679,10 +683,10 @@ export class RuntimeMenuCapture {
         }
 
         // Wait for actual user input for expanded questions
-        console.log("📋 Waiting for expanded menu selection (async)...");
+        this.deps.coordinator.logRoutine("📋 Waiting for expanded menu selection (async)...");
         return this.deps.inputRequests.waitForQuestionInput();
       } else {
-        console.log(
+        this.deps.coordinator.logRoutine(
           "📋 Menu has no selectable items - treating as informational",
         );
       }
@@ -692,7 +696,7 @@ export class RuntimeMenuCapture {
   }
 
   handleShimUpdateInventory() {
-    console.log("NetHack update inventory callback received");
+    this.deps.coordinator.logRoutine("NetHack update inventory callback received");
     // This callback is usually triggered after inventory changes.
     // We can use it to signal the UI to refresh its inventory display if needed.
     if (this.deps.postActionRefresh.maybeRefreshPendingPostActionPlayerTile("inventory_update")) {

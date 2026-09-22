@@ -15,7 +15,7 @@ function mouseFixture() {
     questionMenus: { isInQuestion: false }, directionPrompts: { isInDirectionQuestion: false },
     extendedCommands: { metaCommandModeActive: false },
     tileRendering: { tileMap: new Map([["12,8", tile]]) },
-    positionSelection: { handleFarLookPositionTileSelection: farLook },
+    positionSelection: { handleFarLookPositionTileSelection: farLook, positionInputModeActive: false },
     playerMovement: { hasPlayerMovedOnce: false, playerPos: {x:11,y:8} }, movementInput: { lastMovementInputAtMs: 0, isFpsMode: () => false, resolveDirectionFromDelta: vi.fn(()=>"6") },
     pointerTargeting: {shouldSearchAdjacentTerminalVoid:()=>false},
     renderPipeline: {renderer:{xr:{isPresenting:true}}},
@@ -104,6 +104,17 @@ describe("native Quest map ray input", () => {
     expect(f.events).toEqual([]);
   });
 
+  it("lets far-look select unrendered cells before mesh visibility checks", () => {
+    const f = mouseFixture(); f.farLook.mockReturnValue(true);
+    f.tile.visible = false;
+    expect(f.mouse.activateQuestTile(12, 8)).toBe(true);
+    expect(f.mouse.activateQuestTile(13, 8)).toBe(true);
+    expect(f.dependencies.inputCommands.sendForcedDirectionalInput).not.toHaveBeenCalled();
+    expect(f.sendMouseInput).not.toHaveBeenCalled();
+    for (const [x, y] of [[-1, 8], [80, 8], [12, 21]]) expect(f.mouse.activateQuestTile(x, y)).toBe(false);
+    expect(f.farLook).toHaveBeenCalledTimes(2);
+  });
+
   it("moves the far-look cursor on first selection and confirms on the second", () => {
     const sendInputSequence = vi.fn();
     const sendMouseInput = vi.fn();
@@ -117,12 +128,17 @@ describe("native Quest map ray input", () => {
     position.positionInputOrigin = "far-look";
     position.positionCursor = { x: 5, y: 5 };
     vi.spyOn(position, "setPositionCursorPosition").mockImplementation((x, y) => { position.positionCursor = { x, y }; });
-    expect(position.handleFarLookPositionTileSelection(7, 6, "quest-ray")).toBe(true);
+    const f = mouseFixture();
+    f.dependencies.positionSelection.positionInputModeActive = true;
+    f.farLook.mockImplementation((...args: unknown[]) => position.handleFarLookPositionTileSelection(args[0] as number, args[1] as number, args[2] as string));
+    expect(f.mouse.activateQuestTile(7, 6)).toBe(true);
     expect(position.positionCursor).toEqual({ x: 7, y: 6 });
     expect(sendInputSequence).toHaveBeenCalledExactlyOnceWith(["3", "6"]);
     expect(sendMouseInput).not.toHaveBeenCalled();
-    expect(position.handleFarLookPositionTileSelection(7, 6, "quest-ray")).toBe(true);
+    expect(f.mouse.activateQuestTile(7, 6)).toBe(true);
     expect(sendMouseInput).toHaveBeenCalledExactlyOnceWith(7, 6, 0);
     expect(sendInputSequence).toHaveBeenCalledOnce();
+    expect(f.dependencies.inputCommands.sendForcedDirectionalInput).not.toHaveBeenCalled();
+    expect(f.mouse.activateQuestTile(7, 6, true)).toBe(false);
   });
 });

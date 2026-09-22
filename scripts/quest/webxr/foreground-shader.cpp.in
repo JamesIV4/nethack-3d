@@ -12,12 +12,13 @@ auto pos=glGetAttribLocation(test,"a_position"),uv=glGetAttribLocation(test,"a_u
 glUniform2f(glGetUniformLocation(test,"u_texel"),1.f/8192,1.f/4);glUniform4f(glGetUniformLocation(test,"u_eyeRect"),0,0,.5,1);glUniform1i(glGetUniformLocation(test,"u_texture0"),0);
 GLuint tex;glGenTextures(1,&tex);glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,tex);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);glViewport(0,0,4,4);
 static unsigned char bytes[8192*4*4],pixel[4];
-for(int eye=0;eye<2;eye++)for(int flip=0;flip<2;flip++)for(int mode=0;mode<3;mode++){
+for(int eye=0;eye<2;eye++)for(int flip=0;flip<2;flip++)for(int mode=0;mode<4;mode++){
  glUniform4f(glGetUniformLocation(test,"u_eyeRect"),eye*.5f,0,.5f,1);
  uvs[0]=uvs[2]=eye*.5f;uvs[4]=uvs[6]=eye*.5f+.5f;
  for(int i=0;i<8192*4;i++){bytes[i*4]=40;bytes[i*4+1]=60;bytes[i*4+2]=80;bytes[i*4+3]=mode==2?255:mode==1?32:128;}
- if(mode<2){int tag[]={159,191,223,159};for(int eye=0;eye<2;eye++)for(int i=0;i<4;i++)bytes[(flip*3*8192+eye*4096+i)*4+3]=tag[i];}
+ if(mode!=2){int tag[]={159,191,223,mode==3?191:159};for(int eye=0;eye<2;eye++)for(int i=0;i<4;i++)bytes[(flip*3*8192+eye*4096+i)*4+3]=tag[i];}
  for(int hand=0;hand<2;hand++){ bytes[(hand*4096+1536+8192)*4]=180;bytes[(hand*4096+1536+8192)*4+1]=80;bytes[(hand*4096+1536+8192)*4+2]=30;bytes[(hand*4096+1536+8192)*4+3]=255;}
+ if(mode==3)for(int eye=0;eye<2;eye++){int at=(eye*4096+512+8192)*4;bytes[at]=100;bytes[at+1]=20;bytes[at+2]=220;bytes[at+3]=191;}
 
  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,8192,4,0,GL_RGBA,GL_UNSIGNED_BYTE,bytes);
  glDisable(GL_BLEND);glUniform1i(glGetUniformLocation(test,"u_foregroundOnly"),0);glDrawArrays(GL_TRIANGLE_STRIP,0,4);glReadPixels(2,2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
@@ -25,7 +26,15 @@ for(int eye=0;eye<2;eye++)for(int flip=0;flip<2;flip++)for(int mode=0;mode<3;mod
  glClearColor(0,1,0,1);glClear(GL_COLOR_BUFFER_BIT);glUniform1i(glGetUniformLocation(test,"u_foregroundOnly"),1);glEnable(GL_BLEND);glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);glDrawArrays(GL_TRIANGLE_STRIP,0,4);glReadPixels(2,2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
  if(pixel[1]!=255||pixel[0]!=0){puts("World incorrectly overwrote UI");return 7;}
  glReadPixels(1,2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
- if(mode<2 ? pixel[0]!=180 : pixel[1]!=255){printf("Foreground or legacy gate failed: %d %d %d\n",mode,pixel[0],pixel[1]);return 8;}
+ if(mode!=2 ? pixel[0]!=180 : pixel[1]!=255){printf("Foreground or legacy gate failed: %d %d %d\n",mode,pixel[0],pixel[1]);return 8;}
+ glReadPixels(0,2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+ if(mode==3 && pixel[1]!=255){puts("Loot incorrectly covered a modal in the controller pass");return 9;}
+ glClearColor(0,1,0,1);glClear(GL_COLOR_BUFFER_BIT);
+ glUniform1i(glGetUniformLocation(test,"u_foregroundOnly"),0);glUniform1i(glGetUniformLocation(test,"u_lootOnly"),1);
+ glDrawArrays(GL_TRIANGLE_STRIP,0,4);glReadPixels(0,2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+ if(mode==3 ? abs(int(pixel[0])-100)>1 : pixel[1]!=255){puts("Loot/action-bar composition failed");return 10;}
+ glReadPixels(1,2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);if(pixel[1]!=255){puts("Hand leaked into loot-only pass");return 11;}
+ glUniform1i(glGetUniformLocation(test,"u_lootOnly"),0);
 }
-puts("Quest pixel tests passed: foreground over UI, world under UI, MR alpha restored, legacy frame ignored");
+puts("Quest pixel tests passed: loot over actions and under modals, hands over UI, MR alpha restored, legacy frame ignored");
 return 0;}

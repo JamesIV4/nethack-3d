@@ -51,6 +51,8 @@ function fixture(native = false) {
     },
   };
   const deps = {
+    entityBillboards: { monsterBillboards: new Map() },
+    positionSelection: { isFpsFarLookViewActive: () => false },
     camera: { camera: new THREE.PerspectiveCamera(), cameraYaw: 2, cameraPitch: 0.4, firstPersonEyeHeight: 0.62, sampleFpsStepCameraGroundPosition: () => false, getOverheadCameraFollowTargetWorldPosition: () => ({ x: 3, y: -5 }), applyStandardCameraPresetForTopDownModes: vi.fn() },
     engineState: { clientOptions: { vrPassthrough: false }, playMode: "normal", disposed: false },
     playerMovement: { playerPos: { x: 3, y: 5 } }, renderPipeline: { scene, renderer },
@@ -67,6 +69,89 @@ function fixture(native = false) {
     frame: () => { const camera = presentation.prepareRender(); if (camera) presentation.render(camera); return !!camera; } };
 }
 describe("Three.js owns the Quest world", () => {
+  it("holds the tabletop heading until its grab bar is held, then keeps the released heading", async () => {
+    const f = fixture();
+    const head = { position: { x: 0, y: 1.6, z: 0 }, orientation: new THREE.Quaternion() };
+    f.renderer.xr.getFrame = () => ({ getViewerPose: () => ({ transform: head }) });
+    f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
+    const owner = f.presentation as unknown as { tableHeading: THREE.Quaternion; tableMove: TableMoveHandle };
+    const initial = owner.tableHeading.toArray();
+    head.position.x = .8; f.presentation.updateCamera();
+    expect(owner.tableHeading.toArray()).toEqual(initial);
+    const hand = {} as XRInputSource;
+    owner.tableMove.begin(hand,new THREE.Vector3()); f.presentation.updateCamera();
+    expect(owner.tableHeading.toArray()).not.toEqual(initial);
+    const held = owner.tableHeading.toArray();
+    owner.tableMove.end(hand); head.position.x = -.8; f.presentation.updateCamera();
+    expect(owner.tableHeading.toArray()).toEqual(held);
+    recenterWebXr(); f.presentation.updateCamera();
+    expect(owner.tableHeading.toArray()).toEqual(initial);
+    f.presentation.dispose();
+  });
+  it("applies FPS scale live and restores the original rig at 100 percent", async () => {
+    const f = fixture(); f.deps.engineState.playMode = "fps";
+    f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
+    const root = f.scene.getObjectByName("WebXR tracking space")!;
+    const baseline = root.matrixWorld.clone(), eye = f.deps.camera.camera.position.clone();
+    setXrSettings({ fpsScale: .5 }); f.presentation.updateCamera();
+    expect(new THREE.Vector3().setFromMatrixScale(root.matrixWorld).x).toBeCloseTo(new THREE.Vector3().setFromMatrixScale(baseline).x * 2);
+    expect(f.deps.camera.camera.position.distanceTo(eye)).toBeLessThan(1e-8);
+    setXrSettings({ fpsScale: 2 }); f.presentation.updateCamera();
+    expect(new THREE.Vector3().setFromMatrixScale(root.matrixWorld).x).toBeCloseTo(new THREE.Vector3().setFromMatrixScale(baseline).x / 2);
+    setXrSettings({ fpsScale: 1 }); f.presentation.updateCamera();
+    expect(root.matrixWorld.elements).toEqual(baseline.elements);
+    f.presentation.dispose();
+  });
+  it("faces the virtual eye during far-look and the upright player grid after return", async () => {
+    const f = fixture(); f.deps.engineState.playMode = "fps";
+    const camera = f.deps.camera;
+    Object.assign(camera, {
+      fpsPositionCursorCameraCurrent: new THREE.Vector3(), fpsPositionCursorLookCurrent: new THREE.Vector3(),
+      fpsPositionCursorCameraInitialized: false, fpsPositionCursorReturnActive: false,
+      fpsPositionCursorEntryCameraYaw: Math.PI, fpsPositionCursorEntryCameraPitch: 0,
+      positionCursorFarLookOrbitDistance: 4.4,
+    });
+    let selecting = false;
+    f.deps.positionSelection.isFpsFarLookViewActive = () => selecting;
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial()); f.scene.add(sprite);
+    const head = { position: { x: 0, y: 1.6, z: 0 }, orientation: new THREE.Quaternion() };
+    f.renderer.xr.getFrame = () => ({ getViewerPose: () => ({ transform: head }) });
+    f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
+    const root = f.scene.getObjectByName("WebXR tracking space")!;
+    const baseline = root.matrixWorld.clone();
+    selecting = true; f.presentation.updateCamera();
+    // The same state vectors that the desktop camera updates every frame.
+    camera.fpsPositionCursorCameraCurrent.set(3, -8, 3);
+    camera.fpsPositionCursorLookCurrent.set(3, -5, .5);
+    f.presentation.updateCamera(); f.presentation.prepareRender();
+    expect(camera.camera.position.distanceTo(new THREE.Vector3(3, -8, 3))).toBeLessThan(1e-8);
+    const shader = { vertexShader: THREE.ShaderLib.sprite.vertexShader, uniforms: {} } as Parameters<THREE.Material["onBeforeCompile"]>[0];
+    sprite.material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+    expect(shader.uniforms.nh3dXrTabletop.value).toBe(false);
+    expect(shader.uniforms.nh3dXrUpright.value).toBe(false);
+    expect(shader.uniforms.nh3dXrOrigin.value.distanceTo(camera.camera.position)).toBeLessThan(1e-8);
+    const logicalOrigin = shader.uniforms.nh3dXrOrigin.value.clone();
+    head.position.x += .4; head.position.y -= .2; head.orientation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), .5);
+    f.presentation.updateCamera(); f.presentation.prepareRender();
+    expect(camera.camera.position.distanceTo(logicalOrigin)).toBeGreaterThan(.1);
+    expect(shader.uniforms.nh3dXrOrigin.value).toEqual(logicalOrigin);
+    selecting = false; camera.fpsPositionCursorReturnActive = true;
+    f.presentation.updateCamera(); f.presentation.prepareRender();
+    expect(shader.uniforms.nh3dXrTabletop.value).toBe(false);
+    expect(shader.uniforms.nh3dXrUpright.value).toBe(false);
+    camera.fpsPositionCursorReturnActive = false;
+    f.presentation.updateCamera(); f.presentation.prepareRender();
+    expect(root.matrixWorld.elements).toEqual(baseline.elements);
+    expect(shader.uniforms.nh3dXrTabletop.value).toBe(false);
+    expect(shader.uniforms.nh3dXrUpright.value).toBe(true);
+    expect(shader.uniforms.nh3dXrOrigin.value.toArray()).toEqual([3, -5, camera.firstPersonEyeHeight]);
+    expect(sprite.material.side).toBe(THREE.DoubleSide);
+    head.position.x += .2;
+    Object.assign(camera, { sampleFpsStepCameraGroundPosition: (p: THREE.Vector3) => { p.set(2, -5, 0); return true; } });
+    f.presentation.updateCamera(); f.presentation.prepareRender();
+    expect(shader.uniforms.nh3dXrOrigin.value.toArray()).toEqual([3, -5, camera.firstPersonEyeHeight]);
+    f.presentation.dispose();
+  });
   it("removes movement made during loading when the first FPS player grid arrives", async () => {
     const f=fixture(); f.deps.engineState.playMode="fps"; f.deps.playerMovement.hasSeenPlayerPosition=false;
     const head={position:{x:0,y:1.6,z:0},orientation:new THREE.Quaternion()};

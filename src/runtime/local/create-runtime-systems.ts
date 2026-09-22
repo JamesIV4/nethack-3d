@@ -349,6 +349,7 @@ export function createRuntimeSystems(coordinator: RuntimeCoordinator): RuntimeSy
     get windows() { return windows; },
   });
   const menuCapture: RuntimeMenuCapture = new RuntimeMenuCapture({
+    get contextualLook() { return contextualLook; },
     get coordinator() { return coordinator; },
     get inputRequests() { return inputRequests; },
     get inventoryContext() { return inventoryContext; },

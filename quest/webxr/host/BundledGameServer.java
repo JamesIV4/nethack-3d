@@ -32,8 +32,10 @@ public final class BundledGameServer {
     private static volatile float[] uiPose;
     public static float[] getUiPose() { return uiPose; }
     private static volatile int controllerOpacity;
+    private static volatile int lootHits;
+    public static int getLootHits() { return lootHits; }
     public static int getControllerOpacity() { return controllerOpacity; }
-    public static void resetControllerOpacity() { controllerOpacity = 0; }
+    public static void resetControllerOpacity() { controllerOpacity = 0; lootHits = 0; }
     private static volatile float[] pointerState;
     private static final java.util.concurrent.atomic.AtomicLong systemRecenter = new java.util.concurrent.atomic.AtomicLong();
     public static void onSystemRecenter() { systemRecenter.incrementAndGet(); }
@@ -86,7 +88,7 @@ public final class BundledGameServer {
         listener = null;
         uiPose = null;
         pointerState = null;
-        controllerOpacity = 0;
+        controllerOpacity = 0; lootHits = 0;
         inputMode = null;
         quitHandler = null;
         startupFlatReady = false;
@@ -108,6 +110,7 @@ public final class BundledGameServer {
             String host = "", header;
             String origin = "";
             int opacity = 0;
+            int requestLootHits = 0;
             int contentLength = 0;
             int headerCount = 0;
             while ((header = line(reader)) != null && !header.isEmpty()) {
@@ -115,6 +118,7 @@ public final class BundledGameServer {
                 int colon = header.indexOf(':');
                 if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("Host")) host = header.substring(colon + 1).trim();
                 if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("X-NH3D-Controller-Opacity")) opacity = Integer.parseInt(header.substring(colon + 1).trim());
+                if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("X-NH3D-Loot-Hits")) requestLootHits = Integer.parseInt(header.substring(colon + 1).trim());
                 if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("Origin")) origin = header.substring(colon + 1).trim();
                 if (colon > 0 && header.substring(0, colon).equalsIgnoreCase("Content-Length")) contentLength = Integer.parseInt(header.substring(colon + 1).trim());
             }
@@ -177,7 +181,7 @@ public final class BundledGameServer {
                 }
                 int count = values.getInt(1);
                 int panels = values.getInt(13);
-                if (count < 0 || count > 128 || panels < 0 || panels > 8 || values.length() != 29 + count * 4 + panels * 5) throw new IOException("Invalid table UI snapshot");
+                if (count < 0 || count > 128 || panels < 0 || panels > 9 || values.length() != 29 + count * 4 + panels * 5) throw new IOException("Invalid table UI snapshot");
                 float[] pose = new float[values.length()];
                 for (int i = 0; i < pose.length; i++) {
                     pose[i] = (float)values.getDouble(i);
@@ -194,6 +198,8 @@ public final class BundledGameServer {
                 }
                 if (pose[2] < -1 || pose[2] > 100 || pose[6] < -1 || pose[6] > 100) throw new IOException("Invalid pointer distance");
                 if (opacity < 0 || opacity > 65535) throw new IOException("Invalid controller opacity");
+                if (requestLootHits < 0 || requestLootHits > 3) throw new IOException("Invalid loot hit mask");
+                lootHits = pose[10] == 1 ? requestLootHits : 0;
                 controllerOpacity = opacity;
                 pointerState = pose;
                 socket.getOutputStream().write(("HTTP/1.1 204 No Content\r\nConnection: close\r\nX-NH3D-Recenter: " + systemRecenter.get() + "\r\n\r\n").getBytes(StandardCharsets.US_ASCII));

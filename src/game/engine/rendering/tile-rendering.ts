@@ -354,6 +354,10 @@ export class TileRendering {
         tileRelation.isPlayerMaterial ||
         isRuntimeTrackedPlayerTileInFps);
     const isPredictedFpsPlayerTile = tileRelation.isPredictedPlayerTile;
+    // A predicted step must hide the player's glyph, not flatten known loot
+    // before the authoritative player/under-player update arrives.
+    const keepStandingLootDuringStep = this.dependencies.movementInput.isFpsMode() &&
+      isLootLikeCharacter && !this.dependencies.engineState.clientOptions.fpsFlattenEntityBillboards;
     // Prediction is not terrain authority. An inferred wall rendered during
     // a step must remain a wall (including its movement-highlight metadata).
     // A later real player/floor observation clears the inference normally.
@@ -368,8 +372,7 @@ export class TileRendering {
         !shouldKeepVisiblePlayerBillboardInFarLook) ||
         ((tileRelation.isPlayerGlyph || tileRelation.isPlayerMaterial) &&
           !shouldKeepVisiblePlayerBillboardInFarLook) ||
-        isFpsStepDestinationTile ||
-        isPredictedFpsPlayerTile ||
+        ((isFpsStepDestinationTile || isPredictedFpsPlayerTile) && !keepStandingLootDuringStep) ||
         (tileRelation.isCurrentPlayerTile &&
           !shouldKeepVisiblePlayerBillboardInFarLook) ||
         shouldSuppressRecentPreviousPlayerTileInFps);
@@ -1205,8 +1208,7 @@ export class TileRendering {
       !isRuntimeTrackedPlayerTileInFps &&
       !tileRelation.isPlayerGlyph &&
       !tileRelation.isPlayerMaterial &&
-      !isFpsStepDestinationTile &&
-      !isPredictedFpsPlayerTile &&
+      (keepStandingLootDuringStep || (!isFpsStepDestinationTile && !isPredictedFpsPlayerTile)) &&
       !shouldSuppressRecentPreviousPlayerTileInFps &&
       !tileRelation.isCurrentPlayerTile;
     const shouldRenderEntityBillboard =

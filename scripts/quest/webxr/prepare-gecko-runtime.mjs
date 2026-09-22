@@ -1,4 +1,5 @@
 import { patchForeground } from "./patch-foreground.mjs";
+import { patchLootForeground } from "./patch-loot-foreground.mjs";
 import { patchUiResourceFlush } from "./patch-ui-resource-flush.mjs";
 import { patchStartupVisibility } from "./patch-startup-visibility.mjs";
 import { patchControllerFade } from "./patch-controller-fade.mjs";
@@ -213,5 +214,6 @@ patchControllerFade(checkout);
 patchStartupVisibility(checkout);
 patchUiResourceFlush(checkout);
 patchForeground(checkout);
+patchLootForeground(checkout);
 patchStoreRelease(checkout);
 console.log("Prepared standalone WebXR host with patched GeckoView and its matching v19 native ABI.");

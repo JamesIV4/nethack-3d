@@ -18,7 +18,7 @@ describe("sprite alpha picking", () => {
     const picker = new PointerTargeting({} as PointerTargetingDependencies);
     const canvas = new TestCanvas();
     const texture = new THREE.CanvasTexture(canvas as unknown as HTMLCanvasElement);
-    texture.flipY = false;
+    texture.flipY = true;
     const material = new THREE.SpriteMaterial({ map: texture, alphaTest: 128 / 255 });
     const sprite = new THREE.Sprite(material);
     const hit = (u: number, v: number) => picker.isOpaqueSpriteIntersection({
@@ -43,7 +43,7 @@ describe("sprite alpha picking", () => {
     const picker = new PointerTargeting({} as PointerTargetingDependencies);
     const canvas = new TestCanvas();
     const texture = new THREE.CanvasTexture(canvas as unknown as HTMLCanvasElement);
-    texture.flipY = false;
+    texture.flipY = true;
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture }));
     const hit = () => picker.isOpaqueSpriteIntersection({ object: sprite, uv: new THREE.Vector2(0.25, 0.75), distance: 0, point: new THREE.Vector3() });
     expect(hit()).toBe(false);

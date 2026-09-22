@@ -114,6 +114,10 @@ export class PositionSelection {
   positionHideTimerId: number | null = null;
 
   positionInputModeActive: boolean = false;
+  positionInputCameraSuppressed: boolean = false;
+
+  /** Contextual Info selects a known tile; it is not an interactive camera mode. */
+  suppressNextPositionCamera(): void { this.positionInputCameraSuppressed = true; }
 
   positionInputOrigin: string | null = null;
 
@@ -356,6 +360,7 @@ export class PositionSelection {
     origin: string | null = null,
   ): void {
     if (!active) {
+      const returnCamera = this.positionInputModeActive && !this.positionInputCameraSuppressed;
       if (this.dependencies.tileContextActions.fpsCrosshairGlancePending?.sawPositionInput) {
         this.dependencies.tileContextActions.fpsCrosshairGlancePending.positionResolvedAtMs = Date.now();
       }
@@ -381,10 +386,12 @@ export class PositionSelection {
       this.dependencies.camera.fpsPositionCursorCameraInitialized = false;
       this.dependencies.camera.fpsPositionCursorManualOverrideUntilMs = 0;
       this.dependencies.camera.fpsPositionCursorReturnActive =
+        returnCamera &&
         this.dependencies.camera.fpsPositionCursorEntryCameraYaw !== null &&
         this.dependencies.camera.fpsPositionCursorEntryCameraPitch !== null;
       this.dependencies.camera.fpsPositionCursorOrbitYaw = 0;
       this.dependencies.camera.fpsPositionCursorOrbitPitch = 0;
+      this.positionInputCameraSuppressed = false;
       this.clearPositionCursor();
       this.dependencies.engineState.uiAdapter.setPositionRequest(null);
       this.dependencies.tileUpdates.refreshCurrentPlayerTileVisualFromStateCache();
@@ -403,7 +410,14 @@ export class PositionSelection {
     }
     this.positionInputModeActive = true;
     this.positionInputOrigin = origin;
+    this.positionInputCameraSuppressed ||= Boolean(this.dependencies.tileContextActions.fpsCrosshairGlancePending);
     this.dependencies.engineState.uiAdapter.setPositionInputActive(true, origin);
+    if (this.positionInputCameraSuppressed) {
+      if (this.dependencies.tileContextActions.fpsCrosshairGlancePending) this.dependencies.tileContextActions.fpsCrosshairGlancePending.sawPositionInput = true;
+      this.dependencies.camera.fpsPositionCursorReturnActive = false;
+      this.clearPositionCursor();
+      return;
+    }
     this.dependencies.camera.fpsPositionCursorCameraInitialized = false;
     this.dependencies.camera.fpsPositionCursorManualOverrideUntilMs = 0;
     this.dependencies.camera.fpsPositionCursorReturnActive = false;
@@ -456,7 +470,7 @@ export class PositionSelection {
   }
 
   updatePositionCursorOutline(): void {
-    if (!this.positionInputModeActive) {
+    if (!this.positionInputModeActive || this.positionInputCameraSuppressed) {
       this.clearPositionCursor();
       return;
     }
@@ -476,6 +490,8 @@ export class PositionSelection {
     );
     outline.scale.set(1, 1, heightScale);
     outline.userData.heightScale = heightScale;
+    outline.userData.tileX = this.positionCursor.x;
+    outline.userData.tileY = this.positionCursor.y;
     outline.visible = true;
   }
 
@@ -486,7 +502,7 @@ export class PositionSelection {
   }
 
   isFpsFarLookViewActive(): boolean {
-    return this.dependencies.movementInput.isFpsMode() && this.positionInputModeActive;
+    return this.dependencies.movementInput.isFpsMode() && this.positionInputModeActive && !this.positionInputCameraSuppressed;
   }
 
   updatePositionCursorPulse(timeMs: number): void {

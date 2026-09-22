@@ -31,6 +31,7 @@ export interface EntityBillboardsDependencies {
     Camera,
     "camera"
     | "cameraYaw"
+    | "fpsPositionCursorReturnActive"
   >;
   readonly damageFlashes: Pick<
     DamageFlashes,
@@ -516,6 +517,8 @@ export class EntityBillboards {
     // its entity's tile, not round the edge of the rendered quad to the grid.
     proxy.userData.tileX = sprite.userData.tileX;
     proxy.userData.tileY = sprite.userData.tileY;
+    proxy.userData.isEntityBillboardProxy = true;
+    proxy.userData.entityType = sprite.userData.entityType;
     this.syncBillboardProxyMaterial(proxy.material, spriteMaterial);
     return proxy;
   }
@@ -583,6 +586,7 @@ export class EntityBillboards {
 
     proxy.userData.tileX = sprite.userData.tileX;
     proxy.userData.tileY = sprite.userData.tileY;
+    proxy.userData.isEntityBillboardProxy = true;
     this.syncBillboardProxyMaterial(proxy.material, spriteMaterial);
     return proxy;
   }
@@ -627,7 +631,11 @@ export class EntityBillboards {
 
     this.disposeMonsterBillboardFlatProxyMesh(sprite);
 
-    if (!this.dependencies.movementInput.isFpsMode()) {
+    const xrFarLook = this.dependencies.renderPipeline.renderer?.xr.isPresenting === true &&
+      (this.dependencies.positionSelection.isFpsFarLookViewActive() || this.dependencies.camera.fpsPositionCursorReturnActive);
+    if (!this.dependencies.movementInput.isFpsMode() || xrFarLook) {
+      // The XR sprite shader faces the virtual camera origin during the pullback
+      // and return. A standing FPS proxy would bypass that shader entirely.
       this.disposeMonsterBillboardPitchLockedProxyMesh(sprite);
       sprite.visible = true;
       return;
@@ -653,8 +661,7 @@ export class EntityBillboards {
       tileX === this.dependencies.playerMovement.playerPos.x &&
       tileY === this.dependencies.playerMovement.playerPos.y;
     const inVr = this.dependencies.renderPipeline.renderer?.xr.isPresenting === true;
-    const usePlayerCentricFacing = !inVr &&
-      this.dependencies.movementInput.isFpsMode() &&
+    const usePlayerCentricFacing = this.dependencies.movementInput.isFpsMode() &&
       this.dependencies.playerMovement.hasSeenPlayerPosition &&
       !this.dependencies.positionSelection.isFpsFarLookViewActive();
 

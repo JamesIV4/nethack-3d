@@ -15,7 +15,8 @@ import type { RuntimePostActionRefresh } from "./post-action-refresh";
 export interface RuntimeMapCallbacksDependencies {
   readonly coordinator: Pick<
     RuntimeCoordinator,
-    "emit"
+    "logRoutine"
+    | "emit"
     | "eventHandler"
     | "isClosed"
     | "runtimeVersion"
@@ -170,7 +171,7 @@ export class RuntimeMapCallbacks {
             decodedTileIndex = decodedGlyphInfo.tileIndex;
           }
           shouldLogPrintGlyph = loggingEnabled && !this.deps.runtimeGlyphs.isUndiscoveredOrNothingGlyph(printGlyph);
-          if (shouldLogPrintGlyph) console.log(
+          if (shouldLogPrintGlyph) this.deps.coordinator.logRoutine(
             `🎨 GLYPH [Win ${printWin}] at (${x},${y}): ptr=0x${decodedGlyphInfo.pointer.toString(
               16,
             )} glyph=${printGlyph} extra=0x${Number(extra || 0).toString(16)}`,
@@ -182,19 +183,19 @@ export class RuntimeMapCallbacks {
         }
       } else {
         shouldLogPrintGlyph = loggingEnabled && !this.deps.runtimeGlyphs.isUndiscoveredOrNothingGlyph(printGlyph);
-        if (shouldLogPrintGlyph) console.log(
+        if (shouldLogPrintGlyph) this.deps.coordinator.logRoutine(
           `🎨 GLYPH [Win ${printWin}] at (${x},${y}): ${printGlyph}`,
         );
       }
 
       if (false && shouldLogPrintGlyph && glyphDebugSuffix) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           `ðŸŽ¨ GLYPH [Win ${printWin}] at (${x},${y}): ${glyphDebugSuffix}`,
         );
       }
 
       if (shouldLogPrintGlyph && glyphDebugSuffix) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           `[GLYPH DEBUG] [Win ${printWin}] at (${x},${y}): ${glyphDebugSuffix}`,
         );
       }
@@ -416,12 +417,12 @@ export class RuntimeMapCallbacks {
 
   handleShimCliparound(args) {
     const [clipX, clipY] = args;
-    console.log(
+    this.deps.coordinator.logRoutine(
       `🎯 Cliparound request for position (${clipX}, ${clipY}) - updating player position`,
     );
 
     if (this.deps.positionInput.positionInputActive || this.deps.positionInput.isFarLookPositionRequest()) {
-      console.log(
+      this.deps.coordinator.logRoutine(
         `🎯 Cliparound in position-input mode; routing to cursor at (${clipX}, ${clipY})`,
       );
       this.deps.positionInput.emitPositionCursor(null, clipX, clipY, "cliparound");
@@ -471,7 +472,7 @@ export class RuntimeMapCallbacks {
 
   handleShimCurs(args) {
     const [cursWin, cursX, cursY] = args;
-    console.log(
+    this.deps.coordinator.logRoutine(
       `🖱️ Setting cursor for window ${cursWin} to (${cursX}, ${cursY})`,
     );
     if (this.deps.positionInput.positionInputActive || this.deps.positionInput.isFarLookPositionRequest()) {

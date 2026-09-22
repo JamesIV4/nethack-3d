@@ -9,6 +9,7 @@ export class TableMoveHandle {
     withoutWorldClipping(new THREE.MeshBasicMaterial({ color: 0x78d5ff, transparent: true, opacity: .2, depthTest: false, depthWrite: false, toneMapped: false })),
   );
   private drag: { source: XRInputSource; hand: THREE.Vector3; offset: THREE.Vector3 } | null = null;
+  get active(): boolean { return this.drag !== null; }
   private readonly hovered = new Set<XRInputSource>();
   constructor(private readonly root: THREE.Group) {
     this.handle.name = "Table position handle"; this.handle.visible = false; this.handle.renderOrder = 9999;

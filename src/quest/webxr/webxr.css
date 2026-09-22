@@ -10,6 +10,18 @@
 }
 :root.nh3d-webxr-active .nh3d-fps-crosshair { display: none; }
 :root.nh3d-webxr-active .nh3d-dialog.is-visible { opacity: 1; }
+/* Shared far-look/travel instruction panel. Native crops use pane 1; the
+   wired surface keeps the same narrow panel below the center of the map. */
+:root.nh3d-webxr-active #position-dialog {
+  left: 50% !important; right: auto !important;
+  top: auto !important; bottom: 3vh !important;
+  transform: translateX(-50%) !important;
+  width: max-content !important; min-width: 0 !important;
+  max-width: min(54vw, 720px) !important; max-height: 20vh !important;
+  box-sizing: border-box; white-space: normal; overflow-wrap: anywhere;
+  zoom: 1 !important; --nh3d-ui-font-scale: 1 !important;
+  box-shadow: none !important;
+}
 :root.nh3d-webxr-active .floating-message-container {
   left: 50%;
   right: auto;
@@ -60,6 +72,19 @@
 }
 /* Tile and FPS context actions are their own interaction pane, so keep their
    text and controls at the authored size instead of modal half scaling. */
+:root.nh3d-webxr-active .nh3d-mobile-actions-sheet,
+:root.nh3d-webxr-active .nh3d-mobile-actions-sheet * {
+  animation: none !important; transition: none !important;
+}
+:root.nh3d-webxr-active .nh3d-mobile-actions-sheet[data-mode="extended"] {
+  width: max-content !important;
+  max-width: min(calc(100vw - 32px), 988px) !important;
+}
+:root.nh3d-webxr-active .nh3d-mobile-actions-sheet[data-mode="extended"] .nh3d-mobile-actions-grid {
+  grid-template-columns: repeat(auto-fit, 90px) !important;
+  width: min(calc(100vw - 56px), 954px);
+  max-width: 100%;
+}
 :root.nh3d-webxr-active :is(.nh3d-tile-context-menu,.nh3d-fps-crosshair-context) {
   position: fixed !important;
   left: 50% !important;
@@ -264,16 +289,16 @@
 :root.nh3d-webxr-active.nh3d-xr-menu .nh3d-startup-vr-entry {
   left: 50%; right: auto; transform: translateX(-50%); width: max-content;
 }
-:root .nh3d-xr-depth-slider { position: relative; width: 100%; padding-bottom: 24px; }
-:root .nh3d-xr-depth-slider input { width: 100%; }
-:root .nh3d-xr-depth-default {
-  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+:root .nh3d-xr-fps-scale-slider { position: relative; width: 100%; padding-bottom: 24px; }
+:root .nh3d-xr-fps-scale-slider input { width: 100%; }
+:root .nh3d-xr-fps-scale-default {
+  position: absolute; left: 33.333333%; bottom: 0; transform: translateX(-50%);
   border: 0; padding: 2px 8px; background: transparent; color: inherit;
   font: inherit; font-size: 11px; cursor: pointer;
 }
-:root .nh3d-xr-depth-default::before {
+:root .nh3d-xr-fps-scale-default::before {
   content: ""; position: absolute; left: 50%; top: -7px;
   height: 7px; width: 2px; background: currentColor; pointer-events: none;
 }
-:root .nh3d-xr-depth-default:hover,
-:root .nh3d-xr-depth-default:focus-visible { color: #63dcff; text-decoration: underline; }
+:root .nh3d-xr-fps-scale-default:hover,
+:root .nh3d-xr-fps-scale-default:focus-visible { color: #63dcff; text-decoration: underline; }

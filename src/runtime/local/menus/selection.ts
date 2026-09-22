@@ -18,7 +18,8 @@ import type { RuntimeGameOver } from "../lifecycle/game-over";
 export interface RuntimeMenuSelectionDependencies {
   readonly coordinator: Pick<
     RuntimeCoordinator,
-    "emit"
+    "logRoutine"
+    | "emit"
     | "eventHandler"
     | "nethackModule"
     | "runtimeVersion"
@@ -182,7 +183,7 @@ export class RuntimeMenuSelection {
     this.menuSelections.set(selectionKey, selectionEntry);
     this.isInMultiPickup = false;
     this.lastMenuInteractionCancelled = false;
-    console.log(
+    this.deps.coordinator.logRoutine(
       `Auto-selected menu item via ${reason}: ${selectionEntry.menuChar} (${selectionEntry.text})`,
     );
     this.deps.postActionRefresh.armPendingPostActionPlayerTileRefreshForMenuInteraction(
@@ -232,7 +233,7 @@ export class RuntimeMenuSelection {
       }
     }
 
-    console.log(
+    this.deps.coordinator.logRoutine(
       `Waking pending menu input after auto-selection with "${wakeInput}"`,
     );
     this.deps.inputRequests.enqueueInputKeys([wakeInput], source, ["event"]);
@@ -300,7 +301,7 @@ export class RuntimeMenuSelection {
   getMenuSelectionWakeInput(menuItem) {
     if (this.deps.positionInput.isLookAtMapMenuSelection(menuItem)) {
       this.deps.positionInput.pendingLookMenuFarLookArm = true;
-      console.log(
+      this.deps.coordinator.logRoutine(
         "Look menu map selection detected; using ';' wake input to arm far-look mode",
       );
       return ";";
@@ -308,7 +309,7 @@ export class RuntimeMenuSelection {
 
     if (this.deps.positionInput.isFloorTargetPositionMenuSelection(menuItem)) {
       this.deps.positionInput.pendingLookMenuFarLookArm = true;
-      console.log(
+      this.deps.coordinator.logRoutine(
         "Floor-target naming selection detected; using ';' wake input to arm far-look mode",
       );
       return ";";
@@ -316,7 +317,7 @@ export class RuntimeMenuSelection {
 
     if (this.deps.positionInput.isMonsterTargetPositionMenuSelection(menuItem)) {
       this.deps.positionInput.pendingLookMenuFarLookArm = true;
-      console.log(
+      this.deps.coordinator.logRoutine(
         "Monster-target naming/calling selection detected; using ';' wake input to arm far-look mode",
       );
       return ";";
@@ -463,7 +464,7 @@ export class RuntimeMenuSelection {
 
       if (selectionCount <= 0) {
         this.deps.coordinator.nethackModule.setValue(normalizedMenuListPtrPtr, 0, "*");
-        console.log(
+        this.deps.coordinator.logRoutine(
           `Menu selection write: cleared output pointer at menuListPtrPtr=${normalizedMenuListPtrPtr}`,
         );
         return;
@@ -494,7 +495,7 @@ export class RuntimeMenuSelection {
         normalizedMenuListPtrPtr,
         "*",
       );
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Writing ${selectionCount} selections at outPtr=${outPtr} (menuListPtrPtr=${normalizedMenuListPtrPtr}, priorOutPtr=${priorOutPtr}, confirmOutPtr=${confirmOutPtr}, stride=${bytesPerMenuItem}, countOffset=${countOffset}, itemFlagsOffset=${itemFlagsOffset})`,
       );
 
@@ -551,7 +552,7 @@ export class RuntimeMenuSelection {
             canWriteFieldAt(itemFlagsOffset)
             ? this.deps.coordinator.nethackModule.getValue(structOffset + itemFlagsOffset, "i32")
             : null;
-        console.log(
+        this.deps.coordinator.logRoutine(
           `Wrote menu_item[${i}] => item=${debugItem}, countPrimary=${debugCountPrimary}, itemFlags=${debugItemFlags}, countMode=${countMode}, countValue=${countValue}`,
         );
       }
@@ -561,7 +562,7 @@ export class RuntimeMenuSelection {
         const b = this.deps.coordinator.nethackModule.getValue(outPtr + i, "i8") & 0xff;
         dump.push(b.toString(16).padStart(2, "0"));
       }
-      console.log(
+      this.deps.coordinator.logRoutine(
         `menu_item buffer dump (${dumpBytes} bytes): ${dump.join(" ")}`,
       );
     } catch (error) {
@@ -597,7 +598,7 @@ export class RuntimeMenuSelection {
         )
         : null;
 
-    console.log(
+    this.deps.coordinator.logRoutine(
       `Menu selection request for window ${menuSelectWinid}, how: ${menuSelectHow}, argPtr: ${menuPtrArg}, ptrMode=${ptrMode}, menuListPtrPtr=${menuListPtrPtr}, currentOutPtr=${menuListCurrentOutPtr}`,
     );
 
@@ -621,7 +622,7 @@ export class RuntimeMenuSelection {
       }
 
       if (this.isInMultiPickup) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           "Multi-pickup menu - waiting for completion (async)...",
         );
         this.pendingMenuSelection = {
@@ -641,11 +642,11 @@ export class RuntimeMenuSelection {
       const selectedItems = Array.from(this.menuSelections.values());
       const selectedItem = selectedItems[0];
       if (selectedItems.length > 1) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           `PICK_ONE had ${selectedItems.length} selections; using first item only`,
         );
       }
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Returning single menu selection count: 1 (${selectedItem.menuChar} ${selectedItem.text})`,
       );
       this.menuSelections = new Map([
@@ -670,7 +671,7 @@ export class RuntimeMenuSelection {
 
     if (shouldAwaitQuestionlessInventoryPickOne) {
       if (this.deps.gameOver.pendingGameOverPossessionsInventoryFlow) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           "Suppressing questionless WIN_INVEN PICK_ONE prompt during game-over possessions flow; returning 0",
         );
         this.deps.gameOver.pendingGameOverPossessionsInventoryFlow = false;
@@ -681,7 +682,7 @@ export class RuntimeMenuSelection {
       }
 
       if (!this.deps.inventoryContext.hasPendingInventoryContextSelection()) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           "Suppressing questionless WIN_INVEN PICK_ONE prompt for passive inventory refresh; returning 0",
         );
         this.writeMenuSelectionResult(menuListPtrPtr, 0);
@@ -710,7 +711,7 @@ export class RuntimeMenuSelection {
           const selectedItems = Array.from(this.menuSelections.values());
           const selectedItem = selectedItems[0];
           if (selectedItem) {
-            console.log(
+            this.deps.coordinator.logRoutine(
               `Returning single menu selection count (questionless auto): 1 (${selectedItem.menuChar} ${selectedItem.text})`,
             );
           }
@@ -731,7 +732,7 @@ export class RuntimeMenuSelection {
         const selectedItems = Array.from(this.menuSelections.values());
         const selectedItem = selectedItems[0];
         if (selectedItem) {
-          console.log(
+          this.deps.coordinator.logRoutine(
             `Returning single menu selection count (questionless auto via *): 1 (${selectedItem.menuChar} ${selectedItem.text})`,
           );
         }
@@ -754,7 +755,7 @@ export class RuntimeMenuSelection {
         );
       }
 
-      console.log(
+      this.deps.coordinator.logRoutine(
         "PICK_ONE for questionless WIN_INVEN menu - waiting for async selection...",
       );
       if (this.deps.coordinator.eventHandler) {
@@ -774,11 +775,11 @@ export class RuntimeMenuSelection {
           const selectedItems = Array.from(this.menuSelections.values());
           const selectedItem = selectedItems[0];
           if (selectedItems.length > 1) {
-            console.log(
+            this.deps.coordinator.logRoutine(
               `PICK_ONE had ${selectedItems.length} selections after async wait; using first item only`,
             );
           }
-          console.log(
+          this.deps.coordinator.logRoutine(
             `Returning single menu selection count after async wait: 1 (${selectedItem.menuChar} ${selectedItem.text})`,
           );
           this.menuSelections = new Map([
@@ -792,7 +793,7 @@ export class RuntimeMenuSelection {
         }
 
         if (consumeMenuInteractionCancelled()) {
-          console.log(
+          this.deps.coordinator.logRoutine(
             "Questionless WIN_INVEN PICK_ONE cancelled; returning -1",
           );
           this.writeMenuSelectionResult(menuListPtrPtr, -1);
@@ -801,7 +802,7 @@ export class RuntimeMenuSelection {
           return -1;
         }
 
-        console.log(
+        this.deps.coordinator.logRoutine(
           "Questionless WIN_INVEN PICK_ONE completed with no selection; returning 0",
         );
         this.writeMenuSelectionResult(menuListPtrPtr, 0);
@@ -818,13 +819,13 @@ export class RuntimeMenuSelection {
 
     if (menuSelectHow === 1) {
       if (consumeMenuInteractionCancelled()) {
-        console.log("PICK_ONE cancelled; returning -1");
+        this.deps.coordinator.logRoutine("PICK_ONE cancelled; returning -1");
         this.writeMenuSelectionResult(menuListPtrPtr, -1);
         this.menuSelections.clear();
         this.isInMultiPickup = false;
         return -1;
       }
-      console.log("PICK_ONE requested with no selection; returning 0");
+      this.deps.coordinator.logRoutine("PICK_ONE requested with no selection; returning 0");
       this.writeMenuSelectionResult(menuListPtrPtr, 0);
       this.menuSelections.clear();
       this.isInMultiPickup = false;
@@ -833,7 +834,7 @@ export class RuntimeMenuSelection {
 
     if (menuSelectHow === 2 && this.menuSelections.size > 0) {
       const selectedItems = Array.from(this.menuSelections.values());
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Returning ${this.menuSelections.size} selected items:`,
         selectedItems.map((item) => `${item.menuChar}:${item.text}`),
       );
@@ -847,14 +848,14 @@ export class RuntimeMenuSelection {
     }
 
     if (menuSelectHow === 2 && consumeMenuInteractionCancelled()) {
-      console.log("PICK_ANY cancelled; returning -1");
+      this.deps.coordinator.logRoutine("PICK_ANY cancelled; returning -1");
       this.writeMenuSelectionResult(menuListPtrPtr, -1);
       this.menuSelections.clear();
       this.isInMultiPickup = false;
       return -1;
     }
 
-    console.log("Returning 0 (no selection)");
+    this.deps.coordinator.logRoutine("Returning 0 (no selection)");
     this.writeMenuSelectionResult(menuListPtrPtr, 0);
     this.menuSelections.clear();
     return 0;

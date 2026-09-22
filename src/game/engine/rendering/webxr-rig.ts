@@ -15,13 +15,18 @@ export function createTrackingToGame(
   viewYaw = 0,
   worldScale = 1,
   tablePosition?: THREE.Vector3,
+  fpsWorldScale = 1,
 ): { matrix: THREE.Matrix4; tabletop: THREE.Vector3; scale: number } {
+  const fpsScale = Number.isFinite(fpsWorldScale) ? THREE.MathUtils.clamp(fpsWorldScale, .5, 2) : 1;
   const scale = mode === "first-person"
-    ? THREE.MathUtils.clamp(anchor.y / eyeHeight, 1 / tileSize, 3.5 / tileSize)
+    ? THREE.MathUtils.clamp(anchor.y / eyeHeight, 1 / tileSize, 3.5 / tileSize) * fpsScale
     : 0.11 * worldScale / tileSize;
   const tabletop = tablePosition?.clone() ?? new THREE.Vector3(0, THREE.MathUtils.clamp(anchor.y - 0.65, 0.45, 1.05), -1.55)
     .applyQuaternion(heading).add(new THREE.Vector3(anchor.x, 0, anchor.z));
-  const center = mode === "first-person" ? new THREE.Vector3(anchor.x, 0, anchor.z) : tabletop;
+  // Scale around the calibrated eye rather than the floor. At 100% this is
+  // exactly the original floor-aligned rig; changing scale keeps the virtual
+  // eye at the same height and preserves physical hand/controller alignment.
+  const center = mode === "first-person" ? new THREE.Vector3(anchor.x, anchor.y * (1 - fpsScale), anchor.z) : tabletop;
   const rotation = heading.clone();
   if (mode === "first-person") rotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), viewYaw));
   if (mode === "tabletop") rotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch));

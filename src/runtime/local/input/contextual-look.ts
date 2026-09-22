@@ -9,6 +9,7 @@ export interface RuntimeContextualLookDependencies {
   readonly coordinator: Pick<
     RuntimeCoordinator,
     "runtimeVersion"
+    | "logRoutine"
   >;
   readonly menuSelection: Pick<
     RuntimeMenuSelection,
@@ -47,13 +48,30 @@ export class RuntimeContextualLook {
   }
 
   clearContextualLookInfoAutoFlow(reason = "") {
-    if (reason) {
+    if (reason && reason !== "synthetic escape consumed") {
       console.log(`Clearing contextual tile info auto-flow: ${reason}`);
     }
     this.contextualLookInfoProbeMouseDeadlineMs = 0;
     this.pendingContextualLookMapRouteSelection = false;
     this.contextualLookInfoAutoFlowStage = "none";
     this.contextualLookInfoAutoFlowUntilMs = 0;
+  }
+
+  isContextualInfoQuiet(): boolean {
+    // Pure query: logging must not expire or otherwise advance input state.
+    return this.contextualLookInfoAutoFlowStage !== "none" &&
+      Number.isFinite(this.contextualLookInfoAutoFlowUntilMs) &&
+      Date.now() <= this.contextualLookInfoAutoFlowUntilMs;
+  }
+
+  shouldSuppressContextualGlanceTip(lines: readonly string[]): boolean {
+    // NetHack 5's first getpos emits an informational PICK_NONE tip before
+    // reading the queued target. Do not let that background probe open a modal.
+    return this.deps.coordinator.runtimeVersion === "5.0" &&
+      this.contextualGlanceProbeMouseDeadlineMs > 0 &&
+      Date.now() <= this.contextualGlanceProbeMouseDeadlineMs &&
+      lines.find(line => line.trim().length > 0)?.trim() ===
+        "Tip: Farlooking or selecting a map location";
   }
 
   isContextualLookInfoAutoFlowActive() {
@@ -68,13 +86,6 @@ export class RuntimeContextualLook {
       return false;
     }
     return true;
-  }
-
-  shouldSuppressLegacyContextualLookInfoRawPrint() {
-    return (
-      this.deps.coordinator.runtimeVersion === "slashem" &&
-      this.isContextualLookInfoAutoFlowActive()
-    );
   }
 
   resolveContextualLookInfoAutoAnswer(question, choices, defaultChoice) {
@@ -97,25 +108,24 @@ export class RuntimeContextualLook {
         normalizedChoices.includes("q") &&
         normalizedDefaultChoice === "q";
       if (isCursorPrompt) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           'Auto-answering contextual tile info cursor prompt with "y"',
         );
         this.contextualLookInfoAutoFlowStage = "await_mouse_target";
         return "y";
       }
 
-      const isMoreInfoPrompt =
-        stage === "await_more_info" &&
-        normalizedQuestion.includes("more info") &&
-        normalizedChoices.includes("y") &&
-        normalizedChoices.includes("n") &&
-        normalizedDefaultChoice === "n";
-      if (isMoreInfoPrompt) {
-        console.log('Auto-answering contextual tile info "More info?" with "y"');
-        this.contextualLookInfoAutoFlowStage = "await_exit";
-        this.contextualLookInfoAutoFlowUntilMs = Date.now() + 30000;
-        return "y";
-      }
+    }
+
+    // NetHack variants can ask this after either the mouse target or the
+    // queued verbose-look key. It is not exclusive to Slash'EM.
+    const isMoreInfoPrompt = (stage === "await_more_info" || stage === "await_exit") &&
+      normalizedQuestion.includes("more info") && normalizedChoices.includes("y") &&
+      normalizedChoices.includes("n") && normalizedDefaultChoice === "n";
+    if (isMoreInfoPrompt) {
+      this.contextualLookInfoAutoFlowStage = "await_exit";
+      this.contextualLookInfoAutoFlowUntilMs = Date.now() + 30000;
+      return "y";
     }
 
     if (stage !== "none") {

@@ -8,6 +8,12 @@ Peer imports are type-only. Assembly uses getters so calls and assignments reach
 
 The extracted implementation retains the previous `@ts-nocheck` boundary for dynamic WASM and callback values. The root facade, assembly and coordinator contract are type-checked, and owner fields are declared explicitly. This is an ownership refactor, not a complete typing migration; a successful type check does not validate arbitrary runtime heap layouts or every callback body.
 
+Contextual Info auto-selection must arm position mode before entering `getpos`: both the NetHack map-menu route in `RuntimeInventoryContext` and Slash'EM's automatic cursor confirmation in `RuntimeQuestionInput` bypass ordinary user-input dispatch. Keep verbose `:` in the look-mode continuation set until Escape. Otherwise inspection `cliparound` callbacks become false player moves. The shared contextual answer handler accepts the expected More-info confirmation in each supported runtime. Engine-side camera suppression is separate from this runtime cursor bookkeeping.
+
+NetHack 5's first `getpos` can emit the informational "Tip: Farlooking or selecting a map location" menu. During an armed contextual glance probe, `RuntimeMenuCapture` suppresses only that tip's `info_menu` event. Menu classification, PICK_NONE completion, the queued target click and follow-up cancellation remain unchanged. Manual look commands and unrelated informational menus retain normal presentation.
+
+Contextual Info uses its existing bounded auto-flow lifetime to quiet routine console traces through `LocalNetHackRuntime.logRoutine`. Diagnostic/error paths remain direct console calls. Message-window text and raw-print prompts from this synthetic flow are excluded from the visible game log, while prompt bookkeeping, callback accounting, pointer validation and information-window text continue normally. Logging resumes when the flow ends or expires; manual look and background glance keep their normal output.
+
 ```mermaid
 flowchart LR
   Worker[runtime-worker] --> Root[LocalNetHackRuntime]

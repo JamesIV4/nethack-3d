@@ -23,7 +23,7 @@ export function QuestWebXrButton({
 
 const vrSliders = [
   { key: "area", label: "Tabletop visible area", description: "Increase the map area shown on the table without changing tile size.", min: 1, max: 2 },
-  { key: "scale", label: "VR world scale", description: "Resize the game world without changing the visible map area or UI size.", min: 0.5, max: 2 },
+  { key: "scale", label: "Tabletop world scale", description: "Resize the tabletop world without changing the visible map area or UI size.", min: 0.5, max: 2 },
   { key: "resolution", label: "VR render resolution", description: "Resolution changes apply when you next enter VR.", min: 0.5, max: 2 },
 ] as const;
 
@@ -32,18 +32,18 @@ export function QuestWebXrSettings(): JSX.Element | null {
   const state = useSyncExternalStore(subscribeWebXr, getWebXrState, getWebXrState);
   if (!isQuestApk()) return null;
   return <>
-    <OptionSliderRow label="VR depth (stereo separation)"
-      description="Adjust the depth of the 3D world immediately. 100% uses your headset's normal eye separation. UI depth stays unchanged."
-      valueLabel={`${Math.round(settings.depth * 100)}%${settings.depth === 1 ? " (default)" : ""}`}>
-      <div className="nh3d-xr-depth-slider">
-        <input aria-label="VR depth (stereo separation)" className="nh3d-option-slider" type="range"
-          min="0.5" max="1.5" step="0.05" value={settings.depth} list="nh3d-xr-depth-default"
-          aria-valuetext={`${Math.round(settings.depth * 100)} percent${settings.depth === 1 ? ", default" : ""}`}
-          onInput={event => setXrSettings({ depth: Number(event.currentTarget.value) })}
-          onChange={event => setXrSettings({ depth: Number(event.currentTarget.value) })} />
-        <datalist id="nh3d-xr-depth-default"><option value="1" label="Default" /></datalist>
-        <button type="button" className="nh3d-xr-depth-default" aria-label="Reset VR depth to 100 percent"
-          onClick={() => setXrSettings({ depth: 1 })}>Default</button>
+    <OptionSliderRow label="FPS world scale"
+      description="Resize the immersive first-person world immediately. 100% restores the original size. Controllers, held weapons and UI keep their physical size."
+      valueLabel={`${Math.round(settings.fpsScale * 100)}%${settings.fpsScale === 1 ? " (default)" : ""}`}>
+      <div className="nh3d-xr-fps-scale-slider">
+        <input aria-label="FPS world scale" className="nh3d-option-slider" type="range"
+          min="0.5" max="2" step="0.05" value={settings.fpsScale} list="nh3d-xr-fps-scale-default"
+          aria-valuetext={`${Math.round(settings.fpsScale * 100)} percent${settings.fpsScale === 1 ? ", default" : ""}`}
+          onInput={event => setXrSettings({ fpsScale: Number(event.currentTarget.value) })}
+          onChange={event => setXrSettings({ fpsScale: Number(event.currentTarget.value) })} />
+        <datalist id="nh3d-xr-fps-scale-default"><option value="1" label="Default" /></datalist>
+        <button type="button" className="nh3d-xr-fps-scale-default" aria-label="Reset FPS world scale to 100 percent"
+          onClick={() => setXrSettings({ fpsScale: 1 })}>Default</button>
       </div>
     </OptionSliderRow>
     {WEBXR_WEAPON_ATTACKS_ENABLED ? <><div className="nh3d-option-row nh3d-option-row-inline-toggle">

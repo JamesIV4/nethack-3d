@@ -110,6 +110,7 @@ export interface InputCommandsDependencies {
     PositionSelection,
     "cancelPositionInputMode"
     | "positionInputModeActive"
+    | "suppressNextPositionCamera"
   >;
   readonly promptDialogs: Pick<
     PromptDialogs,
@@ -1122,6 +1123,7 @@ export class InputCommands {
 
     // Route /what is to the map, then let the runtime confirm verbose info
     // and exit the follow-up location prompt automatically.
+    this.dependencies.positionSelection.suppressNextPositionCamera();
     this.sendInput(this.contextualLookInfoProbePrefix);
     this.sendInput("/");
     this.dependencies.engineMessages.logClickLookTileDebug("fps-info", targetTile.x, targetTile.y);

@@ -46,6 +46,7 @@ import {
 } from "../shared/translations";
 import {
   clientOptionsTabs,
+  resolveClientOptionsDefaultTabId,
   getClientOptionsForGroup
 } from "./config";
 import {
@@ -211,7 +212,7 @@ export function useClientOptionsCatalog(dependencies: UseClientOptionsCatalogDep
   const selectedClientOptionsTab = useMemo<ClientOptionsTab>(
     () =>
       clientOptionsTabs.find((tab) => tab.id === activeClientOptionsTab) ??
-      clientOptionsTabs[0],
+      clientOptionsTabs.find(tab => tab.id === resolveClientOptionsDefaultTabId())!,
     [activeClientOptionsTab],
   );
 

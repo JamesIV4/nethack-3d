@@ -34,7 +34,8 @@ export interface RuntimeInputRequestsDependencies {
   >;
   readonly coordinator: Pick<
     RuntimeCoordinator,
-    "runtimeVersion"
+    "logRoutine"
+    | "runtimeVersion"
     | "isClosed"
     | "protocol"
   >;
@@ -192,14 +193,14 @@ export class RuntimeInputRequests {
         const nowMs = Date.now();
         if (nowMs <= this.deps.contextualLook.contextualLookInfoProbeMouseDeadlineMs) {
           if (this.deps.coordinator.runtimeVersion === "slashem") {
-            console.log(
+            this.deps.coordinator.logRoutine(
               'Queueing contextual tile info follow-up input ["Escape"] for legacy /what is map probe',
             );
             this.enqueueInputKeys(["Escape"], "synthetic", ["position"]);
             this.deps.contextualLook.contextualLookInfoAutoFlowStage = "await_more_info";
             this.deps.contextualLook.contextualLookInfoAutoFlowUntilMs = nowMs + 30000;
           } else {
-            console.log(
+            this.deps.coordinator.logRoutine(
               'Queueing contextual tile info follow-up inputs [":", "Escape"] for /what is map probe',
             );
             this.enqueueInputKeys([":", "Escape"], "synthetic", ["position"]);
@@ -256,7 +257,7 @@ export class RuntimeInputRequests {
     if (requestKind === "event" && key === "Escape") {
       const replacement = this.deps.questionInput.resolveEscapeForActiveYnPrompt();
       if (replacement) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           `Mapping Escape to "${replacement}" for active yn_function prompt`,
           {
             choices: this.deps.questionInput.activeYnPrompt?.choices || "",
@@ -322,7 +323,7 @@ export class RuntimeInputRequests {
         return this.activeInputRequest.promise;
       }
 
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Deferring ${requestKind} input request until pending ${this.activeInputRequest.kind} request completes`,
       );
       return this.activeInputRequest.promise.then(() =>

@@ -211,6 +211,10 @@ class LocalNetHackRuntime {
     this.systems.inputRequests.inputBroker.cancelAll(27);
   }
 
+  logRoutine(...args: unknown[]): void {
+    if (!this.systems.contextualLook.isContextualInfoQuiet()) console.log(...args);
+  }
+
   handleUICallback(name: string, args: any[]): any {
     if (this.isClosed) {
       return 0;
@@ -223,7 +227,7 @@ class LocalNetHackRuntime {
       shouldLogUiCallback = false;
     }
     if (shouldLogUiCallback && isLoggingEnabled()) {
-      console.log(`UI Callback: ${name}`, args);
+      this.logRoutine(`UI Callback: ${name}`, args);
     }
     this.systems.promptContext.recordRecentUICallback(name, args);
     if (!this.systems.pointerContract.validateCallbackPointerContract(name, args)) {

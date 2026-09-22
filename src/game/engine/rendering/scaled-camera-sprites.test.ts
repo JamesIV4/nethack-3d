@@ -5,6 +5,22 @@ import { createTrackingToGame } from "./webxr-rig";
 import { gameFrameTime } from "./frame-time";
 
 describe("scaled XR camera rendering", () => {
+  it("raycasts upright sprites from the logical eye with no pitch and a stable coincident fallback", () => {
+    const scene = new THREE.Scene(), sprite = new THREE.Sprite(new THREE.SpriteMaterial());
+    sprite.position.set(2, 0, .2); scene.add(sprite); scene.updateMatrixWorld(true);
+    const patcher = new ScaledCameraSprites(), origin = new THREE.Vector3(0, 0, 2);
+    patcher.prepare(scene, origin, false, true);
+    const caster = new THREE.Raycaster(); caster.camera = new THREE.PerspectiveCamera();
+    // A vertical point on the artwork must stay on x=2 despite the elevated origin.
+    const point = new THREE.Vector3(2, .2, .5);
+    caster.ray.set(origin, point.clone().sub(origin).normalize());
+    expect(caster.intersectObject(sprite)[0].point.distanceTo(point)).toBeLessThan(1e-6);
+    // Same tile: both shader and CPU use a deterministic -Y normal.
+    origin.set(2, 0, 2); patcher.prepare(scene, origin, false, true);
+    const viewer = new THREE.Vector3(2, -2, .2);
+    caster.ray.set(viewer, sprite.position.clone().sub(viewer).normalize());
+    expect(caster.intersectObject(sprite)[0].point.distanceTo(sprite.position)).toBeLessThan(1e-6);
+  });
   it("matches sprite footprint to the mesh tile at tabletop scale", () => {
     const rig = createTrackingToGame("tabletop", new THREE.Vector3(), new THREE.Vector3(0, 1.6, 0), new THREE.Quaternion(), 1, 0.62);
     const view = rig.matrix.clone().invert();

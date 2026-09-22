@@ -10,12 +10,14 @@ export class ScaledCameraSprites {
   private readonly up = { value: new THREE.Vector3(0, 0, 1) };
   private readonly enabled = { value: false };
   private readonly tabletop = { value: false };
+  private readonly upright = { value: false };
   private readonly originalSides = new WeakMap<THREE.SpriteMaterial, THREE.Side>();
   private readonly raycasts = new WeakSet<THREE.Sprite>();
   private readonly pickCamera = new THREE.PerspectiveCamera();
   private readonly target = new THREE.Vector3();
   setOrigin(origin: THREE.Vector3): void { this.origin.value.copy(origin); }
   setTabletop(value: boolean): void { this.tabletop.value = value; }
+  setUpright(value: boolean): void { this.upright.value = value; }
   disable(scene?: THREE.Scene): void {
     this.enabled.value = false;
     scene?.traverse(o => { if (o instanceof THREE.Sprite) this.updateSide(o.material, false); });
@@ -29,12 +31,13 @@ export class ScaledCameraSprites {
   }
   private readonly installed = new WeakMap<THREE.SpriteMaterial, THREE.Material["onBeforeCompile"]>();
 
-  prepare(scene: THREE.Scene, headPosition?: THREE.Vector3, tabletop = false): void {
+  prepare(scene: THREE.Scene, origin?: THREE.Vector3, tabletop = false, upright = false): void {
     this.setTabletop(tabletop);
-    this.enabled.value = !!headPosition;
-    if (headPosition) this.setOrigin(headPosition);
+    this.setUpright(upright);
+    this.enabled.value = !!origin;
+    if (origin) this.setOrigin(origin);
     scene.traverseVisible((object) => {
-      if (object instanceof THREE.Sprite) { this.updateSide(object.material, tabletop); this.patch(object.material); this.patchRaycast(object); }
+      if (object instanceof THREE.Sprite) { this.updateSide(object.material, tabletop || upright); this.patch(object.material); this.patchRaycast(object); }
     });
   }
 
@@ -52,7 +55,10 @@ export class ScaledCameraSprites {
         const dz = this.origin.value.z - this.target.z;
         const depth = Math.max(1e-5, Math.hypot(this.origin.value.x - this.target.x, this.origin.value.y - this.target.y));
         this.target.copy(this.origin.value).sub(new THREE.Vector3(0, -depth, dz));
+      } else if (this.upright.value) {
+        this.target.z = this.origin.value.z;
       }
+      if (this.target.distanceToSquared(this.origin.value) < 1e-10) this.target.copy(this.origin.value).y += 1;
       this.pickCamera.lookAt(this.target);
       this.pickCamera.updateMatrixWorld(true);
       raycaster.camera = this.pickCamera;
@@ -71,16 +77,19 @@ export class ScaledCameraSprites {
       shader.uniforms.nh3dXrUp = this.up;
       shader.uniforms.nh3dXrFacing = this.enabled;
       shader.uniforms.nh3dXrTabletop = this.tabletop;
+      shader.uniforms.nh3dXrUpright = this.upright;
       if (!shader.vertexShader.includes(marker)) {
         shader.vertexShader = shader.vertexShader.replace(scaleLine,
           scaleLine + "\n\t// " + marker + "\n\tscale *= length( viewMatrix[ 0 ].xyz );");
-        shader.vertexShader = "uniform vec3 nh3dXrOrigin;\nuniform vec3 nh3dXrUp;\nuniform bool nh3dXrFacing;\nuniform bool nh3dXrTabletop;\n" + shader.vertexShader;
+        shader.vertexShader = "uniform vec3 nh3dXrOrigin;\nuniform vec3 nh3dXrUp;\nuniform bool nh3dXrFacing;\nuniform bool nh3dXrTabletop;\nuniform bool nh3dXrUpright;\n" + shader.vertexShader;
         shader.vertexShader = shader.vertexShader.replace("mvPosition.xy += rotatedPosition;", `
           if (nh3dXrFacing) {
-            vec3 facing = normalize(nh3dXrOrigin - modelMatrix[3].xyz);
+            vec3 delta = nh3dXrOrigin - modelMatrix[3].xyz;
+            vec3 facing = length(delta) > 0.00001 ? normalize(delta) : vec3(0.0, -1.0, 0.0);
             if (nh3dXrTabletop) {
-              vec3 delta = nh3dXrOrigin - modelMatrix[3].xyz;
               facing = normalize(vec3(0.0, -max(length(delta.xy), 0.00001), delta.z));
+            } else if (nh3dXrUpright) {
+              facing = length(delta.xy) > 0.00001 ? normalize(vec3(delta.xy, 0.0)) : vec3(0.0, -1.0, 0.0);
             }
             vec3 right = cross(nh3dXrUp, facing);
             if (length(right) < 0.0001) right = vec3(1.0, 0.0, 0.0);

@@ -33,7 +33,7 @@ import type {
   ControllerRemapListeningState
 } from "../controller/binding-capture";
 import {
-  clientOptionsDefaultTabId
+  resolveClientOptionsDefaultTabId
 } from "./config";
 
 export interface UseClientOptionsActionsDependencies {
@@ -104,7 +104,7 @@ export function useClientOptionsActions(dependencies: UseClientOptionsActionsDep
 
   const openClientOptionsDialog = (): void => {
     setClientOptionsDraft({ ...clientOptions });
-    setActiveClientOptionsTab(clientOptionsDefaultTabId);
+    setActiveClientOptionsTab(resolveClientOptionsDefaultTabId());
     setIsClientOptionsVisible(true);
     setIsDarkWallTilePickerVisible(false);
     setIsTilesetBackgroundTilePickerVisible(false);

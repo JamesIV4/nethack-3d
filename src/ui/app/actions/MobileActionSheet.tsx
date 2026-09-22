@@ -42,7 +42,7 @@ export function MobileActionSheet({
   const actions = layout.menuActions.map(id => catalog.find(a => a.id === id)).filter((a): a is NonNullable<typeof a> => !!a);
   return (
     mobileTouchUiVisible && isMobileActionSheetVisible ? (
-      <div className="nh3d-mobile-actions-sheet">
+      <div className="nh3d-mobile-actions-sheet" data-mode={mobileActionSheetMode}>
         <div className="nh3d-mobile-actions-title-row">
           <div className="nh3d-mobile-actions-title">
             {mobileActionSheetMode === "quick"
@@ -65,7 +65,7 @@ export function MobileActionSheet({
 
             <button
               className="nh3d-mobile-actions-back"
-              data-nh3d-menu-anchor="pause"
+              data-nh3d-menu-anchor="center"
               onClick={openPauseMenu}
               type="button"
             >

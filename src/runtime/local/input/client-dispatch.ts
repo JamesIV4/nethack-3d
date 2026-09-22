@@ -35,7 +35,8 @@ export interface RuntimeInputDispatchDependencies {
   >;
   readonly coordinator: Pick<
     RuntimeCoordinator,
-    "isClosed"
+    "logRoutine"
+    | "isClosed"
     | "runtimeVersion"
   >;
   readonly extendedCommandCatalog: Pick<
@@ -170,7 +171,7 @@ export class RuntimeInputDispatch {
       return;
     }
 
-    console.log("Received client input sequence:", normalized);
+    this.deps.coordinator.logRoutine("Received client input sequence:", normalized);
     const extendedCommandText =
       this.deps.extendedCommands.extractExtendedCommandSubmission(normalized);
     if (extendedCommandText !== null) {
@@ -215,30 +216,30 @@ export class RuntimeInputDispatch {
       return;
     }
     if (clickButton === 0 && this.deps.mouseInput.isClickMoveBlocked()) {
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Discarding click-move during travel overlap window: button=${clickButton} tile=(${tileX}, ${tileY})`,
       );
       return;
     }
 
-    console.log(
+    this.deps.coordinator.logRoutine(
       `Received client mouse input: button=${clickButton} tile=(${tileX}, ${tileY}) mod=${clickMod}`,
     );
 
     // If NetHack is stuck waiting for an unrelated async selector flow, cancel
     // it and allow mouse movement/clicklook input to reach nh_poskey.
     if (this.deps.extendedCommands.pendingExtendedCommandRequest) {
-      console.log(
+      this.deps.coordinator.logRoutine(
         "Cancelling pending extended-command request due mouse input",
       );
       this.deps.extendedCommands.resolvePendingExtendedCommandRequest(-1);
     }
     if (this.deps.menuSelection.pendingMenuSelection && this.deps.menuSelection.isInMultiPickup) {
-      console.log("Cancelling pending multi-pickup selection due mouse input");
+      this.deps.coordinator.logRoutine("Cancelling pending multi-pickup selection due mouse input");
       this.deps.menuSelection.resolveMenuSelection(-1);
     }
     if (this.deps.textInput.pendingTextRequest) {
-      console.log("Cancelling pending text request due mouse input");
+      this.deps.coordinator.logRoutine("Cancelling pending text request due mouse input");
       this.deps.textInput.handleTextInputResponse("\x1b", "system");
     }
     if (source === "user" && this.deps.inventoryContext.hasPendingInventoryContextSelection()) {
@@ -268,7 +269,7 @@ export class RuntimeInputDispatch {
         tileX === Math.trunc(playerX) &&
         tileY === Math.trunc(playerY);
       if (legacyCursorPromptMouseExamineActive) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           `Preserving legacy Slash'EM cursor far-look mouse examine at (${tileX}, ${tileY})`,
         );
       } else if (clickedCurrentPlayerTile) {
@@ -325,7 +326,7 @@ export class RuntimeInputDispatch {
       return;
     }
 
-    console.log("Received client input:", input, {
+    this.deps.coordinator.logRoutine("Received client input:", input, {
       source,
       awaitingQuestionInput: this.deps.inputRequests.awaitingQuestionInput,
       pendingTextResponses: this.deps.textInput.pendingTextResponses.length,
@@ -343,7 +344,7 @@ export class RuntimeInputDispatch {
       (this.deps.positionInput.positionInputActive || this.deps.positionInput.isFarLookPositionRequest()) &&
       !this.deps.positionInput.isPositionRequestContinuationInput(input)
     ) {
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Cancelling active position request before command input "${input}"`,
       );
       this.deps.inputRequests.enqueueInputKeys(["Escape"], "system", ["position"]);
@@ -394,13 +395,13 @@ export class RuntimeInputDispatch {
       this.deps.keyboardInput.isDirectionalMovementInput(input) &&
       !this.deps.inputRequests.awaitingQuestionInput
     ) {
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Cancelling pending multi-pickup selection due directional input "${input}"`,
       );
       this.deps.menuSelection.resolveMenuSelection(-1);
     }
     if (this.deps.textInput.pendingTextRequest && this.deps.keyboardInput.isDirectionalMovementInput(input)) {
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Cancelling pending text request due directional input "${input}"`,
       );
       this.deps.textInput.handleTextInputResponse("\x1b", "system");
@@ -447,7 +448,7 @@ export class RuntimeInputDispatch {
         this.deps.extendedCommandCatalog.resolveMetaBoundExtendedCommandName(metaKey);
       if (mappedExtCommand) {
         if (!this.deps.extendedCommands.canQueueExtendedCommandSubmission()) {
-          console.log(
+          this.deps.coordinator.logRoutine(
             `Meta extended command "${mappedExtCommand}" blocked by active prompt state; forwarding "${metaKey}" as normal event input`,
           );
           this.deps.extendedCommands.clearQueuedExtendedCommandSubmission(
@@ -456,7 +457,7 @@ export class RuntimeInputDispatch {
           this.deps.inputRequests.enqueueInputKeys([metaKey], "meta", ["event"]);
           return;
         }
-        console.log(
+        this.deps.coordinator.logRoutine(
           `Meta input Alt+${metaKey.toLowerCase()} mapped to extended command "${mappedExtCommand}"`,
         );
         this.deps.extendedCommands.queueExtendedCommandSubmission(mappedExtCommand, "meta");
@@ -495,7 +496,7 @@ export class RuntimeInputDispatch {
         if (this.deps.menuSelection.menuSelections.has(selectionKey)) {
           if (Number.isFinite(selectionCount) && Number(selectionCount) > 0) {
             this.deps.menuSelection.menuSelections.set(selectionKey, selectionEntry);
-            console.log(
+            this.deps.coordinator.logRoutine(
               `Updated selected item count: ${selectionEntry.menuChar} (${selectionEntry.text}) x${selectionEntry.count}. Current selections:`,
               Array.from(this.deps.menuSelection.menuSelections.values()).map(
                 (item) =>
@@ -505,7 +506,7 @@ export class RuntimeInputDispatch {
             );
           } else {
             this.deps.menuSelection.menuSelections.delete(selectionKey);
-            console.log(
+            this.deps.coordinator.logRoutine(
               `Deselected item: ${selectionEntry.menuChar} (${selectionEntry.text}). Current selections:`,
               Array.from(this.deps.menuSelection.menuSelections.values()).map(
                 (item) => `${item.menuChar}:${item.text}`,
@@ -514,7 +515,7 @@ export class RuntimeInputDispatch {
           }
         } else {
           this.deps.menuSelection.menuSelections.set(selectionKey, selectionEntry);
-          console.log(
+          this.deps.coordinator.logRoutine(
             `Selected item: ${selectionEntry.menuChar} (${selectionEntry.text}). Current selections:`,
             Array.from(this.deps.menuSelection.menuSelections.values()).map(
               (item) =>
@@ -529,7 +530,7 @@ export class RuntimeInputDispatch {
       this.deps.menuSelection.menuSelections.clear();
       this.deps.menuSelection.menuSelections.set(selectionKey, selectionEntry);
       this.deps.menuSelection.lastMenuInteractionCancelled = false;
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Recorded single menu selection by index: ${selectionEntry.menuIndex} (${selectionEntry.menuChar} ${selectionEntry.text})`,
       );
 
@@ -588,7 +589,7 @@ export class RuntimeInputDispatch {
         !this.deps.menuSelection.lastEndedMenuHadQuestion &&
         this.deps.inventorySnapshots.lastEndedInventoryMenuKind === "inventory";
       if (suppressSyntheticSelectionOverride) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           `Ignoring synthetic menu accelerator "${normalizedInput}" while preserving contextual inventory auto-selection`,
         );
       } else {
@@ -604,7 +605,7 @@ export class RuntimeInputDispatch {
           const selectionKey = this.deps.menuSelection.getMenuSelectionKey(selectionEntry);
           this.deps.menuSelection.menuSelections.set(selectionKey, selectionEntry);
           this.deps.menuSelection.lastMenuInteractionCancelled = false;
-          console.log(
+          this.deps.coordinator.logRoutine(
             `Recorded single menu selection: ${normalizedInput} (${menuItem.text})`,
           );
           this.deps.postActionRefresh.armPendingPostActionPlayerTileRefreshForQuestion(
@@ -639,7 +640,7 @@ export class RuntimeInputDispatch {
         const selectionKey = this.deps.menuSelection.getMenuSelectionKey(selectionEntry);
         if (this.deps.menuSelection.menuSelections.has(selectionKey)) {
           this.deps.menuSelection.menuSelections.delete(selectionKey);
-          console.log(
+          this.deps.coordinator.logRoutine(
             `Deselected item: ${normalizedInput} (${menuItem.text}). Current selections:`,
             Array.from(this.deps.menuSelection.menuSelections.values()).map(
               (item) => `${item.menuChar}:${item.text}`,
@@ -647,7 +648,7 @@ export class RuntimeInputDispatch {
           );
         } else {
           this.deps.menuSelection.menuSelections.set(selectionKey, selectionEntry);
-          console.log(
+          this.deps.coordinator.logRoutine(
             `Selected item: ${normalizedInput} (${menuItem.text}). Current selections:`,
             Array.from(this.deps.menuSelection.menuSelections.values()).map(
               (item) => `${item.menuChar}:${item.text}`,
@@ -655,9 +656,9 @@ export class RuntimeInputDispatch {
           );
         }
       } else {
-        console.log(`No menu item found for accelerator '${normalizedInput}'`);
+        this.deps.coordinator.logRoutine(`No menu item found for accelerator '${normalizedInput}'`);
       }
-      console.log("Multi-pickup item selection updated");
+      this.deps.coordinator.logRoutine("Multi-pickup item selection updated");
       return;
     }
 
@@ -670,7 +671,7 @@ export class RuntimeInputDispatch {
       const selectedItems = Array.from(this.deps.menuSelection.menuSelections.values()).map(
         (item) => `${item.menuChar}:${item.text}`,
       );
-      console.log("Confirming multi-pickup with selections:", selectedItems);
+      this.deps.coordinator.logRoutine("Confirming multi-pickup with selections:", selectedItems);
       this.deps.postActionRefresh.armPendingPostActionPlayerTileRefreshForQuestion(
         this.deps.postActionRefresh.resolvePostActionPlayerTileRefreshQuestionContext(
           this.deps.menuSelection.currentMenuQuestionText,
@@ -701,7 +702,7 @@ export class RuntimeInputDispatch {
       .toLowerCase();
     if (this.deps.inputRequests.awaitingQuestionInput && this.deps.positionInput.pendingLegacySlashEmCursorPromptFarLook) {
       if (normalizedAnsweredYnInput === "y") {
-        console.log(
+        this.deps.coordinator.logRoutine(
           'Arming far-look mode for legacy Slash\'EM cursor prompt on answered "y"',
         );
         this.deps.positionInput.farLookMode = "armed";

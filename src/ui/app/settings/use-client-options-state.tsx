@@ -17,7 +17,7 @@ import type {
   ManualSafeZonePreview
 } from "./types";
 import {
-  clientOptionsDefaultTabId
+  resolveClientOptionsDefaultTabId
 } from "./config";
 
 /** Owns applied options, draft options, hydration and settings dialog state. */
@@ -47,7 +47,7 @@ export function useClientOptionsState() {
   const [isClientOptionsVisible, setIsClientOptionsVisible] = useState(false);
 
   const [activeClientOptionsTab, setActiveClientOptionsTab] =
-    useState<ClientOptionsTabId>(clientOptionsDefaultTabId);
+    useState<ClientOptionsTabId>(resolveClientOptionsDefaultTabId);
 
   const [optionsUpdateCheckBusy, setOptionsUpdateCheckBusy] = useState(false);
 

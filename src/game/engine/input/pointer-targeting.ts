@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { VisibleSpriteHits, isBillboardObject } from "./visible-sprite-hit";
 import { TILE_SIZE } from "../../constants";
 import { isTerminalVoidGridTargetAdjacentToPlayer } from "../../terminal/terminal-display";
 import type { Camera } from "../camera/camera";
@@ -75,16 +76,7 @@ export class PointerTargeting {
 
   readonly pointerIntersection = new THREE.Vector3();
 
-  private readonly pointerUv = new THREE.Vector2();
-
-  private readonly spriteAlphaCache = new WeakMap<THREE.Texture, {
-    image: HTMLCanvasElement;
-    width: number;
-    height: number;
-    version: number;
-    sourceVersion: number;
-    alpha: Uint8Array;
-  }>();
+  private readonly spriteHits = new VisibleSpriteHits();
 
   getTileUnderFpsCrosshair(): TileContextTarget | null {
     return this.getTileTargetFromPointerNdc(0, 0, true);
@@ -93,60 +85,7 @@ export class PointerTargeting {
   isOpaqueSpriteIntersection(
     intersection: THREE.Intersection<THREE.Object3D>,
   ): boolean {
-    const sprite = intersection.object;
-    if (!(sprite instanceof THREE.Sprite)) {
-      return true;
-    }
-
-    const material = sprite.material;
-    if (!(material instanceof THREE.SpriteMaterial)) {
-      return true;
-    }
-
-    const texture = material.map;
-    if (!texture || !intersection.uv) {
-      return true;
-    }
-
-    const image = texture.image;
-    if (!(image instanceof HTMLCanvasElement)) {
-      return true;
-    }
-
-    const width = image.width;
-    const height = image.height;
-    if (width <= 0 || height <= 0) {
-      return false;
-    }
-
-    const uv = this.pointerUv.copy(intersection.uv);
-    texture.transformUv(uv);
-    const u = THREE.MathUtils.clamp(uv.x, 0, 0.999999);
-    const v = THREE.MathUtils.clamp(uv.y, 0, 0.999999);
-    const px = Math.floor(u * width);
-    const py = Math.floor(THREE.MathUtils.clamp(1 - v, 0, 0.999999) * height);
-    let cached = this.spriteAlphaCache.get(texture);
-    if (!cached || cached.image !== image || cached.width !== width ||
-      cached.height !== height || cached.version !== texture.version ||
-      cached.sourceVersion !== texture.source.version) {
-      const context = image.getContext("2d", { willReadFrequently: true });
-      if (!context) return true;
-      // Read once per published texture revision, rather than synchronously
-      // reading a canvas on every mouse/controller/XR raycast. Weak ownership
-      // lets level and tileset disposal release the cached alpha alongside it.
-      const pixels = context.getImageData(0, 0, width, height).data;
-      const alpha = new Uint8Array(width * height);
-      for (let index = 0; index < alpha.length; index++) alpha[index] = pixels[index * 4 + 3];
-      cached = { image, width, height, version: texture.version, sourceVersion: texture.source.version, alpha };
-      this.spriteAlphaCache.set(texture, cached);
-    }
-
-    const alpha = cached.alpha[py * width + px];
-    const alphaThreshold = Math.max(
-      1,
-      Math.round((material.alphaTest || 0) * 255),
-    );
-    return alpha >= alphaThreshold;
+    return this.spriteHits.accepts(intersection);
   }
 
   collectVisiblePointerRaycastTargets(): THREE.Object3D[] {
@@ -164,16 +103,17 @@ export class PointerTargeting {
     );
 
     for (const sprite of this.dependencies.entityBillboards.monsterBillboards.values()) {
-      if (!sprite.visible) {
-        continue;
+      // FPS renders a mesh proxy while hiding its source sprite. Pick the visible
+      // representation and preserve its owning tile, including the loot nudge.
+      for (const object of [sprite, sprite.userData.fpsPitchLockedProxyMesh, sprite.userData.flatBillboardProxyMesh]) {
+        if (!(object instanceof THREE.Object3D) || !object.visible) continue;
+        let hidden = false;
+        for (let parent = object.parent; parent; parent = parent.parent) if (!parent.visible) hidden = true;
+        if (hidden) continue;
+        if (object.frustumCulled !== false && !(object instanceof THREE.Sprite
+          ? this.pointerRaycastFrustum.intersectsSprite(object) : this.pointerRaycastFrustum.intersectsObject(object))) continue;
+        candidates.push(object);
       }
-      if (
-        sprite.frustumCulled !== false &&
-        !this.pointerRaycastFrustum.intersectsSprite(sprite)
-      ) {
-        continue;
-      }
-      candidates.push(sprite);
     }
 
     for (const mesh of this.dependencies.tileRendering.tileMap.values()) {
@@ -219,7 +159,7 @@ export class PointerTargeting {
     ) {
       const intersection = intersections[intersectionIndex];
       const object = intersection.object;
-      if (object instanceof THREE.Sprite) {
+      if (isBillboardObject(object)) {
         if (!this.isOpaqueSpriteIntersection(intersection)) {
           continue;
         }

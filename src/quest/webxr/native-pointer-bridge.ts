@@ -24,20 +24,23 @@ export class NativePointerBridge {
     this.firstPersonAnchor = [position.x, position.y, position.z, yaw, revision];
   }
   private buttonAnchorShown = false;
-  private buttonAnchor: { kind: string; x: number; y: number; pane: number } | null = null;
+  private buttonAnchor: { x: number; y: number; pane: number } | null = null;
   private readonly captureMenuButton = (event: Event): void => {
     const button = (event.target as Element | null)?.closest<HTMLElement>("[data-nh3d-menu-anchor]");
     if (!button) return;
     this.buttonAnchorShown = false;
-    if (button.dataset.nh3dMenuAnchor === "actions" && button.getAttribute("aria-expanded") === "true") { this.buttonAnchor = null; return; }
+    // Pause and its submenus use the normal centered modal pose.
+    if (button.dataset.nh3dMenuAnchor !== "actions") { this.buttonAnchor = null; return; }
+    if (button.getAttribute("aria-expanded") === "true") { this.buttonAnchor = null; return; }
     const anchor = menuButtonAnchor(this.panes, button.getBoundingClientRect(), innerWidth, innerHeight);
-    this.buttonAnchor = anchor ? { kind: button.dataset.nh3dMenuAnchor!, ...anchor } : null;
+    this.buttonAnchor = anchor;
   };
   private contextPoint: THREE.Vector3 | null = null;
   private gameToTracking = new THREE.Matrix4();
   setContextTarget(point: THREE.Vector3): void { this.contextPoint = point; }
   setWorldTransform(matrix: THREE.Matrix4): void { this.gameToTracking.copy(matrix); }
   private controllerOpacity = 0;
+  private lootHits = 0;
   setControllerOpacity(left: number, right: number): void {
     const byte = (value: number) => Math.round(THREE.MathUtils.clamp(Number.isFinite(value) ? value : 0, 0, 1) * 255);
     this.controllerOpacity = byte(left) | (byte(right) << 8);
@@ -77,15 +80,17 @@ export class NativePointerBridge {
     if (this.firstPerson !== firstPerson) this.dirty = true;
     this.firstPerson = firstPerson; this.pitch = pitch; this.boardY = boardY;
   }
-  hit(hand: XRHandedness, ray: THREE.Ray, point: THREE.Vector3 | null, normal: THREE.Vector3, aim: THREE.Matrix4): void {
+  hit(hand: XRHandedness, ray: THREE.Ray, point: THREE.Vector3 | null, normal: THREE.Vector3, aim: THREE.Matrix4, loot = false): void {
     const index = hand === "left" ? 0 : hand === "right" ? 4 : -1;
     if (index < 0) return;
+    const bit = hand === "left" ? 1 : 2;
+    this.lootHits = (this.lootHits & ~bit) | (this.firstPerson && point && loot ? bit : 0);
     const localNormal = normal.clone().transformDirection(aim.clone().invert());
     const distance = point ? point.distanceTo(ray.origin) : -1;
     this.hits[index] = Number.isFinite(distance) && distance >= 0 && distance <= 100 ? distance : -1;
     this.hits[index + 1] = localNormal.x; this.hits[index + 2] = localNormal.y; this.hits[index + 3] = localNormal.z;
   }
-  forget(hand: XRHandedness): void { if (hand === "left") this.hits[0] = -1; if (hand === "right") this.hits[4] = -1; }
+  forget(hand: XRHandedness): void { if (hand === "left") { this.hits[0] = -1; this.lootHits &= ~1; } if (hand === "right") { this.hits[4] = -1; this.lootHits &= ~2; } }
   update(time: number): void {
     if (this.pending || this.disposed || time - this.lastSend < 1000 / 30) return;
     // CSS animation/ancestor clipping changes need not mutate the DOM.
@@ -94,7 +99,7 @@ export class NativePointerBridge {
       this.dirty = false; this.lastLayout = time;
     }
     const settings = getXrSettings();
-    const anchoredMenu = this.buttonAnchor && document.querySelector<HTMLElement>(this.buttonAnchor.kind === "pause" ? "#pause-menu-dialog.is-visible" : ".nh3d-mobile-actions-sheet");
+    const anchoredMenu = this.buttonAnchor && document.querySelector<HTMLElement>(".nh3d-mobile-actions-sheet");
     const buttonAnchor = anchoredMenu && isVisibleUi(anchoredMenu) ? this.buttonAnchor : null;
     if (buttonAnchor) this.buttonAnchorShown = true;
     else if (this.buttonAnchorShown) { this.buttonAnchor = null; this.buttonAnchorShown = false; }
@@ -105,10 +110,11 @@ export class NativePointerBridge {
       settings.area, settings.scale, buttonAnchor ? 2 : context ? 1 : 0, ...(buttonAnchor ? [buttonAnchor.x, buttonAnchor.y, buttonAnchor.pane] : point.toArray()), ...this.firstPersonAnchor, ...this.rects, ...this.panes.flat()]);
     // Keep a low-frequency heartbeat even when neither controller moves, so
     // the system Meta-button recenter can reach a stationary player.
-    const snapshot = body + ":" + this.controllerOpacity;
+    const lootHits = this.firstPerson ? this.lootHits : 0;
+    const snapshot = body + ":" + this.controllerOpacity + ":" + lootHits;
     if (snapshot === this.lastBody && time - this.lastSend < 500) return;
     this.pending = true; this.lastSend = time;
-    void fetch("/__xr/table-ui", { method: "POST", headers: { "Content-Type": "application/json", "X-NH3D-Controller-Opacity": String(this.controllerOpacity) }, body, signal: this.abort.signal })
+    void fetch("/__xr/table-ui", { method: "POST", headers: { "Content-Type": "application/json", "X-NH3D-Controller-Opacity": String(this.controllerOpacity), "X-NH3D-Loot-Hits": String(lootHits) }, body, signal: this.abort.signal })
       .then((response) => {
         if (!response.ok) throw new Error("Native pointer bridge: " + response.status);
         if (this.disposed) return;

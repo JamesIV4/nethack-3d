@@ -53,6 +53,7 @@ interface PointerState {
   fpsVoidTargeting: boolean;
   voidDirection: {dx:number;dy:number} | null;
   voidTarget: boolean;
+  positionSelectionAtPress: boolean;
   grip: boolean; gripCapture: "ui" | "world" | "table" | null; primaryBlocked: boolean; gripBlocked: boolean;
   tableHandle: THREE.Vector3 | null; hand: THREE.Vector3;
   pan: TablePanGesture;
@@ -112,11 +113,11 @@ export class WebXrControllerInput {
     }
     state = { source, id: this.nextId++, ray: new THREE.Ray(), line, circle, trigger: false, a: false,
       down: false, tracked: false, capture: null, ui: null, ring: null, world: null, buttons: [], gesture: new WorldClickGesture(), pressedTile: null, contextPoint: null,
-      directionInput: null, capturedDirectionInput: null, fpsVoidTargeting: false, voidDirection: null, voidTarget: false, grip: false, gripCapture: null, primaryBlocked: false, gripBlocked: false, pan: new TablePanGesture(), tableHandle: null, hand: new THREE.Vector3() };
+      directionInput: null, capturedDirectionInput: null, fpsVoidTargeting: false, voidDirection: null, voidTarget: false, positionSelectionAtPress: false, grip: false, gripCapture: null, primaryBlocked: false, gripBlocked: false, pan: new TablePanGesture(), tableHandle: null, hand: new THREE.Vector3() };
     this.pointers.set(source, state);
     return state;
   }
-  private refresh(state: PointerState, frame: XRFrame, fpsVoidTargeting = false): void {
+  private refresh(state: PointerState, frame: XRFrame, fpsVoidTargeting = state.fpsVoidTargeting): void {
     state.fpsVoidTargeting = fpsVoidTargeting;
     const reference = this.renderer.xr.getReferenceSpace();
     const pose = reference && frame.getPose(state.source.targetRaySpace, reference);
@@ -164,7 +165,7 @@ export class WebXrControllerInput {
     }
     state.directionInput = this.resolveDirectionPromptRayInput(state);
     const end = point ?? state.ray.at(5, new THREE.Vector3());
-    this.panel()?.nativePointer?.hit(state.source.handedness, state.ray, point, normal, transform);
+    this.panel()?.nativePointer?.hit(state.source.handedness, state.ray, point, normal, transform, state.world?.object.userData.entityType === "loot");
     if (!state.line || !state.circle) return;
     const positions = state.line.geometry.getAttribute("position") as THREE.BufferAttribute;
     positions.setXYZ(0, state.ray.origin.x, state.ray.origin.y, state.ray.origin.z);
@@ -204,9 +205,10 @@ export class WebXrControllerInput {
     if (state.ring) { state.capture = "tilt"; this.tilt.begin(state.source, state.ray); return; }
     state.capture = "world";
     this.captureTile(state);
-    state.gesture.press(this.clock, !state.a);
+    state.gesture.press(this.clock, !state.a && !state.positionSelectionAtPress);
   }
   private captureTile(state: PointerState): void {
+    state.positionSelectionAtPress = !!useGameStore.getState().positionInputActive;
     const tile = this.getRayTile(state);
     state.pressedTile = tile?.tile ?? null;
     // Freeze the exact visible hit at press time, independently of the tile
@@ -215,7 +217,7 @@ export class WebXrControllerInput {
       ? this.scene.localToWorld(state.supportPoint.clone())
       : tile ? this.scene.localToWorld(new THREE.Vector3(tile.tile.x * this.tileSize, -tile.tile.y * this.tileSize, tile.height)) : null);
     const player = this.navigation?.playerTile();
-    state.voidTarget = !!tile?.empty && !!player;
+    state.voidTarget = !!tile?.empty && !!player && !state.positionSelectionAtPress;
     state.voidDirection = tile?.empty && player ? this.navigation!.direction(tile.tile.x-player.x,tile.tile.y-player.y) : null;
   }
   private getRayTile(state: PointerState): { tile: { x: number; y: number }; height: number; empty: boolean } | null {
@@ -244,7 +246,7 @@ export class WebXrControllerInput {
           if (x >= 0 && x < MINIMAP_WIDTH_TILES && y >= 0 && y < MINIMAP_HEIGHT_TILES) tile = { x, y };
         }
       }
-      if (!tile && this.navigation) {
+      if (!tile && this.navigation && !useGameStore.getState().positionInputActive) {
         const direction = this.navigation.direction(planeRay.direction.x,-planeRay.direction.y);
         const player = this.navigation.playerTile();
         if (direction) {
@@ -317,6 +319,8 @@ export class WebXrControllerInput {
     }
   }
   private worldClick(state: PointerState, secondary: boolean): void {
+    // A released selection gesture must not become a movement after cancellation.
+    if (state.positionSelectionAtPress && !useGameStore.getState().positionInputActive) return;
     if (!secondary && state.voidTarget) { if (state.voidDirection) this.command({type:"move",...state.voidDirection,run:true}); return; }
     if (!state.pressedTile) return;
     if (secondary && state.contextPoint) this.panel()?.nativePointer?.setContextTarget(state.contextPoint);

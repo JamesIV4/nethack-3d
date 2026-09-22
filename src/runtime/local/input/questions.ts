@@ -18,7 +18,8 @@ export interface RuntimeQuestionInputDependencies {
   >;
   readonly coordinator: Pick<
     RuntimeCoordinator,
-    "emit"
+    "logRoutine"
+    | "emit"
     | "eventHandler"
     | "runtimeVersion"
   >;
@@ -48,6 +49,8 @@ export interface RuntimeQuestionInputDependencies {
   readonly positionInput: Pick<
     RuntimePositionInput,
     "pendingLegacySlashEmCursorPromptFarLook"
+    | "farLookMode"
+    | "farLookOrigin"
   >;
   readonly recovery: Pick<
     RuntimeCheckpointRecovery,
@@ -254,7 +257,7 @@ export class RuntimeQuestionInput {
 
     this.legacyAutoHelpYnPromptSignature = signature;
     this.legacyAutoHelpYnPromptUntilMs = nowMs + 2500;
-    console.log(
+    this.deps.coordinator.logRoutine(
       `Auto-answering legacy yn_function inventory prompt with "${autoChoice}"`,
       {
         question: normalizedQuestion,
@@ -289,7 +292,7 @@ export class RuntimeQuestionInput {
       typeof defaultChoice === "number" && Number.isFinite(defaultChoice)
         ? Math.trunc(defaultChoice)
         : 0;
-    console.log(
+    this.deps.coordinator.logRoutine(
       `Y/N Question: "${question}" choices: "${choices}" default: ${defaultChoice}`,
     );
 
@@ -308,7 +311,7 @@ export class RuntimeQuestionInput {
       // automatically so resume goes straight into the recovered save without
       // asking the player twice.
       const recoveryChoice = /r/i.test(normalizedChoices) ? "r" : "y";
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Auto-confirming checkpoint recovery with "${recoveryChoice}" during autosave resume`,
       );
       return this.deps.keyboardInput.processKey(recoveryChoice);
@@ -318,14 +321,14 @@ export class RuntimeQuestionInput {
       // Unsupported wasm builds cannot recover checkpoint shards into a proper
       // save file. For those builds, auto-confirm stale cleanup during
       // fresh-game startup instead of surfacing an unusable prompt.
-      console.log(
+      this.deps.coordinator.logRoutine(
         'Auto-confirming stale checkpoint cleanup with "y" during fresh-game startup',
       );
       return this.deps.keyboardInput.processKey("y");
     }
 
     if (this.deps.menuSelection.isContainerLootTypeQuestion(question)) {
-      console.log('Auto-answering container loot type question with "a"');
+      this.deps.coordinator.logRoutine('Auto-answering container loot type question with "a"');
       return this.deps.keyboardInput.processKey("a");
     }
 
@@ -342,6 +345,13 @@ export class RuntimeQuestionInput {
         defaultChoice,
       );
     if (contextualLookInfoAutoAnswer) {
+      if (contextualLookInfoAutoAnswer === "y" && this.isLegacySlashEmCursorPromptQuestion(question, normalizedChoices, defaultChoice)) {
+        // Auto-confirming bypasses the ordinary legacy cursor-prompt arm.
+        // Arm before getpos emits its first cliparound, just like the map menu.
+        this.deps.positionInput.farLookMode = "armed";
+        this.deps.positionInput.farLookOrigin = "legacy_cursor_prompt";
+        this.deps.positionInput.pendingLegacySlashEmCursorPromptFarLook = false;
+      }
       return this.deps.keyboardInput.processKey(contextualLookInfoAutoAnswer);
     }
 
@@ -352,7 +362,7 @@ export class RuntimeQuestionInput {
         defaultChoice,
       );
     if (this.deps.positionInput.pendingLegacySlashEmCursorPromptFarLook) {
-      console.log(
+      this.deps.coordinator.logRoutine(
         "Tracking legacy Slash'EM cursor yn prompt for far-look activation",
       );
     }
@@ -390,7 +400,7 @@ export class RuntimeQuestionInput {
         normalizedChoices,
       );
     if (legacySlashEmInventoryPromptMenuItems.length > 0) {
-      console.log(
+      this.deps.coordinator.logRoutine(
         `Routing legacy Slash'EM inventory yn prompt through menu dialog (${legacySlashEmInventoryPromptMenuItems.length} items)`,
         {
           question: String(question || ""),

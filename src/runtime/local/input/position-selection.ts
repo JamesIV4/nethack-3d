@@ -17,7 +17,8 @@ export interface RuntimePositionInputDependencies {
   >;
   readonly coordinator: Pick<
     RuntimeCoordinator,
-    "emit"
+    "logRoutine"
+    | "emit"
     | "eventHandler"
   >;
   readonly inputRequests: Pick<
@@ -131,7 +132,7 @@ export class RuntimePositionInput {
       return;
     }
     this.pendingTravelPositionInputArm = true;
-    console.log("Arming travel position input mode from travel prompt");
+    this.deps.coordinator.logRoutine("Arming travel position input mode from travel prompt");
     this.activateTravelPositionInputMode("travel prompt");
   }
 
@@ -139,7 +140,7 @@ export class RuntimePositionInput {
     if (this.farLookMode === "active" && this.farLookOrigin === "travel") {
       return;
     }
-    console.log(`Activating travel position input mode (${reason})`);
+    this.deps.coordinator.logRoutine(`Activating travel position input mode (${reason})`);
     this.farLookMode = "active";
     this.farLookOrigin = "travel";
     this.pendingTravelPositionInputArm = false;
@@ -239,6 +240,9 @@ export class RuntimePositionInput {
     if (this.deps.keyboardInput.isDirectionalMovementInput(normalized)) {
       return true;
     }
+    // Verbose look asks about the current cursor and then returns to getpos.
+    // Keep cliparound classified as cursor motion until the actual exit key.
+    if (normalized === ":" && this.shouldPreserveFarLookAfterMouseSelection()) return true;
     return (
       normalized === "," ||
       normalized === "." ||
@@ -343,7 +347,7 @@ export class RuntimePositionInput {
 
   handleShimNhPoskey(args) {
     const [xPtr, yPtr, modPtr] = args;
-    console.log("NetHack requesting position key");
+    this.deps.coordinator.logRoutine("NetHack requesting position key");
     if (this.deps.postActionRefresh.maybeRefreshPendingPostActionPlayerTile("nh_poskey")) {
       this.deps.postActionRefresh.pendingPostActionPlayerTileRefreshReason = null;
       this.deps.postActionRefresh.pendingPostActionPlayerTileRefreshTarget = null;
@@ -351,7 +355,7 @@ export class RuntimePositionInput {
     if (this.deps.contextualLook.contextualGlanceAutoCancelPositionUntilMs > 0) {
       const nowMs = Date.now();
       if (nowMs <= this.deps.contextualLook.contextualGlanceAutoCancelPositionUntilMs) {
-        console.log(
+        this.deps.coordinator.logRoutine(
           "Auto-canceling contextual look/glance follow-up position request",
         );
         this.deps.contextualLook.contextualGlanceAutoCancelPositionUntilMs = 0;
