@@ -68,8 +68,7 @@ export class RuntimeContextualLook {
     // NetHack 5's first getpos emits an informational PICK_NONE tip before
     // reading the queued target. Do not let that background probe open a modal.
     return this.deps.coordinator.runtimeVersion === "5.0" &&
-      this.contextualGlanceProbeMouseDeadlineMs > 0 &&
-      Date.now() <= this.contextualGlanceProbeMouseDeadlineMs &&
+      (this.contextualGlanceProbeMouseDeadlineMs > 0 || this.isContextualInfoQuiet()) &&
       lines.find(line => line.trim().length > 0)?.trim() ===
         "Tip: Farlooking or selecting a map location";
   }

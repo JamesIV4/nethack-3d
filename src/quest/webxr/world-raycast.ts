@@ -27,7 +27,7 @@ export class WorldRaycast {
     // Keep Three's bounding-volume traversal. A separate bounds pass over all
     // revealed tiles costs more than it saves for rays that reach the board.
     for (const child of scene.children) {
-      if (child.visible && child !== excludedRoot) this.targets.push(child);
+      if (child.visible && child !== excludedRoot && !child.userData.nh3dIgnoreWorldRay) this.targets.push(child);
     }
     const originalNear = caster.near, originalFar = caster.far;
     try {
@@ -35,7 +35,7 @@ export class WorldRaycast {
       caster.intersectObjects(this.targets, true, this.intersections);
       // Keep the original point-level test for tiles crossing the board edge.
       return this.intersections.find(hit => {
-        for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
+        for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible || node.userData.nh3dIgnoreWorldRay) return false;
         return planes.every(plane => plane.distanceToPoint(hit.point) >= 0) && this.spriteHits.accepts(hit);
       }) ?? null;
     } finally {

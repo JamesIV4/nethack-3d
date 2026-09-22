@@ -100,8 +100,16 @@ export class NativePointerBridge {
     }
     const settings = getXrSettings();
     const anchoredMenu = this.buttonAnchor && document.querySelector<HTMLElement>(".nh3d-mobile-actions-sheet");
-    const buttonAnchor = anchoredMenu && isVisibleUi(anchoredMenu) ? this.buttonAnchor : null;
-    if (buttonAnchor) this.buttonAnchorShown = true;
+    const menuVisible = anchoredMenu && isVisibleUi(anchoredMenu);
+    let buttonAnchor = menuVisible ? this.buttonAnchor : null;
+    if (buttonAnchor && anchoredMenu?.getAttribute?.("data-mode") === "extended") {
+      // Keep the invoking button's bottom hinge height, but center Extended
+      // across its source bar instead of above that individual button.
+      const paneId = buttonAnchor.pane;
+      const pane = this.panes.find(pane => pane[0] === paneId);
+      if (pane) buttonAnchor = { ...buttonAnchor, x: (pane[1] + pane[3]) / 2 };
+    }
+    if (menuVisible) this.buttonAnchorShown = true;
     else if (this.buttonAnchorShown) { this.buttonAnchor = null; this.buttonAnchorShown = false; }
     const context = !!this.contextPoint && hasWorldContextAnchor();
     const point = this.contextPoint?.clone().applyMatrix4(this.gameToTracking) ?? new THREE.Vector3();

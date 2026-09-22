@@ -15,4 +15,4 @@ Local raw captures are under `quest/build/diagnostics/vr-sprite-trace-*.log`.
 
 Preserve cached standing loot during an explicit player-glyph update for a predicted or animated-step destination. Apply the same rule to unchanged tile signatures so repeated payloads cannot remove the billboard. Regression tests cover player-ID and glyph-only payloads, both movement paths, arrival, and authoritative loot removal. Inferred-wall and doorway preservation tests also pass.
 
-Only the actual player tile receives the separate hotbar foreground layer; this fix does not give neighboring/predicted tiles that priority. Release tracing remains enabled pending another headset reproduction with the rebuilt APK. Source tests do not confirm that rebuilt headset result.
+Only the actual player tile receives the separate hotbar foreground layer; this fix does not give neighboring/predicted tiles that priority. The user confirmed the rebuilt APK fixes the floor-loot transition. Temporary release tracing was then removed.

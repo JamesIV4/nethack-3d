@@ -7,11 +7,11 @@ vi.mock("./context-anchor", () => ({ hasWorldContextAnchor: () => false }));
 vi.mock("./presentation", () => ({ recenterWebXr: vi.fn() }));
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
-it("anchors Actions but centers Pause and its subsequent submenus", async () => {
-  let actionsVisible = false;
+it("hinges Actions and horizontally centered Extended above the bar, but centers Pause and its submenus", async () => {
+  let actionsVisible = false,extended=false;
   const doc = Object.assign(new EventTarget(), {
     body: {}, documentElement: {},
-    querySelector: (selector: string) => selector === ".nh3d-mobile-actions-sheet" && actionsVisible ? {} : null,
+    querySelector: (selector: string) => selector === ".nh3d-mobile-actions-sheet" && actionsVisible ? {getAttribute:()=>extended?"extended":"quick"} : null,
   });
   vi.stubGlobal("document",doc); vi.stubGlobal("window",new EventTarget());
   vi.stubGlobal("innerWidth",1000); vi.stubGlobal("innerHeight",1000);
@@ -25,9 +25,15 @@ it("anchors Actions but centers Pause and its subsequent submenus", async () => 
     const event = new Event("click"); Object.defineProperty(event,"target",{value:{closest:()=>button}}); doc.dispatchEvent(event);
   };
   const anchorMode = () => JSON.parse((fetcher.mock.calls as unknown as [string,RequestInit][])[fetcher.mock.calls.length-1][1].body as string)[20];
+  const anchor = () => JSON.parse((fetcher.mock.calls as unknown as [string,RequestInit][])[fetcher.mock.calls.length-1][1].body as string).slice(21,24);
   await update(0); click("actions"); actionsVisible = true; await update(100);
   expect(anchorMode()).toBe(2);
-  click("center"); actionsVisible = false; await update(200);
+  expect(anchor()).toEqual([.45,.82,2]);
+  extended=true;await update(150);expect(anchorMode()).toBe(2);
+  expect(anchor()).toEqual([.5,.82,2]);
+  extended=false;await update(190);expect(anchorMode()).toBe(2);
+  expect(anchor()).toEqual([.45,.82,2]);
+  click("center"); actionsVisible = false; await update(250);
   expect(anchorMode()).toBe(0);
   await update(800); // Options or another pause submenu retains normal placement.
   expect(anchorMode()).toBe(0);

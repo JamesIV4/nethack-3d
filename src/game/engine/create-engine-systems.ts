@@ -874,6 +874,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get tileRendering() { return tileRendering; },
   });
   const webXrPresentation = new WebXrPresentation({
+    get aimHighlights() { return aimHighlights; },
     get entityBillboards() { return entityBillboards; },
     get positionSelection() { return positionSelection; },
     get movementInput() { return movementInput; },

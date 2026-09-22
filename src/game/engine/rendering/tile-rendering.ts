@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { spriteTrace, spriteTraceEnabled } from "../../../quest/webxr/sprite-trace";
 import { TILE_SIZE, WALL_HEIGHT } from "../../constants";
 import {
   classifyTileBehavior,
@@ -1233,13 +1232,6 @@ export class TileRendering {
     const billboardEntityType = this.dependencies.worldClassification.isLootLikeBehavior(billboardBehavior)
       ? "loot"
       : "monster";
-    if (spriteTraceEnabled() && Math.abs(x-this.dependencies.playerMovement.playerPos.x)<=2 && Math.abs(y-this.dependencies.playerMovement.playerPos.y)<=2) {
-      spriteTrace.record("tile-decision",key,{glyph,char,kind:behavior.effective.kind,player:{...this.dependencies.playerMovement.playerPos},
-        relation:tileRelation,flatten:this.dependencies.engineState.clientOptions.fpsFlattenEntityBillboards,
-        suppress:shouldSuppressPlayerTileVisualInFps,keepStandingLootDuringStep,shouldRenderEntityBillboard,
-        billboardEntityType,billboardGlyph:billboardBehavior.effective.glyph,floorGlyph:renderBehavior.effective.glyph,
-        cachedUnderPlayer:this.dependencies.worldClassification.flatFeatureUnderPlayerCache.get(key)?.glyph??null});
-    }
     const billboardIsWall = shouldKeepBillboardOnFpsPlayerTile
       ? billboardBehavior.isWall
       : renderBehavior.isWall;

@@ -83,6 +83,9 @@ describe("position selection lifecycle", () => {
     f.position.setPositionInputMode(true, "look_menu");
     expect(f.position.positionInputModeActive).toBe(true);
     expect(f.position.isFpsFarLookViewActive()).toBe(false);
+    expect(f.setPositionInputActive).toHaveBeenLastCalledWith(true,"contextual-probe");
+    f.setPositionRequest.mockClear(); f.position.showPositionRequest("Move the cursor");
+    expect(f.setPositionRequest).not.toHaveBeenCalled();
     expect(f.requestPlayerTileRefresh).not.toHaveBeenCalled();
     // Cache expiry while input is in flight must not change its presentation.
     f.tileContextActions.fpsCrosshairGlancePending = null;

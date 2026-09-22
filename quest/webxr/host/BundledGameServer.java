@@ -139,7 +139,7 @@ public final class BundledGameServer {
             }
             if (parts[0].equals("POST")) {
                 if (!ORIGIN.equals(origin) || contentLength < 1 || contentLength > 16384 ||
-                    (!"/__xr/table-ui".equals(path) && !"/__xr/input-mode".equals(path) && !"/__xr/quit".equals(path) && !"/__xr/startup-flat-ready".equals(path) && !"/__xr/sprite-trace".equals(path))) {
+                    (!"/__xr/table-ui".equals(path) && !"/__xr/input-mode".equals(path) && !"/__xr/quit".equals(path) && !"/__xr/startup-flat-ready".equals(path))) {
                     status(socket, 403, "Forbidden"); return;
                 }
                 char[] body = new char[contentLength];
@@ -148,15 +148,6 @@ public final class BundledGameServer {
                     int read = reader.read(body, offset, body.length - offset);
                     if (read < 0) throw new IOException("Incomplete pane pose");
                     offset += read;
-                }
-                if ("/__xr/sprite-trace".equals(path)) {
-                    // Temporary release diagnostics. Only the bundled same-origin
-                    // client can submit bounded records; no debug signing required.
-                    String[] records = new String(body).split("\n");
-                    if (contentLength > 8192 || records.length > 32) { status(socket, 400, "Bad Request"); return; }
-                    for (String record : records) if (record.length() > 2500) { status(socket, 400, "Bad Request"); return; }
-                    for (String record : records) if (!record.isEmpty()) Log.i("NH3DSprites", record.replace('\r', ' '));
-                    status(socket, 204, "No Content"); return;
                 }
                 JSONArray values = new JSONArray(new String(body));
                 if ("/__xr/startup-flat-ready".equals(path)) {

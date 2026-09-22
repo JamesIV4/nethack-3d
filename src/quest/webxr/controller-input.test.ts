@@ -33,6 +33,7 @@ function fixture(withTableHandle = false, withNavigation = false, withWeapons = 
   const panel = { native: true, nativePointer: { setControllerOpacity: vi.fn(), hit: vi.fn(), setContextTarget: vi.fn() }, hit: () => null, hover: vi.fn(), forget: vi.fn(), beginGrab: vi.fn(), moveGrab: vi.fn(), endGrab: vi.fn() };
   const tilt = { hit: () => null, hover: vi.fn(), surfaceHit: () => null, end: vi.fn() };
   const pan = vi.fn();
+  const player = {x:3,y:6};
   const tableMove = withTableHandle ? new TableMoveHandle(root) : undefined;
   const weaponProvider: QuestWeaponProvider | undefined = withWeapons ? {
     resolveFpsHeldWeaponTextureState: () => ({ signature: "test", tileIndex: 1, sourceGlyph: 1, tilesetPath: "test" }),
@@ -40,12 +41,78 @@ function fixture(withTableHandle = false, withNavigation = false, withWeapons = 
   } : undefined;
   const input = new WebXrControllerInput(session as unknown as XRSession, renderer as unknown as THREE.WebGLRenderer,
     scene, root, 1, () => panel as unknown as HtmlUiPanel, tilt as unknown as BoardTilt, undefined, weaponProvider, pan, tableMove,
-    withNavigation ? {playerTile:()=>({x:3,y:6}),direction:(dx,dy)=>dx||dy ? {dx:Math.sign(dx),dy:Math.sign(dy)} : null} : undefined);
-  return { input, left, right, controller, session, scene, root, tile, pose, panel, renderer, pan, tableMove };
+    withNavigation ? {playerTile:()=>player,direction:(dx,dy)=>dx||dy ? {dx:Math.sign(dx),dy:Math.sign(dy)} : null} : undefined);
+  return { input, left, right, controller, session, scene, root, tile, pose, panel, renderer, pan, tableMove, player };
 }
 afterEach(() => vi.unstubAllGlobals());
 
 describe("WebXR trigger to game command integration", () => {
+  it.each([
+    [0,1,"8"], [1,1,"9"], [1,0,"6"], [1,-1,"3"],
+    [0,-1,"2"], [-1,-1,"1"], [-1,0,"4"], [-1,1,"7"],
+  ] as const)("keeps LS camera-relative at heading %s,%s even when the laser owns highlighting",(x,y,key)=>{
+    const f=fixture(false,true),forward=new THREE.Vector3(x,y,0);
+    f.input.update(0,forward);
+    f.left.gamepad.axes[3]=-1;f.input.update(10,forward);
+    expect(f.controller.sendInput).toHaveBeenLastCalledWith(`Numpad${key}`);
+    // While LS stays held, a new relative laser tile may own the preview.
+    f.tile.userData.tileX=12;f.input.update(20,forward);
+    expect(f.input.highlightHeadset).toBe(false);
+    expect(f.input.highlightTile).toEqual({x:12,y:6});
+    f.input.update(200,forward);
+    expect(f.controller.sendInput).toHaveBeenLastCalledWith(`Numpad${key}`);
+    f.left.gamepad.buttons[0].pressed=true;f.input.update(400,forward);
+    expect(f.controller.runQuestDirection).toHaveBeenLastCalledWith(key);
+    expect(f.controller.activateQuestTile).not.toHaveBeenCalled();
+    f.input.dispose();
+  });
+  it("reclaims headset highlighting on RS turning and rebases the relative laser tile",()=>{
+    const f=fixture(false,true),forward=new THREE.Vector3(0,1,0);
+    f.input.update(0,forward);expect(f.input.highlightHeadset).toBe(false);
+    f.right.gamepad.axes[2]=1;f.tile.userData.tileX=8;
+    f.input.update(10,forward);expect(f.input.highlightHeadset).toBe(true);
+    f.player.x++;f.tile.userData.tileX++;
+    f.input.update(20,forward);expect(f.input.highlightHeadset).toBe(true);
+    f.tile.userData.tileY++;
+    f.input.update(30,forward);expect(f.input.highlightHeadset).toBe(false);
+    f.input.dispose();
+  });
+  it("lets RT claim a stationary laser target and keeps it until a fresh LS tilt or 30-degree head turn",()=>{
+    const f=fixture(false,true),forward=new THREE.Vector3(0,1,0);
+    f.left.gamepad.axes[3]=.06;f.input.update(0,forward);expect(f.input.highlightHeadset).toBe(true);
+    f.left.gamepad.axes[3]=0;f.input.update(10,forward);
+    f.right.gamepad.buttons[0].pressed=true;f.input.update(20,forward);
+    f.right.gamepad.buttons[0].pressed=false;f.input.update(100,forward);
+    expect(f.input.highlightHeadset).toBe(false);
+    f.player.x++;f.tile.userData.tileX++;f.input.update(110,forward);
+    expect(f.input.highlightHeadset).toBe(false);
+    forward.set(Math.sin(Math.PI/6),Math.cos(Math.PI/6),0);f.input.update(120,forward);
+    expect(f.input.highlightHeadset).toBe(true);
+    f.input.dispose();
+  });
+  it("selects headset highlighting at 5 percent, moves at 30 percent, and switches only for relative laser changes", () => {
+    const f=fixture(false,true),forward=new THREE.Vector3(0,1,0);
+    f.left.gamepad.axes[3]=.04;f.input.update(0,forward);
+    expect(f.input.highlightTile).toEqual({x:4,y:6});
+    f.left.gamepad.axes[3]=.06;f.input.update(10,forward);
+    expect(f.input.highlightTile).toEqual({x:3,y:5});expect(f.controller.sendInput).not.toHaveBeenCalled();
+    f.left.gamepad.axes[3]=.29;f.input.update(20,forward);expect(f.controller.sendInput).not.toHaveBeenCalled();
+    f.left.gamepad.axes[3]=.30;f.input.update(30,forward);
+    expect(f.controller.sendInput).toHaveBeenCalledExactlyOnceWith("Numpad2");
+    f.left.gamepad.axes[3]=0;f.input.update(529,forward);expect(f.input.highlightTile).toEqual({x:3,y:5});
+    f.input.update(10000,forward);expect(f.input.highlightTile).toEqual({x:3,y:5});
+    f.player.x++;f.tile.userData.tileX++;f.input.update(10001,forward);
+    expect(f.input.highlightHeadset).toBe(true);expect(f.input.highlightTile).toEqual({x:4,y:5});
+    forward.set(1,0,0);f.input.update(10002,forward);expect(f.input.highlightTile).toEqual({x:5,y:6});
+    f.tile.userData.tileX=7;f.input.update(10003,forward);expect(f.input.highlightHeadset).toBe(false);
+    f.right.gamepad.buttons[0].pressed=true;f.input.update(10004,forward);
+    f.right.gamepad.buttons[0].pressed=false;f.input.update(10080,forward);
+    expect(f.controller.activateQuestTile).toHaveBeenCalledExactlyOnceWith(7,6);
+    f.tile.userData.tileX=8;f.input.update(10081,forward);
+    expect(f.input.highlightTile).toEqual({x:8,y:6});
+    f.session.visibilityState="hidden";f.input.update(10082,forward);expect(f.input.highlightTile).toBeNull();
+    f.input.dispose();
+  });
   it.each([[-.4, 12, 8, .5], [.4, 4, 6, 0]])("uses visible sprite pixels for the Info target and laser at ray x=%s", (x, tileX, tileY, z) => {
     const f = fixture();
     const texture = new THREE.DataTexture(new Uint8Array([0,0,0,255, 0,0,0,0]), 2, 1);

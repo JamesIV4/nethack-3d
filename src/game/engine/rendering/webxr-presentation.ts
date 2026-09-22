@@ -1,8 +1,8 @@
 import { revealFlatStartup } from "../../../quest/webxr/startup-visibility";
 import { ControllerModels } from "../../../quest/webxr/controller-models";
 import { LootForeground } from "../../../quest/webxr/loot-foreground";
-import { spriteTrace, traceSpritePresentation } from "../../../quest/webxr/sprite-trace";
 import type { EntityBillboards } from "./entity-billboards";
+import type { AimHighlights } from "../ui/aim-highlights";
 import * as THREE from "three";
 import { ScaledCameraSprites } from "./scaled-camera-sprites";
 import { XrFarLook, type FarLookCamera } from "./xr-far-look";
@@ -34,8 +34,9 @@ import { QuestResumeMode } from "../../../quest/webxr/quest-resume-mode";
 import { gridUiHeading } from "../../../quest/webxr/grid-ui-heading";
 
 export interface WebXrPresentationDependencies {
+  readonly aimHighlights: Pick<AimHighlights,"setXrTarget">;
   readonly entityBillboards: Pick<EntityBillboards, "monsterBillboards">;
-  readonly positionSelection: Pick<PositionSelection, "isFpsFarLookViewActive">;
+  readonly positionSelection: Pick<PositionSelection, "isFpsFarLookViewActive" | "positionCursor">;
   readonly movementInput: Pick<MovementInput,"resolveDirectionKeyFromDelta">;
   readonly camera: FarLookCamera & Pick<Camera, "camera" | "sampleFpsStepCameraGroundPosition" | "snapFpsStepToPlayer" | "fpsAutoTurnTargetYaw" | "cameraPanX" | "cameraPanY" | "cameraPanTargetX" | "cameraPanTargetY" | "isCameraCenteredOnPlayer" | "getOverheadCameraFollowTargetWorldPosition" | "applyStandardCameraPresetForTopDownModes">;
   readonly engineState: Pick<EngineState, "clientOptions" | "playMode" | "disposed">;
@@ -68,6 +69,7 @@ export class WebXrPresentation {
   private readonly tablePosition = new THREE.Vector3();
   private readonly tabletopPan = new TabletopPan();
   private readonly position = new THREE.Vector3();
+  private movementPreviewSettled = true;
   private readonly orientation = new THREE.Quaternion();
   private readonly forward = new THREE.Vector3();
   private readonly headPosition = new THREE.Vector3();
@@ -273,6 +275,7 @@ export class WebXrPresentation {
         this.trackingRoot, TILE_SIZE, () => this.htmlPanel, this.tilt, direction => this.snapTurn(direction), this.dependencies.heldWeapon,
         (dx, dy) => this.panTabletop(dx, dy), this.tableMove, {
           playerTile: () => this.dependencies.playerMovement.playerPos,
+          previewSettled: () => this.movementPreviewSettled,
           direction: (dx,dy) => this.dependencies.movementInput.resolveDirectionKeyFromDelta(dx,dy,.25),
         });
       if (renderer instanceof THREE.WebGLRenderer) this.controllerModels = new ControllerModels(renderer);
@@ -291,6 +294,7 @@ export class WebXrPresentation {
   }
 
   private readonly ended = (): void => {
+    this.dependencies.aimHighlights.setXrTarget(false,null);
     this.lootForeground.dispose();
     this.farLook.reset();
     this.terrainBatches.dispose();
@@ -355,6 +359,11 @@ export class WebXrPresentation {
     const reference = xr.getReferenceSpace();
     const pose = reference && xr.getFrame()?.getViewerPose(reference);
     if (!pose) return;
+    if (this.dependencies.positionSelection.isFpsFarLookViewActive()) {
+      this.farLook.turn(this.dependencies.camera,direction*Math.PI/2,this.dependencies.positionSelection.positionCursor,TILE_SIZE);
+      this.lastRigKey="";this.updateCamera();return;
+    }
+    if (this.farLook.active) return;
     this.rotateView(direction * Math.PI / 4, pose.transform.position);
     this.updateCamera();
   }
@@ -444,6 +453,7 @@ export class WebXrPresentation {
       const smoothed = this.tabletopPan.update(target, performance.now());
       this.position.set(smoothed.x, smoothed.y, 0);
     } else if (!usingAnimatedFpsPosition) this.position.set(player.x * TILE_SIZE, -player.y * TILE_SIZE, 0);
+    this.movementPreviewSettled = !firstPerson || this.position.distanceToSquared(this.playerEyeGround) < 1e-6;
     this.position.applyMatrix4(scene.matrixWorld);
     if (firstPerson) {
       const viewer = new THREE.Vector3(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z);
@@ -538,14 +548,11 @@ export class WebXrPresentation {
   updateInput(time: number): void {
     if (this.active) this.updateControllerModels(time);
     if (this.active) this.input?.update(time, this.dependencies.engineState.playMode === "fps" ? this.forward : null);
+    this.dependencies.aimHighlights.setXrTarget(this.active,this.input?.highlightTile??null,this.input?.highlightSelection??false,this.input?.highlightHeadset??false);
   }
 
   prepareRender(): THREE.Camera | null {
     if (!this.active) return null;
-    traceSpritePresentation(this.dependencies.entityBillboards.monsterBillboards,this.dependencies.tileRendering.tileMap,
-      this.dependencies.playerMovement.playerPos,{mode:this.dependencies.engineState.playMode,flatten:this.dependencies.engineState.clientOptions.fpsFlattenEntityBillboards,
-        farLook:this.farLook.active,returning:this.dependencies.camera.fpsPositionCursorReturnActive});
-    spriteTrace.flush(performance.now());
     this.htmlPanel?.nativePointer?.setWorldTransform(this.trackingRoot.matrixWorld.clone().invert());
     this.htmlPanel?.update(performance.now());
     const firstPerson = this.dependencies.engineState.playMode === "fps";

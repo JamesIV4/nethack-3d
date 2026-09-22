@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { spriteTrace } from "../quest/webxr/sprite-trace";
 import { setNativeInputModeFps } from "../quest/webxr/native-input-mode";
 import { gameFrameTime } from "./engine/rendering/frame-time";
 import { WebHaptics } from "web-haptics";
@@ -818,11 +817,6 @@ class Nethack3DEngine implements Nethack3DEngineController {
       return;
     }
     const data = event as RuntimeEvent & Record<string, any>;
-    if (data.type === "player_position" || data.type === "under_player_item_glyph" ||
-        data.type === "under_player_item_glyph_cleared" || data.type === "position_input_state") {
-      spriteTrace.record(data.type,`${data.x??""},${data.y??""}`,{x:data.x,y:data.y,glyph:data.glyph,kind:data.kind,
-        tileIndex:data.tileIndex,active:data.active,origin:data.origin,playerBefore:{...this.systems.playerMovement.playerPos}},false);
-    }
     switch (data.type) {
       case "map_glyph":
         this.systems.runtimeEntityTracking.updateRuntimeMonsterTrackingFromTile(data);

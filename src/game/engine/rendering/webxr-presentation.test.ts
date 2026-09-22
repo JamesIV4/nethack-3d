@@ -51,6 +51,7 @@ function fixture(native = false) {
     },
   };
   const deps = {
+    aimHighlights: {setXrTarget:vi.fn()},
     entityBillboards: { monsterBillboards: new Map() },
     positionSelection: { isFpsFarLookViewActive: () => false },
     camera: { camera: new THREE.PerspectiveCamera(), cameraYaw: 2, cameraPitch: 0.4, firstPersonEyeHeight: 0.62, sampleFpsStepCameraGroundPosition: () => false, getOverheadCameraFollowTargetWorldPosition: () => ({ x: 3, y: -5 }), applyStandardCameraPresetForTopDownModes: vi.fn() },

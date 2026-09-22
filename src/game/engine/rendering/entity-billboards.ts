@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { spriteTrace } from "../../../quest/webxr/sprite-trace";
 import { TILE_SIZE, WALL_HEIGHT } from "../../constants";
 import { TERMINAL_MG_FLAGS } from "../../terminal/terminal-display";
 import type { TileBehaviorResult, TileMaterialKind } from "../../glyphs";
@@ -771,7 +770,6 @@ export class EntityBillboards {
     }
     this.dependencies.renderPipeline.scene.remove(sprite);
     this.monsterBillboards.delete(key);
-    spriteTrace.record("billboard-detached",key,{tileX:sprite.userData.tileX,tileY:sprite.userData.tileY,entity:sprite.userData.entityType},false);
     return sprite;
   }
 

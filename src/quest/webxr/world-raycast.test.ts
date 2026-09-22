@@ -3,6 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import { WorldRaycast } from "./world-raycast";
 
 describe("XR board ray ranges", () => {
+  it("ignores the selection column and highlight geometry while picking the real tile behind", () => {
+    const f=fixture(),column=new THREE.Group();column.userData.nh3dIgnoreWorldRay=true;f.scene.add(column);
+    const glow=f.add(-.5,column),floor=f.add(0),raycast=vi.spyOn(glow,"raycast");
+    expect(f.hit()?.object).toBe(floor);expect(raycast).not.toHaveBeenCalled();
+  });
   it.each(["sprite", "proxy"])("passes transparent %s pixels through to the floor", kind => {
     const scene = new THREE.Scene(), root = new THREE.Group(); scene.add(root);
     const texture = new THREE.DataTexture(new Uint8Array([0,0,0,255, 0,0,0,0]), 2, 1);

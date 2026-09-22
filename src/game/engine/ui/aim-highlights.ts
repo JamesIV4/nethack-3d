@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { TILE_SIZE, WALL_HEIGHT } from "../../constants";
+import { MINIMAP_WIDTH_TILES, MINIMAP_HEIGHT_TILES } from "../shared/constants";
 import type { Camera } from "../camera/camera";
 import type { DirectionPrompts } from "./direction-prompts";
 import type { EntityBillboards } from "../rendering/entity-billboards";
@@ -77,6 +78,23 @@ export class AimHighlights {
   fpsForwardHighlightTexture: THREE.CanvasTexture | null = null;
 
   fpsAimLinePulseUntilMs: number = 0;
+  private xrActive = false;
+  private xrTarget: {x:number;y:number} | null = null;
+  private xrSelection = false;
+  private xrHeadset = false;
+  setXrTarget(active: boolean, target: {x:number;y:number} | null, selection=false, headset=false): void {
+    this.xrActive=active;this.xrTarget=target;this.xrSelection=selection;this.xrHeadset=headset;
+  }
+
+  private isVoidEdgeTarget(x: number, y: number): boolean {
+    if (x<0 || y<0 || x>=MINIMAP_WIDTH_TILES || y>=MINIMAP_HEIGHT_TILES) return false;
+    for (let dy=-1;dy<=1;dy++) for (let dx=-1;dx<=1;dx++) {
+      if (!dx && !dy) continue;
+      const neighbor=this.dependencies.tileRendering.tileMap.get(`${x+dx},${y+dy}`);
+      if (neighbor?.visible && !neighbor.userData.isWall) return true;
+    }
+    return false;
+  }
 
   ensureFpsForwardHighlightTexture(): THREE.CanvasTexture {
     if (this.fpsForwardHighlightTexture) {
@@ -160,6 +178,7 @@ export class AimHighlights {
         toneMapped: false,
       });
       const mesh = new THREE.Mesh(geometry, material);
+      mesh.userData.nh3dIgnoreWorldRay = true;
       // Keep highlight above floor/shadow layers while still beneath
       // dominant wall/billboard overlays.
       mesh.renderOrder = this.resolveContextHighlightRenderOrder();
@@ -213,14 +232,14 @@ export class AimHighlights {
   }
 
   updateFpsAimVisuals(timeMs: number): void {
-    if (!this.dependencies.movementInput.isFpsMode()) {
+    if (!this.dependencies.movementInput.isFpsMode() && !this.xrActive) {
       if (this.fpsForwardHighlight) {
         this.fpsForwardHighlight.visible = false;
       }
       return;
     }
 
-    if (this.dependencies.positionSelection.isFpsFarLookViewActive()) {
+    if (this.dependencies.positionSelection.isFpsFarLookViewActive() && !this.xrActive) {
       if (this.fpsForwardHighlight) {
         this.fpsForwardHighlight.visible = false;
       }
@@ -238,8 +257,9 @@ export class AimHighlights {
       return;
     }
 
-    const aim = this.dependencies.camera.getFpsAimDirectionFromCamera();
-    if (!aim) {
+    const useLaser = this.xrActive && !this.xrHeadset;
+    const aim = useLaser ? null : this.dependencies.camera.getFpsAimDirectionFromCamera();
+    if (useLaser ? !this.xrTarget : !aim) {
       if (this.fpsForwardHighlight) {
         this.fpsForwardHighlight.visible = false;
       }
@@ -247,10 +267,10 @@ export class AimHighlights {
     }
     this.ensureFpsAimVisuals();
 
-    let targetX = this.dependencies.playerMovement.playerPos.x + aim.dx;
-    let targetY = this.dependencies.playerMovement.playerPos.y + aim.dy;
+    let targetX = useLaser ? this.xrTarget!.x : this.dependencies.playerMovement.playerPos.x + aim!.dx;
+    let targetY = useLaser ? this.xrTarget!.y : this.dependencies.playerMovement.playerPos.y + aim!.dy;
     let targetTile = this.dependencies.tileRendering.tileMap.get(`${targetX},${targetY}`) ?? null;
-    if (this.dependencies.movementInput.shouldUseFpsSelfTileDirectionTarget()) {
+    if (!useLaser && this.dependencies.movementInput.shouldUseFpsSelfTileDirectionTarget()) {
       const playerTile =
         this.dependencies.tileRendering.tileMap.get(`${this.dependencies.playerMovement.playerPos.x},${this.dependencies.playerMovement.playerPos.y}`) ?? null;
       if (playerTile) {
@@ -261,7 +281,8 @@ export class AimHighlights {
     }
     const isDiscoveredPassableTarget =
       Boolean(targetTile) && !Boolean(targetTile?.userData?.isWall);
-    if (!isDiscoveredPassableTarget) {
+    const isVoidEdge = this.xrActive && !targetTile && this.isVoidEdgeTarget(targetX,targetY);
+    if (!isDiscoveredPassableTarget && !isVoidEdge && !(this.xrActive && this.xrSelection && targetTile)) {
       if (this.fpsForwardHighlight) {
         this.fpsForwardHighlight.visible = false;
       }

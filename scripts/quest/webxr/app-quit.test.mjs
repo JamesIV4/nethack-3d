@@ -39,7 +39,7 @@ test("real host HTTP handler accepts only same-origin POST quit and clears the c
     write("com/igalia/wolvic/BundledGameServer.java", readFileSync(path.join(root, "quest/webxr/host/BundledGameServer.java"), "utf8"));
     write("android/content/Context.java", "package android.content; public class Context { public Context getApplicationContext(){return this;} public android.content.res.AssetManager getAssets(){return new android.content.res.AssetManager();} }");
     write("android/content/res/AssetManager.java", "package android.content.res; public class AssetManager { public static final int ACCESS_STREAMING=2; public java.io.InputStream open(String name,int mode)throws java.io.IOException{throw new java.io.FileNotFoundException(name);} }");
-    write("android/util/Log.java", "package android.util; public class Log { public static int traces=0; public static void i(String a,String b){if(a.equals(\"NH3DSprites\"))traces++;} public static void e(String a,String b,Throwable c){} public static void w(String a,String b){} }");
+    write("android/util/Log.java", "package android.util; public class Log { public static void e(String a,String b,Throwable c){} public static void w(String a,String b){} }");
     write("org/json/JSONArray.java", "package org.json; public class JSONArray { private final String[] values; public JSONArray(String s){s=s.trim();if(!s.startsWith(\"[\")||!s.endsWith(\"]\"))throw new IllegalArgumentException();s=s.substring(1,s.length()-1).trim();values=s.isEmpty()?new String[0]:s.split(\",\");} public int length(){return values.length;} public double getDouble(int i){return Double.parseDouble(values[i]);} public int getInt(int i){return (int)getDouble(i);} }");
     write("QuitHarness.java", String.raw`
 import com.igalia.wolvic.BundledGameServer;
@@ -63,12 +63,6 @@ public class QuitHarness {
  static void check(boolean b){if(!b)throw new AssertionError();}
  public static void main(String[] args)throws Exception {
   AtomicInteger calls=new AtomicInteger();String origin=BundledGameServer.ORIGIN;
-  check(requestPath("POST","/__xr/sprite-trace","https://example.com","{}").contains("403"));
-  check(android.util.Log.traces==0);
-  check(requestPath("POST","/__xr/sprite-trace",origin,"{\"event\":\"trace-ready\"}\n{\"event\":\"presentation\"}").contains("204"));
-  check(android.util.Log.traces==2);
-  check(requestPath("POST","/__xr/sprite-trace",origin,"x".repeat(2501)).contains("400"));
-  check(android.util.Log.traces==2);
   check(!BundledGameServer.isStartupFlatReady());
   check(requestPath("POST","/__xr/startup-flat-ready","https://example.com","[]").contains("403"));
   check(!BundledGameServer.isStartupFlatReady());

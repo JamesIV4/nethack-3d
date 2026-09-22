@@ -79,6 +79,11 @@ class GameUiPanels {
       return x >= rect[0] && x <= rect[2] && y >= rect[1] && y <= rect[3];
     });
   }
+  static bool InteractiveAt(const std::vector<float>& state, float x, float y) {
+    for (size_t i = 29; i + 3 < 29 + size_t(state[1]) * 4; i += 4)
+      if (x >= state[i] && y >= state[i+1] && x <= state[i+2] && y <= state[i+3]) return true;
+    return false;
+  }
   void ClearMissingPaneInput() {
     for (auto it = selected.begin(); it != selected.end();) {
       const bool present = std::any_of(panes.begin(), panes.end(), [id = it->second](const Pane& pane) { return pane.id == id; });
@@ -173,9 +178,8 @@ class GameUiPanels {
       // default anchor (center is already 0.95 m forward).
       if (p.id >= 12) p.pose = center.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
           0, p.id == 12 ? 1.0f : p.id == 14 ? -0.7f : 0.0f, p.id <= 14 ? -1.55f : -0.8f)));
-      // Shared position/travel instructions sit below the map at modal depth.
-      // Use the HUD anchor even while a context popup has its own world anchor.
-      else if (p.id == 1) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0, -.85f - height / 2, -.45f)));
+      // Fallback until the minimap/status parent below has been resolved.
+      else if (p.id == 1) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0, -.15f - height / 2, -.45f)));
       else if (p.id == 0 && firstPerson) p.pose = hud.PostMultiply(vrb::Matrix::Translation(vrb::Vector(
           4.8f * ((crop[0] + crop[2]) / 2 - 0.5f),
           4.8f * float(textureHeight) / textureWidth * (0.5f - (crop[1] + crop[3]) / 2) - .25f, 0)));
@@ -226,6 +230,18 @@ class GameUiPanels {
       p.base = vrb::Matrix::Translation(hudSlice ? hud.GetTranslation() : p.pose.GetTranslation()).PostMultiply(p.base);
       p.local = hudSlice ? hud.AfineInverse().PostMultiply(p.pose) : vrb::Matrix::Identity();
       p.facingCenterY = 0;
+      if (p.id == 1) {
+        // Instructions follow the actual moved/tilted panel, not a screen edge:
+        // minimap in immersive FPS, status in tabletop. Keep a 6 cm gap.
+        const int parentId = firstPerson ? 5 : 0;
+        auto parent = std::find_if(panes.begin(),panes.begin()+i,[parentId](const Pane& pane) { return pane.id == parentId; });
+        if (firstPerson && parent == panes.begin()+i) parent = std::find_if(panes.begin(),panes.begin()+i,[](const Pane& pane) { return pane.id == 0; });
+        if (parent != panes.begin()+i) {
+          p.base = parent->pose.PostMultiply(vrb::Matrix::Translation(vrb::Vector(0,-parent->height/2-.06f,0)));
+          p.local = vrb::Matrix::Translation(vrb::Vector(0,-height/2,0));
+          p.facingCenterY = -height/2;
+        }
+      }
       if (p.id == 4 && state[20] == 1) {
         // Preserve the hit's screen direction even when looking straight down
         // or away from the HUD. A fixed forward plane loses those directions.
@@ -280,7 +296,7 @@ class GameUiPanels {
     // Keep the bottom pivot fixed, but aim the panel's center at the viewer.
     // Facing from the low button alone would copy the hotbar's steep pitch.
     const float distance = std::max(.001f, std::hypot(toward.y(), toward.z()));
-    const float centerAngle = std::asin(std::min(.99f, p.facingCenterY / distance));
+    const float centerAngle = std::asin(std::max(-.99f,std::min(.99f, p.facingCenterY / distance)));
     const float pitch = startupPlane ? 0 : centerAngle - std::atan2(toward.y(), std::max(.001f, std::fabs(toward.z())));
     p.pose = anchor.PostMultiply(vrb::Matrix::Rotation(vrb::Vector(1,0,0), pitch)).PostMultiply(p.local);
     p.quad->GetTransformNode()->SetTransform(p.pose);
@@ -371,6 +387,7 @@ class GameUiPanels {
         const float x = p.crop[0] + (hit.x()/p.width+.5f)*(p.crop[2]-p.crop[0]);
         const float y = p.crop[1] + (.5f-hit.y()/p.height)*(p.crop[3]-p.crop[1]);
         if (MaskedAt(p,x,y)) continue;
+        if (p.id == 2 && !InteractiveAt(hitState,x,y)) continue;
         const float length = (p.pose.MultiplyPosition(hit)-rayOrigin).Magnitude();
         if (length < distance || IsModal(p.id)) { found = true; id = p.id; distance = length; }
       }
@@ -410,9 +427,7 @@ class GameUiPanels {
       if (!captured && MaskedAt(p,x,y)) continue;
       if (!captured && p.id != 15 && hasDropdown && x >= dropdown[0] && x <= dropdown[2] && y >= dropdown[1] && y <= dropdown[3]) continue;
       if (!captured && !IsModal(p.id) && hasModal && x >= modal[0] && x <= modal[2] && y >= modal[1] && y <= modal[3]) continue;
-      bool interactive = captured;
-      for (size_t i = 29; !interactive && i + 3 < 29 + size_t(state[1]) * 4; i += 4)
-        interactive = x >= state[i] && y >= state[i+1] && x <= state[i+2] && y <= state[i+3];
+      bool interactive = captured || InteractiveAt(state,x,y);
       if (!interactive) continue;
       const auto hit = p.pose.MultiplyPosition(local);
       const float length = (hit - origin).Magnitude();

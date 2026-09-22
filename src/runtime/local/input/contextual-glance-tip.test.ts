@@ -45,11 +45,25 @@ it("suppresses the first automatic glance tip without consuming the target or in
   expect(events.some(event => event.type === "info_menu")).toBe(false);
 });
 
-it.each(["manual", "expired", "after-target", "unrelated", "3.6.7", "slashem"])("preserves tip/report presentation for %s", mode => {
+it.each(["manual", "after-target", "unrelated", "3.6.7", "slashem"])("preserves tip/report presentation for %s", mode => {
   if (mode !== "manual") runtime.sendInput("__CTX_GLANCE_PROBE__");
-  if (mode === "expired") systems.contextualLook.contextualGlanceProbeMouseDeadlineMs = Date.now()-1;
   if (mode === "after-target") systems.contextualLook.contextualGlanceProbeMouseDeadlineMs = 0;
   if (mode === "3.6.7" || mode === "slashem") runtime.runtimeVersion = mode;
   emitTip(mode === "unrelated" ? "Unrelated game information" : title);
   expect(events.filter(event => event.type === "info_menu")).toHaveLength(1);
+});
+
+it.each(["delayed-glance","info"])("suppresses the first-use tip during %s", mode => {
+  runtime.sendInput(mode === "info" ? "__CTX_LOOK_INFO_PROBE__" : "__CTX_GLANCE_PROBE__");
+  if (mode === "delayed-glance") systems.contextualLook.contextualGlanceProbeMouseDeadlineMs = Date.now()-1;
+  emitTip(); expect(events.some(event=>event.type==="info_menu")).toBe(false);
+});
+
+it("clears pending glance-tip suppression on cancellation so manual look retains help", async () => {
+  runtime.sendInput("__CTX_GLANCE_PROBE__");
+  systems.positionInput.farLookMode="armed";
+  const wait=systems.positionInput.handleShimNhPoskey([64,66,72]);
+  runtime.sendInput("Escape");expect(await wait).toBe(27);
+  expect(systems.contextualLook.contextualGlanceProbeMouseDeadlineMs).toBe(0);
+  emitTip(); expect(events.some(event=>event.type==="info_menu")).toBe(true);
 });

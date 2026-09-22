@@ -40,6 +40,22 @@ function fixture(width = 1) {
 }
 
 describe("XR far-look uses the desktop animation", () => {
+  it("turns around the selection column rather than the player and restores the original rig", () => {
+    const f=fixture();f.selection.positionCursor={x:8,y:7};
+    let before=f.tick();for(let i=0;i<140;i++)before=f.tick();
+    const pivot=new THREE.Vector3(8,-7,0),eye=f.head.clone().applyMatrix4(before);
+    const distance=eye.clone().setZ(0).distanceTo(pivot);
+    f.farLook.turn(f.camera,Math.PI/2,f.selection.positionCursor,1);
+    const after=f.base.clone();f.farLook.apply(f.camera,after,f.scene,f.player);
+    const next=f.head.clone().applyMatrix4(after);
+    expect(next.clone().setZ(0).distanceTo(pivot)).toBeCloseTo(distance);
+    const expected=eye.clone().sub(pivot).applyAxisAngle(new THREE.Vector3(0,0,1),-Math.PI/2).add(pivot);
+    expect(next.distanceTo(expected)).toBeLessThan(1e-8);
+    const up=new THREE.Vector3(0,1,0).transformDirection(after);
+    expect(up.z).toBeCloseTo(1);
+    f.close();let returned=after;for(let i=0;i<140;i++)returned=f.tick();
+    expect(returned.elements).toEqual(f.base.elements);
+  });
   it.each([0, .7, 1, 2.4, -1, -2.4, 3.1])("pulls away along the nearest grid axis at heading %s without tilting the world", yaw => {
     const f = fixture();
     f.camera.fpsPositionCursorEntryCameraYaw = yaw;

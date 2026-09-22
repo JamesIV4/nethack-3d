@@ -12,6 +12,7 @@ import { withoutWorldClipping } from "./overlay-material";
 import { SnapTurnLatch, WorldClickGesture } from "./controller-gestures";
 import { WorldRaycast } from "./world-raycast";
 import { isPlayerTileLoot } from "./loot-foreground";
+import { MovementPreview, XR_STICK_PREVIEW_DEADZONE, XR_STICK_MOVE_DEADZONE } from "./movement-preview";
 import { TablePanGesture } from "./table-pan-gesture";
 import type { TableMoveHandle } from "./table-move-handle";
 
@@ -24,8 +25,8 @@ function command(value: QuestNativeCommand): QuestCommandResult {
     dispatchKey: dispatchQuestKey,
   });
 }
-export function xrStickDirection(x: number, y: number, forward: THREE.Vector3 | null): { dx: -1 | 0 | 1; dy: -1 | 0 | 1 } | null {
-  if (!Number.isFinite(x) || !Number.isFinite(y) || Math.hypot(x, y) < 0.6) return null;
+export function xrStickDirection(x: number, y: number, forward: THREE.Vector3 | null, deadzone = .6): { dx: -1 | 0 | 1; dy: -1 | 0 | 1 } | null {
+  if (!Number.isFinite(x) || !Number.isFinite(y) || Math.hypot(x, y) < deadzone) return null;
   const yaw = Math.atan2(x, -y);
   let dx = Math.sin(yaw), dy = -Math.cos(yaw);
   if (forward) {
@@ -61,6 +62,12 @@ interface PointerState {
   supportPoint?: THREE.Vector3;
 }
 export class WebXrControllerInput {
+  highlightTile: {x:number;y:number} | null = null;
+  highlightSelection = false;
+  highlightHeadset = false;
+  private readonly movementPreview = new MovementPreview();
+  private readonly highlightLook = new THREE.Vector3();
+  private readonly highlightOrientation = new THREE.Quaternion();
   controllerOpacity: (source: XRInputSource) => number = () => 1;
   private readonly pointers = new Map<XRInputSource, PointerState>();
   private nextId = 1;
@@ -71,9 +78,11 @@ export class WebXrControllerInput {
   // One bounded record lets wired debugging distinguish a missing button from
   // a command rejected by an active prompt, without logging every XR frame.
   readonly diagnostics: { command: QuestNativeCommand; result: QuestCommandResult; time: number }[] = [];
-  private command(value: QuestNativeCommand): void {
-    this.diagnostics.push({ command: value, result: command(value), time: this.clock });
+  private command(value: QuestNativeCommand): QuestCommandResult {
+    const result=command(value);
+    this.diagnostics.push({ command: value, result, time: this.clock });
     if (this.diagnostics.length > 16) this.diagnostics.shift();
+    return result;
   }
   private readonly caster = new THREE.Raycaster();
   private readonly worldRaycast = new WorldRaycast();
@@ -95,7 +104,7 @@ export class WebXrControllerInput {
     private readonly onSnapTurn: (direction: -1 | 1) => void = () => {}, weaponProvider?: QuestWeaponProvider,
     private readonly onPan: (dx: number, dy: number) => void = () => {},
     private readonly tableMove?: TableMoveHandle,
-    private readonly navigation?: { playerTile: () => {x:number;y:number}; direction: (dx:number,dy:number) => {dx:number;dy:number} | null }) {
+    private readonly navigation?: { playerTile: () => {x:number;y:number}; direction: (dx:number,dy:number) => {dx:number;dy:number} | null; previewSettled?: () => boolean }) {
     if (weaponProvider) this.weapons = new ControllerWeapons(root, weaponProvider);
     if (!panel()?.native) {
       session.addEventListener("selectstart", this.selectStart);
@@ -323,10 +332,14 @@ export class WebXrControllerInput {
   private worldClick(state: PointerState, secondary: boolean): void {
     // A released selection gesture must not become a movement after cancellation.
     if (state.positionSelectionAtPress && !useGameStore.getState().positionInputActive) return;
-    if (!secondary && state.voidTarget) { if (state.voidDirection) this.command({type:"move",...state.voidDirection,run:true}); return; }
+    if (!secondary && state.voidTarget) {
+      if (state.voidDirection && this.command({type:"move",...state.voidDirection,run:true}).accepted) this.movementPreview.useLaser();
+      return;
+    }
     if (!state.pressedTile) return;
     if (secondary && state.contextPoint) this.panel()?.nativePointer?.setContextTarget(state.contextPoint);
-    this.command({ type: "tile", ...state.pressedTile, ...(secondary ? { secondary: true } : {}) });
+    const result=this.command({ type: "tile", ...state.pressedTile, ...(secondary ? { secondary: true } : {}) });
+    if (result.accepted && !secondary && !useGameStore.getState().positionInputActive) this.movementPreview.useLaser();
   }
   update(time: number, forward: THREE.Vector3 | null): void {
     const opacity = (hand: XRHandedness) => Math.max(0, ...Array.from(this.session.inputSources).filter(source => source.handedness === hand).map(source => this.controllerOpacity(source)));
@@ -334,6 +347,7 @@ export class WebXrControllerInput {
     this.clock = time;
     const frame = this.renderer.xr.getFrame();
     if (this.session.visibilityState !== "visible" || !frame) {
+      this.highlightTile=null;this.highlightHeadset=false;this.movementPreview.reset();
       for (const state of this.pointers.values()) {
         this.cancel(state);
         if (state.line) state.line.visible = false;
@@ -346,7 +360,10 @@ export class WebXrControllerInput {
     const game = useGameStore.getState();
     const turningAllowed = !!forward && !game.loadingVisible && !game.uiBlockingVisible && !game.textInput && !game.question && !game.infoMenu && !game.inventory.visible && !document.querySelector(".nh3d-dialog.is-visible,.nh3d-mobile-actions-sheet");
     const turn = this.snap.update(right?.gamepad?.axes[2] ?? right?.gamepad?.axes[0] ?? 0, turningAllowed);
-    if (turn) this.onSnapTurn(turn);
+    if (turn) {
+      this.onSnapTurn(turn);
+      this.movementPreview.useHeadset();
+    }
     for (const [source, state] of this.pointers) if (!active.has(source)) this.remove(state);
     for (const source of this.session.inputSources) {
       const state = this.state(source);
@@ -372,7 +389,9 @@ export class WebXrControllerInput {
         });
       if (state.grip || state.ui || state.capture === "ui" || state.capture === "tilt" || state.capture === "table" || state.capture === "direction") continue;
       if (source.handedness === "left" && pad) {
-        const direction = xrStickDirection(pad.axes[2] ?? pad.axes[0] ?? 0, pad.axes[3] ?? pad.axes[1] ?? 0, forward);
+        // LS always uses camera facing; the interaction highlight is only a
+        // preview and must never redirect this command toward the laser tile.
+        const direction = xrStickDirection(pad.axes[2] ?? pad.axes[0] ?? 0, pad.axes[3] ?? pad.axes[1] ?? 0, forward, forward ? XR_STICK_MOVE_DEADZONE : .6);
         if (direction && time >= this.nextMove) { this.command({ type: "move", ...direction, run: state.trigger }); this.nextMove = time + 180; }
         else if (!direction) this.nextMove = 0;
         if (buttons[4] && !prior[4]) this.command({ type: "inventory" });
@@ -380,6 +399,38 @@ export class WebXrControllerInput {
       }
       if (source.handedness === "right" && buttons[5] && !prior[5]) this.command({ type: "key", key: "Escape" });
     }
+    this.updateHighlight(forward,frame);
+  }
+  private updateHighlight(forward: THREE.Vector3 | null, frame: XRFrame): void {
+    const game=useGameStore.getState();
+    this.highlightSelection=!!game.positionInputActive && game.positionInputOrigin !== "contextual-probe";
+    const blocked=game.loadingVisible || game.uiBlockingVisible || game.textInput || game.question || game.directionQuestion ||
+      game.infoMenu || game.inventory.visible || game.gameOver.active || game.newGamePrompt.visible || game.connectionState !== "running" ||
+      document.querySelector(".nh3d-dialog.is-visible,.nh3d-context-menu.is-visible,.nh3d-mobile-actions-sheet");
+    if (blocked) { this.highlightTile=null;this.highlightHeadset=false;this.movementPreview.reset();return; }
+    const left=[...this.pointers.values()].find(p=>p.source.handedness==="left");
+    const right=[...this.pointers.values()].find(p=>p.source.handedness==="right");
+    const pad=left?.source.gamepad;
+    const stick=forward && left?.tracked && !left.ui && !left.grip && pad
+      ? xrStickDirection(pad.axes[2]??pad.axes[0]??0,pad.axes[3]??pad.axes[1]??0,forward,XR_STICK_PREVIEW_DEADZONE) : null;
+    const laser=right?.tracked && !right.ui && !right.grip && !document.querySelector("button:hover,input:hover,select:hover,[role=button]:hover")
+      ? (right.capture==="world" && right.down ? right.pressedTile : this.getRayTile(right)?.tile??null) : null;
+    const player=this.navigation?.playerTile();
+    if (!forward || !player || this.highlightSelection) {
+      this.movementPreview.reset();this.highlightHeadset=false;
+      this.highlightTile=this.highlightSelection && stick ? null : laser;
+      return;
+    }
+    const facing=xrStickDirection(0,-1,forward,0);
+    const headset=facing ? {x:player.x+facing.dx,y:player.y+facing.dy} : null;
+    const reference=this.renderer.xr.getReferenceSpace();
+    const orientation=reference && frame.getViewerPose?.(reference)?.transform.orientation;
+    if (orientation) {
+      this.highlightOrientation.set(orientation.x,orientation.y,orientation.z,orientation.w);
+      this.highlightLook.set(0,0,-1).applyQuaternion(this.highlightOrientation);
+    } else this.highlightLook.copy(forward);
+    this.highlightTile=this.movementPreview.resolve(player,stick,laser,headset,this.navigation?.previewSettled?.()??true,this.highlightLook);
+    this.highlightHeadset=this.movementPreview.source === "headset";
   }
   private cancel(state: PointerState): void {
     this.panel()?.forget(state.source); this.tilt.end(state.source);

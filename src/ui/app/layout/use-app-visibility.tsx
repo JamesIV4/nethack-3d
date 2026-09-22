@@ -245,7 +245,7 @@ export function useAppVisibility(dependencies: UseAppVisibilityDependencies) {
     isMobileGameRunning && !gameOverDialogShowsTombstone;
 
   const farLookPositionInputActive =
-    positionInputActive && positionInputOrigin !== "travel";
+    positionInputActive && positionInputOrigin !== "travel" && positionInputOrigin !== "contextual-probe";
 
   const positionInputInstruction = farLookPositionInputActive
     ? clientOptions.controllerEnabled && !mobileTouchUiVisible
@@ -256,7 +256,7 @@ export function useAppVisibility(dependencies: UseAppVisibilityDependencies) {
     : null;
 
   const positionDialogVisible =
-    Boolean(positionRequest) || Boolean(positionInputInstruction);
+    positionInputOrigin !== "contextual-probe" && (Boolean(positionRequest) || Boolean(positionInputInstruction));
 
   const hideAllUiForDeferredGameOver =
     reopenNewGamePromptOnInteraction && !newGamePrompt.visible;

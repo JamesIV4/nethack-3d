@@ -243,6 +243,7 @@ export class RuntimeInputRequests {
     if (!key) {
       return 0;
     }
+    if (key === "Escape" || (commandPositionInput && key !== "#")) this.deps.contextualLook.contextualGlanceProbeMouseDeadlineMs = 0;
 
     if (
       token &&

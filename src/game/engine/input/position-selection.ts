@@ -282,6 +282,7 @@ export class PositionSelection {
     const bottomOutlineShape = this.buildPositionCursorBottomOutlineShape();
     const height = this.positionCursorColumnHeight;
     const group = new THREE.Group();
+    group.userData.nh3dIgnoreWorldRay = true;
     const bottomOutlineGeometry = new THREE.ShapeGeometry(bottomOutlineShape);
     const columnGeometry = new THREE.ExtrudeGeometry(shape, {
       depth: height,
@@ -411,11 +412,12 @@ export class PositionSelection {
     this.positionInputModeActive = true;
     this.positionInputOrigin = origin;
     this.positionInputCameraSuppressed ||= Boolean(this.dependencies.tileContextActions.fpsCrosshairGlancePending);
-    this.dependencies.engineState.uiAdapter.setPositionInputActive(true, origin);
+    this.dependencies.engineState.uiAdapter.setPositionInputActive(true, this.positionInputCameraSuppressed ? "contextual-probe" : origin);
     if (this.positionInputCameraSuppressed) {
       if (this.dependencies.tileContextActions.fpsCrosshairGlancePending) this.dependencies.tileContextActions.fpsCrosshairGlancePending.sawPositionInput = true;
       this.dependencies.camera.fpsPositionCursorReturnActive = false;
       this.clearPositionCursor();
+      this.dependencies.engineState.uiAdapter.setPositionRequest(null);
       return;
     }
     this.dependencies.camera.fpsPositionCursorCameraInitialized = false;
@@ -526,6 +528,7 @@ export class PositionSelection {
   }
 
   showPositionRequest(text: string): void {
+    if (this.positionInputCameraSuppressed || this.dependencies.tileContextActions.fpsCrosshairGlancePending) return;
     if (this.positionHideTimerId !== null) {
       window.clearTimeout(this.positionHideTimerId);
       this.positionHideTimerId = null;
