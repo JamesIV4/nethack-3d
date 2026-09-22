@@ -96,12 +96,36 @@ describe("Three.js owns the Quest world", () => {
     const baseline = root.matrixWorld.clone(), eye = f.deps.camera.camera.position.clone();
     setXrSettings({ fpsScale: .5 }); f.presentation.updateCamera();
     expect(new THREE.Vector3().setFromMatrixScale(root.matrixWorld).x).toBeCloseTo(new THREE.Vector3().setFromMatrixScale(baseline).x * 2);
-    expect(f.deps.camera.camera.position.distanceTo(eye)).toBeLessThan(1e-8);
+    expect(f.deps.camera.camera.position.z).toBeCloseTo(eye.z * 2);
     setXrSettings({ fpsScale: 2 }); f.presentation.updateCamera();
     expect(new THREE.Vector3().setFromMatrixScale(root.matrixWorld).x).toBeCloseTo(new THREE.Vector3().setFromMatrixScale(baseline).x / 2);
     setXrSettings({ fpsScale: 1 }); f.presentation.updateCamera();
     expect(root.matrixWorld.elements).toEqual(baseline.elements);
     f.presentation.dispose();
+  });
+  it.each([.5,1,2])("anchors the dungeon to local-floor on FPS entry, recenter and re-entry at scale %s",async fpsScale=>{
+    const f=fixture();
+    const head={position:{x:1,y:1.25,z:2},orientation:new THREE.Quaternion()};
+    f.renderer.xr.getFrame=()=>({getViewerPose:()=>({transform:head})});
+    setXrSettings({fpsScale});
+    const floorHeight=()=>{
+      const tracking=f.scene.getObjectByName("WebXR tracking space")!;
+      const player=f.deps.playerMovement.playerPos;
+      return new THREE.Vector3(player.x*TILE_SIZE,-player.y*TILE_SIZE,0)
+        .applyMatrix4(f.scene.matrixWorld).applyMatrix4(tracking.matrixWorld.clone().invert()).y;
+    };
+    try {
+      f.presentation.start();await Promise.resolve();await toggleWebXr();
+      f.presentation.updateCamera(); // Enter FPS from an existing tabletop session.
+      f.deps.engineState.playMode="fps";f.presentation.updateCamera();
+      expect(floorHeight()).toBeCloseTo(0);
+      head.position.y=.7;f.presentation.updateCamera(); // Crouching must not lift the floor.
+      expect(floorHeight()).toBeCloseTo(0);
+      recenterWebXr();f.presentation.updateCamera();expect(floorHeight()).toBeCloseTo(0);
+      await toggleWebXr();head.position.y=1.8;await toggleWebXr();f.presentation.updateCamera();
+      expect(floorHeight()).toBeCloseTo(0);
+      expect(f.renderer.xr.setReferenceSpaceType).toHaveBeenCalledWith("local-floor");
+    } finally { f.presentation.dispose();setXrSettings({fpsScale:1}); }
   });
   it("faces the virtual eye during far-look and the upright player grid after return", async () => {
     const f = fixture(); f.deps.engineState.playMode = "fps";

@@ -9,12 +9,13 @@ function near(actual: THREE.Vector3, expected: THREE.Vector3): void {
   expect(actual.distanceTo(expected)).toBeLessThan(0.00001);
 }
 describe("direct WebXR tracking rig", () => {
-  it.each([.5, 1, 2])("resizes the FPS world at %s while preserving the eye anchor and physical hands", fpsScale => {
+  it.each([.5, 1, 2])("resizes the FPS world at %s around the reported floor while preserving physical hands", fpsScale => {
     const base = createTrackingToGame("first-person", player, anchor, heading, 1, .62);
     const rig = createTrackingToGame("first-person", player, anchor, heading, 1, .62, 0, 0, 1, undefined, fpsScale);
     expect(rig.scale).toBeCloseTo(base.scale * fpsScale);
-    near(anchor.clone().applyMatrix4(rig.matrix), anchor.clone().applyMatrix4(base.matrix));
+    near(anchor.clone().applyMatrix4(rig.matrix), player.clone().setZ(.62 / fpsScale));
     const world = rig.matrix.clone().invert();
+    near(player.clone().applyMatrix4(world), new THREE.Vector3(anchor.x,0,anchor.z));
     const tileWidth = player.clone().add(new THREE.Vector3(1,0,0)).applyMatrix4(world).distanceTo(player.clone().applyMatrix4(world));
     expect(tileWidth).toBeCloseTo((1.7 / .62) * fpsScale);
     const hand = new THREE.Matrix4().compose(anchor.clone().add(new THREE.Vector3(.3,-.25,-.4)),

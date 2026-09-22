@@ -23,10 +23,10 @@ export function createTrackingToGame(
     : 0.11 * worldScale / tileSize;
   const tabletop = tablePosition?.clone() ?? new THREE.Vector3(0, THREE.MathUtils.clamp(anchor.y - 0.65, 0.45, 1.05), -1.55)
     .applyQuaternion(heading).add(new THREE.Vector3(anchor.x, 0, anchor.z));
-  // Scale around the calibrated eye rather than the floor. At 100% this is
-  // exactly the original floor-aligned rig; changing scale keeps the virtual
-  // eye at the same height and preserves physical hand/controller alignment.
-  const center = mode === "first-person" ? new THREE.Vector3(anchor.x, anchor.y * (1 - fpsScale), anchor.z) : tabletop;
+  // local-floor reports the physical floor at tracking Y=0. Keep the dungeon
+  // floor there at every FPS scale, including entry, re-entry and recentering.
+  // The tracked head and hands share this mapping, preserving their alignment.
+  const center = mode === "first-person" ? new THREE.Vector3(anchor.x, 0, anchor.z) : tabletop;
   const rotation = heading.clone();
   if (mode === "first-person") rotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), viewYaw));
   if (mode === "tabletop") rotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch));

@@ -5873,8 +5873,9 @@ canvas {
 }
 
 .nh3d-top-score-detail-dialog {
+  --nh3d-dialog-width: min(96vw, 1180px);
   container-type: inline-size;
-  width: min(96vw, 1180px);
+  width: var(--nh3d-dialog-width);
 
   .nh3d-character-sheet-scroll > * {
     flex: 0 0 auto;

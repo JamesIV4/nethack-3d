@@ -56,7 +56,9 @@
   top: 50% !important;
   right: auto !important;
   bottom: auto !important;
-  width: fit-content !important;
+  /* Size-contained dialogs need their authored width; fit-content would
+     collapse them to padding because their contents cannot size the parent. */
+  width: var(--nh3d-dialog-width, fit-content) !important;
   min-width: 0 !important;
   zoom: 1 !important;
   max-width: calc(100vw - 32px) !important;
