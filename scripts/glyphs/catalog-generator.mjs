@@ -101,6 +101,7 @@ function toPosixPath(inputPath) {
 function glyphKindFromOffsetKey(key) {
   const rawKind = key
     .replace(/^GLYPH_/, "")
+    .replace(/_PILETOP_OFF$/, "_OFF")
     .replace(/_OFF$/, "")
     .toLowerCase();
   if (!KNOWN_GLYPH_KINDS.has(rawKind)) {
@@ -242,7 +243,28 @@ async function bootCatalogRuntime(projectRoot, target) {
 /**
  * @param {Record<string, number>} glyphConstants
  */
-function deriveGlyphRanges(glyphConstants) {
+export function deriveGlyphRanges(glyphConstants) {
+  // NetHack 5 exports the combined pile-top range. Split it into the
+  // existing item kinds using the counts from its ordinary glyph ranges
+  // (include/display.h), so corpses and statues keep their normal behavior.
+  if (Number.isFinite(glyphConstants.GLYPH_PILETOP_OFF)) {
+    const { GLYPH_PILETOP_OFF: pileStart, ...ordinaryConstants } = glyphConstants;
+    const objectCount = glyphConstants.GLYPH_CMAP_OFF - glyphConstants.GLYPH_OBJ_OFF;
+    const monsterCount = glyphConstants.GLYPH_RIDDEN_OFF - glyphConstants.GLYPH_BODY_OFF;
+    if (
+      !Number.isInteger(objectCount) || objectCount <= 0 ||
+      !Number.isInteger(monsterCount) || monsterCount <= 0 ||
+      pileStart + objectCount + 3 * monsterCount !== glyphConstants.GLYPH_UNEXPLORED_OFF
+    ) {
+      throw new Error("Unexpected NetHack pile-top glyph layout");
+    }
+    glyphConstants = {
+      ...ordinaryConstants,
+      GLYPH_OBJ_PILETOP_OFF: pileStart,
+      GLYPH_BODY_PILETOP_OFF: pileStart + objectCount,
+      GLYPH_STATUE_PILETOP_OFF: pileStart + objectCount + monsterCount,
+    };
+  }
   const maxGlyph = normalizeNumber(glyphConstants.MAX_GLYPH, 0);
   const offsetEntries = Object.entries(glyphConstants)
     .filter(

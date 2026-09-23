@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { VultureTilesetTranslator } from "./translation";
-import { getGlyphCatalogEntry, getGlyphCatalogEntriesForVersion, setActiveGlyphCatalog } from "../glyphs/registry";
+import { getGlyphCatalogEntry, getGlyphCatalogEntriesForVersion, getGlyphCatalogRanges, setActiveGlyphCatalog } from "../glyphs/registry";
 import { NETHACK_367_OBJECT_TOKENS } from "./nethack-object-tokens";
 import { GLYPH_CATALOG as legacyCatalog } from "../glyphs/glyph-catalog.367.generated";
 import { translateNh367TileIndexToNh5 } from "../tileset-367-to-5-translation";
@@ -56,6 +56,10 @@ describe("NetHack 5 Vulture identities", () => {
     nativeTileByObjectId[native.glyph - 3448] = 987;
     translator.setRuntimeObjectTileIndexByObjectId(nativeTileByObjectId);
     expect(translator.resolveLookupForTile({ glyph: native.glyph, tileIndex: 987, materialKind: null, forBillboard: true })?.name).toBe("POT_HEALING");
+    const pileStart = getGlyphCatalogRanges().find(range => range.key === "GLYPH_OBJ_PILETOP_OFF")!.start;
+    const pileGlyph = pileStart + native.glyph - 3448;
+    expect(lookup(pileGlyph, true, true)?.name).toBe("POT_HEALING");
+    expect(translator.resolveLookupForTile({ glyph: pileGlyph, tileIndex: 987, materialKind: null, forBillboard: true })?.name).toBe("POT_HEALING");
   });
 });
 

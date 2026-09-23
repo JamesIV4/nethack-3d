@@ -1144,7 +1144,11 @@ export class VultureTilesetTranslator {
   private getRangeStart(kind: string): number | null {
     if (this.rangeStartByKind.size === 0) {
       for (const range of getGlyphCatalogRanges()) {
-        this.rangeStartByKind.set(range.kind, range.start);
+        // Pile-top ranges repeat object/body/statue kinds after the ordinary
+        // ranges. Object IDs are always relative to the ordinary range.
+        if (!this.rangeStartByKind.has(range.kind)) {
+          this.rangeStartByKind.set(range.kind, range.start);
+        }
       }
     }
     return this.rangeStartByKind.get(kind) ?? null;
@@ -2468,7 +2472,9 @@ export class VultureTilesetTranslator {
           tileIndex >= 0 &&
           entry.kind === "obj"
         ) {
-          const rangeStart = this.getRangeStart("obj");
+          const rangeStart = getGlyphCatalogRanges().find(
+            (range) => range.kind === "obj" && glyph >= range.start && glyph < range.endExclusive,
+          )?.start ?? null;
           if (rangeStart !== null) {
             const objectId = glyph - rangeStart;
             if (
