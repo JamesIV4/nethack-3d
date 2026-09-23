@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      QUEST_DEPENDENCY_CACHE: ${{ runner.temp }}/quest-dependencies
+      QUEST_DEPENDENCY_CACHE: /tmp/quest-dependencies-${{ github.run_id }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
