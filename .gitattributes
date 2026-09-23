@@ -1,0 +1,3 @@
+# The runtime download is pinned to the exact patch bytes on every host OS.
+scripts/quest/webxr/patch-gecko-paint.py text eol=lf
+scripts/quest/webxr/*.sh text eol=lf

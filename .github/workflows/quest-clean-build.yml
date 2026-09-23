@@ -1,0 +1,49 @@
+name: Quest clean debug build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [vr-v2]
+    paths:
+      - 'scripts/quest/**'
+      - 'quest/webxr/**'
+      - 'package*.json'
+      - '.github/workflows/quest-clean-build.yml'
+  pull_request:
+    paths:
+      - 'scripts/quest/**'
+      - 'quest/webxr/**'
+      - 'package*.json'
+      - '.github/workflows/quest-clean-build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      QUEST_DEPENDENCY_CACHE: ${{ runner.temp }}/quest-dependencies
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - name: Test dependency validation
+        run: node --test scripts/quest/webxr/setup-dependencies.test.mjs scripts/quest/webxr/download-dependencies.test.mjs scripts/quest/build-environment.test.mjs
+      - name: Download from an empty cache
+        run: npm run quest:webxr:setup
+      - run: npm run quest:webxr:apk -- --check
+      - name: Build without private signing credentials
+        run: npm run quest:webxr:apk -- --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Quest-debug-apk
+          path: quest/build/outputs/apk/*.apk

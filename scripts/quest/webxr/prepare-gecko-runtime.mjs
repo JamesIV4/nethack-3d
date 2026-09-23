@@ -34,8 +34,10 @@ import { patchUiFollow } from "./patch-ui-follow.mjs";
 import { patchUiLayout } from "./patch-ui-layout.mjs";
 import { patchActionGrip } from "./patch-action-grip.mjs";
 import { patchPointerInput } from "./patch-pointer-input.mjs";
+import { setupDependencies } from "./setup-dependencies.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
+if (!process.argv.includes("--check")) await setupDependencies({ root });
 const checkout = path.join(root, "quest/runtime/wolvic");
 const platform = process.env.QUEST_OVR_PLATFORM_SDK ?? path.join(root, "quest/runtime/OVRPlatformSDK");
 const sdk = findAndroidSdk({ properties: [path.join(root, "quest/runtime/wolvic/local.properties")] });

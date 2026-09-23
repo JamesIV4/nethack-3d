@@ -24,12 +24,16 @@ The Quest launcher icon and system launch splash use the same `NetHack3D-splash.
 
 ## Build the standalone APK
 
-The APK orchestration uses Node on Windows, macOS, and Linux. The separate patched-Gecko source build still uses Linux/WSL; stage its artifacts before building the APK. After those artifacts have been built once:
+The APK orchestration uses Node on Windows, macOS, and Linux. On a fresh checkout, setup downloads the exact Meta SDK/Gecko runtime bundle pinned in `scripts/quest/webxr/dependencies.lock.json`; no local Firefox build or files from another developer are required. Normal builds save and restore these files from a cache outside the checkout. `--check` remains read-only:
 
 ```sh
+npm ci
+npm run quest:webxr:setup
 npm run quest:webxr:apk -- --check
-npm run quest:webxr:apk
+npm run quest:webxr:apk -- --debug
 ```
+
+Install Node 24, Git, JDK 21, and the Android SDK command-line tools first. Configure `JAVA_HOME` and `ANDROID_HOME`, and accept Android SDK licenses with `sdkmanager --licenses`. Gradle installs its required Android platform, NDK, and CMake packages as needed. Use a short checkout path on Windows to avoid native-build path limits. The debug command uses the generated Android debug key; a signed store build uses `npm run quest:webxr:apk` and requires your own local signing configuration.
 
 Sideload `quest/build/outputs/apk/nethack3d-vr.apk` with Meta Quest Developer Hub. The build verifies its package ID, version, bundled NetHack runtimes, required Gecko permissions, and the custom HTML painting code and preference before copying it to that location. `quest:apk` still builds the earlier Meta Spatial experiment. Both commands use `scripts/quest/build-apk.mjs`; the `.bat` files are optional Windows shortcuts with no build logic. The Node runner invokes the pinned Gradle wrapper through Java directly, without a platform-specific shell.
 
@@ -51,6 +55,46 @@ Flat view uses a 1920 by 1080 logical viewport; immersive HTML UI uses 2560 by 1
 - Patched GeckoView at `quest/runtime/gecko`, or `QUEST_GECKO_DIR`. A stock Maven AAR stops HTML painting during immersive VR and cannot be substituted.
 
 The wrapper prepares Wolvic revision `5725712987a8f87eea3780834b5359cca4c5f5e1` under `quest/runtime/wolvic`, stages the complete game, and builds `:app:assembleOculusvrArm64GeckoGenericDebug`. The checkout, SDKs, and generated artifacts are ignored by Git. The build scripts and patches are tracked.
+
+### Preserve or transfer the runtime dependencies
+
+Run `npm run quest:webxr:setup` once with working staged dependencies. APK builds and `quest:webxr:prepare` also run this setup automatically. The cache lives under `%LOCALAPPDATA%/nethack-3d/quest-dependencies` on Windows, or `$XDG_CACHE_HOME/nethack-3d/quest-dependencies` (default `~/.cache/nethack-3d/quest-dependencies`) elsewhere. Set `QUEST_DEPENDENCY_CACHE` to choose another cache root. Each Gecko revision and paint-patch hash has a separate cache entry.
+
+Setup verifies checksums before restoring files. It can also recover the Meta SDK from the existing Wolvic checkout. Explicit `QUEST_OVR_PLATFORM_SDK` and `QUEST_GECKO_DIR` overrides remain authoritative: invalid overrides cause an error rather than being silently replaced.
+
+Export a portable folder to a location outside this repository:
+
+```powershell
+npm run quest:webxr:setup -- --export "S:\NetHack stuff\Quest dependencies"
+```
+
+Copy that folder to another machine, then import it:
+
+```powershell
+npm run quest:webxr:setup -- --from "D:\Quest dependencies"
+npm run quest:webxr:apk -- --check
+```
+
+The bundle contains the Meta SDK (including its notices), the selected patched Gecko `.aar`, `.pom`, `.module`, runtime receipt, and a checksum manifest. It omits old Maven publications and refuses to overwrite an existing export directory. Import verifies the complete bundle and its compatibility with the current branch before populating the cache. Keep bundles from a trusted source; checksums detect corruption, not authenticity.
+
+If staged files and the external cache are absent, setup fetches the public release URL in `scripts/quest/webxr/dependencies.lock.json`. It checks the pinned size and SHA256 before extraction, rejects archive links and unsafe paths, and validates every bundled file before installing it. A failed download never becomes a valid cache entry. Existing local overrides and `--from` still support offline use.
+
+The public bundle includes only the Meta SDK headers and ARM64 library needed by NetHack 3D, plus the original license/notices and a separate Meta attribution. These retain the [Meta SDK license](https://developers.meta.com/horizon/licenses/oculussdk/). Gecko's `corresponding-source.tar.gz` supplies the complete modified source files, a patch, upstream source revision, notices, and rebuild scripts. The dependency release does not replace the game's latest release.
+
+Node packages, JDK, Android SDK/NDK, Wolvic source/submodules, and Gradle dependencies remain separate build prerequisites. The first native build needs network access. The `Quest clean debug build` GitHub workflow starts with an empty runtime cache, downloads the public bundle, and builds without private signing credentials.
+
+### Publish a new runtime dependency version
+
+Game-only changes reuse the pinned bundle. When the Gecko revision or paint patch changes, rebuild Gecko below, then package its corresponding source on Linux/WSL:
+
+```sh
+python3 scripts/quest/webxr/package-gecko-source.py "$HOME/.cache/nethack-quest-gecko/firefox" quest/build/gecko-source.tar.gz
+node scripts/quest/webxr/package-dependency-release.mjs --tag quest-runtime-YYYYMMDD-N --source-bundle quest/build/gecko-source.tar.gz --output quest/build/runtime-release-N
+```
+
+The source packager verifies that the tracked patch reproduces all five modified Gecko files exactly. The release packager preserves the selected Maven module, includes corresponding source, and excludes unrelated SDK samples and Windows binaries. Use new output paths for each run; existing outputs are never overwritten.
+
+Publish `quest-dependencies.tar.gz`, `dependencies.lock.json`, and `SHA256SUMS` from the output directory as assets of the specified GitHub release, marking it as a prerelease and not latest. Copy its generated `dependencies.lock.json` to `scripts/quest/webxr/dependencies.lock.json` and commit that file together with the matching patches. Never replace an existing pinned asset; publish a new tag. Run the clean debug-build workflow on the resulting branch. No separate Firefox/Wolvic fork is needed: upstream commit pins plus tracked patches and published corresponding source define the runtime.
 
 ### Build the browser runtime once
 
