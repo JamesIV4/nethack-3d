@@ -81,3 +81,21 @@ test("bundle paths cannot escape the dependency directories", () => {
     assert.throws(() => bundleFile(os.tmpdir(), name), /Invalid dependency bundle path/);
   }
 });
+
+test("snapshot bundles retain the Maven metadata needed to resolve timestamped artifacts", async t => {
+  const options = fixture(t);
+  const directory = path.join(options.root, "quest/runtime/gecko");
+  const receiptPath = path.join(directory, "nh3d-gecko-runtime.json");
+  const receipt = JSON.parse(readFileSync(receiptPath, "utf8"));
+  receipt.coordinate += "-SNAPSHOT";
+  writeFileSync(receiptPath, JSON.stringify(receipt));
+  assert.throws(() => readGeckoArtifact(directory), /snapshot metadata/);
+  const metadata = "<metadata>snapshot publication fixture</metadata>";
+  writeFileSync(path.join(directory, "maven/maven-metadata.xml"), metadata);
+  receipt.files["maven/maven-metadata.xml"] = sha256(metadata);
+  writeFileSync(receiptPath, JSON.stringify(receipt));
+  const output = path.join(options.directory, "snapshot-bundle");
+  await setupDependencies({ ...options, output });
+  assert.equal(readFileSync(path.join(output, "gecko/maven/maven-metadata.xml"), "utf8"), metadata);
+  verifyBundle(output);
+});

@@ -75,7 +75,7 @@ npm run quest:webxr:setup -- --from "D:\Quest dependencies"
 npm run quest:webxr:apk -- --check
 ```
 
-The bundle contains the Meta SDK (including its notices), the selected patched Gecko `.aar`, `.pom`, `.module`, runtime receipt, and a checksum manifest. It omits old Maven publications and refuses to overwrite an existing export directory. Import verifies the complete bundle and its compatibility with the current branch before populating the cache. Keep bundles from a trusted source; checksums detect corruption, not authenticity.
+The bundle contains the Meta SDK (including its notices), the selected patched Gecko Maven publication and its snapshot metadata, runtime receipt, and a checksum manifest. It omits old Maven publications and refuses to overwrite an existing export directory. Import verifies the complete bundle and its compatibility with the current branch before populating the cache. Keep bundles from a trusted source; checksums detect corruption, not authenticity.
 
 If staged files and the external cache are absent, setup fetches the public release URL in `scripts/quest/webxr/dependencies.lock.json`. It checks the pinned size and SHA256 before extraction, rejects archive links and unsafe paths, and validates every bundled file before installing it. A failed download never becomes a valid cache entry. Existing local overrides and `--from` still support offline use.
 

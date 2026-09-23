@@ -85,8 +85,10 @@ function createBundle(platform, geckoDirectory, destination) {
   cpSync(platform, path.join(destination, "OVRPlatformSDK"), { recursive: true, dereference: false });
   // Keep only the selected runtime, not all historical Maven publications.
   const files = {};
-  for (const suffix of [".aar", ".pom", ".module"]) {
-    const name = gecko.aar.replace(/\.aar$/, suffix);
+  const stem = gecko.aar.replace(/\.aar$/, "");
+  const metadata = path.posix.join(path.posix.dirname(gecko.aar), "maven-metadata.xml");
+  for (const name of Object.keys(gecko.files).filter(name =>
+    name.startsWith(stem + ".") || name.startsWith(stem + "-") || name === metadata || name.startsWith(metadata + "."))) {
     const target = bundleFile(destination, `gecko/${name}`);
     mkdirSync(path.dirname(target), { recursive: true });
     cpSync(path.join(geckoDirectory, name), target);

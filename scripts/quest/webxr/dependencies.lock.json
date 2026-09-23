@@ -2,7 +2,7 @@
   "schema": 1,
   "revision": "dc6d11938934f4490158a1334dda9d143dffab46",
   "patchSha256": "4e6ca88798dfbf3349f975a674700d38bbd2c9000490c82107aba7fa473435a4",
-  "url": "https://github.com/JamesIV4/nethack-3d/releases/download/quest-runtime-20260923-1/quest-dependencies.tar.gz",
-  "bytes": 96839056,
-  "sha256": "a2848d1504cb3bc6ba230d7c40cc71c9f7c5de374d93ec04ee85fb337bb3cc00"
+  "url": "https://github.com/JamesIV4/nethack-3d/releases/download/quest-runtime-20260923-2/quest-dependencies.tar.gz",
+  "bytes": 99031356,
+  "sha256": "d99952d2c4bee2002835b355b8c941e3df4f691dcb5ea6195bb1725e9516c492"
 }

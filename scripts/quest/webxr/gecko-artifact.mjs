@@ -27,5 +27,8 @@ export function readGeckoArtifact(directory) {
   for (const extension of [".aar", ".pom", ".module"]) {
     if (!receipt.files[receipt.aar.replace(/\.aar$/, extension)]) throw new Error("Incomplete GeckoView Maven module.");
   }
+  if (receipt.coordinate.endsWith("-SNAPSHOT") && !receipt.files[path.posix.join(path.posix.dirname(receipt.aar), "maven-metadata.xml")]) {
+    throw new Error("Incomplete GeckoView Maven snapshot metadata. Run npm run quest:webxr:setup to restore it.");
+  }
   return receipt;
 }
