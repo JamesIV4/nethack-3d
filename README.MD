@@ -1,6 +1,6 @@
 # NetHack 3D
 
-Quest VR development: the [direct Three.js WebXR runtime proof](docs/quest-webxr-runtime.md) uses the original game renderer with a floating HTML UI. Run `npm.cmd run quest:webxr:wired` to test with Quest Link; the standalone host has additional runtime prerequisites.
+Quest VR development: the [direct Three.js WebXR runtime proof](docs/quest-webxr-runtime.md) uses the original game renderer with a floating HTML UI. Run `npm.cmd run quest:webxr:wired` to test with Quest Link. For a standalone debug APK, install the documented Android/JDK tools, run `npm ci`, then `npm run quest:webxr:apk -- --debug`. The build automatically downloads and verifies its pinned Meta SDK and patched GeckoView dependencies; no Firefox source build or private signing key is needed.
 
 NetHack 3D lets you play classic NetHack in a fully interactive 3D dungeon.
 
@@ -126,7 +126,8 @@ Set `NH3D_SKIP_ELECTRON_BUILD=1` only when `dist/` already contains a current El
 - `npm run android:add` - Create the native Android project with Capacitor (run once).
 - `npm run android:sync` - Build web assets and sync them into the Android project.
 - `npm run android:release` - Build web assets, sync Android, and create a signed release APK without opening Android Studio. Output: `release/NetHack 3D <version> Android.apk`.
-- `npm run quest:webxr:apk` - Build and verify the standalone Quest APK, then copy it to `release/NetHack 3D <version> Quest.apk`. `quest:webxr:publish-apk` verifies and copies an existing build. Quest retains its existing debug signing.
+- `npm run quest:webxr:setup` - Download and verify the pinned Quest runtime dependencies, or restore them from the external cache.
+- `npm run quest:webxr:apk -- --debug` - Build and verify a standalone Quest debug APK using the generated Android debug key. Omit `--debug` for a signed release using your own signing configuration. The stable output is `quest/build/outputs/apk/nethack3d-vr.apk`, with a versioned copy under `release/`; `quest:webxr:publish-apk` verifies and copies an existing build.
 - `npm run quest:apk` - Build the legacy Quest app and copy it to `release/NetHack 3D <version> Quest Legacy.apk`.
 - `npm run android:open` - Open the Android project in Android Studio.
 - `npm run android:run` - Build web assets and run on a connected Android device/emulator.
