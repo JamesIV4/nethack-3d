@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { commonStrings } from "../shared/translations";
 
 const logoLayers = [
   `
@@ -81,7 +82,7 @@ export interface StartupLogoProps {
 export function StartupLogo({ asciiLogoVisible }: StartupLogoProps) {
   if (!asciiLogoVisible) return null;
   return (
-    <div className="logo-container" role="img" aria-label="NetHack 3D">
+    <div className="logo-container" role="img" aria-label={commonStrings.appName}>
       {logoLayouts.map(({ rows, left, width }, layer) => {
         return <pre className="nethack-ascii-logo" aria-hidden="true" key={layer}
           style={{ "--nh3d-logo-ink-left": `${left}ch`, "--nh3d-logo-ink-width": `${width}ch` } as CSSProperties}>

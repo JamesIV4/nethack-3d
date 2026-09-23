@@ -1,0 +1,12 @@
+// Treat drive-letter Windows storeFile paths as paths, not Java escapes.
+// Leave passwords and other properties under the standard Properties rules.
+ext.loadNh3dSigningProperties = { File source ->
+    def properties = new Properties()
+    if (source.exists()) {
+        def text = source.getText('ISO-8859-1').replaceAll(
+            /(?m)^([ \t]*storeFile[ \t]*[=:][ \t]*)([A-Za-z]:[^\r\n]*)/
+        ) { match, prefix, value -> prefix + value.replaceAll(/\\+/, '/') }
+        properties.load(new StringReader(text))
+    }
+    properties
+}

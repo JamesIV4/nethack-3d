@@ -12,7 +12,7 @@ export function actionCatalog(commands: readonly string[]): CustomAction[] {
     { id: "character", label: t.dialogs.mobileActions.character, kind: "ui", value: "character" },
     { id: "inventory", label: t.dialogs.mobileActions.inventory, kind: "ui", value: "inventory" },
     { id: "log", label: t.dialogs.mobileActions.log, kind: "ui", value: "log" },
-    { id: "menu", label: "Menu / Actions", kind: "ui", value: "menu" },
+    { id: "menu", label: `${t.dialogs.mobileActions.menu} / ${t.dialogs.mobileActions.actions}`, kind: "ui", value: "menu" },
     { id: "pickup", label: t.dialogs.mobileActions.pickUp, kind: "quick", value: "pickup" },
     { id: "search", label: t.dialogs.mobileActions.search, kind: "quick", value: "search" },
     ...mobileActions.filter(a => a.kind === "quick"),

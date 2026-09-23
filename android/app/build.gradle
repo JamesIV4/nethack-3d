@@ -3,11 +3,9 @@ import groovy.json.JsonSlurper
 
 def rootPackage = new JsonSlurper().parse(file('../../package.json'))
 def packageVersion = rootPackage.version ?: "0.0.0"
-def signingProperties = new Properties()
+apply from: '../../scripts/android/signing-properties.gradle'
 def signingPropertiesFile = rootProject.file('keystore.properties')
-if (signingPropertiesFile.exists()) {
-    signingPropertiesFile.withInputStream { signingProperties.load(it) }
-}
+def signingProperties = loadNh3dSigningProperties(signingPropertiesFile)
 def signingValues = [
     storeFile: System.getenv('NH3D_ANDROID_STORE_FILE') ?: signingProperties.getProperty('storeFile'),
     storePassword: System.getenv('NH3D_ANDROID_STORE_PASSWORD') ?: signingProperties.getProperty('storePassword'),

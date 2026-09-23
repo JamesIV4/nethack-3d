@@ -25,6 +25,7 @@ import type { HeldWeapon } from "./held-weapon";
 import type { MovementInput } from "../input/movement-input";
 import { createTrackingToGame, tabletopClippingPlanes } from "./webxr-rig";
 import { registerWebXrOwner, updateWebXrState } from "../../../quest/webxr/presentation";
+import { t } from "../../../ui/app/shared/translations";
 import { getXrSettings } from "../../../quest/webxr/settings";
 import { LaggingUiAnchor } from "../../../quest/webxr/lagging-ui-anchor";
 import { MenuRain } from "../../../quest/webxr/menu-rain";
@@ -231,7 +232,7 @@ export class WebXrPresentation {
     updateWebXrState({ host: true, available: false, error: "" });
     if (!navigator.xr) {
       void revealFlatStartup();
-      updateWebXrState({ available: false, error: "This host does not expose WebXR. Use the WebXR runtime build." });
+      updateWebXrState({ available: false, error: t.webxr.unsupportedHost });
       return;
     }
     navigator.xr.addEventListener("devicechange", this.refreshAvailability, { signal: this.lifecycle.signal });
@@ -253,7 +254,7 @@ export class WebXrPresentation {
       if (!this.started) return;
       this.xrAvailable = available;
       if (!available) void revealFlatStartup();
-      updateWebXrState({ available, error: available ? "" : "No active XR headset/runtime was found." });
+      updateWebXrState({ available, error: available ? "" : t.webxr.noHeadset });
       this.tryAutomaticEntry();
     } catch (error) {
       if (this.started) { void revealFlatStartup(); updateWebXrState({ error: String(error) }); }
@@ -313,7 +314,7 @@ export class WebXrPresentation {
       await renderer.xr.setSession(session);
       if (!this.started || this.session !== session) return;
       const layer = session.renderState?.baseLayer;
-      if (layer) updateWebXrState({ renderResolution: `${Math.floor(layer.framebufferWidth / 2)} × ${layer.framebufferHeight} pixels per eye` });
+      if (layer) updateWebXrState({ renderResolution: t.webxr.renderResolution(Math.floor(layer.framebufferWidth / 2), layer.framebufferHeight) });
       this.htmlPanel = new HtmlUiPanel(this.trackingRoot, this.nativeHost);
       this.input = new WebXrControllerInput(session, renderer, this.dependencies.renderPipeline.scene,
         this.trackingRoot, TILE_SIZE, () => this.htmlPanel, this.tilt, direction => this.snapTurn(direction), this.dependencies.heldWeapon,
@@ -334,7 +335,7 @@ export class WebXrPresentation {
       else { this.canvasPresentation.exit(); document.documentElement.classList.remove("nh3d-webxr-active"); }
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(this.dependencies.engineState.clientOptions.vrPassthrough
-        ? "Could not enter mixed reality. Turn off Mixed reality in VR to test an opaque VR session. " + detail : detail);
+        ? t.webxr.mixedRealityError(detail) : detail);
     } finally { this.entering = false; }
   }
 

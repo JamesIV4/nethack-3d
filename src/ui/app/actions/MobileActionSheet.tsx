@@ -50,7 +50,7 @@ export function MobileActionSheet({
               : t.dialogs.mobileActions.extendedCommands}
           </div>
           <div className="nh3d-mobile-actions-controls">
-            <button type="button" className="nh3d-mobile-actions-back nh3d-mobile-actions-customize" onClick={openButtonCustomization}>Customize</button>
+            <button type="button" className="nh3d-mobile-actions-back nh3d-mobile-actions-customize" onClick={openButtonCustomization}>{t.actionCustomization.customize}</button>
             {mobileActionSheetMode === "extended" ? (
               <button
                 className="nh3d-mobile-actions-back"

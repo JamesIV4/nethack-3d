@@ -649,6 +649,82 @@ export const en = {
       takeOff: "Take Off",
       extended: "Extended",
     },
+    actionCustomization: {
+      savedImmediately:
+        "Changes are saved immediately. Restore Defaults resets all three button layouts.",
+      customize: "Customize",
+      mobileHotbar: "Hotbar (mobile / VR)",
+      desktopHotbar: "Hotbar (desktop)",
+      menuActions: "Menu / Actions",
+      buttonOrder: "Button order",
+      unavailableInGame: (label: string) => `${label} (unavailable in this game)`,
+      moveEarlier: (label: string) => `Move ${label} earlier`,
+      moveLater: (label: string) => `Move ${label} later`,
+      remove: (label: string) => `Remove ${label}`,
+      removeButton: "Remove",
+      noButtonsAdded: "No buttons added yet.",
+      allCommands: "All commands",
+      searchCommands: "Search commands",
+      searchPlaceholder: "Search by name",
+      add: (label: string) => `Add ${label}`,
+      addButton: "Add",
+      added: "Added",
+      noMatchingCommands: "No matching commands.",
+      restoreDefaults: "Restore Defaults",
+      hotbar: "Hotbar",
+      showHotbar: "Show hotbar",
+      hideHotbar: "Hide hotbar",
+      customizeHotbar: "Customize hotbar",
+    },
+    webxr: {
+      groupLabel: "Virtual reality",
+      passthroughLabel: "Mixed reality in VR",
+      passthroughDescription:
+        "Show your room around the board or dungeon. Takes effect the next time you enter VR.",
+      vrTabLabel: "VR",
+      vrTabDescription: "Headset presentation and tabletop settings.",
+      buttonsTabLabel: "Hotbar",
+      buttonsTabDescription: "Customize hotbars and Menu / Actions shortcuts.",
+      enter: "Enter VR",
+      exit: "Exit VR",
+      opening: "Opening VR…",
+      fpsWorldScaleLabel: "FPS world scale",
+      fpsWorldScaleDescription:
+        "Resize the immersive first-person world immediately. 100% restores the original size. Controllers, held weapons and UI keep their physical size.",
+      fpsScaleValue: (percent: number, isDefault: boolean) =>
+        `${percent}%${isDefault ? " (default)" : ""}`,
+      fpsScaleAriaValue: (percent: number, isDefault: boolean) =>
+        `${percent} percent${isDefault ? ", default" : ""}`,
+      defaultLabel: "Default",
+      resetFpsWorldScaleLabel: "Reset FPS world scale to 100 percent",
+      weaponGesturesLabel: "Weapon gestures",
+      weaponGesturesDescription:
+        "Swing a held weapon to attack in first-person VR. Recover to a quiet position before the next attack.",
+      weaponSensitivityLabel: "Weapon gesture sensitivity",
+      weaponSensitivityDescription: "Higher values accept lighter swings.",
+      tabletopVisibleAreaLabel: "Tabletop visible area",
+      tabletopVisibleAreaDescription:
+        "Increase the map area shown on the table without changing tile size.",
+      tabletopWorldScaleLabel: "Tabletop world scale",
+      tabletopWorldScaleDescription:
+        "Resize the tabletop world without changing the visible map area or UI size.",
+      renderResolutionLabel: "VR render resolution",
+      renderResolutionDescription: "Resolution changes apply when you next enter VR.",
+      currentRenderSize: (size: string) => ` Current render size: ${size}.`,
+      instantMovementLabel: "Instant movement",
+      instantMovementDescription:
+        "Move immediately between dungeon tiles instead of using the standard first-person movement animation.",
+      recenterWorldLabel: "Recenter world",
+      visibleMapAreaLabel: "Visible map area",
+      worldScaleLabel: "World scale",
+      renderResolution: (width: number, height: number) =>
+        `${width} × ${height} pixels per eye`,
+      unsupportedHost: "This host does not expose WebXR. Use the WebXR runtime build.",
+      noHeadset: "No active XR headset/runtime was found.",
+      mixedRealityError: (detail: string) =>
+        `Could not enter mixed reality. Turn off Mixed reality in VR to test an opaque VR session. ${detail}`,
+      hostQuitError: "The VR host could not exit the app.",
+    },
     clientOptions: {
       config: {
         groupControls: "Controller and first-person mode",

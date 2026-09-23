@@ -10,6 +10,9 @@ import type * as React from "react";
 import type {
   MobileActionSheetMode
 } from "../menus/mobile-actions";
+import {
+  t
+} from "../shared/translations";
 
 export interface MobileBottomBarProps {
   actionCommandNames: string[];
@@ -60,7 +63,7 @@ export function MobileBottomBar({
   return <div className="nh3d-mobile-bottom-bar" data-vr-collapsed={collapsed ? "true" : undefined} data-xr-ui={!vr.active || undefined} ref={barRef}>
     <div className="nh3d-vr-hotbar-shell" data-xr-ui={vr.active || undefined}>
     {vr.active ? <button type="button" className="nh3d-mobile-bottom-button nh3d-vr-hotbar-toggle"
-      aria-label={collapsed ? "Show hotbar" : "Hide hotbar"} aria-expanded={!collapsed} aria-controls="nh3d-hotbar-buttons"
+      aria-label={collapsed ? t.actionCustomization.showHotbar : t.actionCustomization.hideHotbar} aria-expanded={!collapsed} aria-controls="nh3d-hotbar-buttons"
       onClick={vr.toggle}><Menu aria-hidden="true" size={26} /></button> : null}
     <div id="nh3d-hotbar-buttons" className="nh3d-hotbar-buttons" aria-hidden={collapsed || undefined}
       ref={element=>{ if(element) element.inert=collapsed; }}>
@@ -83,7 +86,7 @@ export function MobileBottomBar({
           else runCustomCommand(controller, action);
         }}><ActionLabel>{action?.label ?? formatActionLabel(id.replace(/^command:/, ""))}</ActionLabel></button>;
     })}
-    {!layout.mobileHotbar.includes("menu") ? <button className="nh3d-mobile-bottom-button" tabIndex={collapsed ? -1 : undefined} type="button" onClick={openButtonCustomization} aria-label="Customize hotbar">Hotbar</button> : null}
+    {!layout.mobileHotbar.includes("menu") ? <button className="nh3d-mobile-bottom-button" tabIndex={collapsed ? -1 : undefined} type="button" onClick={openButtonCustomization} aria-label={t.actionCustomization.customizeHotbar}>{t.actionCustomization.hotbar}</button> : null}
     </div></div>
   </div>;
 }

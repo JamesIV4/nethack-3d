@@ -1,5 +1,6 @@
 /** Localhost detection and platform window bridges. */
 import { isQuestApk } from "../../../quest/webxr/host";
+import { t } from "./translations";
 export function isRunningOnLocalhost(): boolean {
   if (typeof window === "undefined") {
     return false;
@@ -33,7 +34,7 @@ export async function requestGameQuit(): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: "[]",
     });
-    if (!response.ok) throw new Error("The VR host could not exit the app.");
+    if (!response.ok) throw new Error(t.webxr.hostQuitError);
     return;
   }
   const bridgeWindow = window as Nh3dWindowBridges;

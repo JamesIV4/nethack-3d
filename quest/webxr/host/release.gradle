@@ -1,9 +1,9 @@
 // Generated host applies this after its browser Gradle configuration.
-def keyProperties = new Properties()
+apply from: rootProject.file('../../../scripts/android/signing-properties.gradle')
 def questKeys = rootProject.file('../../../quest/keystore.properties')
 def androidKeys = rootProject.file('../../../android/keystore.properties')
 def keyFile = questKeys.exists() ? questKeys : androidKeys
-if (keyFile.exists()) keyFile.withInputStream { keyProperties.load(it) }
+def keyProperties = loadNh3dSigningProperties(keyFile)
 def keyValues = [:]
 [storeFile:'STORE_FILE', storePassword:'STORE_PASSWORD', keyAlias:'KEY_ALIAS', keyPassword:'KEY_PASSWORD'].each { key, suffix ->
     keyValues[key] = System.getenv('NH3D_QUEST_' + suffix) ?: System.getenv('NH3D_ANDROID_' + suffix) ?: keyProperties.getProperty(key)

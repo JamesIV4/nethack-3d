@@ -665,11 +665,11 @@ export const clientOptionsConfig: ClientOption[] = [
         .description,
     type: "boolean",
   },
-  { key: "group-vr", label: "Virtual reality", type: "group" },
+  { key: "group-vr", label: t.webxr.groupLabel, type: "group" },
   {
     key: "vrPassthrough",
-    label: "Mixed reality in VR",
-    description: "Show your room around the board or dungeon. Takes effect the next time you enter VR.",
+    label: t.webxr.passthroughLabel,
+    description: t.webxr.passthroughDescription,
     type: "boolean",
   },
 ];
@@ -678,14 +678,14 @@ export const clientOptionsDefaultTabId: ClientOptionsTabId = "display";
 export const resolveClientOptionsDefaultTabId = (): ClientOptionsTabId => isQuestApk() ? "vr" : clientOptionsDefaultTabId;
 
 export const clientOptionsTabs: ClientOptionsTab[] = [
-  { id: "vr", label: "VR", description: "Headset presentation and tabletop settings.", groupKey: "group-vr" },
+  { id: "vr", label: t.webxr.vrTabLabel, description: t.webxr.vrTabDescription, groupKey: "group-vr" },
   {
     id: "display",
     label: t.clientOptions.tabs.display.label,
     description: t.clientOptions.tabs.display.description,
     groupKey: "group-interface",
   },
-  { id: "buttons", label: "Hotbar", description: "Customize hotbars and Menu / Actions shortcuts.", groupKey: "group-buttons" },
+  { id: "buttons", label: t.webxr.buttonsTabLabel, description: t.webxr.buttonsTabDescription, groupKey: "group-buttons" },
   {
     id: "controls",
     label: t.clientOptions.tabs.controls.label,
