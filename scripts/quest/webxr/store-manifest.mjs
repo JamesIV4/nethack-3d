@@ -25,7 +25,8 @@ function decodeXmlTree(tree) {
     } else {
       const attribute=line.match(/^\s*A: (?:android:)?([\w]+)(?:\([^)]*\))?=(.*)$/);
       if(attribute&&stack.length) stack.at(-1).attributes[attribute[1]]=attribute[2].match(/^"([^"]*)"/)?.[1]??attribute[2];
-      const text=line.match(/^\s*T: (.*)$/);
+      // aapt emits C: for compiled XML character data; accept T: dumps too.
+      const text=line.match(/^\s*[CT]: (.*)$/);
       if(text&&stack.length) stack.at(-1).text+=text[1].trim().replace(/^"|"$/g,'');
     }
   }

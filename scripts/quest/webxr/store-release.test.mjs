@@ -84,10 +84,11 @@ const policyTree=`E: network-security-config
     A: cleartextTrafficPermitted=(type 0x12)0xffffffff
     E: domain
       A: includeSubdomains=(type 0x12)0x0
-      T: "127.0.0.1"
+      C: "127.0.0.1"
 `;
 test('packaged policy permits only exact loopback HTTP',()=>{
  assert.doesNotThrow(()=>assertNetworkSecurityPolicy(policyTree));
+ assert.doesNotThrow(()=>assertNetworkSecurityPolicy(policyTree.replace('C:','T:')));
  for(const tree of [policyTree.replace('127.0.0.1','example.com'),policyTree.replace('cleartextTrafficPermitted=(type 0x12)0x0','cleartextTrafficPermitted=(type 0x12)0xffffffff'),policyTree.replace('includeSubdomains=(type 0x12)0x0','includeSubdomains=(type 0x12)0xffffffff'),policyTree+'  E: domain-config\n',policyTree.replace('    E: domain','  E: domain')]) assert.throws(()=>assertNetworkSecurityPolicy(tree),/deny cleartext/);
 });
 test('resolves optimized network policy and validates its manifest reference',()=>{
