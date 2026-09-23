@@ -6,6 +6,8 @@ Classic NetHack, presented as an interactive 3D dungeon. Play from above, step i
 
 [Ways to play](#ways-to-play) · [Features](#features) · [Screenshots](#screenshots) · [Run locally](#run-locally)
 
+[Privacy Policy](https://jamesiv4.github.io/nethack-3d/privacy.html) · Privacy and data-deletion requests: jamespoundiv@gmail.com
+
 ## New in 1.6.0: The VR Update
 
 Standalone Quest VR, up to **40% better GPU performance**, customizable hotbars, and two new tilesets headline this release. DuskHack and Geoduck join the built-in artwork, and NetHack 5 players can start without possessions in **Pauper Mode**. Greatly improved communcation between the internal NetHack builds and the 3D client, allowing for smoother, more responsive gameplay. Sounds now preload during loading, alongside improvements to inventory prompts, terrain updates, and Vulture rendering.
