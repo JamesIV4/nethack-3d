@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import process from "node:process";
+import path from "node:path";
 
 const isDryRun = process.env.NH3D_APPIMAGE_DRY_RUN === "1";
 const isPrepareOnly = process.env.NH3D_APPIMAGE_PREPARE_ONLY === "1";
@@ -19,6 +20,7 @@ function runOrExit(command, args) {
     return;
   }
 
+  const started = performance.now();
   const result = spawnSync(command, args, {
     stdio: "inherit",
     shell: false,
@@ -32,8 +34,21 @@ function runOrExit(command, args) {
     process.exit(1);
   }
 
-  if (typeof result.status === "number" && result.status !== 0) {
-    process.exit(result.status);
+  if (result.status !== 0) {
+    console.error(`${command} failed${result.signal ? ` (${result.signal})` : ""}.`);
+    process.exit(result.status || 1);
+  }
+  console.log(`[AppImage] ${command} finished in ${((performance.now() - started) / 1000).toFixed(1)}s`);
+}
+
+function buildElectronAssets() {
+  console.log("[AppImage] Building Electron web assets on the host...");
+  // Running npm's JS entrypoint avoids Windows .cmd shell quoting problems.
+  const npmCli = process.env.npm_execpath || path.join(path.dirname(process.execPath), "node_modules/npm/bin/npm-cli.js");
+  if (process.platform === "win32") {
+    runOrExit(process.execPath, [npmCli, "run", "build:electron"]);
+  } else {
+    runOrExit("npm", ["run", "build:electron"]);
   }
 }
 
@@ -73,7 +88,7 @@ function runNative() {
     return;
   }
   if (!shouldSkipElectronBuild) {
-    runOrExit("npm", ["run", "build:electron"]);
+    buildElectronAssets();
   }
   runOrExit("npx", getElectronBuilderArgs());
 }
@@ -107,55 +122,43 @@ function runViaWsl() {
   }
 
   const wslShell = resolveWslShell();
-  const wslElectronBuilderCommand = `npx ${getElectronBuilderArgs().map(bashQuote).join(" ")}`;
-  const wslInstallOptionalDepsCommand =
-    `cd ${bashQuote(wslCwd)} && npm install --include=optional --no-audit --no-fund --no-save --package-lock=false`;
-  const wslStageLinuxRuntimeDepsCommand =
-    `cd ${bashQuote(wslCwd)} && ${stageLinuxRuntimeDepsCommand}`;
-  const wslRollupOptionalDepCheckCommand =
-    `cd ${bashQuote(wslCwd)} && [ -f node_modules/@rollup/rollup-linux-x64-gnu/package.json ]`;
-  const wslCommand = shouldSkipElectronBuild
-    ? `cd ${bashQuote(wslCwd)} && ${wslElectronBuilderCommand}`
-    : `cd ${bashQuote(wslCwd)} && npm run build:electron && ${wslElectronBuilderCommand}`;
+  let wslOutput = `${wslCwd}/release`;
+  if (outputDirOverride) {
+    const outputPath = path.resolve(outputDirOverride).replace(/\\/g, "/");
+    const result = spawnSync("wsl", ["wslpath", "-a", outputPath], { encoding: "utf8", shell: false });
+    if (result.error || result.status !== 0) {
+      throw new Error(`Cannot resolve AppImage output directory in WSL: ${outputPath}`);
+    }
+    wslOutput = result.stdout.trim();
+  }
+  const helperArgs = [
+    `${wslCwd}/scripts/electron/wsl-appimage.mjs`,
+    wslCwd,
+    wslOutput,
+    ...(isPrepareOnly ? ["--prepare-only"] : []),
+    ...(shouldSkipPrepare ? ["--skip-prepare"] : []),
+  ];
 
   if (!isDryRun) {
     const wslNodeCheck = spawnSync(
       "wsl",
-      [wslShell, "-lic", "command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1"],
+      [wslShell, "-lic", "command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1 && command -v rsync >/dev/null 2>&1"],
       { shell: false },
     );
     if (wslNodeCheck.error || wslNodeCheck.status !== 0) {
       console.error(
-        "WSL is available, but node/npm were not found in the non-interactive shell used by this script.",
+        "WSL requires Linux node, npm, and rsync for AppImage packaging.",
       );
-      console.error(`Ensure your shell init exposes node/npm for \`wsl ${wslShell} -lic\` commands, then rerun.`);
+      console.error(`Ensure your shell init exposes Linux node/npm and rsync for \`wsl ${wslShell} -lic\` commands, then rerun.`);
       process.exit(1);
     }
-
-    if (!shouldSkipPrepare) {
-      if (!shouldSkipElectronBuild) {
-        const wslRollupOptionalDepCheck = spawnSync(
-          "wsl",
-          [wslShell, "-lic", wslRollupOptionalDepCheckCommand],
-          { shell: false },
-        );
-        if (wslRollupOptionalDepCheck.error || wslRollupOptionalDepCheck.status !== 0) {
-          console.log(
-            "Linux optional dependencies are missing in node_modules for the WSL build. Installing them in WSL...",
-          );
-          runOrExit("wsl", [wslShell, "-lic", wslInstallOptionalDepsCommand]);
-        }
-      }
-
-      runOrExit("wsl", [wslShell, "-lic", wslStageLinuxRuntimeDepsCommand]);
-    }
   }
 
-  console.log(`Using WSL AppImage build flow from: ${wslCwd} (shell: ${wslShell})`);
-  if (isPrepareOnly) {
-    return;
+  if (!isPrepareOnly && !shouldSkipElectronBuild) {
+    buildElectronAssets();
   }
-  runOrExit("wsl", [wslShell, "-lic", wslCommand]);
+  console.log(`Using cached WSL-local AppImage packaging (shell: ${wslShell}).`);
+  runOrExit("wsl", [wslShell, "-lic", `node ${helperArgs.map(bashQuote).join(" ")}`]);
 }
 
 if (process.platform === "win32") {

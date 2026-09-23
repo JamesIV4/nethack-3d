@@ -540,7 +540,7 @@ async function main() {
     finalizeParallelOutputsOrExit();
     progressTracker.advance("Merged staged artifacts into release/");
   } else {
-    logInfo("Packaging Windows setup + x64 and legacy x86 portable executables...");
+    logInfo("Packaging Windows x64 setup and portable executables...");
     await runOrExit(process.execPath, windowsAllTargetsArgs, {
       NH3D_SKIP_ELECTRON_BUILD: "1",
     });

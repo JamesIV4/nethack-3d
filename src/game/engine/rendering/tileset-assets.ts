@@ -820,13 +820,7 @@ export class TilesetAssets {
       return normalizedTileIndex;
     }
     try {
-      if (
-        !shouldTranslateNh367TilesetForNh5Runtime(
-          this.resolveRuntimeVersion(),
-          this.resolveLoadedAtlasTileCount(),
-          this.loadedTilesetSourceLayoutVersion,
-        )
-      ) {
+      if (!this.usesNh367SourceTileIndices()) {
         return normalizedTileIndex;
       }
       return translateNh367TileIndexToNh5(normalizedTileIndex);
@@ -840,11 +834,17 @@ export class TilesetAssets {
   resolveSourceTileIndexForRuntime(tileIndex: number): number {
     const normalized = Math.trunc(tileIndex);
     if (!Number.isFinite(normalized) || normalized < 0) return normalized;
+    return this.usesNh367SourceTileIndices() ? translateNh5TileIndexToNh367(normalized) : normalized;
+  }
+
+  private usesNh367SourceTileIndices(): boolean {
+    // A compiled atlas has NH5 dimensions but its authored settings still
+    // refer to the original 3.6.7 pack. Use the same rule in both directions.
     const compiledLegacyAtlas = this.resolveRuntimeVersion() === "5.0" &&
       this.loadedTilesetSourceLayoutVersion === "3.6.7" && this.loadedTilesetTileLayoutVersion === "5.0";
-    return (compiledLegacyAtlas || shouldTranslateNh367TilesetForNh5Runtime(
+    return compiledLegacyAtlas || shouldTranslateNh367TilesetForNh5Runtime(
       this.resolveRuntimeVersion(), this.resolveLoadedAtlasTileCount(), this.loadedTilesetSourceLayoutVersion,
-    )) ? translateNh5TileIndexToNh367(normalized) : normalized;
+    );
   }
 
   setTilesetCompilationLoadingVisible(visible: boolean): void {

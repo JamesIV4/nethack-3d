@@ -109,15 +109,20 @@ An experimental, fully bundled Quest UI proof and the staged VR port design are 
 - `npm test` - Run regression tests, including engine input, world state, and rendering resources.
 - `npm run build` - Build production bundles.
 - `npm run build:electron` - Build bundles with Electron-safe relative asset paths.
+- `npm run ensure:rollup-native` - Manually repair a missing Rollup native optional dependency on the build machine. Normal build/dev commands rely on the dependencies installed by npm and do not run this repair check.
 - `npm run preview` - Preview production build locally.
 - `npm run electron:dev` - Run Electron against the Vite dev server.
 - `npm run electron:pack:mac` - Build an unpacked macOS app bundle to `release/` for local testing.
 - `npm run electron:dist:mac` - Build a macOS DMG to `release/` (pass `-- --universal` to produce a universal macOS build).
 - `npm run electron:dist:win` - Build and package a Windows NSIS `.exe` installer (x64) to `release/`.
-- `npm run electron:dist:win:portable` - Build and package portable Windows `.exe` files for x64 and legacy x86 to `release/`; the 32-bit artifact ends in `-legacy-x86.exe`.
+- `npm run electron:dist:win:portable` - Build and package a portable Windows `.exe` for x64 to `release/`.
 - `npm run electron:dist:linux:appimage` - Build and package a Linux AppImage (x64) to `release/` (uses WSL automatically on Windows, stages Linux runtime deps, and includes Linux icon assets).
-- `npm run electron:dist:all` - Build Electron assets once, then package the Windows setup, x64 and legacy x86 portable executables, and Linux AppImage back to back.
+- `npm run electron:dist:all` - Build Electron assets once, then package the Windows x64 setup and portable executables, and Linux AppImage back to back.
 - `npm run electron:dist:all:parallel` - Same as above, but packages Windows and Linux at the same time after the shared Electron build.
+
+On Windows, AppImage packaging builds the web assets with Windows Node, then syncs the packaging inputs to `~/.cache/nethack3d/appimage/<checkout-id>/` inside WSL. Linux dependencies and packaging intermediates stay there; only finished artifacts and build diagnostics are copied back to `release/`. WSL needs Linux Node/npm, `rsync`, and `libcups.so.2`. The first run installs dependencies; subsequent runs reuse them until package metadata, `.npmrc`, or the Linux Node version changes. Each stage prints its elapsed time.
+
+Set `NH3D_SKIP_ELECTRON_BUILD=1` only when `dist/` already contains a current Electron build. `NH3D_ELECTRON_OUTPUT_DIR` changes the Windows artifact destination. The combined release scripts retain their shared-build and parallel packaging behavior. `NH3D_APPIMAGE_PREPARE_ONLY=1` stages the current build and dependencies; `NH3D_APPIMAGE_SKIP_PREPARE=1` packages that existing staged snapshot. An interrupted process may leave a workspace `lock` directory; remove that empty directory only after confirming no AppImage build is running.
 - `npm run android:add` - Create the native Android project with Capacitor (run once).
 - `npm run android:sync` - Build web assets and sync them into the Android project.
 - `npm run android:release` - Build web assets, sync Android, and create a signed release APK without opening Android Studio. Output: `release/NetHack 3D <version> Android.apk`.

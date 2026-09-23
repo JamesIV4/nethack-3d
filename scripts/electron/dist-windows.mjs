@@ -6,8 +6,6 @@ const isPortableOnly = args.delete("--portable-only");
 const isDryRun = process.env.NH3D_WINDOWS_DRY_RUN === "1";
 const shouldSkipElectronBuild = process.env.NH3D_SKIP_ELECTRON_BUILD === "1";
 const outputDirOverride = process.env.NH3D_ELECTRON_OUTPUT_DIR?.trim() || null;
-const legacyPortableArtifactName =
-  "NetHack 3D ${version} Portable (Legacy x86).${ext}";
 const npmExecPath = process.env.npm_execpath;
 const npmRunner = npmExecPath
   ? {
@@ -53,15 +51,14 @@ function runNpmOrExit(npmArgs) {
   runOrExit(npmRunner.command, [...npmRunner.baseArgs, ...npmArgs]);
 }
 
-function getElectronBuilderArgs(targets, arch, extraConfig = []) {
+function getElectronBuilderArgs(targets) {
   const builderArgs = [
     "exec",
     "--",
     "electron-builder",
     "--win",
     ...targets,
-    `--${arch}`,
-    ...extraConfig,
+    "--x64",
   ];
 
   if (outputDirOverride) {
@@ -77,11 +74,4 @@ if (!shouldSkipElectronBuild) {
 
 const x64Targets = isPortableOnly ? ["portable"] : ["nsis", "portable"];
 console.log(`Packaging Windows ${x64Targets.join(" + ")} for x64...`);
-runNpmOrExit(getElectronBuilderArgs(x64Targets, "x64"));
-
-console.log("Packaging legacy Windows portable executable for x86...");
-runNpmOrExit(
-  getElectronBuilderArgs(["portable"], "ia32", [
-    `-c.portable.artifactName=${legacyPortableArtifactName}`,
-  ]),
-);
+runNpmOrExit(getElectronBuilderArgs(x64Targets));
