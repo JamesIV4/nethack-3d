@@ -1,3 +1,6 @@
+import { useSyncExternalStore } from "react";
+import { getWebXrState, subscribeWebXr } from "../../../quest/webxr/presentation";
+import { getXrSettings, subscribeXrSettings } from "../../../quest/webxr/settings";
 import { OptionSliderRow } from "./OptionSliderRow";
 import type { ClientOptionsDialogProps } from "./ClientOptionsDialog";
 import type { ClientOptionSlider } from "./types";
@@ -16,6 +19,8 @@ export function ClientOptionSliderControl({
   showManualSafeZonePreview,
   updateClientSliderDraft,
 }: ClientOptionSliderControlProps): JSX.Element {
+  const xr = useSyncExternalStore(subscribeWebXr, getWebXrState, getWebXrState);
+  const xrSettings = useSyncExternalStore(subscribeXrSettings, getXrSettings, getXrSettings);
 
   const sliderValue = clientOptionsDraft[option.key];
   const isManualBottomSafeZoneSlider =
@@ -31,7 +36,7 @@ export function ClientOptionSliderControl({
       option.key === "fpsFov" ||
       option.key === "fpsLookSensitivityX" ||
       option.key === "fpsLookSensitivityY") &&
-    !clientOptionsDraft.fpsMode;
+    !(xr.active ? xrSettings.fpsMode : clientOptionsDraft.fpsMode);
   const sliderDisabledByController =
     option.key === "controllerFpsMoveRepeatMs" &&
     !clientOptionsDraft.controllerEnabled;

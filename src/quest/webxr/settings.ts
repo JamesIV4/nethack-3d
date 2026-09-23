@@ -1,4 +1,4 @@
-export interface XrSettings { resolution: number; fpsScale: number; area: number; scale: number; swipeSensitivity: number; swipeAttacks: boolean; instantMovement: boolean; rainCount: number; rainFallSpeed: number; rainChangeRate: number }
+export interface XrSettings { fpsMode: boolean; resolution: number; fpsScale: number; area: number; scale: number; swipeSensitivity: number; swipeAttacks: boolean; instantMovement: boolean; rainCount: number; rainFallSpeed: number; rainChangeRate: number }
 /** Kept separate from the saved preference so VR attacks can be paused globally. */
 export const WEBXR_WEAPON_ATTACKS_ENABLED = false;
 const key = "nh3d-webxr-settings";
@@ -6,7 +6,7 @@ export function normalizeXrSettings(value: Partial<XrSettings>): XrSettings {
   const limit = (n: unknown, min: number, max: number, fallback: number) => typeof n === "number" && Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
   // Legacy stereo depth is deliberately not migrated: 100% restores the
   // original FPS rig with the headset's unmodified eye poses.
-  return { resolution: limit(value.resolution, .5, 2, 1.5), fpsScale: limit(value.fpsScale, .5, 2, 1), area: limit(value.area, 1, 2, 1), scale: limit(value.scale, .5, 2, 1), swipeSensitivity: limit(value.swipeSensitivity, .5, 2.5, 1), swipeAttacks: value.swipeAttacks !== false, instantMovement: value.instantMovement === true,
+  return { fpsMode: value.fpsMode !== false, resolution: limit(value.resolution, .5, 2, 1.5), fpsScale: limit(value.fpsScale, .5, 2, 1), area: limit(value.area, 1, 2, 1), scale: limit(value.scale, .5, 2, 1), swipeSensitivity: limit(value.swipeSensitivity, .5, 2.5, 1), swipeAttacks: value.swipeAttacks !== false, instantMovement: value.instantMovement === true,
     rainCount: Math.round(limit(value.rainCount, 0, 12000, 1000)),
     rainFallSpeed: limit(value.rainFallSpeed, .1, 8, 1.5),
     rainChangeRate: limit(value.rainChangeRate, 0, 10, .3),

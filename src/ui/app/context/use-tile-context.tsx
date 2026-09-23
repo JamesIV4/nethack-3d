@@ -2,10 +2,13 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
-  useState
+  useState,
+  useSyncExternalStore
 } from "react";
 import type { FpsCrosshairContextState, Nh3dClientOptions, Nethack3DEngineController } from "../../../game/ui-types";
 import type * as React from "react";
+import { getWebXrState, subscribeWebXr } from "../../../quest/webxr/presentation";
+import { getXrSettings, subscribeXrSettings } from "../../../quest/webxr/settings";
 import type {
   InventoryContextMenuState
 } from "../inventory/types";
@@ -25,7 +28,10 @@ export function useTileContextState(dependencies: UseTileContextStateDependencie
     clientOptions,
   } = dependencies;
 
-  const isFpsPlayMode = clientOptions.fpsMode;
+  const xr = useSyncExternalStore(subscribeWebXr, getWebXrState, getWebXrState);
+  const xrSettings = useSyncExternalStore(subscribeXrSettings, getXrSettings, getXrSettings);
+  const isFpsPlayMode = clientOptions.tilesetMode !== "terminal" &&
+    (xr.active ? xrSettings.fpsMode : clientOptions.fpsMode);
 
   const fpsCrosshairContextMenuRef = useRef<HTMLDivElement | null>(null);
 

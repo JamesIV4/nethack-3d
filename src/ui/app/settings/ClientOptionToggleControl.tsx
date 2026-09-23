@@ -1,4 +1,6 @@
-import { Fragment } from "react";
+import { Fragment, useSyncExternalStore } from "react";
+import { getWebXrState, subscribeWebXr } from "../../../quest/webxr/presentation";
+import { getXrSettings, setXrSettings, subscribeXrSettings } from "../../../quest/webxr/settings";
 import { t } from "../shared/translations";
 import { OptionLabelWithInfo } from "./OptionLabelWithInfo";
 import { normalizeSolidChromaKeyHex } from "../tilesets/TilesetSolidColorPickerDialog";
@@ -49,6 +51,10 @@ export function ClientOptionToggleControl({
   updateDarkWallSolidColorOverrideEnabledDraft,
   openControllerRemapDialog,
 }: ClientOptionToggleControlProps): JSX.Element {
+  const xr = useSyncExternalStore(subscribeWebXr, getWebXrState, getWebXrState);
+  const xrSettings = useSyncExternalStore(subscribeXrSettings, getXrSettings, getXrSettings);
+  const useVrFps = xr.active || selectedClientOptionsTab.id === "vr";
+  const fpsMode = useVrFps ? xrSettings.fpsMode : clientOptionsDraft.fpsMode;
 
   const isInventoryTileOnlyMotionOption =
     option.key === "inventoryTileOnlyMotion";
@@ -73,7 +79,7 @@ export function ClientOptionToggleControl({
     isVultureTilesetSelected && isDarkCorridorWallsOption;
   const invertLookOptionDisabledByFpsMode =
     option.key === "invertLookYAxis" &&
-    !clientOptionsDraft.fpsMode;
+    !fpsMode;
   const fpsModeDisabledByTerminal =
     option.key === "fpsMode" &&
     clientOptionsDraft.tilesetMode === "terminal";
@@ -86,7 +92,7 @@ export function ClientOptionToggleControl({
     !clientOptionsDraft.overrideNh5DarkCorridorWallTiles;
   const enabled = darkCorridorWallsForcedOnByVulture
     ? true
-    : Boolean(clientOptionsDraft[option.key]);
+    : option.key === "fpsMode" ? fpsMode : Boolean(clientOptionsDraft[option.key]);
   const toggleDisabled =
     (isInventoryTileOnlyMotionOption &&
       clientOptionsDraft.reduceInventoryMotion) ||
@@ -306,7 +312,8 @@ export function ClientOptionToggleControl({
               );
               return;
             }
-            updateClientOptionDraft(option.key, !enabled);
+            if (option.key === "fpsMode" && useVrFps) setXrSettings({ fpsMode: !enabled });
+            else updateClientOptionDraft(option.key, !enabled);
           }}
           role="switch"
           type="button"

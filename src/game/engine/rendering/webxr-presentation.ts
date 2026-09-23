@@ -32,14 +32,16 @@ import { TableMoveHandle } from "../../../quest/webxr/table-move-handle";
 import { TabletopPan } from "../../../quest/webxr/tabletop-pan";
 import { QuestResumeMode } from "../../../quest/webxr/quest-resume-mode";
 import { gridUiHeading } from "../../../quest/webxr/grid-ui-heading";
+import type { EngineCoordinator } from "../engine-coordinator";
 
 export interface WebXrPresentationDependencies {
+  readonly coordinator: Pick<EngineCoordinator, "applyPlayMode">;
   readonly aimHighlights: Pick<AimHighlights,"setXrTarget">;
   readonly entityBillboards: Pick<EntityBillboards, "monsterBillboards">;
   readonly positionSelection: Pick<PositionSelection, "isFpsFarLookViewActive" | "positionCursor">;
   readonly movementInput: Pick<MovementInput,"resolveDirectionKeyFromDelta">;
   readonly camera: FarLookCamera & Pick<Camera, "camera" | "sampleFpsStepCameraGroundPosition" | "snapFpsStepToPlayer" | "fpsAutoTurnTargetYaw" | "cameraPanX" | "cameraPanY" | "cameraPanTargetX" | "cameraPanTargetY" | "isCameraCenteredOnPlayer" | "getOverheadCameraFollowTargetWorldPosition" | "applyStandardCameraPresetForTopDownModes">;
-  readonly engineState: Pick<EngineState, "clientOptions" | "playMode" | "disposed">;
+  readonly engineState: Pick<EngineState, "clientOptions" | "playMode" | "disposed" | "characterCreationConfig">;
   readonly playerMovement: Pick<PlayerMovement, "playerPos" | "hasSeenPlayerPosition">;
   readonly renderPipeline: Pick<RenderPipeline, "renderer" | "scene">;
   readonly tileRendering: Pick<TileRendering, "tileMap" | "floorGeometry">;
@@ -95,6 +97,47 @@ export class WebXrPresentation {
   private lastRigKey = "";
   private viewYaw = 0;
   private needsRecenter = true;
+  private referenceSpace: XRReferenceSpace | null = null;
+  private floorReferenceRevision = 0;
+  private floorReferencePending = false;
+  private trackingReady = false;
+  private readonly requestRecalibration = (): void => {
+    this.needsRecenter = true;
+    this.lastRigKey = "";
+  };
+  private readonly refreshFloorReference = (): void => {
+    this.requestRecalibration();
+    const session = this.session;
+    if (!session) return;
+    const revision = ++this.floorReferenceRevision;
+    this.floorReferencePending = true;
+    // Refresh the browser's local-floor origin as well as our rig. This covers
+    // a session first created before the host had valid stage parameters.
+    void session.requestReferenceSpace("local-floor").then(space => {
+      if (this.session === session && revision === this.floorReferenceRevision) {
+        this.dependencies.renderPipeline.renderer.xr.setReferenceSpace(space);
+        this.requestRecalibration();
+      }
+    }).catch(error => {
+      if (this.session === session) console.warn("Could not refresh the VR floor reference", error);
+    }).finally(() => {
+      if (revision === this.floorReferenceRevision) this.floorReferencePending = false;
+    });
+  };
+
+  private syncPlayMode(immersive: boolean): void {
+    const state = this.dependencies.engineState;
+    if (state.disposed) return;
+    const fps = immersive ? getXrSettings().fpsMode : state.clientOptions.fpsMode;
+    const desired = fps && state.clientOptions.tilesetMode !== "terminal" ? "fps" : "normal";
+    if (state.playMode === desired) return;
+    const savedFps = state.clientOptions.fpsMode;
+    const savedStartup = state.characterCreationConfig.playMode;
+    this.dependencies.coordinator.applyPlayMode(desired);
+    state.clientOptions.fpsMode = savedFps;
+    state.characterCreationConfig.playMode = savedStartup;
+    this.requestRecalibration();
+  }
   private host = false;
   private nativeHost = false;
   private availabilityPending = false;
@@ -112,6 +155,7 @@ export class WebXrPresentation {
   private menuRain: MenuRain | null = null;
 
   setStartupMenu(visible: boolean): void {
+    this.trackingReady = false;
     this.farLook.reset();
     this.lastPlayerPositionReady = false;
     this.startupMenu = visible;
@@ -182,7 +226,7 @@ export class WebXrPresentation {
     this.unregister = registerWebXrOwner({
       enter: () => this.resumeMode?.chooseImmersive() ?? this.enter(),
       exit: () => this.resumeMode?.chooseFlat() ?? this.session?.end() ?? Promise.resolve(),
-      recenter: () => { this.needsRecenter = true; },
+      recenter: this.refreshFloorReference,
     });
     updateWebXrState({ host: true, available: false, error: "" });
     if (!navigator.xr) {
@@ -282,6 +326,7 @@ export class WebXrPresentation {
       this.input.controllerOpacity = source => this.controllerModels?.opacity(source) ?? 1;
       this.needsRecenter = true;
       this.lastRigKey = "";
+      this.trackingReady = false;
       document.documentElement.classList.add("nh3d-webxr-active");
       updateWebXrState({ active: true, error: "" });
     } catch (error) {
@@ -294,6 +339,11 @@ export class WebXrPresentation {
   }
 
   private readonly ended = (): void => {
+    this.trackingReady = false;
+    this.floorReferenceRevision++;
+    this.floorReferencePending = false;
+    this.referenceSpace?.removeEventListener("reset", this.requestRecalibration);
+    this.referenceSpace = null;
     this.dependencies.aimHighlights.setXrTarget(false,null);
     this.lootForeground.dispose();
     this.farLook.reset();
@@ -312,6 +362,7 @@ export class WebXrPresentation {
     scene.background = this.previousBackground;
     renderer.setClearColor(this.previousClearColor, this.previousClearAlpha);
     scene.remove(this.trackingRoot);
+    this.syncPlayMode(false);
     if (this.savedCamera) {
       if (this.savedCamera.mode === this.dependencies.engineState.playMode) {
         this.dependencies.camera.camera.position.copy(this.savedCamera.position);
@@ -380,11 +431,25 @@ export class WebXrPresentation {
   updateCamera(): boolean {
     this.checkResumeAfterFramePause();
     if (!this.active) return false;
+    if (!this.startupMenu) this.syncPlayMode(true);
+    if (this.floorReferencePending) return true;
     const renderer = this.dependencies.renderPipeline.renderer;
     const xr = renderer.xr;
     const referenceSpace = xr.getReferenceSpace();
+    if (referenceSpace !== this.referenceSpace) {
+      this.referenceSpace?.removeEventListener("reset", this.requestRecalibration);
+      this.referenceSpace = referenceSpace;
+      referenceSpace?.addEventListener("reset", this.requestRecalibration);
+      this.requestRecalibration();
+    }
     const pose = referenceSpace && xr.getFrame()?.getViewerPose(referenceSpace);
-    if (!pose) return true;
+    if (!pose) { this.trackingReady = false; return true; }
+    const position = pose.transform.position;
+    // Defer entry/reset calibration until tracked local-floor coordinates arrive.
+    if (pose.emulatedPosition || ![position.x,position.y,position.z].every(Number.isFinite) || position.y <= 0) {
+      this.trackingReady = false;
+      return true;
+    }
     const positionReady = this.dependencies.playerMovement.hasSeenPlayerPosition !== false;
     const enteringFps = !this.startupMenu && this.dependencies.engineState.playMode === "fps" &&
       (!this.uiFirstPerson || (!this.lastPlayerPositionReady && positionReady));
@@ -400,7 +465,7 @@ export class WebXrPresentation {
       if (this.dependencies.engineState.playMode === "fps") camera.snapFpsStepToPlayer();
       this.viewYaw = 0;
       const { position, orientation } = pose.transform;
-      this.anchor.set(position.x, position.y > 0.35 ? position.y : 1.6, position.z);
+      this.anchor.set(position.x, position.y, position.z);
       this.orientation.set(orientation.x, orientation.y, orientation.z, orientation.w);
       this.forward.set(0, 0, -1).applyQuaternion(this.orientation);
       this.heading.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(-this.forward.x, -this.forward.z));
@@ -418,6 +483,7 @@ export class WebXrPresentation {
       this.tableMove.place(this.anchor, this.heading, this.tilt.pitch, false);
       this.htmlPanel?.nativePointer?.setBoard(false, 0, -.65);
       this.menuRain?.recenter(this.anchor);
+      this.trackingReady = true;
       return true;
     }
     const player = this.dependencies.playerMovement.playerPos;
@@ -480,7 +546,7 @@ export class WebXrPresentation {
     const towardX = this.tablePosition.x-pose.transform.position.x, towardZ = this.tablePosition.z-pose.transform.position.z;
     if (this.tableMove.active && Math.hypot(towardX,towardZ) > .05) this.tableHeading.setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(-towardX,-towardZ));
     const heading = firstPerson ? this.heading : this.tableHeading;
-    const key = [this.position.x, this.position.y, this.position.z, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.area, settings.scale, settings.fpsScale, ...this.tablePosition.toArray(), ...heading.toArray(), ...scene.matrixWorld.elements].join(":");
+    const key = [...this.anchor.toArray(), this.position.x, this.position.y, this.position.z, firstPerson, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.area, settings.scale, settings.fpsScale, ...this.tablePosition.toArray(), ...heading.toArray(), ...scene.matrixWorld.elements].join(":");
     if (key !== this.lastRigKey || this.farLook.active) {
       const rig = createTrackingToGame(firstPerson ? "first-person" : "tabletop", this.position, this.anchor,
         heading, TILE_SIZE, this.dependencies.camera.firstPersonEyeHeight, this.tilt.pitch, this.viewYaw, settings.scale, firstPerson ? undefined : this.tablePosition, settings.fpsScale);
@@ -530,6 +596,7 @@ export class WebXrPresentation {
       camera.quaternion.setFromRotationMatrix(this.cameraBasis);
     }
     camera.updateMatrixWorld(true);
+    this.trackingReady = true;
     this.forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     if (firstPerson && !this.farLook.active) {
       this.dependencies.camera.cameraYaw = Math.atan2(-this.forward.x, -this.forward.y);
@@ -547,7 +614,7 @@ export class WebXrPresentation {
 
   updateInput(time: number): void {
     if (this.active) this.updateControllerModels(time);
-    if (this.active) this.input?.update(time, this.dependencies.engineState.playMode === "fps" ? this.forward : null);
+    if (this.active && this.trackingReady) this.input?.update(time, this.dependencies.engineState.playMode === "fps" ? this.forward : null);
     this.dependencies.aimHighlights.setXrTarget(this.active,this.input?.highlightTile??null,this.input?.highlightSelection??false,this.input?.highlightHeadset??false);
   }
 
@@ -564,6 +631,9 @@ export class WebXrPresentation {
 
   render(camera: THREE.Camera): void {
     const { renderer, scene } = this.dependencies.renderPipeline;
+    // Never show the dungeon using the startup menu's identity rig while the
+    // headset's first usable floor pose is still pending. Native UI stays live.
+    if (!this.trackingReady) { renderer.clear(); return; }
     const drawWorld = () => this.terrainBatches.render(renderer, scene, camera, this.trackingRoot,
       this.dependencies.tileRendering.tileMap, this.dependencies.tileRendering.floorGeometry,
       this.dependencies.glyphTextures.glyphOverlayMap, this.worldClipCulling);

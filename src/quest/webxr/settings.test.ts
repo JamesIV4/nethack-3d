@@ -2,8 +2,12 @@ import { expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { normalizeXrSettings, WEBXR_WEAPON_ATTACKS_ENABLED } from "./settings";
 import { createTrackingToGame, tabletopClippingPlanes } from "../../game/engine/rendering/webxr-rig";
+it("defaults immersive FPS on while honoring a saved tabletop preference",()=>{
+  expect(normalizeXrSettings({}).fpsMode).toBe(true);
+  expect(normalizeXrSettings({fpsMode:false}).fpsMode).toBe(false);
+});
 it("defaults to 150% resolution and bounds persisted values", () => {
-  expect(normalizeXrSettings({})).toEqual({ resolution: 1.5, fpsScale: 1, area: 1, scale: 1, swipeSensitivity: 1, swipeAttacks: true, instantMovement: false, rainCount: 1000, rainFallSpeed: 1.5, rainChangeRate: .3 });
+  expect(normalizeXrSettings({})).toEqual({ fpsMode: true, resolution: 1.5, fpsScale: 1, area: 1, scale: 1, swipeSensitivity: 1, swipeAttacks: true, instantMovement: false, rainCount: 1000, rainFallSpeed: 1.5, rainChangeRate: .3 });
   expect(normalizeXrSettings({ resolution: NaN, area: 99, scale: -1, instantMovement: true })).toMatchObject({ resolution: 1.5, area: 2, scale: .5, swipeSensitivity: 1, swipeAttacks: true, instantMovement: true });
 });
 it("bounds rain counts and rates while allowing an empty field and unchanging letters", () => {

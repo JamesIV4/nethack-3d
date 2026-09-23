@@ -15,6 +15,7 @@ vi.mock("../../../quest/webxr/menu-rain", () => ({ MenuRain: class {
 afterEach(() => vi.unstubAllGlobals());
 
 function fixture(native = false) {
+  setXrSettings({fpsMode:false});
   const classes = new Set<string>();
   vi.stubGlobal("document", Object.assign(new EventTarget(), { visibilityState: "visible", exitPointerLock: vi.fn(), documentElement: { classList: {
     add: (value: string) => classes.add(value), remove: (value: string) => classes.delete(value),
@@ -36,14 +37,16 @@ function fixture(native = false) {
     setProperty: (key: string, value: string) => { styleValues.set(key, value); },
     removeProperty: (key: string) => { styleValues.delete(key); },
   };
+  const referenceSpace = new EventTarget();
+  Object.assign(session, {requestReferenceSpace: vi.fn(async () => referenceSpace)});
   const renderer = {
     domElement: { style },
-    render: vi.fn(), clippingPlanes: [] as THREE.Plane[],
+    render: vi.fn(), clear: vi.fn(), clippingPlanes: [] as THREE.Plane[],
     getClearColor: (value: THREE.Color) => value.set(0x123456), getClearAlpha: () => 1, setClearColor: vi.fn(),
     xr: {
-      enabled: false, isPresenting: false, setReferenceSpaceType: vi.fn(), setFramebufferScaleFactor: vi.fn(),
+      enabled: false, isPresenting: false, setReferenceSpaceType: vi.fn(), setFramebufferScaleFactor: vi.fn(), setReferenceSpace: vi.fn(),
       setSession: vi.fn(async () => { renderer.xr.isPresenting = true; }),
-      getReferenceSpace: () => ({}),
+      getReferenceSpace: () => referenceSpace as XRReferenceSpace,
       getFrame: () => ({ getViewerPose: () => ({ transform: {
         position: { x: 0, y: 1.6, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 },
       } }) }),
@@ -55,11 +58,12 @@ function fixture(native = false) {
     entityBillboards: { monsterBillboards: new Map() },
     positionSelection: { isFpsFarLookViewActive: () => false },
     camera: { camera: new THREE.PerspectiveCamera(), cameraYaw: 2, cameraPitch: 0.4, firstPersonEyeHeight: 0.62, sampleFpsStepCameraGroundPosition: () => false, getOverheadCameraFollowTargetWorldPosition: () => ({ x: 3, y: -5 }), applyStandardCameraPresetForTopDownModes: vi.fn() },
-    engineState: { clientOptions: { vrPassthrough: false }, playMode: "normal", disposed: false },
+    engineState: { clientOptions: { vrPassthrough: false, fpsMode: false }, characterCreationConfig: {playMode:"normal"}, playMode: "normal", disposed: false },
     playerMovement: { playerPos: { x: 3, y: 5 } }, renderPipeline: { scene, renderer },
     heldWeapon: { fpsHeldWeaponMesh: null },
     tileRendering: { tileMap: new Map(), floorGeometry: new THREE.PlaneGeometry() }, glyphTextures: { glyphOverlayMap: new Map() },
   } as unknown as WebXrPresentationDependencies;
+  Object.assign(deps, { coordinator: { applyPlayMode: vi.fn((mode: "fps" | "normal") => { deps.engineState.playMode=mode; }) } });
   Object.assign(deps.camera, {
     snapFpsStepToPlayer: vi.fn(),
     cameraPanX: 0, cameraPanY: 0, cameraPanTargetX: 0, cameraPanTargetY: 0, isCameraCenteredOnPlayer: true,
@@ -70,6 +74,61 @@ function fixture(native = false) {
     frame: () => { const camera = presentation.prepareRender(); if (camera) presentation.render(camera); return !!camera; } };
 }
 describe("Three.js owns the Quest world", () => {
+  it("defaults immersive FPS independently, preserves a tabletop choice, and restores flat view",async()=>{
+    const f=fixture();setXrSettings({fpsMode:true});
+    f.presentation.setStartupMenu(true);
+    f.presentation.start();await Promise.resolve();await toggleWebXr();f.presentation.updateCamera();
+    f.presentation.setStartupMenu(false);f.presentation.updateCamera();
+    expect(f.deps.engineState.playMode).toBe("fps");
+    expect(f.deps.engineState.clientOptions.fpsMode).toBe(false);
+    setXrSettings({fpsMode:false});f.presentation.updateCamera();
+    expect(f.deps.engineState.playMode).toBe("normal");
+    f.presentation.setStartupMenu(true);f.presentation.setStartupMenu(false);f.presentation.updateCamera();
+    expect(f.deps.engineState.playMode).toBe("normal");
+    setXrSettings({fpsMode:true});f.presentation.updateCamera();
+    await toggleWebXr();expect(f.deps.engineState.playMode).toBe("normal");
+    f.presentation.dispose();
+  });
+  it("waits for a valid floor pose and recalibrates on late player/scene initialization and both reset paths",async()=>{
+    const f=fixture();setXrSettings({fpsMode:true,fpsScale:1.5});
+    const pose={emulatedPosition:true,transform:{position:{x:0,y:0,z:0},orientation:new THREE.Quaternion()}};
+    f.renderer.xr.getFrame=()=>({getViewerPose:()=>pose});
+    f.deps.playerMovement.hasSeenPlayerPosition=false;
+    f.presentation.start();await Promise.resolve();await toggleWebXr();
+    const owner=f.presentation as unknown as {needsRecenter:boolean;anchor:THREE.Vector3};
+    f.presentation.updateCamera();expect(owner.needsRecenter).toBe(true);
+    f.frame();expect(f.renderer.clear).toHaveBeenCalledOnce();expect(f.renderer.render).not.toHaveBeenCalled();
+    pose.emulatedPosition=false;pose.transform.position.y=1.2;
+    f.presentation.updateCamera();expect(owner.anchor.y).toBe(1.2);
+    f.scene.scale.x=.6;f.deps.playerMovement.playerPos={x:19,y:13};
+    f.deps.playerMovement.hasSeenPlayerPosition=true;pose.transform.position.y=1.8;
+    f.presentation.updateCamera();expect(owner.anchor.y).toBe(1.8);
+    const root=f.scene.getObjectByName("WebXR tracking space")!;
+    const check=()=>{
+      const floor=new THREE.Vector3(19*TILE_SIZE,-13*TILE_SIZE,0).applyMatrix4(f.scene.matrixWorld).applyMatrix4(root.matrixWorld.clone().invert());
+      expect(floor.y).toBeCloseTo(0);
+      expect(new THREE.Vector3().setFromMatrixScale(root.matrixWorld).x).toBeCloseTo(1/(1.8/.62*1.5));
+    };
+    check();
+    for (const reset of [()=>recenterWebXr(),()=>f.renderer.xr.getReferenceSpace().dispatchEvent(new Event("reset"))]) {
+      owner.anchor.y=8;root.matrix.makeScale(9,9,9);root.updateMatrixWorld(true);
+      reset();await Promise.resolve();await Promise.resolve();await Promise.resolve();pose.emulatedPosition=true;f.presentation.updateCamera();expect(owner.needsRecenter).toBe(true);
+      pose.emulatedPosition=false;f.presentation.updateCamera();check();expect(owner.anchor.y).toBe(1.8);
+    }
+    f.presentation.dispose();setXrSettings({fpsScale:1});
+  });
+  it("ignores a late floor-reference refresh after its session ends",async()=>{
+    const f=fixture();
+    let resolve!: (space:XRReferenceSpace)=>void;
+    Object.assign(f.session,{requestReferenceSpace:()=>new Promise<XRReferenceSpace>(done=>{resolve=done;})});
+    f.presentation.start();await Promise.resolve();await toggleWebXr();f.presentation.updateCamera();
+    recenterWebXr();await toggleWebXr();await toggleWebXr();
+    resolve(new EventTarget() as XRReferenceSpace);
+    await Promise.resolve();await Promise.resolve();await Promise.resolve();
+    expect(f.renderer.xr.setReferenceSpace).not.toHaveBeenCalled();
+    f.presentation.updateCamera();expect(f.presentation.active).toBe(true);
+    f.presentation.dispose();
+  });
   it("holds the tabletop heading until its grab bar is held, then keeps the released heading", async () => {
     const f = fixture();
     const head = { position: { x: 0, y: 1.6, z: 0 }, orientation: new THREE.Quaternion() };
@@ -85,12 +144,12 @@ describe("Three.js owns the Quest world", () => {
     const held = owner.tableHeading.toArray();
     owner.tableMove.end(hand); head.position.x = -.8; f.presentation.updateCamera();
     expect(owner.tableHeading.toArray()).toEqual(held);
-    recenterWebXr(); f.presentation.updateCamera();
+    recenterWebXr(); await Promise.resolve();await Promise.resolve();await Promise.resolve(); f.presentation.updateCamera();
     expect(owner.tableHeading.toArray()).toEqual(initial);
     f.presentation.dispose();
   });
   it("applies FPS scale live and restores the original rig at 100 percent", async () => {
-    const f = fixture(); f.deps.engineState.playMode = "fps";
+    const f = fixture(); f.deps.engineState.playMode = "fps"; setXrSettings({fpsMode:true});
     f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
     const root = f.scene.getObjectByName("WebXR tracking space")!;
     const baseline = root.matrixWorld.clone(), eye = f.deps.camera.camera.position.clone();
@@ -117,18 +176,18 @@ describe("Three.js owns the Quest world", () => {
     try {
       f.presentation.start();await Promise.resolve();await toggleWebXr();
       f.presentation.updateCamera(); // Enter FPS from an existing tabletop session.
-      f.deps.engineState.playMode="fps";f.presentation.updateCamera();
+      f.deps.engineState.playMode="fps";setXrSettings({fpsMode:true});f.presentation.updateCamera();
       expect(floorHeight()).toBeCloseTo(0);
       head.position.y=.7;f.presentation.updateCamera(); // Crouching must not lift the floor.
       expect(floorHeight()).toBeCloseTo(0);
-      recenterWebXr();f.presentation.updateCamera();expect(floorHeight()).toBeCloseTo(0);
+      recenterWebXr();await Promise.resolve();await Promise.resolve();await Promise.resolve();f.presentation.updateCamera();expect(floorHeight()).toBeCloseTo(0);
       await toggleWebXr();head.position.y=1.8;await toggleWebXr();f.presentation.updateCamera();
       expect(floorHeight()).toBeCloseTo(0);
       expect(f.renderer.xr.setReferenceSpaceType).toHaveBeenCalledWith("local-floor");
     } finally { f.presentation.dispose();setXrSettings({fpsScale:1}); }
   });
   it("faces the virtual eye during far-look and the upright player grid after return", async () => {
-    const f = fixture(); f.deps.engineState.playMode = "fps";
+    const f = fixture(); f.deps.engineState.playMode = "fps"; setXrSettings({fpsMode:true});
     const camera = f.deps.camera;
     Object.assign(camera, {
       fpsPositionCursorCameraCurrent: new THREE.Vector3(), fpsPositionCursorLookCurrent: new THREE.Vector3(),
@@ -178,7 +237,7 @@ describe("Three.js owns the Quest world", () => {
     f.presentation.dispose();
   });
   it("removes movement made during loading when the first FPS player grid arrives", async () => {
-    const f=fixture(); f.deps.engineState.playMode="fps"; f.deps.playerMovement.hasSeenPlayerPosition=false;
+    const f=fixture(); f.deps.engineState.playMode="fps";setXrSettings({fpsMode:true}); f.deps.playerMovement.hasSeenPlayerPosition=false;
     const head={position:{x:0,y:1.6,z:0},orientation:new THREE.Quaternion()};
     f.renderer.xr.getFrame=()=>({getViewerPose:()=>({transform:head})});
     f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
@@ -187,7 +246,7 @@ describe("Three.js owns the Quest world", () => {
     f.presentation.dispose();
   });
   it("snaps fast-movement turns to the target grid heading while keeping the headset position fixed", async () => {
-    const f=fixture(); f.deps.engineState.playMode="fps";
+    const f=fixture(); f.deps.engineState.playMode="fps";setXrSettings({fpsMode:true});
     const head={position:{x:0,y:1.6,z:0},orientation:new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),.4)};
     f.renderer.xr.getFrame=()=>({getViewerPose:()=>({transform:head})});
     f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
@@ -206,12 +265,12 @@ describe("Three.js owns the Quest world", () => {
     const head={position:{x:0,y:1.6,z:0},orientation:new THREE.Quaternion()};
     f.renderer.xr.getFrame=()=>({getViewerPose:()=>({transform:head})});
     f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
-    head.position={x:.8,y:1.6,z:.4}; f.deps.engineState.playMode="fps"; f.presentation.updateCamera();
+    head.position={x:.8,y:1.6,z:.4}; f.deps.engineState.playMode="fps";setXrSettings({fpsMode:true}); f.presentation.updateCamera();
     expect(f.deps.camera.camera.position.x).toBeCloseTo(3);
     expect(f.deps.camera.camera.position.y).toBeCloseTo(-5);
     head.position.x+=.3; f.presentation.updateCamera();
     expect(f.deps.camera.camera.position.x).not.toBeCloseTo(3);
-    recenterWebXr(); f.presentation.updateCamera();
+    recenterWebXr(); await Promise.resolve();await Promise.resolve();await Promise.resolve(); f.presentation.updateCamera();
     expect(f.deps.camera.camera.position.x).toBeCloseTo(3);
     expect(f.deps.camera.camera.position.y).toBeCloseTo(-5);
     expect(f.deps.camera.snapFpsStepToPlayer).toHaveBeenCalledTimes(2);
@@ -225,7 +284,7 @@ describe("Three.js owns the Quest world", () => {
     const owner = f.presentation as unknown as {tableMove:TableMoveHandle;tablePosition:THREE.Vector3;tilt:{pitch:number}};
     owner.tableMove.offset.set(3,2,1); f.deps.camera.cameraPanX=20; f.presentation.updateCamera();
     head.position={x:5,y:1.6,z:-3}; head.orientation.setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI/2);
-    recenterWebXr(); f.presentation.updateCamera();
+    recenterWebXr(); await Promise.resolve();await Promise.resolve();await Promise.resolve(); f.presentation.updateCamera();
     expect(owner.tableMove.offset.length()).toBe(0); expect(f.deps.camera.cameraPanX).toBe(0);
     expect(owner.tablePosition.x).toBeCloseTo(5-1.55); expect(owner.tablePosition.z).toBeCloseTo(-3);
     expect(owner.tablePosition.y).toBeCloseTo(.95); expect(owner.tilt.pitch).toBeCloseTo(Math.PI/3);
@@ -275,7 +334,7 @@ describe("Three.js owns the Quest world", () => {
   it("keeps tracked eyes and physical UI undistorted under rectangular world cells", async () => {
     const f = fixture();
     f.scene.scale.x = 0.6;
-    f.deps.engineState.playMode = "fps";
+    f.deps.engineState.playMode = "fps"; setXrSettings({fpsMode:true});
     f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
     const root = f.scene.getObjectByName("WebXR tracking space")!;
     const tracked = new THREE.ArrayCamera();
@@ -322,7 +381,7 @@ describe("Three.js owns the Quest world", () => {
     f.presentation.dispose();
   });
   it("uses the standard FPS step position unless instant movement is enabled", async () => {
-    const f = fixture(); (f.deps.engineState as { playMode: string }).playMode = "fps";
+    const f = fixture(); (f.deps.engineState as { playMode: string }).playMode = "fps"; setXrSettings({fpsMode:true});
     Object.assign(f.deps.camera, { sampleFpsStepCameraGroundPosition: (position: THREE.Vector3) => { position.set(2, -5, 0); return true; } });
     f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
     const root = f.scene.getObjectByName("WebXR tracking space")!;
@@ -332,7 +391,7 @@ describe("Three.js owns the Quest world", () => {
     setXrSettings({ instantMovement: false }); f.presentation.dispose();
   });
   it("keeps a repeated FPS step sample stable with roomscale and the XR-written camera pose", async () => {
-    const f = fixture(); (f.deps.engineState as { playMode: string }).playMode = "fps";
+    const f = fixture(); (f.deps.engineState as { playMode: string }).playMode = "fps"; setXrSettings({fpsMode:true});
     const head = { position: { x: .35, y: 1.8, z: .2 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
     f.renderer.xr.getFrame = () => ({ getViewerPose: () => ({ transform: head }) });
     Object.assign(f.deps.camera, { sampleFpsStepCameraGroundPosition: (position: THREE.Vector3) => { position.set(2, -5, 0); return true; } });
@@ -348,7 +407,7 @@ describe("Three.js owns the Quest world", () => {
     f.presentation.dispose();
   });
   it("recenters the first-person HUD when gameplay moves the player", async () => {
-    const f = fixture(); (f.deps.engineState as { playMode: string }).playMode = "fps";
+    const f = fixture(); (f.deps.engineState as { playMode: string }).playMode = "fps"; setXrSettings({fpsMode:true});
     const head = { position: { x: 0, y: 1.6, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
     f.renderer.xr.getFrame = () => ({ getViewerPose: () => ({ transform: head }) });
     f.presentation.start(); await Promise.resolve(); await toggleWebXr(); f.presentation.updateCamera();
@@ -363,7 +422,7 @@ describe("Three.js owns the Quest world", () => {
     f.presentation.dispose();
   });
   it("snap turning bypasses first-person UI lag and centers its heading immediately", async () => {
-    const f = fixture(); (f.deps.engineState as { playMode: string }).playMode = "fps";
+    const f = fixture(); (f.deps.engineState as { playMode: string }).playMode = "fps"; setXrSettings({fpsMode:true});
     const head = { position: { x: 0, y: 1.6, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
     f.renderer.xr.getFrame = () => ({ getViewerPose: () => ({ transform: head }) });
     const now = vi.spyOn(performance, "now").mockReturnValue(0);
@@ -437,13 +496,13 @@ describe("Three.js owns the Quest world", () => {
     expect(f.frame()).toBe(true);
     expect(f.renderer.render.mock.calls[0][0]).toBe(f.scene);
     expect(f.renderer.clippingPlanes).toHaveLength(4);
-    f.deps.engineState.playMode = "fps";
+    f.deps.engineState.playMode = "fps"; setXrSettings({fpsMode:true});
     f.presentation.updateCamera(); f.frame();
     expect(f.renderer.clippingPlanes).toHaveLength(0);
     expect(f.mesh.geometry).toBe(geometry); expect(f.mesh.material).toBe(material); expect(f.mesh.matrix.equals(matrix)).toBe(true);
     await toggleWebXr();
     expect(f.presentation.active).toBe(false);
-    expect(f.deps.camera.cameraPitch).toBe(0); // FPS selected during XR stays FPS on exit.
+    expect(f.deps.camera.cameraPitch).toBe(.4); // Restore the independent flat camera preference.
     expect(f.classes.has("nh3d-webxr-active")).toBe(false);
     expect(f.scene.children).toEqual([f.mesh]);
     f.presentation.dispose();
@@ -560,6 +619,7 @@ it("renders controller overlays in menu and game and releases them with the sess
   f.presentation.renderStartupFrame(0);
   expect(models.render).toHaveBeenCalledOnce();
   f.presentation.setStartupMenu(false);
+  f.presentation.updateCamera();
   f.presentation.render(new THREE.PerspectiveCamera());
   expect(models.render).toHaveBeenCalledTimes(2);
   f.presentation.dispose();expect(models.dispose).toHaveBeenCalledOnce();expect(f.presentation.controllerModels).toBeNull();
