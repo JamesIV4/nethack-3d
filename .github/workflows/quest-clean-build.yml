@@ -35,6 +35,9 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - run: npm ci
       - name: Test dependency validation
         run: node --test scripts/quest/webxr/setup-dependencies.test.mjs scripts/quest/webxr/download-dependencies.test.mjs scripts/quest/build-environment.test.mjs
