@@ -49,14 +49,12 @@ export function patchVisibleInput(checkout) {
     "discard vanished pane capture");
 
   source = replaceOnce(source,
-    `      for (const WidgetPtr& widget: widgets) {
-        if (externalVR->IsPresenting() && widget->GetPlacement()->name == "Window" &&`,
+    `      for (const WidgetPtr& widget: widgets) {`,
     `      for (const WidgetPtr& widget: widgets) {
         // Widget roots may be temporarily hidden for composition. Use the
         // placement flag here so only a logically hidden native widget loses
         // hit testing.
-        if (!widget->GetPlacement() || !widget->GetPlacement()->visible) continue;
-        if (externalVR->IsPresenting() && widget->GetPlacement()->name == "Window" &&`,
+        if (!widget->GetPlacement() || !widget->GetPlacement()->visible) continue;`,
     "skip hidden native widgets");
 
   writeFileSync(file, source);

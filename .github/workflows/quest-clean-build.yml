@@ -40,7 +40,7 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - run: npm ci
       - name: Test dependency validation
-        run: node --test scripts/quest/webxr/setup-dependencies.test.mjs scripts/quest/webxr/download-dependencies.test.mjs scripts/quest/build-environment.test.mjs
+        run: node --test scripts/quest/webxr/setup-dependencies.test.mjs scripts/quest/webxr/download-dependencies.test.mjs scripts/quest/webxr/patch-visible-input.test.mjs scripts/quest/build-environment.test.mjs
       - name: Download from an empty cache
         run: npm run quest:webxr:setup
       - run: npm run quest:webxr:apk -- --check
