@@ -1,5 +1,6 @@
 import {
   nh3dBaseSoundVariationId,
+  nh3dSoundEffectDefinitions,
   loadNh3dSoundPackStateFromIndexedDb,
   loadStoredNh3dSoundBlob,
   resolveNh3dMessageLogSoundEffectKeys,
@@ -47,6 +48,32 @@ export class MessageSoundHooks {
     new Map();
   private audioDecodeErrorLoggedByUrl: Set<string> = new Set();
   private userGestureAudioResumed: boolean = false;
+  private disposed = false;
+  private preloadInFlight: Promise<void> | null = null;
+
+  /** Decode enabled variations during loading without playing or choosing one. */
+  public preload(): Promise<void> {
+    if (this.disposed || !this.isSoundEnabled()) return Promise.resolve();
+    if (this.preloadInFlight) return this.preloadInFlight;
+    const context = this.ensureAudioContext();
+    if (!context) return Promise.resolve();
+    this.preloadInFlight = (async () => {
+      const pack = await this.resolveActiveSoundPack();
+      const pending = nh3dSoundEffectDefinitions.flatMap(({key}) =>
+        this.collectSoundVariations(key, pack).filter(v => v.enabled && v.volume > 0)
+          .map(variation => ({key,variation})));
+      let index = 0;
+      // Limit parallel fetch/decode work on mobile and standalone headsets.
+      await Promise.all(Array.from({length:4}, async () => {
+        while (!this.disposed && this.isSoundEnabled() && index < pending.length) {
+          const {key,variation} = pending[index++];
+          const url = await this.resolveSoundEffectSourceUrl(key, variation);
+          if (url && !this.disposed) await this.decodeAudioBufferForUrl(url, context);
+        }
+      }));
+    })().finally(() => { this.preloadInFlight = null; });
+    return this.preloadInFlight;
+  }
 
   constructor(options: MessageSoundHooksOptions) {
     this.isSoundEnabled = options.isSoundEnabled;
@@ -130,6 +157,7 @@ export class MessageSoundHooks {
   }
 
   public dispose(): void {
+    this.disposed = true;
     this.reset();
     this.stopAudioContextRecoveryLoop();
     this.userGestureAudioResumed = false;
@@ -170,6 +198,7 @@ export class MessageSoundHooks {
     this.soundPackLookupInFlight = (async () => {
       try {
         const state = await loadNh3dSoundPackStateFromIndexedDb();
+        if (this.disposed) return null;
         const activePack =
           state.packs.find((pack) => pack.id === state.activePackId) ??
           state.packs.find((pack) => pack.isDefault) ??
@@ -232,6 +261,7 @@ export class MessageSoundHooks {
 
     try {
       const blob = await loadStoredNh3dSoundBlob(assignmentPath);
+      if (this.disposed) return null;
       if (!blob) {
         return defaultPath;
       }
@@ -387,6 +417,7 @@ export class MessageSoundHooks {
   }
 
   private ensureAudioContext(): AudioContext | null {
+    if (this.disposed) return null;
     if (this.audioContext) {
       return this.audioContext;
     }
@@ -484,6 +515,7 @@ export class MessageSoundHooks {
           return null;
         }
         const bytes = await response.arrayBuffer();
+        if (this.disposed) return null;
         return await context.decodeAudioData(bytes.slice(0));
       } catch (error) {
         if (!this.audioDecodeErrorLoggedByUrl.has(sourceUrl)) {
@@ -514,6 +546,7 @@ export class MessageSoundHooks {
     }
 
     const buffer = await this.decodeAudioBufferForUrl(sourceUrl, context);
+    if (this.disposed || !this.isSoundEnabled()) return "not-ready";
     if (!buffer) {
       return "failed";
     }
@@ -537,6 +570,7 @@ export class MessageSoundHooks {
   }
 
   private tryPlaySoundEffectViaHtmlAudio(sourceUrl: string, volume: number): void {
+    if (this.disposed || !this.isSoundEnabled()) return;
     try {
       const audio = new Audio(sourceUrl);
       audio.volume = volume;

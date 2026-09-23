@@ -206,6 +206,10 @@ class Nethack3DEngine implements Nethack3DEngineController {
 
     // --- Event Listeners ---
     const eventListenerSignal = { signal: this.systems.engineState.domEventAbortController.signal };
+    // Menu/start interactions can unlock preloaded audio before the first move.
+    const resumeAudio = () => this.systems.audioHapticsPlatform.resumeFmodFromUserGesture();
+    document.addEventListener("pointerdown", resumeAudio, { ...eventListenerSignal, capture: true });
+    document.addEventListener("keydown", resumeAudio, { ...eventListenerSignal, capture: true });
     this.systems.renderPipeline.renderer.domElement.addEventListener(
       "webglcontextlost",
       this.systems.renderPipeline.handleWebGlContextLost,
@@ -743,9 +747,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.promptDialogs.updateConnectionStatus("Starting", "starting");
     this.systems.tileUpdates.pendingPlayerTileRefreshOnNextPosition = true;
 
-    await setActiveGlyphCatalog(
+    await Promise.all([this.systems.audioHapticsPlatform.prepareAudioForLoading(), setActiveGlyphCatalog(
       this.systems.engineState.characterCreationConfig.runtimeVersion ?? "3.6.7",
-    );
+    )]);
     if (this.systems.engineState.disposed || generation !== this.runtimeGeneration) {
       return;
     }

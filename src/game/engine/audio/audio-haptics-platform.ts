@@ -22,7 +22,7 @@ export interface AudioHapticsPlatformDependencies {
   >;
   readonly engineState: Pick<
     EngineState,
-    "clientOptions"
+    "clientOptions" | "disposed"
   >;
   readonly movementInput: Pick<
     MovementInput,
@@ -66,6 +66,7 @@ export class AudioHapticsPlatform {
   readonly deploymentTarget: string = this.resolveDeploymentTarget();
 
   fmodRuntimeInitializationInFlight: boolean = false;
+  private fmodInitialization: Promise<void> | null = null;
 
   pendingThrownWeaponDirectionSound: boolean = false;
 
@@ -85,16 +86,25 @@ export class AudioHapticsPlatform {
 
   readonly incomingDamageRumbleDebounceMs: number = 140;
 
-  async initializeFmodRuntime(): Promise<void> {
-    if (
-      this.fmodRuntime.isInitialized() ||
-      this.fmodRuntimeInitializationInFlight
-    ) {
-      return;
-    }
+  initializeFmodRuntime(): Promise<void> {
+    if (this.fmodInitialization) return this.fmodInitialization;
+    if (this.fmodRuntime.isInitialized() || this.dependencies.engineState.disposed) return Promise.resolve();
+    this.fmodInitialization = this.initializeFmodRuntimeInternal().finally(() => { this.fmodInitialization = null; });
+    return this.fmodInitialization;
+  }
+
+  async prepareAudioForLoading(): Promise<void> {
+    if (!this.dependencies.engineState.clientOptions.soundEnabled || this.dependencies.engineState.disposed) return;
+    await Promise.all([this.initializeFmodRuntime(), this.messageSoundHooks.preload()]).catch(error => {
+      console.warn("Audio preload failed; gameplay will continue and retry sounds on demand.", error);
+    });
+  }
+
+  private async initializeFmodRuntimeInternal(): Promise<void> {
     this.fmodRuntimeInitializationInFlight = true;
     try {
       await this.fmodRuntime.initialize();
+      if (this.dependencies.engineState.disposed) return;
       this.fmodRuntime.setEnabled(this.dependencies.engineState.clientOptions.soundEnabled);
       if (!this.dependencies.engineState.clientOptions.soundEnabled) {
         logWithOriginal(
@@ -136,10 +146,7 @@ export class AudioHapticsPlatform {
     if (!enabled) {
       return;
     }
-    if (this.fmodRuntime.isInitialized()) {
-      return;
-    }
-    void this.initializeFmodRuntime();
+    void this.prepareAudioForLoading();
   }
 
   resumeFmodFromUserGesture(): void {

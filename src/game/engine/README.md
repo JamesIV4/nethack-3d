@@ -90,6 +90,8 @@ When extending a subsystem:
 
 ## Events and cleanup
 
+Audio preparation starts when sound is enabled, including the shared startup-menu engine. `connectToRuntime` joins FMOD initialization and enabled sound-variation fetch/decode work before starting NetHack, alongside glyph-catalog loading. `MessageSoundHooks` owns the decoded cache and limits preload concurrency to four; preparation is silent and does not consume variation/debounce state. Document pointer/key gestures unlock audio during menu interaction. Muted settings skip preparation, and disposal prevents late loading from recreating audio resources.
+
 Worker commands and event payloads are unchanged. `InputCommands` is the shared submission path for device and UI commands; input selection, prompt cleanup, tile refresh and pointer-lock transitions remain synchronous. Preserve their ordering, including cursor updates received before position-mode activation and menu completion before prompt reset.
 
 Browser handlers must use their owning subsystem as `this`. Listener registration uses the engine's abort signal. Root disposal first stops frame/listener intake and clears scheduled interaction work, then resets prompts and coordinates runtime, audio, DOM and graphics cleanup. Keep owner resource cleanup connected to this lifecycle, including scene clears and option-driven cache invalidation.

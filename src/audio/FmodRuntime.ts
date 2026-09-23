@@ -124,6 +124,7 @@ export class FmodRuntime {
   private studioSystem: FmodStudioSystem | null = null;
   private coreSystem: FmodCoreSystem | null = null;
   private initializePromise: Promise<void> | null = null;
+  private disposed = false;
   private loadScriptPromise: Promise<void> | null = null;
   private updateTimerId: number | null = null;
   private updateLoopMode: "raf" | "timeout" | null = null;
@@ -171,6 +172,7 @@ export class FmodRuntime {
   }
 
   public initialize(): Promise<void> {
+    if (this.disposed) return Promise.resolve();
     if (!this.initializePromise) {
       this.initializePromise = this.initializeInternal().catch((error) => {
         this.initializePromise = null;
@@ -246,6 +248,7 @@ export class FmodRuntime {
   }
 
   public dispose(): void {
+    this.disposed = true;
     this.setEnabled(false);
     this.stopResumeRecoveryLoop();
     this.stopUpdateLoop();
@@ -292,16 +295,18 @@ export class FmodRuntime {
   }
 
   public resumeFromUserGesture(): void {
-    if (!this.enabled || !this.module || !this.coreSystem) {
+    if (!this.enabled || this.disposed) {
       return;
     }
     this.userGestureAudioResumed = true;
+    if (!this.module || !this.coreSystem) return;
     this.startResumeRecoveryLoop();
     this.recoverAudioAfterInterruption("user-gesture");
   }
 
   private async initializeInternal(): Promise<void> {
     const moduleFactory = await this.getModuleFactory();
+    if (this.disposed) return;
     const moduleConfig: Record<string, unknown> = {
       INITIAL_MEMORY: this.options.initialMemoryBytes,
       locateFile: (path: string) => {
@@ -317,6 +322,7 @@ export class FmodRuntime {
     };
 
     const module = await moduleFactory(moduleConfig);
+    if (this.disposed) return;
     this.module = module;
 
     const studioOut: FmodOut<FmodStudioSystem> = {};
@@ -380,6 +386,7 @@ export class FmodRuntime {
       this.startUpdateLoop();
       if (this.userGestureAudioResumed) {
         this.startResumeRecoveryLoop();
+        this.recoverAudioAfterInterruption("user-gesture");
       }
     } else {
       this.suspendMixer();
