@@ -39,7 +39,7 @@ Sideload `quest/build/outputs/apk/nethack3d-vr.apk` with Meta Quest Developer Hu
 
 The build also produces a versioned copy in `quest/build/outputs/apk/`. The publisher verifies that `libxul.so` matches the staged custom Gecko binary byte for byte and prints the APK's SHA256 on every build. Sideload this copy with Meta Quest Developer Hub.
 
-The launcher name is **NetHack 3D VR**, including debug builds. The package ID is `com.nethack3d.quest.vr`; its private data directory is separate from the old WebXR Proof package, with no save migration. `package.json` supplies `versionName`; `versionCode` is `major * 1000000 + minor * 1000 + patch`. The publisher verifies both. The host serves only its bundled assets at `http://127.0.0.1:18973`. It does not depend on Quest Browser or a remote game server. A cold launch and game creation in airplane mode remain acceptance checks.
+The launcher name is **NetHack 3D**, including debug builds. The package ID is `com.nethack3d.quest.vr`; its private data directory is separate from the old WebXR Proof package, with no save migration. `package.json` supplies `versionName`; signed release builds automatically reserve a higher `versionCode` (see below). The publisher verifies both. The host serves only its bundled assets at `http://127.0.0.1:18973`. It does not depend on Quest Browser or a remote game server. A cold launch and game creation in airplane mode remain acceptance checks.
 
 The app opens its main menu in VR. The dedicated offline Gecko host disables `dom.vr.require-gesture` so launch can request the session immediately; other hosts retain a normal Enter VR button. The front end creates the renderer without starting a NetHack worker, and starting/resuming a game or returning to the menu keeps that renderer and XR session. Explicit Exit VR is respected.
 
@@ -298,11 +298,67 @@ versioned filename ends in `Quest Debug.apk`. Publishing an existing release
 uses `npm run quest:webxr:publish-apk`; pass `-- --debug` explicitly for debug.
 Publication here only verifies/copies locally; it does not upload to Meta.
 
+### Automatic upload version codes
+
+Each `npm run quest:webxr:apk` signed release build reserves an increasing Android
+`versionCode`, after prerequisites and signing configuration are checked. The
+first rebuild of 1.6.0 uses 1006001, followed by 1006002, and so on; `versionName`
+and the versioned APK filename remain based on `package.json`. This supports
+small fixes without changing the public release version. Meta requires a higher
+internal code for each upload, not a new display version.
+
+The counter is stored in ignored `quest/version-code.local.json`, outside the
+generated runtime and build directories. Failed builds consume a number; gaps are
+safe. Debug builds, `--check`, standalone preparation, and publication of an
+existing APK do not increment it. Do not run concurrent builds in one checkout.
+The publisher verifies the currently reserved code, so after a failed newer build,
+rebuild before publishing instead of copying an older artifact.
+
+Preserve this counter when moving to another machine. Alternatively, set
+`NH3D_QUEST_VERSION_CODE` to a number above the highest code already uploaded to
+Meta for one release build, then unset it; later builds continue automatically.
+For example in PowerShell:
+
+```powershell
+$env:NH3D_QUEST_VERSION_CODE = "1006050" # Choose a code above your uploaded builds.
+npm.cmd run quest:webxr:apk
+Remove-Item Env:NH3D_QUEST_VERSION_CODE
+```
+
+The local counter does not query Meta. A reservation lock prevents simultaneous
+counter writes; after a process crash, remove `quest/version-code.local.json.lock`
+only after confirming no Quest build is running. Never reset the counter to reuse
+an uploaded version code.
+
 The final release APK is checked for a valid non-debug signature, debuggable
-flags, unsupported install/package-query permissions, eye-tracking feature
-pairing, and a MAIN/VR intent filter before copying it to the release directory.
-Eye tracking is optional so devices without it remain supported. Release code
+flags, excluded permissions, and a MAIN/VR intent filter before copying it to
+the release directory. The game excludes eye tracking, microphone recording,
+coarse/fine location, Bluetooth scan/connect/advertise, and notification
+permissions, as well as package installation/query permissions inherited from
+the browser host. Debug and release overlays explicitly remove them during
+manifest merging, including SDK-23 declarations from dependencies. The unused
+eye-tracking feature declaration is also removed. Native keyboard typing remains
+available; microphone dictation is unavailable without recording permission.
+Rebuild the APK to apply these changes; an already uploaded binary is unchanged.
+Release code
 shrinking is disabled to preserve the tested host's JNI/reflection behavior.
+
+### Backup and network policy
+
+Both Quest build overlays and the main manifest explicitly set `allowBackup`,
+`fullBackupContent`, and `usesCleartextTraffic` to `false`. The application uses
+`@xml/nh3d_network_security_config`, which denies cleartext traffic by default
+and allows only the exact `127.0.0.1` address needed by the bundled game server.
+There is no LAN or public-domain HTTP exception. Android's per-domain network
+configuration takes precedence over the cleartext manifest flag on supported
+Android versions. See [Android network security configuration](https://developer.android.com/privacy-and-security/security-config).
+
+Release publication checks the decoded APK manifest, resolves its actual network
+configuration resource even after resource-path optimization, and verifies the
+packaged policy. These are packaging checks; the rebuilt APK still needs an
+offline startup/gameplay check on Quest to confirm the embedded Gecko runtime
+and native local-server clients work with the restricted policy. No claim is
+made that the Android policy filters every raw/native network socket.
 
 The launcher name is **NetHack 3D**. Android's application description is:
 

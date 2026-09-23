@@ -1,4 +1,4 @@
-import { assertStoreManifest, geckoConfigResourcePath } from "./store-manifest.mjs";
+import { assertStoreManifest, geckoConfigResourcePath, networkSecurityResource, assertNetworkSecurityPolicy } from "./store-manifest.mjs";
 import { findAndroidSdk } from "../build-environment.mjs";
 import { execFileSync } from "node:child_process";
 import { readFileSync, mkdirSync, copyFileSync, readdirSync, statSync } from "node:fs";
@@ -43,13 +43,17 @@ for (const permission of ["WAKE_LOCK", "FOREGROUND_SERVICE"]) {
   if (!details.includes("name='android.permission." + permission + "'"))
     throw new Error("Missing Gecko runtime permission: " + permission);
 }
+const resources = execFileSync(aapt, ["dump", "--values", "resources", apk], {encoding:"utf8",windowsHide:true,maxBuffer:32*1024*1024});
 if (!debug) {
-  assertStoreManifest(execFileSync(aapt, ["dump", "xmltree", apk, "AndroidManifest.xml"], {encoding:"utf8", windowsHide:true}));
+  const reference=assertStoreManifest(execFileSync(aapt, ["dump", "xmltree", apk, "AndroidManifest.xml"], {encoding:"utf8", windowsHide:true}));
+  const policy=networkSecurityResource(resources);
+  if(reference!==policy.reference) throw new Error('APK references an unexpected network security policy.');
+  assertNetworkSecurityPolicy(execFileSync(aapt, ["dump", "xmltree", apk, policy.path], {encoding:"utf8",windowsHide:true}));
   const signer = path.join(sdk,"build-tools",versions[0],"lib/apksigner.jar");
   const result = execFileSync(process.env.JAVA_HOME ? path.join(process.env.JAVA_HOME,"bin",process.platform === "win32" ? "java.exe" : "java") : "java", ["-jar",signer,"verify","--verbose","--print-certs",apk], {encoding:"utf8",windowsHide:true});
   if (/CN=Android Debug/i.test(result)) throw new Error("Store APK uses the Android debug signing certificate.");
 }
-const configResourcePath = geckoConfigResourcePath(execFileSync(aapt, ["dump", "--values", "resources", apk], {encoding:"utf8",windowsHide:true,maxBuffer:32*1024*1024}));
+const configResourcePath = geckoConfigResourcePath(resources);
 const bytes = readFileSync(apk),
   names = new Set();
 const inspected = unzipSync(bytes, {
@@ -145,8 +149,9 @@ const versionedOutput = path.join(root, "release", `NetHack 3D ${version} Quest$
 mkdirSync(path.dirname(versionedOutput), { recursive: true });
 copyFileSync(apk, versionedOutput);
 console.log("Verified standalone APK: " + versionedOutput);
+console.log(`Version: ${appVersion.name}; versionCode: ${appVersion.code}`);
 console.log("Latest APK: " + output);
 console.log("SHA256: " + createHash("sha256").update(bytes).digest("hex"));
 console.log("APK binary modified: " + statSync(apk).mtime.toLocaleString());
 console.log("Verified/copied at: " + new Date().toLocaleString());
-console.log("Unchanged builds reuse the existing APK; its file timestamp and SHA256 can stay the same.");
+console.log("Verification does not increment versions; signed release builds reserve a new versionCode.");

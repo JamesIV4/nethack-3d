@@ -4,8 +4,7 @@ import { replaceOnce } from "./runtime-patch.mjs";
 import { questAppVersion } from "./app-version.mjs";
 
 /** Shipping identity is independent of Gradle's debug/release build type. */
-export function patchIdentity(checkout) {
-  const version = questAppVersion();
+export function patchIdentity(checkout, version = questAppVersion()) {
   const buildPath = path.join(checkout, "app/build.gradle");
   let build = readFileSync(buildPath, "utf8").replaceAll("\r\n", "\n")
     .replaceAll("com.nethack3d.quest.webxrproof", "com.nethack3d.quest.vr")
@@ -26,7 +25,7 @@ android.applicationVariants.all { variant ->
     writeFileSync(buildPath, build);
   }
   writeFileSync(path.join(checkout, "app/nh3d-identity.gradle"), `
-// Generated from package.json; overrides the browser's version and debug label.
+// Generated from package.json and the Quest build counter.
 android.defaultConfig {
     applicationId = "com.nethack3d.quest.vr"
     versionName = "${version.name}"

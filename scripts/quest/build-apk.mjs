@@ -3,6 +3,8 @@ import { existsSync, readFileSync, mkdirSync, copyFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { findAndroidSdk, javaEnvironment } from "./build-environment.mjs";
+import { reserveQuestVersion } from "./webxr/app-version.mjs";
+import { patchIdentity } from "./webxr/patch-identity.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const args = process.argv.slice(2), legacy = args.includes("--legacy"), debug = legacy || args.includes("--debug");
@@ -28,6 +30,11 @@ try {
   if (!debug) run(java,["-Xmx64m","-classpath",path.join(project,"gradle/wrapper/gradle-wrapper.jar"),"org.gradle.wrapper.GradleWrapperMain","-p",project,":app:validateNh3dReleaseSigning","--console=plain"],env);
   const npm = [env.npm_execpath, path.join(path.dirname(process.execPath),"node_modules/npm/bin/npm-cli.js"),path.resolve(path.dirname(process.execPath),"../lib/node_modules/npm/bin/npm-cli.js")].find(file=>file&&existsSync(file));
   if (!npm) throw new Error("Cannot locate npm-cli.js. Run this build using npm run quest:webxr:apk (or quest:apk for the legacy build).");
+  if (!debug) {
+    const version = reserveQuestVersion(JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")).version);
+    patchIdentity(project, version);
+    console.log(`Quest release ${version.name}: reserved versionCode ${version.code}`);
+  }
   run(process.execPath,[npm,"run","quest:sync"],env);
   const wrapper = path.join(root,legacy?"android":"quest/runtime/wolvic","gradle/wrapper/gradle-wrapper.jar");
   // Invoke the pinned Gradle wrapper without a platform-specific shell launcher.
