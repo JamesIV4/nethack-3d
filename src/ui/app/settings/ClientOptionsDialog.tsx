@@ -225,7 +225,6 @@ export function ClientOptionsDialog({
                 openGitHubReleases={openGitHubReleases}
               />) : null}
               {visibleClientOptions.map((option) => {
-                if (option.key === "vrPassthrough" && !isQuestApk()) return null;
                 if (option.developerOnly && !showDeveloperClientSettings) {
                   return null;
                 }

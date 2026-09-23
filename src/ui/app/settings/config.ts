@@ -666,12 +666,6 @@ export const clientOptionsConfig: ClientOption[] = [
     type: "boolean",
   },
   { key: "group-vr", label: t.webxr.groupLabel, type: "group" },
-  {
-    key: "vrPassthrough",
-    label: t.webxr.passthroughLabel,
-    description: t.webxr.passthroughDescription,
-    type: "boolean",
-  },
 ];
 
 export const clientOptionsDefaultTabId: ClientOptionsTabId = "display";

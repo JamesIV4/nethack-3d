@@ -515,14 +515,13 @@ describe("Three.js owns the Quest world", () => {
     expect(f.classes.size).toBe(0); expect(f.frame()).toBe(false);
     f.presentation.dispose();
   });
-  it("requests AR explicitly and clears alpha for mixed reality", async () => {
+  it("enters opaque VR even when a saved mixed reality preference is enabled", async () => {
     const f = fixture(); f.deps.engineState.clientOptions.vrPassthrough = true;
-    f.session.environmentBlendMode = "alpha-blend";
     f.presentation.start(); await Promise.resolve(); await toggleWebXr();
     f.presentation.updateCamera();
-    expect(f.requestSession).toHaveBeenCalledWith("immersive-ar", expect.anything());
-    expect(f.renderer.setClearColor).toHaveBeenCalledWith(0, 0);
-    expect(f.scene.background).toBeNull();
+    expect(f.requestSession).toHaveBeenCalledWith("immersive-vr", expect.anything());
+    expect(f.renderer.setClearColor).toHaveBeenCalledWith(0, 1);
+    expect(f.scene.background).toEqual(new THREE.Color(0x000000));
     f.presentation.dispose();
   });
   it("ends the XR session and releases its rig when the engine is disposed", async () => {

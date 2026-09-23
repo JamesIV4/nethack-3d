@@ -119,7 +119,6 @@ export type ManualSafeZonePreview = {
 
 export type ClientOptionToggleKey =
   | "fpsMode"
-  | "vrPassthrough"
   | "lightingEnabled"
   | "fpsFlattenEntityBillboards"
   | "fpsHeldWeaponVisible"

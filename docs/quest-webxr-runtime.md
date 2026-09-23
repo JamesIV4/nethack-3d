@@ -134,7 +134,7 @@ The host chooses installed Chrome or Edge; `QUEST_CHROME_PATH` overrides that ch
 
 This is separate from the old `quest:wired` UI-only preview. Three.js renders directly through WebXR. Only HTML is captured at 10 Hz into the floating pane. That screenshot transport is for wired development; the APK uses the live browser GPU surface. Capture and input endpoints require a per-run token, and access to browser-profile files is rejected.
 
-Leave Mixed reality in VR off for initial tests. That option requests `immersive-ar` at the next entry. The current Gecko ABI integration supports opaque VR; standalone MR remains unfinished. Browser/Link combinations without AR support report an error.
+Mixed reality is temporarily unavailable because the current Gecko ABI integration supports only opaque VR. The setting is hidden, and saved mixed reality preferences are ignored when entering VR.
 
 Initial XR controls:
 

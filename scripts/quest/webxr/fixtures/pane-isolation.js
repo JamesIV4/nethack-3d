@@ -38,7 +38,7 @@ assert(tableUiPanes(false).some(p=>p[0]===4)&&tableUiPanes(true).some(p=>p[0]===
 gameOverDialog.querySelector('.nh3d-menu-action-confirm').click();assert(newGameClicked,'game-over modal button works');
 flushSync(()=>gameOverRoot.unmount());
 assert(clientOptionsTabs.some(tab=>tab.id==='vr'),'VR options tab exists');
-assert(getClientOptionsForGroup('group-vr').some(option=>option.key==='vrPassthrough'),'mixed reality lives in VR group');
+assert(!getClientOptionsForGroup('group-vr').some(option=>option.key==='vrPassthrough'),'unfinished mixed reality setting is hidden');
 updateWebXrState({host:true,available:true});setXrSettings({swipeAttacks:true,swipeSensitivity:1});
 assert(getClientOptionsForGroup('group-vr').some(option=>option.key==='fpsMode'&&option.type==='boolean'),'VR view uses the standard option descriptor');
 const settingsRoot=createRoot(document.querySelector('#game-over-fixture'));

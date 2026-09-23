@@ -287,9 +287,9 @@ export class WebXrPresentation {
     document.documentElement.classList.add("nh3d-webxr-active");
     let session: XRSession | null = null;
     try {
-      const mode = this.dependencies.engineState.clientOptions.vrPassthrough ? "immersive-ar" : "immersive-vr";
-      // requestSession stays directly in the user gesture; unsupported MR produces a visible error.
-      session = await navigator.xr.requestSession(mode, { requiredFeatures: ["local-floor"] });
+      // Ignore saved passthrough preferences until the standalone runtime supports MR.
+      // requestSession stays directly in the user gesture.
+      session = await navigator.xr.requestSession("immersive-vr", { requiredFeatures: ["local-floor"] });
       if (!this.started) { await session.end(); return; }
       this.session = session;
       const currentSession = session;
@@ -307,7 +307,7 @@ export class WebXrPresentation {
       this.previousBackground = this.dependencies.renderPipeline.scene.background;
       renderer.getClearColor(this.previousClearColor);
       this.previousClearAlpha = renderer.getClearAlpha();
-      renderer.setClearColor(0x000000, mode === "immersive-ar" ? 0 : 1);
+      renderer.setClearColor(0x000000, 1);
       this.dependencies.renderPipeline.scene.add(this.trackingRoot);
       document.exitPointerLock?.();
       renderer.xr.setFramebufferScaleFactor(getXrSettings().resolution);
@@ -334,8 +334,7 @@ export class WebXrPresentation {
       if (session) { await session.end().catch(() => {}); if (this.session === session) this.ended(); }
       else { this.canvasPresentation.exit(); document.documentElement.classList.remove("nh3d-webxr-active"); }
       const detail = error instanceof Error ? error.message : String(error);
-      throw new Error(this.dependencies.engineState.clientOptions.vrPassthrough
-        ? t.webxr.mixedRealityError(detail) : detail);
+      throw new Error(detail);
     } finally { this.entering = false; }
   }
 
