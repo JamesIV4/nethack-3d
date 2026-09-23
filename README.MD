@@ -6,7 +6,7 @@ Classic NetHack, presented as an interactive 3D dungeon. Play from above, step i
 
 [Ways to play](#ways-to-play) · [Features](#features) · [Screenshots](#screenshots) · [Run locally](#run-locally)
 
-[Privacy Policy](https://jamesiv4.github.io/nethack-3d/privacy.html) · Privacy and data-deletion requests: jamespoundiv@gmail.com
+[Privacy Policy](https://jamesiv4.github.io/nethack-3d/privacy.html)
 
 ## New in 1.6.0: The VR Update
 
