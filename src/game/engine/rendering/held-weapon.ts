@@ -112,6 +112,7 @@ export interface HeldWeaponDependencies {
   readonly tilesetAssets: Pick<
     TilesetAssets,
     "resolveRuntimeVersion"
+    | "resolveSourceTileIndexForRuntime"
     | "resolveTilesetAtlasImageSource"
     | "shouldUseVultureTiles"
     | "tileSourceSize"
@@ -365,7 +366,9 @@ export class HeldWeapon {
     tilesetPath: string,
     tileId: number | null,
   ): FpsHeldWeaponTileFlipOverride {
-    return resolveHeldWeaponTileFlips(tilesetPath, tileId);
+    const sourceTileId = tileId === null ? null
+      : this.dependencies.tilesetAssets.resolveSourceTileIndexForRuntime(tileId);
+    return resolveHeldWeaponTileFlips(tilesetPath, sourceTileId);
   }
 
   resolveFpsHeldWeaponTileFlipState(

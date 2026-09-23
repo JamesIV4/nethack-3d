@@ -2051,7 +2051,7 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|784|-1": {
       "attachmentOffsetPixels": {
-        "x": 14,
+        "x": 12,
         "y": -12,
         "z": 0
       },
@@ -2088,7 +2088,7 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     "assets/3.6/Absurdly Evil.png|785|-1": {
       "attachmentOffsetPixels": {
         "x": 15,
-        "y": -14,
+        "y": -13,
         "z": 0
       },
       "rotationDeg": {
@@ -8880,13 +8880,13 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     "assets/3.6/Absurdly Evil.png|464|-1": {
       "attachmentOffsetPixels": {
         "x": 17.5,
-        "y": 11,
+        "y": 11.5,
         "z": 0
       },
       "rotationDeg": {
-        "x": 0,
-        "y": 0,
-        "z": -30
+        "x": 90,
+        "y": -90,
+        "z": 60
       }
     },
     "assets/3.6/Absurdly Evil.png|613|-1": {
@@ -8963,8 +8963,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|780|-1": {
       "attachmentOffsetPixels": {
-        "x": 11.5,
-        "y": -10.5,
+        "x": 16.5,
+        "y": -14.5,
         "z": 0
       },
       "rotationDeg": {
@@ -8975,8 +8975,8 @@ export const defaultWeaponPoses: WeaponPoseLibrary = {
     },
     "assets/3.6/Absurdly Evil.png|781|-1": {
       "attachmentOffsetPixels": {
-        "x": 13,
-        "y": -11,
+        "x": 14,
+        "y": -13,
         "z": 0
       },
       "rotationDeg": {

@@ -835,6 +835,18 @@ export class TilesetAssets {
     }
   }
 
+  /** Authored sprite metadata uses the source pack's IDs, even after its atlas
+   * has been compiled into the runtime's tile order. */
+  resolveSourceTileIndexForRuntime(tileIndex: number): number {
+    const normalized = Math.trunc(tileIndex);
+    if (!Number.isFinite(normalized) || normalized < 0) return normalized;
+    const compiledLegacyAtlas = this.resolveRuntimeVersion() === "5.0" &&
+      this.loadedTilesetSourceLayoutVersion === "3.6.7" && this.loadedTilesetTileLayoutVersion === "5.0";
+    return (compiledLegacyAtlas || shouldTranslateNh367TilesetForNh5Runtime(
+      this.resolveRuntimeVersion(), this.resolveLoadedAtlasTileCount(), this.loadedTilesetSourceLayoutVersion,
+    )) ? translateNh5TileIndexToNh367(normalized) : normalized;
+  }
+
   setTilesetCompilationLoadingVisible(visible: boolean): void {
     const nextVisible = Boolean(visible);
     if (this.tilesetCompilationLoadingVisible === nextVisible) {
