@@ -141,6 +141,92 @@ def tube(name, points, radii, sides=12, color="joint", shade=None, smooth=True):
     return smooth_surface(obj, tonal="limb" if shade else False) if smooth else obj
 
 
+def swept_ellipse(name, points, widths, depths, sides=12, color="shell"):
+    """Closed, smooth curved strand with independently controlled width/depth.
+
+    Hair and draped details need broad silhouettes without the cylindrical mass
+    of a round tube. Width follows the lateral tangent; depth points across it.
+    """
+    points = [Vector(point) for point in points]
+    if not (len(points) == len(widths) == len(depths)) or len(points) < 2:
+        raise ValueError("Sweep needs matching point, width, and depth samples")
+    vertices = []
+    for index, (point, width, depth) in enumerate(zip(points, widths, depths)):
+        tangent = (points[min(index + 1, len(points) - 1)] -
+                   points[max(0, index - 1)]).normalized()
+        lateral = tangent.cross(Vector((0, 1, 0)))
+        if lateral.length < .00001:
+            lateral = tangent.cross(Vector((0, 0, 1)))
+        lateral.normalize()
+        normal = tangent.cross(lateral).normalized()
+        for segment in range(sides):
+            angle = math.tau * segment / sides
+            vertices.append(point + math.cos(angle) * width * lateral +
+                            math.sin(angle) * depth * normal)
+    faces = [tuple(range(sides - 1, -1, -1))]
+    for index in range(len(points) - 1):
+        for segment in range(sides):
+            a = index * sides + segment
+            b = index * sides + (segment + 1) % sides
+            faces.append((a, b, b + sides, a + sides))
+    faces.append(tuple((len(points) - 1) * sides + i for i in range(sides)))
+    return smooth_surface(mesh(name, vertices, faces, color))
+
+
+def voxel_union(name, objects, voxel_size=.045, smooth_iterations=2):
+    """Fuse overlapping authored parts into one closed skin surface.
+
+    Call before rigging. Vertex colors and skin weights must be repainted on the
+    new topology; the original objects remain editable in the Python recipe.
+    """
+    if not objects:
+        raise ValueError("Voxel union needs at least one mesh")
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in objects:
+        obj.select_set(True)
+    bpy.context.view_layer.objects.active = objects[0]
+    bpy.ops.object.join()
+    result = objects[0]
+    result.name = name
+    result.data.name = name
+    result.data.remesh_voxel_size = voxel_size
+    bpy.ops.object.voxel_remesh()
+    if smooth_iterations:
+        modifier = result.modifiers.new("Relax voxel skin", "SMOOTH")
+        modifier.factor = 1
+        modifier.iterations = smooth_iterations
+        bpy.ops.object.modifier_apply(modifier=modifier.name)
+    smooth_surface(result)
+    for attr in list(result.data.color_attributes):
+        result.data.color_attributes.remove(attr)
+    result.data.color_attributes.new(name="Palette", type="BYTE_COLOR", domain="CORNER")
+    result["pixelhack_part"] = name
+    return result
+
+
+def mesh_topology(obj):
+    """Count connected shells and open/nonmanifold edges in one editable mesh."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    remaining = set(bm.verts)
+    components = 0
+    while remaining:
+        components += 1
+        start = remaining.pop()
+        stack = [start]
+        while stack:
+            vertex = stack.pop()
+            for edge in vertex.link_edges:
+                other = edge.other_vert(vertex)
+                if other in remaining:
+                    remaining.remove(other)
+                    stack.append(other)
+    result = {"components": components,
+              "nonManifoldEdges": sum(not edge.is_manifold for edge in bm.edges)}
+    bm.free()
+    return result
+
+
 def ellipsoid(name, center, scale, color="joint", subdivisions=1):
     bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=subdivisions, radius=1, location=center)
     temp = bpy.context.object

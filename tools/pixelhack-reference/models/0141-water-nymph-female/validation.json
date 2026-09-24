@@ -1,0 +1,60 @@
+{
+  "meshCount": 1,
+  "materialCount": 1,
+  "triangles": 12148,
+  "bones": 20,
+  "allVerticesWeighted": true,
+  "restMinimumY": -5.161907617169348e-8,
+  "groundClearance": 0,
+  "clips": {
+    "Attack": {
+      "duration": 0.5,
+      "sampledFrames": 61,
+      "loop": false,
+      "minimumY": -0.0006606490489300265,
+      "maximumDisplacement": 0.3492626342285795,
+      "endpointDifference": 0,
+      "hitTime": 0.11666666666666667,
+      "matchesIdleEndpoints": true,
+      "earlyFingerMotion": 0.11018729753010008,
+      "bodyMotionAtImpact": [
+        0,
+        0.012353599054323539,
+        0.1853048910603654
+      ],
+      "fingerMotionAtImpact": [
+        0.09433979942536763,
+        0.08026971069596656,
+        0.21751173031523416
+      ],
+      "armSwingRadians": 0.960396534502303,
+      "graspSnapRadians": 1.0518518908533636,
+      "highestFoot": 1.2517066571812386e-7
+    },
+    "Idle": {
+      "duration": 2,
+      "sampledFrames": 61,
+      "loop": true,
+      "minimumY": -7.940145173457474e-8,
+      "maximumDisplacement": 0.03694560175980431,
+      "loopSeamError": 0
+    },
+    "Walk": {
+      "duration": 0.5,
+      "sampledFrames": 61,
+      "loop": true,
+      "minimumY": -0.0008381791592180836,
+      "maximumDisplacement": 0.4817928679825748,
+      "loopSeamError": 0,
+      "travelSpeedTilesPerSecond": 2,
+      "strideCycles": 1,
+      "stanceFootSpeed": 1.927171437506426,
+      "swingFootHeight": 0.12190311862048181
+    }
+  },
+  "connectedJointsChecked": 4,
+  "fingerVerticesChecked": 63,
+  "softShoulderVerticesChecked": 54,
+  "hairBonesChecked": 2,
+  "groundedFeetChecked": 2
+}

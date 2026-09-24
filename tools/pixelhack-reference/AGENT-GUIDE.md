@@ -10,9 +10,12 @@ details in [MODELING.md](MODELING.md) only when needed.
   from `research.json`, and relevant comparisons from `art-analysis.json`.
   Inspect the original crop and light/dark previews before modeling. Research
   only unresolved identity or anatomy questions.
-- Preserve silhouette, proportions, palette, defining features, and personality.
-  Establish the pose before detail. Use the tile for appearance and wiki sources
-  for identity/anatomy; note inferred unseen features briefly.
+- Treat the tile as visual inspiration, not a blueprint to reproduce exactly.
+  Keep enough defining cues, palette relationships, and personality for the
+  character to be recognizable, then adjust silhouette, proportions, pose,
+  materials, and details where a stronger 3D design calls for it. Add fitting
+  features that the pixels cannot show. Establish the pose before detail; use
+  wiki sources for identity/anatomy and briefly note interpreted unseen features.
 - Smooth curved bodies and appendages, including jaws and antennae. Use smooth
   normals and continuous colors; keep distinct joints and genuinely sharp edges.
   Make thin features readable at small sizes through separation and thickness.
@@ -40,6 +43,10 @@ details in [MODELING.md](MODELING.md) only when needed.
   [rig](../../scripts/tilesets/pixelhack_rig.py) helpers selectively. Set palettes
   locally. Prefer compact vertex colors and standard PBR materials; allocate
   geometry to silhouette and deformation. Keep source parts editable.
+- For visible humanoid skin, favor a continuous weighted surface across the
+  torso and limbs. Fuse editable source parts when useful, then repaint and
+  assign smooth weights on the new topology. Inspect elbows, knees, shoulders,
+  and hips in motion; a joined mesh alone does not guarantee good deformation.
 - Check tooling defaults: palettes, anatomy, material count, grounded contact,
   clip duration, movement limits, and viewer captions must suit the asset.
   Static objects and flying or transparent subjects require appropriate
@@ -94,8 +101,10 @@ Use the requested ID. The launcher generates assets, validates GLB, and makes
 `review.png`. For focused corrections, add `--views hero,side --resolution 512`;
 finish with a default run for four current views.
 
-- Inspect actual images: pose/identity first, then surfaces, palette, and
-  defining features at 32/64/128 pixels. Watch exported animations at normal
+- Inspect actual images: judge character identity and the quality of the 3D
+  design first, then surfaces, palette, and defining features at 32/64/128
+  pixels. Pixel-perfect agreement with the source is not the goal. Watch
+  exported animations at normal
   speed; inspect launch and impact separately from multiple views.
 - Check normalized weights, finite geometry, connected joints, contact,
   loop seams, attack transitions, early movement, direction, and articulation.

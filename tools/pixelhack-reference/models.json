@@ -84,6 +84,27 @@
         "Walk": { "loop": true, "maxDisplacement": 0.48, "travelSpeedTilesPerSecond": 2, "strideCycles": 1 },
         "Attack": { "loop": false, "hitTime": 0.13333333333333333, "maxDisplacement": 0.60 }
       }
+    },
+    {
+      "id": "water-nymph-female",
+      "title": "Water nymph, female",
+      "tileIds": [141],
+      "directory": "tools/pixelhack-reference/models/0141-water-nymph-female",
+      "script": "scripts/tilesets/models/water_nymph_female.py",
+      "triangleBudget": 13000,
+      "reviewSmallView": "hero",
+      "viewer": {
+        "badge": "MODEL 005",
+        "summary": "An icy water nymph with luminous blue curls, a sea-glass halter, flowing hip wrap, and pale water markings.",
+        "visualHeading": "A calm water spirit ready to steal.",
+        "visualDescription": "Long bright curls frame a delicate face. A jeweled turquoise halter and diagonal flowing wrap leave pale blue skin and winding water marks visible.",
+        "motionDescription": "Idle holds one hand near the clasp as hair and cloth drift. Walk uses a complete left-right cycle over a half-second tile move. Attack sends the raised hand forward in a quick stealing grab, closes the fingers at impact, and returns to the ready stance."
+      },
+      "animations": {
+        "Idle": { "loop": true, "maxDisplacement": 0.08 },
+        "Walk": { "loop": true, "maxDisplacement": 0.62, "travelSpeedTilesPerSecond": 2, "strideCycles": 1 },
+        "Attack": { "loop": false, "hitTime": 0.11666666666666667, "maxDisplacement": 0.42 }
+      }
     }
   ]
 }

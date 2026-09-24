@@ -47,7 +47,8 @@ function points() {
 const rest = points();
 const boneName = (bone) => bone.userData.name ?? bone.name;
 const jointPattern = metadata.id === 'killer-bee' ? /^Leg\.[LR][1-3]\.lower$/
-  : metadata.id === 'dwarf-male' ? /^(Leg\.[LR]\.lower|Foot\.[LR])$/
+  : metadata.id === 'dwarf-male' || metadata.id === 'water-nymph-female'
+    ? /^(Leg\.[LR]\.lower|Foot\.[LR])$/
     : /^Leg\.[LR][1-3]\.(lower|foot)$/;
 const connectedJoints = mesh.skeleton.bones.filter((bone) => jointPattern.test(boneName(bone)))
   .map((bone) => ({ bone, restPosition: bone.position.clone() }));
@@ -55,6 +56,8 @@ if (metadata.id === 'giant-ant' || metadata.id === 'soldier-ant')
   assert.equal(connectedJoints.length, 12, 'All ant knee/ankle connections are checked');
 if (metadata.id === 'killer-bee') assert.equal(connectedJoints.length, 6, 'All bee knee connections are checked');
 if (metadata.id === 'dwarf-male') assert.equal(connectedJoints.length, 4, 'Both dwarf knees and ankles are checked');
+if (metadata.id === 'water-nymph-female')
+  assert.equal(connectedJoints.length, 4, 'Both nymph knees and ankles are checked');
 const restMinY = Math.min(...rest.map((p) => p.y));
 const groundClearance = metadata.groundClearance ?? 0;
 assert.ok(Math.abs(restMinY - groundClearance) < .0001,
@@ -419,6 +422,106 @@ if (metadata.id === 'dwarf-male') {
   assert.ok(stanceFootSpeed > 1.5 && stanceFootSpeed < 2.3,
     `Planted boot sweeps backward during forward travel at about two tiles per second (${stanceFootSpeed})`);
   assert.ok(swingFootHeight > .04, `Swing boot visibly clears the floor (${swingFootHeight})`);
+  Object.assign(report.clips.Walk, { travelSpeedTilesPerSecond: 2, strideCycles: 1,
+    stanceFootSpeed, swingFootHeight });
+  walkMixer.stopAllAction();
+}
+if (metadata.id === 'water-nymph-female') {
+  const findBone = (name) => mesh.skeleton.bones.find((bone) => boneName(bone) === name);
+  const body = findBone('Body');
+  const arm = findBone('Arm.R.lower');
+  const fingers = findBone('Grasp.R');
+  const hair = ['Hair.L', 'Hair.R'].map(findBone);
+  const skirt = findBone('Skirt.Front');
+  const feet = ['Foot.L', 'Foot.R'].map(findBone);
+  assert.equal(mesh.skeleton.bones.length, 20, 'Nymph retains all planned joints');
+  assert.ok(body && arm && fingers && hair.every(Boolean) && skirt && feet.every(Boolean),
+    'Hair, cloth, grabbing hand, and both feet have independent bones');
+  const skinIndex = mesh.geometry.attributes.skinIndex;
+  const ownedVertices = (bone) => {
+    const index = mesh.skeleton.bones.indexOf(bone);
+    const indices = Array.from({ length: skinIndex.count }, (_, i) => i)
+      .filter((i) => skinIndex.getX(i) === index && weights.getX(i) > .99);
+    assert.ok(indices.length >= 12, `${boneName(bone)} owns visible geometry`);
+    return indices;
+  };
+  const fingerVertices = ownedVertices(fingers);
+  const footVertices = feet.map(ownedVertices);
+  const bodyIndex = mesh.skeleton.bones.indexOf(body);
+  const armIndex = mesh.skeleton.bones.indexOf(findBone('Arm.R.upper'));
+  let softShoulderVertices = 0;
+  for (let i = 0; i < skinIndex.count; i += 1) {
+    const joints = [skinIndex.getX(i), skinIndex.getY(i), skinIndex.getZ(i), skinIndex.getW(i)];
+    const values = [weights.getX(i), weights.getY(i), weights.getZ(i), weights.getW(i)];
+    const bodyWeight = values.reduce((sum, value, channel) => sum + (joints[channel] === bodyIndex ? value : 0), 0);
+    const armWeight = values.reduce((sum, value, channel) => sum + (joints[channel] === armIndex ? value : 0), 0);
+    if (bodyWeight > .1 && armWeight > .1) softShoulderVertices += 1;
+  }
+  assert.ok(softShoulderVertices >= 8, 'Continuous skin blends through the right shoulder');
+  const attackClip = gltf.animations.find((clip) => clip.name === 'Attack');
+  const mixer = new THREE.AnimationMixer(model);
+  mixer.clipAction(attackClip).play();
+  mixer.setTime(0);
+  const ready = points();
+  const tipIndex = fingerVertices.reduce((front, i) => ready[i].z > ready[front].z ? i : front);
+  const bodyOrigin = body.getWorldPosition(new THREE.Vector3());
+  const armReady = arm.quaternion.clone();
+  mixer.setTime(1 / 60);
+  const early = points();
+  const earlyFingerMotion = early[tipIndex].distanceTo(ready[tipIndex]);
+  mixer.setTime(2 / 30);
+  model.updateMatrixWorld(true);
+  const openFingers = fingers.quaternion.clone();
+  mixer.setTime(metadata.animationContract.Attack.hitTime);
+  const impact = points();
+  const bodyMotion = body.getWorldPosition(new THREE.Vector3()).sub(bodyOrigin);
+  const armSwing = arm.quaternion.angleTo(armReady);
+  const graspSnap = fingers.quaternion.angleTo(openFingers);
+  const fingerMotion = impact[tipIndex].clone().sub(ready[tipIndex]);
+  assert.ok(earlyFingerMotion > .05, 'Grab starts moving in the first attack frame');
+  assert.ok(bodyMotion.z > .14 && fingerMotion.z > .17 && fingerMotion.y > .04,
+    'Nymph reaches forward into the target');
+  assert.ok(armSwing > .80 && graspSnap > .80,
+    'Forearm reach and closing fingers are separate attack actions');
+  let highestFoot = -Infinity;
+  for (let step = 0; step <= 60; step += 1) {
+    mixer.setTime(attackClip.duration * step / 60);
+    const sample = points();
+    for (const indices of footVertices) {
+      const height = Math.min(...indices.map((i) => sample[i].y));
+      highestFoot = Math.max(highestFoot, height);
+      assert.ok(height >= -.008 && height <= .008,
+        `Both bare feet brace through Attack (sample ${step}, height ${height})`);
+    }
+  }
+  Object.assign(report.clips.Attack, { earlyFingerMotion,
+    bodyMotionAtImpact: bodyMotion.toArray(), fingerMotionAtImpact: fingerMotion.toArray(),
+    armSwingRadians: armSwing, graspSnapRadians: graspSnap, highestFoot });
+  report.fingerVerticesChecked = fingerVertices.length;
+  report.softShoulderVerticesChecked = softShoulderVertices;
+  report.hairBonesChecked = hair.length;
+  report.groundedFeetChecked = footVertices.length;
+  mixer.stopAllAction();
+  mesh.skeleton.pose();
+  const walkClip = gltf.animations.find((clip) => clip.name === 'Walk');
+  const walkContract = metadata.animationContract.Walk;
+  assert.ok(Math.abs(walkClip.duration - .5) < .0001 && walkContract.travelSpeedTilesPerSecond === 2
+    && walkContract.strideCycles === 1, 'Nymph crosses one tile in a half-second left-right gait');
+  const walkMixer = new THREE.AnimationMixer(model);
+  walkMixer.clipAction(walkClip).play();
+  walkMixer.setTime(0);
+  model.updateMatrixWorld(true);
+  const stanceStart = feet[0].getWorldPosition(new THREE.Vector3());
+  walkMixer.setTime(.25);
+  model.updateMatrixWorld(true);
+  const stanceEnd = feet[0].getWorldPosition(new THREE.Vector3());
+  const stanceFootSpeed = (stanceStart.z - stanceEnd.z) / .25;
+  walkMixer.setTime(.375);
+  const swing = points();
+  const swingFootHeight = Math.min(...footVertices[0].map((i) => swing[i].y));
+  assert.ok(stanceFootSpeed > 1.5 && stanceFootSpeed < 2.4,
+    `Planted foot sweeps backward at travel speed (${stanceFootSpeed})`);
+  assert.ok(swingFootHeight > .04, `Swing foot clears the floor (${swingFootHeight})`);
   Object.assign(report.clips.Walk, { travelSpeedTilesPerSecond: 2, strideCycles: 1,
     stanceFootSpeed, swingFootHeight });
   walkMixer.stopAllAction();

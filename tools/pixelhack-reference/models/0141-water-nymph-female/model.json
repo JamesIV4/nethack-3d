@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "id": "water-nymph-female",
+  "title": "Water nymph, female",
+  "tileIds": [
+    141
+  ],
+  "sourceAtlasSha256": "4a9327f7164afd28962d9a713e581cf28ae6b85467bc6d31981a681b1267170d",
+  "sourceScript": "scripts/tilesets/models/water_nymph_female.py",
+  "blenderVersion": "5.1.2",
+  "parts": 59,
+  "triangles": 12148,
+  "materials": 1,
+  "boundsBlender": {
+    "min": [
+      -0.46000003814697266,
+      -0.22773660719394684,
+      -2.8455007239358565e-09
+    ],
+    "max": [
+      0.46000003814697266,
+      0.22773657739162445,
+      1.3240293264389038
+    ]
+  },
+  "dimensionsBlender": [
+    0.9200000762939453,
+    0.4554731845855713,
+    1.3240293264389038
+  ],
+  "glbBytes": 493348,
+  "bones": 20,
+  "animations": [
+    "Attack",
+    "Idle",
+    "Walk"
+  ],
+  "animationContract": {
+    "Idle": {
+      "loop": true,
+      "maxDisplacement": 0.08
+    },
+    "Walk": {
+      "loop": true,
+      "maxDisplacement": 0.62,
+      "travelSpeedTilesPerSecond": 2,
+      "strideCycles": 1
+    },
+    "Attack": {
+      "loop": false,
+      "hitTime": 0.11666666666666667,
+      "maxDisplacement": 0.42
+    }
+  },
+  "reviewSmallView": "hero",
+  "footprint": 0.92,
+  "groundClearance": 0,
+  "views": [
+    "hero",
+    "side",
+    "front",
+    "top"
+  ],
+  "resolution": 768,
+  "directory": "tools/pixelhack-reference/models/0141-water-nymph-female",
+  "palette": {
+    "shell": "a9e1f4",
+    "ink": "264b77",
+    "skin_shadow": "729ac5",
+    "skin": "a8d6f0",
+    "skin_light": "d8f0fa",
+    "mark": "e9ffff",
+    "socket": "6576a0",
+    "sclera": "e2eefa",
+    "iris": "95a9d0",
+    "pupil": "293f70",
+    "lip": "8296b7",
+    "hair_shadow": "278bb7",
+    "hair": "64c8e6",
+    "hair_light": "b1f0fa",
+    "hair_glint": "d7fbff",
+    "cloth_dark": "1b7097",
+    "cloth": "38a8ce",
+    "cloth_light": "77d9ec",
+    "cloth_glint": "b4f2f6",
+    "gem_dark": "276a92",
+    "gem": "a6eaf6"
+  },
+  "status": "baseline-candidate"
+}
