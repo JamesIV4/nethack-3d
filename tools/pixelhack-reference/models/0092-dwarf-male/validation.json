@@ -1,0 +1,61 @@
+{
+  "meshCount": 1,
+  "materialCount": 1,
+  "triangles": 5342,
+  "bones": 15,
+  "allVerticesWeighted": true,
+  "restMinimumY": -5.754008334439321e-8,
+  "groundClearance": 0,
+  "clips": {
+    "Attack": {
+      "duration": 0.5,
+      "sampledFrames": 61,
+      "loop": false,
+      "minimumY": -0.00008909839154649677,
+      "maximumDisplacement": 0.4690463797913964,
+      "endpointDifference": 0,
+      "hitTime": 0.13333333333333333,
+      "matchesIdleEndpoints": true,
+      "earlyPickMotion": 0.07697537119871967,
+      "bodyMotionAtImpact": [
+        0,
+        0.010464638245208602,
+        0.06439775834238635
+      ],
+      "armSwingRadians": 1.0199998303812918,
+      "pickSnapRadians": 0.4499998439179859,
+      "pickTipMotionAtImpact": [
+        1.9100656500903312e-8,
+        -0.4030362825260879,
+        -0.08639300203361006
+      ],
+      "forwardReachAtImpact": 0.18549176797131417,
+      "highestFoot": 7.397950485072055e-8
+    },
+    "Idle": {
+      "duration": 2,
+      "sampledFrames": 61,
+      "loop": true,
+      "minimumY": -1.290362814872001e-7,
+      "maximumDisplacement": 0.012328266778621179,
+      "loopSeamError": 0
+    },
+    "Walk": {
+      "duration": 0.5,
+      "sampledFrames": 61,
+      "loop": true,
+      "minimumY": -0.0013008648599967573,
+      "maximumDisplacement": 0.45938137844159427,
+      "loopSeamError": 0,
+      "travelSpeedTilesPerSecond": 2,
+      "strideCycles": 1,
+      "stanceFootSpeed": 1.674342046777368,
+      "swingFootHeight": 0.08309396857484906
+    }
+  },
+  "connectedJointsChecked": 4,
+  "weaponVerticesChecked": 170,
+  "pickHeadForwardDepth": 0.35128297359862654,
+  "pickHeadSideWidth": 0.22121663524521656,
+  "groundedBootsChecked": 2
+}

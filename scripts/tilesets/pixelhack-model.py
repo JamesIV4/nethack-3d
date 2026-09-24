@@ -78,6 +78,7 @@ def main():
               "bones": len(rig.data.bones) if rig else 0,
               "animations": [a.name for a in bpy.data.actions],
               "animationContract": entry.get("animations", {}),
+              "reviewSmallView": entry.get("reviewSmallView", "side"),
               "footprint": footprint, "groundClearance": ground_clearance,
               "views": views, "resolution": args.resolution,
               "directory": out.resolve().relative_to(ROOT).as_posix() if out.resolve().is_relative_to(ROOT) else str(out.resolve()),

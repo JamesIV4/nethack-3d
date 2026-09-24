@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "id": "dwarf-male",
+  "title": "Dwarf, male",
+  "tileIds": [
+    92
+  ],
+  "sourceAtlasSha256": "4a9327f7164afd28962d9a713e581cf28ae6b85467bc6d31981a681b1267170d",
+  "sourceScript": "scripts/tilesets/models/dwarf_male.py",
+  "blenderVersion": "5.1.2",
+  "parts": 83,
+  "triangles": 5342,
+  "materials": 1,
+  "boundsBlender": {
+    "min": [
+      -0.46000000834465027,
+      -0.24058879911899567,
+      3.1332497707481366e-10
+    ],
+    "max": [
+      0.4599999487400055,
+      0.24058875441551208,
+      0.9186985492706299
+    ]
+  },
+  "dimensionsBlender": [
+    0.9199999570846558,
+    0.48117756843566895,
+    0.9186985492706299
+  ],
+  "glbBytes": 250024,
+  "bones": 15,
+  "animations": [
+    "Attack",
+    "Idle",
+    "Walk"
+  ],
+  "animationContract": {
+    "Idle": {
+      "loop": true,
+      "maxDisplacement": 0.08
+    },
+    "Walk": {
+      "loop": true,
+      "maxDisplacement": 0.48,
+      "travelSpeedTilesPerSecond": 2,
+      "strideCycles": 1
+    },
+    "Attack": {
+      "loop": false,
+      "hitTime": 0.13333333333333333,
+      "maxDisplacement": 0.6
+    }
+  },
+  "reviewSmallView": "hero",
+  "footprint": 0.92,
+  "groundClearance": 0,
+  "views": [
+    "hero",
+    "side",
+    "front",
+    "top"
+  ],
+  "resolution": 768,
+  "directory": "tools/pixelhack-reference/models/0092-dwarf-male",
+  "palette": {
+    "ink": "211d25",
+    "shell": "ba3c2d",
+    "skin": "d8bc96",
+    "skin_shadow": "9d795f",
+    "eye": "29252a",
+    "beard": "c9cabb",
+    "beard_light": "f0ecd5",
+    "beard_shadow": "929da0",
+    "beard_mid": "d8d8c7",
+    "helm": "526776",
+    "helm_dark": "283948",
+    "helm_light": "a8b8b3",
+    "horn": "536373",
+    "tunic": "ba3c2d",
+    "tunic_light": "ef7044",
+    "tunic_dark": "6e211d",
+    "trim": "f2ad37",
+    "pants": "4f241b",
+    "boot": "704018",
+    "boot_light": "b97739",
+    "sole": "42300f",
+    "wood": "6f3820",
+    "wood_light": "a56b3a",
+    "blade": "415968",
+    "blade_light": "91a9a5",
+    "shield": "bb3d2e",
+    "shield_edge": "6d291e",
+    "shield_highlight": "ef7646"
+  },
+  "status": "baseline-candidate"
+}

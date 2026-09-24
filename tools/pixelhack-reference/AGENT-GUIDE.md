@@ -59,6 +59,9 @@ cleanly to Idle.
   in that loop. Give the legs enough forward/backward sweep to suit the travel
   speed without frantic tiny steps; lift swing feet while support feet stay
   near the ground. Record the expected controller speed in the model contract.
+- For humanoids, use one complete left/right gait cycle over that tile: the first
+  step accompanies travel halfway to the next tile, and the second finishes at
+  its center. Keep the planted foot moving backward relative to forward travel.
 - During a grounded creature's Attack, keep an anatomy-appropriate support set
   in contact with the ground unless the attack is deliberately a full jump.
   For the soldier ant, the hind pair braces while the front and middle legs

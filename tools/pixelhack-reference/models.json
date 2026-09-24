@@ -63,6 +63,27 @@
         "Walk": { "loop": true, "maxDisplacement": 0.30, "travelSpeedTilesPerSecond": 2, "strideCycles": 2 },
         "Attack": { "loop": false, "hitTime": 0.1, "maxDisplacement": 0.36 }
       }
+    },
+    {
+      "id": "dwarf-male",
+      "title": "Dwarf, male",
+      "tileIds": [92],
+      "directory": "tools/pixelhack-reference/models/0092-dwarf-male",
+      "script": "scripts/tilesets/models/dwarf_male.py",
+      "triangleBudget": 8000,
+      "reviewSmallView": "hero",
+      "viewer": {
+        "badge": "MODEL 004",
+        "summary": "A stout dwarf with a horned steel helmet, ivory beard, red tunic, shield, and raised war pick.",
+        "visualHeading": "An armored dwarf ready to strike.",
+        "visualDescription": "The broad helmet and upturned horns frame a small face and long pale beard. A curved pick rises over one red sleeve; a rounded red shield crosses the other.",
+        "motionDescription": "Idle keeps the pick raised and both boots planted. Walk uses one complete left-right cycle per half-second tile move, with each step covering half the journey. Attack drives the torso forward and chops with the pick while the shield stays up and the boots brace."
+      },
+      "animations": {
+        "Idle": { "loop": true, "maxDisplacement": 0.08 },
+        "Walk": { "loop": true, "maxDisplacement": 0.48, "travelSpeedTilesPerSecond": 2, "strideCycles": 1 },
+        "Attack": { "loop": false, "hitTime": 0.13333333333333333, "maxDisplacement": 0.60 }
+      }
     }
   ]
 }

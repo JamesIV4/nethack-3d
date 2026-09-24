@@ -53,14 +53,16 @@ def main():
         if view in stats["views"] and (directory / f"{view}.png").exists():
             panel(Image.open(directory / f"{view}.png"), 28 + index * 282, 718, 256, view.title())
     draw.text((604, 721), "GAME-SIZE READABILITY", fill="#bbc9c3", font=font(17))
-    if "side" in stats["views"] and (directory / "side.png").exists():
-        source_render = Image.open(directory / "side.png").convert("RGBA")
+    small_view = stats.get("reviewSmallView", "side")
+    if small_view in stats["views"] and (directory / f"{small_view}.png").exists():
+        source_render = Image.open(directory / f"{small_view}.png").convert("RGBA")
         for index, size in enumerate([32, 64, 128]):
             small = source_render.resize((size, size), Image.Resampling.LANCZOS)
             panel(small, 604 + index * 212, 760, 180, f"{size} px · enlarged", pixel=True)
     note = ({
         "killer-bee": "Hovering body, pale raised wings, dark face and legs, visible rear stinger: the killer bee silhouette.",
         "soldier-ant": "Broad olive gaster, tan highlights, long dark legs, red eyes, hooked jaws: the soldier ant silhouette.",
+        "dwarf-male": "Blue-gray horned helmet, ivory beard, raised curved pick, red tunic and shield: the male dwarf silhouette.",
     }).get(stats["id"],
            "Smooth carapace, red eyes, spread jaws, lifted forelegs: an attack-ready pose based on the source tile.")
     draw.text((28, 1033), note, font=font(17), fill="#e1e8e1")

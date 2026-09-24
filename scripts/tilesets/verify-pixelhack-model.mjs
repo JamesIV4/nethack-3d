@@ -46,12 +46,15 @@ function points() {
 }
 const rest = points();
 const boneName = (bone) => bone.userData.name ?? bone.name;
-const jointPattern = metadata.id === 'killer-bee' ? /^Leg\.[LR][1-3]\.lower$/ : /^Leg\.[LR][1-3]\.(lower|foot)$/;
+const jointPattern = metadata.id === 'killer-bee' ? /^Leg\.[LR][1-3]\.lower$/
+  : metadata.id === 'dwarf-male' ? /^(Leg\.[LR]\.lower|Foot\.[LR])$/
+    : /^Leg\.[LR][1-3]\.(lower|foot)$/;
 const connectedJoints = mesh.skeleton.bones.filter((bone) => jointPattern.test(boneName(bone)))
   .map((bone) => ({ bone, restPosition: bone.position.clone() }));
 if (metadata.id === 'giant-ant' || metadata.id === 'soldier-ant')
   assert.equal(connectedJoints.length, 12, 'All ant knee/ankle connections are checked');
 if (metadata.id === 'killer-bee') assert.equal(connectedJoints.length, 6, 'All bee knee connections are checked');
+if (metadata.id === 'dwarf-male') assert.equal(connectedJoints.length, 4, 'Both dwarf knees and ankles are checked');
 const restMinY = Math.min(...rest.map((p) => p.y));
 const groundClearance = metadata.groundClearance ?? 0;
 assert.ok(Math.abs(restMinY - groundClearance) < .0001,
@@ -321,6 +324,103 @@ if (metadata.id === 'soldier-ant') {
   assert.ok(swingFootHeight > .03, `Walk has a readable swing-foot lift (${swingFootHeight})`);
   Object.assign(report.clips.Walk, { travelSpeedTilesPerSecond: walkContract.travelSpeedTilesPerSecond,
     strideCycles: walkContract.strideCycles, stanceFootSpeed, swingFootHeight });
+  walkMixer.stopAllAction();
+}
+if (metadata.id === 'dwarf-male') {
+  const findBone = (name) => mesh.skeleton.bones.find((bone) => boneName(bone) === name);
+  const body = findBone('Body');
+  const weapon = findBone('Weapon');
+  const shield = findBone('Shield');
+  const strikingArm = findBone('Arm.L.upper');
+  const feet = ['Foot.L', 'Foot.R'].map(findBone);
+  assert.equal(mesh.skeleton.bones.length, 15, 'Male dwarf retains all planned joints');
+  assert.ok(body && weapon && shield && strikingArm && feet.every(Boolean),
+    'Weapon, shield, striking arm, and both feet are independently rigged');
+  const skinIndex = mesh.geometry.attributes.skinIndex;
+  const ownedVertices = (bone) => {
+    const index = mesh.skeleton.bones.indexOf(bone);
+    const indices = Array.from({ length: skinIndex.count }, (_, i) => i)
+      .filter((i) => skinIndex.getX(i) === index && weights.getX(i) > .99);
+    assert.ok(indices.length >= 10, `${boneName(bone)} owns visible geometry`);
+    return indices;
+  };
+  const pickVertices = ownedVertices(weapon);
+  const footVertices = feet.map(ownedVertices);
+  const attackClip = gltf.animations.find((clip) => clip.name === 'Attack');
+  const mixer = new THREE.AnimationMixer(model);
+  mixer.clipAction(attackClip).play();
+  mixer.setTime(0);
+  const ready = points();
+  const headVertices = pickVertices.filter((i) => ready[i].y > .60);
+  assert.ok(headVertices.length >= 30, 'The pick has a substantial raised metal head');
+  const width = Math.max(...headVertices.map((i) => ready[i].x))
+    - Math.min(...headVertices.map((i) => ready[i].x));
+  const depth = Math.max(...headVertices.map((i) => ready[i].z))
+    - Math.min(...headVertices.map((i) => ready[i].z));
+  assert.ok(depth > 1.2 * width,
+    `Pick head points mainly forward rather than across the body (${depth} vs ${width})`);
+  const tipIndex = headVertices.reduce((front, i) => ready[i].z > ready[front].z ? i : front);
+  model.updateMatrixWorld(true);
+  const bodyOrigin = body.getWorldPosition(new THREE.Vector3());
+  const armReady = strikingArm.quaternion.clone();
+  const weaponReady = weapon.quaternion.clone();
+  mixer.setTime(1 / 60);
+  const early = points();
+  const earlyPickMotion = early[tipIndex].distanceTo(ready[tipIndex]);
+  mixer.setTime(metadata.animationContract.Attack.hitTime);
+  const impact = points();
+  const bodyImpact = body.getWorldPosition(new THREE.Vector3()).sub(bodyOrigin);
+  const armSwing = strikingArm.quaternion.angleTo(armReady);
+  const pickSnap = weapon.quaternion.angleTo(weaponReady);
+  const tipMotion = impact[tipIndex].clone().sub(ready[tipIndex]);
+  const forwardReach = impact[tipIndex].z - (bodyOrigin.z + bodyImpact.z);
+  assert.ok(earlyPickMotion > .015, 'The pick starts moving in the first attack frame');
+  assert.ok(bodyImpact.z > .04, 'The dwarf drives forward into the target');
+  assert.ok(armSwing > .5 && pickSnap > .2, 'Arm chop and pick snap move independently');
+  assert.ok(tipMotion.y < -.08 && forwardReach > .12,
+    `The forward-pointing pick tip chops down ahead of the body (${tipMotion.toArray()}, reach ${forwardReach})`);
+  let highestFoot = -Infinity;
+  for (let step = 0; step <= 60; step += 1) {
+    mixer.setTime(attackClip.duration * step / 60);
+    const sample = points();
+    for (const indices of footVertices) {
+      const height = Math.min(...indices.map((i) => sample[i].y));
+      highestFoot = Math.max(highestFoot, height);
+      assert.ok(height >= -.008 && height <= .008,
+        `Both boots brace through Attack (sample ${step}, height ${height})`);
+    }
+  }
+  Object.assign(report.clips.Attack, { earlyPickMotion, bodyMotionAtImpact: bodyImpact.toArray(),
+    armSwingRadians: armSwing, pickSnapRadians: pickSnap,
+    pickTipMotionAtImpact: tipMotion.toArray(), forwardReachAtImpact: forwardReach,
+    highestFoot });
+  report.weaponVerticesChecked = pickVertices.length;
+  report.pickHeadForwardDepth = depth;
+  report.pickHeadSideWidth = width;
+  report.groundedBootsChecked = footVertices.length;
+  mixer.stopAllAction();
+  mesh.skeleton.pose();
+  const walkClip = gltf.animations.find((clip) => clip.name === 'Walk');
+  const walkContract = metadata.animationContract.Walk;
+  assert.ok(Math.abs(walkClip.duration - .5) < .0001 && walkContract.travelSpeedTilesPerSecond === 2
+    && walkContract.strideCycles === 1, 'Dwarf walks one tile in half a second with one left-right cycle');
+  const walkMixer = new THREE.AnimationMixer(model);
+  walkMixer.clipAction(walkClip).play();
+  walkMixer.setTime(0);
+  model.updateMatrixWorld(true);
+  const stanceStart = feet[0].getWorldPosition(new THREE.Vector3());
+  walkMixer.setTime(.25);
+  model.updateMatrixWorld(true);
+  const stanceEnd = feet[0].getWorldPosition(new THREE.Vector3());
+  const stanceFootSpeed = (stanceStart.z - stanceEnd.z) / .25;
+  walkMixer.setTime(.375);
+  const swing = points();
+  const swingFootHeight = Math.min(...footVertices[0].map((i) => swing[i].y));
+  assert.ok(stanceFootSpeed > 1.5 && stanceFootSpeed < 2.3,
+    `Planted boot sweeps backward during forward travel at about two tiles per second (${stanceFootSpeed})`);
+  assert.ok(swingFootHeight > .04, `Swing boot visibly clears the floor (${swingFootHeight})`);
+  Object.assign(report.clips.Walk, { travelSpeedTilesPerSecond: 2, strideCycles: 1,
+    stanceFootSpeed, swingFootHeight });
   walkMixer.stopAllAction();
 }
 writeFileSync(path.join(directory, 'validation.json'), `${JSON.stringify(report, null, 2)}\n`);
