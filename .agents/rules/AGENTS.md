@@ -87,6 +87,12 @@ Start here before making changes.
 - Coding conventions:
   - Avoid timeouts unless there is no better alternative, because they tend to create bugs, race conditions, and brittle behavior.
 
+## PixelHack 3D Asset Work
+
+- For PixelHack modeling tasks, read [the asset agent guide](../../tools/pixelhack-reference/AGENT-GUIDE.md) before creating geometry. Follow its requirements for pose, smooth shading, animation, reusable Python workflows, and validation suited to the asset.
+- Creature assets require Idle, Walk, and Attack. Attacks need immediate strong movement, an explicit bite/sting/weapon action, direction suited to the target, and short recovery.
+- Use [the implementation reference](../../tools/pixelhack-reference/MODELING.md) for asset paths, scale/orientation, rig, and export details.
+
 ## NetHack Reference
 
 - The WSL-hosted NetHack code is the source of truth for game behavior, data files, and shim expectations:

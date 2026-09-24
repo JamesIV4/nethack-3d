@@ -10,6 +10,8 @@
     "quest:dev": "cross-env VITE_DEPLOY_TARGET=quest vite --host 127.0.0.1",
     "weapon:calibrate": "node scripts/weapon-calibrator/server.mjs",
     "pixelhack:reference": "vite --host 127.0.0.1 --port 5175",
+    "pixelhack:model": "node scripts/tilesets/model-pixelhack.mjs",
+    "pixelhack:model:check": "node scripts/tilesets/verify-pixelhack-model.mjs",
     "pixelhack:reference:generate": "node scripts/tilesets/generate-pixelhack-reference.mjs",
     "pixelhack:reference:analyze": "py scripts/tilesets/analyze-pixelhack-art.py",
     "pixelhack:research:compile": "node scripts/tilesets/compile-pixelhack-research.mjs",

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PixelHack · 3D baseline</title>
+  <link rel="stylesheet" href="/tools/pixelhack-reference/model.css">
+</head>
+<body>
+  <header><a href="/tools/pixelhack-reference/#tile=0">← Tile catalog</a><span>PIXELHACK / 3D STUDIES</span><span class="badge">BASELINE 001</span></header>
+  <main>
+    <section class="title"><div><p class="eyebrow">CREATURE STUDY · TILES 0000 / 0001</p><h1 id="title">Giant ant</h1><p>Slate carapace. Scarlet eyes. Reared and ready to bite.</p></div><a id="download-glb" class="download" download>Download GLB ↗</a></section>
+    <div class="workspace">
+      <section class="stage-panel">
+        <div id="stage"><p id="status" role="status">Loading model…</p><span class="stage-note">Drag to orbit · Scroll to zoom · Right-drag to pan</span></div>
+        <div class="controls">
+          <div class="views" aria-label="Camera view"><button data-view="hero" aria-pressed="true">Three-quarter</button><button data-view="side" aria-pressed="false">Side</button><button data-view="front" aria-pressed="false">Front</button><button data-view="top" aria-pressed="false">Top</button></div>
+          <label>Animation <select id="animation"><option>Rest</option></select></label><button id="pause" aria-pressed="false">Pause</button><button id="attack">Attack</button>
+          <label>Backdrop <select id="backdrop"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+          <label><input id="wireframe" type="checkbox"> Wireframe</label><label><input id="skeleton" type="checkbox"> Rig</label>
+        </div>
+        <div class="metrics" id="metrics"></div>
+      </section>
+      <aside>
+        <div class="section-label"><span>01 / SOURCE</span><a href="/tools/pixelhack-reference/#tile=0">Open brief ↗</a></div>
+        <div class="reference-grid"><figure><canvas id="source-light" width="320" height="320"></canvas><figcaption>PixelHack · light</figcaption></figure><figure><canvas id="source-dark" width="320" height="320"></canvas><figcaption>PixelHack · dark</figcaption></figure></div>
+        <p class="reference-note">Exact source pixels. The black ground shadow belongs to the sprite and is not part of the mesh.</p>
+        <div class="section-label"><span>02 / VISUAL LANGUAGE</span></div>
+        <h2>Braced for an attack.</h2>
+        <p>A raised head, spread jaws, and lifted forelegs give the ant an aggressive silhouette. Smooth carapace, limbs, jaws, and antennae meet at distinct dark joints.</p>
+        <div id="palette" class="palette" aria-label="Model palette"></div>
+        <div class="section-label"><span>03 / MOTION</span></div>
+        <p><strong>Idle</strong> holds the threatening pose with tense forelegs, working jaws, and probing antennae. <strong>Walk</strong> lowers the front legs into an alternating tripod gait. <strong>Attack</strong> launches forward and upward toward a taller target, snaps the jaws, and lands back in idle.</p>
+        <p class="reference-note">Walk plays in place. A game controller supplies travel. This study has not been integrated into gameplay.</p>
+        <div class="asset-links"><a id="download-blend" download>Editable Blender file ↗</a><a id="review-link">Review sheet ↗</a></div>
+      </aside>
+    </div>
+  </main>
+  <script type="module" src="/tools/pixelhack-reference/model.js"></script>
+</body>
+</html>

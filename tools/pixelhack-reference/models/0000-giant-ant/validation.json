@@ -1,0 +1,46 @@
+{
+  "meshCount": 1,
+  "materialCount": 1,
+  "triangles": 4460,
+  "bones": 28,
+  "allVerticesWeighted": true,
+  "clips": {
+    "Attack": {
+      "duration": 0.5,
+      "sampledFrames": 61,
+      "loop": false,
+      "minimumY": -6.863169189370031e-8,
+      "maximumDisplacement": 0.26156332113361885,
+      "endpointDifference": 0,
+      "hitTime": 0.1,
+      "matchesIdleEndpoints": true,
+      "firstFrameBodyMotion": 0.09799269889506194,
+      "bodyMotionAtImpact": [
+        0,
+        0.11818249378352558,
+        0.1829015850887626
+      ],
+      "jawSnapRadians": [
+        0.6899996576559361,
+        0.6899998960565319
+      ]
+    },
+    "Idle": {
+      "duration": 3,
+      "sampledFrames": 61,
+      "loop": true,
+      "minimumY": -3.7227788459817546e-7,
+      "maximumDisplacement": 0.031236759219118098,
+      "loopSeamError": 0
+    },
+    "Walk": {
+      "duration": 1,
+      "sampledFrames": 61,
+      "loop": true,
+      "minimumY": -0.000035540727143034805,
+      "maximumDisplacement": 0.07666078403319872,
+      "loopSeamError": 0
+    }
+  },
+  "connectedJointsChecked": 12
+}

@@ -3,6 +3,10 @@
 This is a preparation workbench for building a 3D tileset from the checked-in
 `public/assets/5.0/PixelHack.png`. It does not change game rendering.
 
+**Future modeling agents:** start with [AGENT-GUIDE.md](AGENT-GUIDE.md) for the
+complete single-assignment workflow, settled art direction, and a copyable
+task prompt. [MODELING.md](MODELING.md) documents the implementation and baseline.
+
 ## Open the catalog
 
 Run `npm.cmd run pixelhack:reference` in the repository, then open
@@ -127,7 +131,7 @@ model appearance. No shadow or outline is added to the pixels.
 
 The current session has no callable Blender MCP server. Blender 5.1 is
 installed at `C:\Program Files\Blender Foundation\Blender 5.1\blender.exe`,
-which can be used headlessly until MCP is connected. The review script renders
+which is used by the Python modeling workflow. The review script renders
 front, side, and three-quarter views with repeatable lighting, orthographic
 projection, and automatic framing. For a `.blend` model:
 
@@ -141,6 +145,13 @@ previews. Check silhouette first, then palette, major forms, distinctive
 features, and the male/female or statue variant. Record uncertain details in
 the brief rather than treating an inferred wiki illustration as PixelHack art.
 
-The modeling phase still needs an asset format, scale/orientation contract,
-and runtime loader. Those choices belong with the first model prototype; the
-reference catalog and source mapping are ready independently of them.
+## First animated model
+
+The giant ant (tiles 0 and 1) is the first baseline. Open
+<http://127.0.0.1:5175/tools/pixelhack-reference/model.html?tile=0> to inspect
+the actual GLB with idle/walk/attack clips, camera presets, and light/dark backgrounds.
+Run `npm.cmd run pixelhack:model -- --tile 0` to regenerate the editable Blender
+file, GLB, review renders, and validation report. See [MODELING.md](MODELING.md)
+for the recipe workflow, scale/orientation contract, rig, and animation details.
+The baseline uses a standalone Three.js viewer; game integration remains a
+separate step.

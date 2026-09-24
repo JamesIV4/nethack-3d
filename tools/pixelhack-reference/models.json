@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "models": [
+    {
+      "id": "giant-ant",
+      "title": "Giant ant",
+      "tileIds": [0, 1],
+      "directory": "tools/pixelhack-reference/models/0000-giant-ant",
+      "script": "scripts/tilesets/models/giant_ant.py",
+      "triangleBudget": 6000,
+      "animations": {
+        "Idle": { "loop": true },
+        "Walk": { "loop": true },
+        "Attack": { "loop": false, "hitTime": 0.1, "maxDisplacement": 0.35 }
+      }
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "id": "giant-ant",
+  "title": "Giant ant",
+  "tileIds": [
+    0,
+    1
+  ],
+  "sourceAtlasSha256": "4a9327f7164afd28962d9a713e581cf28ae6b85467bc6d31981a681b1267170d",
+  "sourceScript": "scripts/tilesets/models/giant_ant.py",
+  "blenderVersion": "5.1.2",
+  "parts": 37,
+  "triangles": 4460,
+  "materials": 1,
+  "boundsBlender": {
+    "min": [
+      -0.2638140320777893,
+      -0.4599999785423279,
+      -1.0874972034002894e-09
+    ],
+    "max": [
+      0.2638140022754669,
+      0.46000000834465027,
+      0.523940920829773
+    ]
+  },
+  "dimensionsBlender": [
+    0.5276280641555786,
+    0.9199999570846558,
+    0.523940920829773
+  ],
+  "glbBytes": 305676,
+  "bones": 28,
+  "animations": [
+    "Attack",
+    "Idle",
+    "Walk"
+  ],
+  "animationContract": {
+    "Idle": {
+      "loop": true
+    },
+    "Walk": {
+      "loop": true
+    },
+    "Attack": {
+      "loop": false,
+      "hitTime": 0.1,
+      "maxDisplacement": 0.35
+    }
+  },
+  "views": [
+    "hero",
+    "side",
+    "front",
+    "top"
+  ],
+  "resolution": 768,
+  "directory": "tools/pixelhack-reference/models/0000-giant-ant",
+  "palette": {
+    "ink": "161d27",
+    "joint": "283449",
+    "edge": "424e5c",
+    "shell": "586366",
+    "light": "869596",
+    "glint": "a6b1aa",
+    "red": "b51d35",
+    "red_light": "ee746c",
+    "red_dark": "671b31"
+  },
+  "status": "baseline-candidate"
+}
