@@ -17,8 +17,12 @@ details in [MODELING.md](MODELING.md) only when needed.
   normals and continuous colors; keep distinct joints and genuinely sharp edges.
   Make thin features readable at small sizes through separation and thickness.
 - Verify pixel identity before sharing models across variants. Shared names or
-  sex labels alone are insufficient. Model randomized items by visible appearance;
-  give statues their own material treatment. Exclude source scenery and baked shadows.
+  sex labels alone are insufficient. For humanoid characters, make distinct male
+  and female models when NetHack has both genders, even if their source pixels
+  are identical. Share a humanoid model across gender labels only when NetHack
+  has no other gender for that character. Model randomized items by visible
+  appearance; give statues their own material treatment. Exclude source scenery
+  and baked shadows.
 
 ## Authoring
 
