@@ -2,7 +2,25 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-const clipOrder = ['Walk', 'Idle', 'Attack', 'Idle'];
+const transitionSeconds = .12;
+
+function animationSequence(animations) {
+  const find = (name) => animations.find((clip) => clip.name === name);
+  const walk = find('Walk'), idle = find('Idle'), attack = find('Attack');
+  if (!walk || !idle || !attack) {
+    return animations.map((clip) => ({ clip, seconds: clip.duration, label: clip.name }));
+  }
+  return [
+    { clip: walk, repetitions: 3, seconds: walk.duration * 3, label: 'Walk ×3' },
+    { clip: idle, seconds: idle.duration, label: 'Idle' },
+    { clip: attack, seconds: attack.duration, label: 'Attack 1/3' },
+    { clip: idle, seconds: .5, label: 'Idle · 0.5s' },
+    { clip: attack, seconds: attack.duration, label: 'Attack 2/3' },
+    { clip: idle, seconds: .5, label: 'Idle · 0.5s' },
+    { clip: attack, seconds: attack.duration, label: 'Attack 3/3' },
+    { clip: idle, seconds: idle.duration, label: 'Idle' },
+  ];
+}
 
 function disposeModel(model) {
   const textures = new Set();
@@ -128,11 +146,10 @@ export class ModelPreview {
     this.intersectionObserver.observe(this.container);
     this.resize();
 
-    this.clips = clipOrder.map((name) => gltf.animations.find((clip) => clip.name === name)).filter(Boolean);
-    if (!this.clips.length) this.clips = gltf.animations;
+    this.steps = animationSequence(gltf.animations);
     this.mixer = new THREE.AnimationMixer(this.model);
-    this.clipIndex = 0;
-    if (this.clips.length) this.playClip();
+    this.stepIndex = 0;
+    if (this.steps.length) this.playStep();
     else {
       this.label.textContent = '3D model';
       this.label.hidden = false;
@@ -153,16 +170,20 @@ export class ModelPreview {
     this.camera.updateProjectionMatrix();
   }
 
-  playClip() {
-    this.mixer.stopAllAction();
-    const clip = this.clips[this.clipIndex];
-    const action = this.mixer.clipAction(clip).reset();
-    action.setLoop(THREE.LoopOnce, 1);
+  playStep() {
+    const step = this.steps[this.stepIndex];
+    const action = this.mixer.clipAction(step.clip).reset();
+    action.setLoop(step.repetitions > 1 ? THREE.LoopRepeat : THREE.LoopOnce,
+      step.repetitions ?? 1);
     action.clampWhenFinished = true;
     action.play();
+    if (this.currentAction && this.currentAction !== action) {
+      action.crossFadeFrom(this.currentAction, transitionSeconds);
+    }
+    this.currentAction = action;
     this.mixer.update(0);
-    this.clipElapsed = 0;
-    this.label.textContent = clip.name;
+    this.stepElapsed = 0;
+    this.label.textContent = step.label;
     this.label.hidden = false;
   }
 
@@ -171,12 +192,12 @@ export class ModelPreview {
     const delta = this.lastFrame ? Math.min((time - this.lastFrame) / 1000, .05) : 0;
     this.lastFrame = time;
     if (this.visible && !document.hidden) {
-      if (this.clips.length) {
+      if (this.steps.length) {
         this.mixer.update(delta);
-        this.clipElapsed += delta;
-        if (this.clipElapsed >= this.clips[this.clipIndex].duration) {
-          this.clipIndex = (this.clipIndex + 1) % this.clips.length;
-          this.playClip();
+        this.stepElapsed += delta;
+        if (this.stepElapsed >= this.steps[this.stepIndex].seconds) {
+          this.stepIndex = (this.stepIndex + 1) % this.steps.length;
+          this.playStep();
         }
       }
       this.controls.update();
