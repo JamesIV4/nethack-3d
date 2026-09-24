@@ -1,6 +1,7 @@
 import { useActionLayout } from "./action-layout";
 import { actionCatalog, formatActionLabel } from "./action-catalog";
 import { ActionLabel } from "./ActionLabel";
+import { useVrHotbarActive } from "../../../quest/webxr/use-vr-hotbar";
 import type * as React from "react";
 import type {
   MobileActionSheetMode
@@ -37,11 +38,12 @@ export function MobileActionSheet({
   mobileCommonExtendedCommandNames,
   mobileExtendedCommandNames,
 }: MobileActionSheetProps) {
+  const vrActive = useVrHotbarActive();
   const layout = useActionLayout();
   const catalog = actionCatalog(mobileExtendedCommandNames);
   const actions = layout.menuActions.map(id => catalog.find(a => a.id === id)).filter((a): a is NonNullable<typeof a> => !!a);
   return (
-    mobileTouchUiVisible && isMobileActionSheetVisible ? (
+    (mobileTouchUiVisible || vrActive) && isMobileActionSheetVisible ? (
       <div className="nh3d-mobile-actions-sheet" data-mode={mobileActionSheetMode}>
         <div className="nh3d-mobile-actions-title-row">
           <div className="nh3d-mobile-actions-title">

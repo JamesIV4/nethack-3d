@@ -10,11 +10,17 @@ export function toggleHotbar(state: VrHotbarState, glance: boolean): VrHotbarSta
   return glance ? {...state,glance:true,glanceOpen:!hotbarExpanded(state,true)} : {...state,normalOpen:!state.normalOpen};
 }
 
-export function useVrHotbar() {
+/** Both the VR hotbar and its menus must become available at the same time. */
+export function useVrHotbarActive(): boolean {
   const xr = useSyncExternalStore(subscribeWebXr,getWebXrState,getWebXrState);
   const playing = useGameStore(s=>s.connectionState === "running" && !s.gameOver.active);
+  return xr.active && playing;
+}
+
+export function useVrHotbar() {
+  const active = useVrHotbarActive();
   const selecting = useGameStore(s=>s.positionInputActive && s.positionInputOrigin !== "travel" && s.positionInputOrigin !== "contextual-probe");
-  const active = xr.active && playing, glance = active && selecting;
+  const glance = active && selecting;
   const [state,setState] = useState(initialVrHotbarState);
   useLayoutEffect(()=>setState(previous=>hotbarContext(previous,glance)),[glance]);
   return { active, expanded: !active || hotbarExpanded(state,glance), toggle:()=>setState(previous=>toggleHotbar(previous,glance)) };

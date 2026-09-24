@@ -8,6 +8,7 @@ import { patchRuntimeControllerModels } from "./patch-runtime-controller-models.
 import { patchIdentity } from "./patch-identity.mjs";
 import { patchControllerMouse } from "./patch-controller-mouse.mjs";
 import { patchLaserTouch } from "./patch-laser-touch.mjs";
+import { patchTouchOwnership } from "./patch-touch-ownership.mjs";
 import { patchVisibleInput } from "./patch-visible-input.mjs";
 import { patchKeyboard } from "./patch-keyboard.mjs";
 import { patchKeyboardDialogs } from "./patch-keyboard-dialogs.mjs";
@@ -205,6 +206,7 @@ patchPaneIsolation(checkout);
 patchWeaponControls(checkout);
 patchControllerMouse(checkout);
 patchLaserTouch(checkout);
+patchTouchOwnership(checkout);
 patchKeyboard(checkout);
 patchKeyboardDialogs(checkout);
 patchSystemUi(checkout);
