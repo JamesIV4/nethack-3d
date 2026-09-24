@@ -29,7 +29,7 @@
     0.9199999570846558,
     0.523940920829773
   ],
-  "glbBytes": 305676,
+  "glbBytes": 349460,
   "bones": 28,
   "animations": [
     "Attack",
@@ -41,7 +41,10 @@
       "loop": true
     },
     "Walk": {
-      "loop": true
+      "loop": true,
+      "maxDisplacement": 0.3,
+      "travelSpeedTilesPerSecond": 2,
+      "strideCycles": 2
     },
     "Attack": {
       "loop": false,
@@ -49,6 +52,8 @@
       "maxDisplacement": 0.35
     }
   },
+  "footprint": 0.92,
+  "groundClearance": 0,
   "views": [
     "hero",
     "side",

@@ -66,7 +66,8 @@ def main():
     bpy.context.preferences.filepaths.save_version = 0
     if rig and bpy.data.actions.get("Idle"):
         rig.animation_data.action = bpy.data.actions["Idle"]
-        bpy.context.scene.frame_start, bpy.context.scene.frame_end = 0, 90
+        bpy.context.scene.frame_start = 0
+        bpy.context.scene.frame_end = int(bpy.data.actions["Idle"].frame_range[1])
         bpy.context.scene.frame_set(0)
     bpy.ops.wm.save_as_mainfile(filepath=str((out / "model.blend").resolve()))
     result = {"schemaVersion": 1, "id": entry["id"], "title": entry["title"], "tileIds": entry["tileIds"],

@@ -4,42 +4,47 @@
   "triangles": 4460,
   "bones": 28,
   "allVerticesWeighted": true,
+  "restMinimumY": 3.66781527325066e-8,
+  "groundClearance": 0,
   "clips": {
     "Attack": {
       "duration": 0.5,
       "sampledFrames": 61,
       "loop": false,
       "minimumY": -6.863169189370031e-8,
-      "maximumDisplacement": 0.26156332113361885,
+      "maximumDisplacement": 0.2615633222612333,
       "endpointDifference": 0,
       "hitTime": 0.1,
       "matchesIdleEndpoints": true,
-      "firstFrameBodyMotion": 0.09799269889506194,
+      "firstFrameBodyMotion": 0.09799269889506389,
       "bodyMotionAtImpact": [
         0,
-        0.11818249378352558,
-        0.1829015850887626
+        0.11818249432835776,
+        0.18290158593194752
       ],
       "jawSnapRadians": [
-        0.6899996576559361,
-        0.6899998960565319
+        0.6899996576559676,
+        0.6899998960565648
       ]
     },
     "Idle": {
       "duration": 3,
       "sampledFrames": 61,
       "loop": true,
-      "minimumY": -3.7227788459817546e-7,
-      "maximumDisplacement": 0.031236759219118098,
+      "minimumY": -1.138961894946999e-7,
+      "maximumDisplacement": 0.03123676285929668,
       "loopSeamError": 0
     },
     "Walk": {
-      "duration": 1,
+      "duration": 0.5,
       "sampledFrames": 61,
       "loop": true,
-      "minimumY": -0.000035540727143034805,
-      "maximumDisplacement": 0.07666078403319872,
-      "loopSeamError": 0
+      "minimumY": -0.0013821969738774145,
+      "maximumDisplacement": 0.2176507580395002,
+      "loopSeamError": 0,
+      "travelSpeedTilesPerSecond": 2,
+      "strideCycles": 2,
+      "stanceFootSpeed": 1.7228327804632417
     }
   },
   "connectedJointsChecked": 12

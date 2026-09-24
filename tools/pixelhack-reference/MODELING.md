@@ -67,6 +67,10 @@ Generated baseline files live in `models/0000-giant-ant/`:
 - `hero.png`, `side.png`, `front.png`, `top.png`: transparent review renders.
 - `review.png`: source comparison and small-size readability sheet.
 
+Model review PNGs are generated locally and ignored by Git. Run the modeling
+command before opening a fresh checkout's preview; the editable `.blend`, GLB,
+metadata, validation report, and source recipe remain versioned.
+
 ## Visual baseline
 
 Use smooth normals and continuous color gradients on the body, legs, jaws, and
@@ -97,14 +101,16 @@ it is a per-asset guard, not a performance target for every future creature.
   0.92 units, including appendages; its origin is centered on the ground.
 - Blender: **Z up, -Y forward**. Exported GLB/Three.js: **Y up, +Z forward**.
   The GLB is already converted; do not add a second corrective rotation.
-- Root remains fixed. Idle lasts 3 seconds; Walk lasts 1 second at 30 fps.
-  Both are baked to ordinary bone transforms with continuous loop endpoints.
+- Root remains fixed. Idle lasts 3 seconds; Walk lasts 0.5 seconds with two
+  broad strides at 60 fps. Both are baked to ordinary bone transforms with
+  continuous loop endpoints.
 - Attack lasts 0.5 seconds and plays once: immediate forward/upward pounce toward
   a human-size target, raised head and forelegs, jaw snap,
-  short recovery. Its impact is at 0.1 seconds (frame 3); the first moving frame
-  already reaches 45% of the lunge. Support feet lift with the pounce to keep the
-  legs within reach. Mandibles open on frame 1, clamp shut between frames 2 and
-  3, hold the bite briefly, and reopen during recovery. Its first and last poses
+  short recovery. Its impact is at 0.1 seconds (frame 6 at 60 fps); the first
+  moving frame already shows the lunge. This full pounce lifts the feet and
+  moves them with the body to keep the legs within reach. Mandibles open by
+  frame 2, clamp shut at frame 6, hold the bite briefly, and reopen during
+  recovery. Its first and last poses
   match Idle's
   starting pose. `models.json` stores loop modes and impact time; `model.json`
   exports them as `animationContract`. The viewer returns to Idle on completion.
@@ -115,9 +121,12 @@ it is a per-asset guard, not a performance target for every future creature.
 - Idle retains the rearing attack pose; Walk lowers the forelegs to the floor.
   Walk uses alternating support tripods (L1/R2/L3 and R1/L2/R3). Stance feet
   travel backward at a constant rate relative to the body; swing feet lift.
-  Travel is supplied by the game controller. At playback speed 1, the authored
-  stride corresponds to about **0.113 tile units per second**. Match travel and
-  playback speed to avoid sliding. It is a starter gait, not a locomotion system.
+  The intended controller speed is **one tile per 0.5 seconds**. The exported
+  stance-foot sweep measures about 1.72 tiles per second at playback speed 1,
+  so some sliding remains at the 2-tile-per-second controller speed.
+- Both ants now use the [asset guide's](AGENT-GUIDE.md#animation-direction-and-timing)
+  half-second walking contract and attack-ready Idle pose. The soldier ant
+  braces its hind feet during the bite; the giant ant performs a full pounce.
 - The Blender file contains a deform/FK skeleton with editable baked actions.
   The recipe uses a two-link leg solver to generate those actions. It does not
   require Blender IK constraints or helper controls in the runtime asset.

@@ -47,6 +47,18 @@ Creatures require **Idle**, **Walk**, and **Attack**. Idle and Walk loop; Walk
 represents suitable locomotion, including flight. Attack plays once and returns
 cleanly to Idle.
 
+- Make Idle visibly poised to attack. This is the stance the player sees just
+  before the creature strikes; keep the first and last Attack poses aligned with
+  it rather than settling into an unrelated neutral pose.
+- For grounded, legged creatures, time Walk for one tile of travel in **0.5
+  seconds** at normal playback speed. Use about **two broad, readable strides**
+  in that loop. Give the legs enough forward/backward sweep to suit the travel
+  speed without frantic tiny steps; lift swing feet while support feet stay
+  near the ground. Record the expected controller speed in the model contract.
+- During a grounded creature's Attack, keep an anatomy-appropriate support set
+  in contact with the ground unless the attack is deliberately a full jump.
+  For the soldier ant, the hind pair braces while the front and middle legs
+  lift for the bite.
 - Start visibly in the first moving frames. Use a forceful body/head/limb action,
   minimal anticipation, clear impact, and short recovery.
 - Aim at the target's height and position using the creature's anatomy and reach.
@@ -105,6 +117,8 @@ Save the recipe, registry entry, editable `.blend`, GLB, metadata, validation
 report, four renders, comparison sheet, and a short review note. Provide asset
 links, preview URL, regeneration command, and verification results. State whether
 gameplay integration was performed; the standalone viewer does not establish it.
+Review PNGs are generated locally and ignored by Git; regenerate them from the
+recipe before opening a fresh checkout's model viewer.
 
 Task prompt: **Create tile `<ID>` following this guide. Complete modeling,
 required animations, visual correction, export validation, and delivery in this assignment.**

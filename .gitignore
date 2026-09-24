@@ -27,5 +27,7 @@ quest/version-code.local.json
 quest/version-code.local.json.lock
 quest/version-code.local.json.tmp
 tools/pixelhack-reference/exports/
+# Regenerated model comparisons and motion snapshots; keep source, GLB, and blend.
+tools/pixelhack-reference/models/*/*.png
 __pycache__/
 *.pyc

@@ -2,8 +2,9 @@
 
 Source: PixelHack tiles 0/1; `monster:giant ant` in the prepared research catalog.
 
-The user accepted the revised appearance and animation on **2026-09-24**.
-Use this version as the reference for the next assets, with the lessons in
+The user accepted the revised appearance and attack on **2026-09-24**; Walk
+was subsequently retimed for half-second tile moves. Use this version as the
+reference for the next assets, with the lessons in
 [the agent guide](../../AGENT-GUIDE.md#animation-direction-and-timing).
 
 ## Art direction adopted
@@ -21,8 +22,10 @@ Use this version as the reference for the next assets, with the lessons in
 
 - Editable Blender file with named parts, a 28-bone rig, and Idle/Walk/Attack actions.
 - GLB with one skinned mesh/material and no external textures.
-- Idle: 3-second threatening stance; Walk: 1-second alternating tripod gait
-  with the raised forelegs lowered to the floor.
+- Idle: 3-second threatening stance; Walk: 0.5-second loop with two broad
+  alternating tripod strides and the raised forelegs lowered to the floor.
+  The intended controller motion is one tile per loop; the exported stance
+  foot sweep measures about 1.72 tiles per second.
 - Attack: immediate forward/upward pounce toward a human-size target, with
   raised head/forelegs and a sharp jaw snap, impacting at 0.1 seconds;
   complete action/recovery lasts 0.5 seconds. Plays once, then returns to Idle.

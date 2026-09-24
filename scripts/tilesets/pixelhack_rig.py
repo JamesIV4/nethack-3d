@@ -73,11 +73,11 @@ def envelope(time, keys):
 
 def animate_ant(rig, legs, transform):
     scene = bpy.context.scene
-    scene.render.fps = 30
-    scene.frame_start, scene.frame_end = 0, 30
+    scene.render.fps = 60
+    scene.frame_start, scene.frame_end = 0, 180
     scale = transform.to_scale().x
     rig.animation_data_create()
-    for clip_name, frames in [("Idle", 91), ("Walk", 31), ("Attack", 16)]:
+    for clip_name, frames in [("Idle", 181), ("Walk", 31), ("Attack", 31)]:
         action = bpy.data.actions.new(clip_name)
         action.use_fake_user = True
         rig.animation_data.action = action
@@ -86,10 +86,10 @@ def animate_ant(rig, legs, transform):
             for bone in rig.pose.bones:
                 bone.matrix_basis.identity()
             progress = (frame - 1) / (frames - 1)
-            phase = 0 if clip_name == "Attack" else progress * math.tau
+            phase = 0 if clip_name == "Attack" else progress * math.tau * (2 if clip_name == "Walk" else 1)
             strike = envelope(progress, [(0, 0), (1 / 15, .45), (3 / 15, 1),
                                         (4 / 15, .95), (7 / 15, .3), (1, 0)]) if clip_name == "Attack" else 0
-            bob = (.013 * math.sin(phase) if clip_name != "Walk" else -.10 + .018 * (1 - math.cos(phase * 2))) * scale
+            bob = (.013 * math.sin(phase) if clip_name != "Walk" else -.10 + .030 * (1 - math.cos(phase * 2))) * scale
             lean = -.024 * (1 - math.cos(phase)) * scale if clip_name == "Idle" else -.04 * scale
             if clip_name == "Attack":
                 bob = .42 * strike * scale
@@ -129,7 +129,8 @@ def animate_ant(rig, legs, transform):
                 if number == 1:
                     if clip_name == "Walk":
                         # Lower the raised striking arms into the six-foot walking stance.
-                        ankle = transform @ Vector((.60 if side == "R" else -.60, -.76, .095))
+                        ankle = transform @ Vector((.52 if side == "R" else -.52,
+                                                     -.54 + (-.065 if side == "L" else 0), .095))
                         toe_offset = Vector((.10 if side == "R" else -.10, -.15, -.070)) * scale
                     else:
                         ankle.y -= .035 * scale * math.sin(phase + (0 if side == "R" else .45))
@@ -143,16 +144,18 @@ def animate_ant(rig, legs, transform):
                     ankle.y -= .65 * strike * scale
                     ankle.z += (.40 * strike + .065 * math.sin(math.pi * strike)) * scale
                 if clip_name == "Walk":
+                    if number == 3:
+                        ankle.y -= .31 * scale
                     # Alternating tripod groups: L1/R2/L3 and R1/L2/R3.
                     offset = 0 if (side == "L") == (number % 2 == 1) else .5
-                    cycle = ((frame - 1) / (frames - 1) + offset) % 1
-                    stride = .20 * scale
+                    cycle = (2 * progress + offset) % 1
+                    stride = .82 * scale
                     if cycle < .5:
                         ankle.y += stride * (cycle * 2 - .5)
                     else:
                         t = (cycle - .5) * 2
                         ankle.y += stride * (.5 - t)
-                        ankle.z += .13 * scale * math.sin(t * math.pi) ** 2
+                        ankle.z += .20 * scale * math.sin(t * math.pi) ** 2
                 upper = (points[2] - points[0]).length
                 lower = (points[3] - points[2]).length
                 knee = solve_knee(hip, ankle, knee0, upper, lower)

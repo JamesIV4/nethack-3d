@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "id": "soldier-ant",
+  "title": "Soldier ant",
+  "tileIds": [
+    4,
+    5
+  ],
+  "sourceAtlasSha256": "4a9327f7164afd28962d9a713e581cf28ae6b85467bc6d31981a681b1267170d",
+  "sourceScript": "scripts/tilesets/models/soldier_ant.py",
+  "blenderVersion": "5.1.2",
+  "parts": 62,
+  "triangles": 5436,
+  "materials": 1,
+  "boundsBlender": {
+    "min": [
+      -0.3088293969631195,
+      -0.46000003814697266,
+      -1.6721390494467414e-08
+    ],
+    "max": [
+      0.3088293969631195,
+      0.4599999785423279,
+      0.3675929307937622
+    ]
+  },
+  "dimensionsBlender": [
+    0.617658793926239,
+    0.9200000166893005,
+    0.3675929605960846
+  ],
+  "glbBytes": 317060,
+  "bones": 29,
+  "animations": [
+    "Attack",
+    "Idle",
+    "Walk"
+  ],
+  "animationContract": {
+    "Idle": {
+      "loop": true,
+      "maxDisplacement": 0.1
+    },
+    "Walk": {
+      "loop": true,
+      "maxDisplacement": 0.3,
+      "travelSpeedTilesPerSecond": 2,
+      "strideCycles": 2
+    },
+    "Attack": {
+      "loop": false,
+      "hitTime": 0.1,
+      "maxDisplacement": 0.36
+    }
+  },
+  "footprint": 0.92,
+  "groundClearance": 0,
+  "views": [
+    "hero",
+    "side",
+    "front",
+    "top"
+  ],
+  "resolution": 768,
+  "directory": "tools/pixelhack-reference/models/0004-soldier-ant",
+  "palette": {
+    "ink": "191806",
+    "joint": "30290e",
+    "limb": "47391b",
+    "shell": "514217",
+    "shell_light": "755f2c",
+    "tan": "9b804a",
+    "abdomen": "4b3e16",
+    "abdomen_light": "78632d",
+    "edge": "28230c",
+    "red": "aa142a",
+    "red_light": "db8174",
+    "sting": "29240f"
+  },
+  "status": "baseline-candidate"
+}

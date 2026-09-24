@@ -153,5 +153,8 @@ the actual GLB with idle/walk/attack clips, camera presets, and light/dark backg
 Run `npm.cmd run pixelhack:model -- --tile 0` to regenerate the editable Blender
 file, GLB, review renders, and validation report. See [MODELING.md](MODELING.md)
 for the recipe workflow, scale/orientation contract, rig, and animation details.
+Model review PNGs are local generated files and are ignored by Git. Regenerate
+the relevant tile before expecting its hero image or review sheet in a fresh
+checkout.
 The baseline uses a standalone Three.js viewer; game integration remains a
 separate step.

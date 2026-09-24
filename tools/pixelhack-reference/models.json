@@ -13,11 +13,11 @@
         "summary": "Slate carapace. Scarlet eyes. Reared and ready to bite.",
         "visualHeading": "Braced for an attack.",
         "visualDescription": "A raised head, spread jaws, and lifted forelegs give the ant an aggressive silhouette. Smooth carapace, limbs, jaws, and antennae meet at distinct dark joints.",
-        "motionDescription": "Idle holds the threatening pose with tense forelegs, working jaws, and probing antennae. Walk lowers the front legs into an alternating tripod gait. Attack launches forward and upward toward a taller target, snaps the jaws, and lands back in idle."
+        "motionDescription": "Idle holds the threatening pose with tense forelegs, working jaws, and probing antennae. Walk lowers the front legs and uses two broad alternating tripod strides over a half-second tile move. Attack launches forward and upward toward a taller target, snaps the jaws, and lands back in idle."
       },
       "animations": {
         "Idle": { "loop": true },
-        "Walk": { "loop": true },
+        "Walk": { "loop": true, "maxDisplacement": 0.30, "travelSpeedTilesPerSecond": 2, "strideCycles": 2 },
         "Attack": { "loop": false, "hitTime": 0.1, "maxDisplacement": 0.35 }
       }
     },
@@ -42,6 +42,26 @@
         "Idle": { "loop": true, "maxDisplacement": 0.16 },
         "Walk": { "loop": true, "maxDisplacement": 0.19 },
         "Attack": { "loop": false, "hitTime": 0.13333333333333333, "maxDisplacement": 0.96 }
+      }
+    },
+    {
+      "id": "soldier-ant",
+      "title": "Soldier ant",
+      "tileIds": [4, 5],
+      "directory": "tools/pixelhack-reference/models/0004-soldier-ant",
+      "script": "scripts/tilesets/models/soldier_ant.py",
+      "triangleBudget": 6500,
+      "viewer": {
+        "badge": "MODEL 003",
+        "summary": "Olive armor. Broad abdomen. Red eyes and a soldier's bite.",
+        "visualHeading": "A stout, ground-hugging defender.",
+        "visualDescription": "The broad olive-brown gaster, tan shell highlights, long dark legs, red eyes, hooked mandibles, and small rear stinger follow the source tile. The baked ground shadow is excluded.",
+        "motionDescription": "Idle probes with antennae and jaws. Walk uses two broad alternating tripod strides in 0.5 seconds, timed for one tile of controller travel. Attack braces both hind feet, lifts the front and middle legs, thrusts the head toward the target, snaps both jaws, flicks the stinger, and returns to idle."
+      },
+      "animations": {
+        "Idle": { "loop": true, "maxDisplacement": 0.10 },
+        "Walk": { "loop": true, "maxDisplacement": 0.30, "travelSpeedTilesPerSecond": 2, "strideCycles": 2 },
+        "Attack": { "loop": false, "hitTime": 0.1, "maxDisplacement": 0.36 }
       }
     }
   ]
