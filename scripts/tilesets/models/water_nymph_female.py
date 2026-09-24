@@ -1,22 +1,24 @@
-"""PixelHack tile 141: an icy water nymph with a jeweled halter and flowing hair.
+"""Water nymph: CC0 anatomical cage, fitted sea silk and flowing hair.
 
-The tile supplies her aqua palette and flowing motion. The face, curls, halter,
-water markings, hip wrap, and bare feet are an artistic interpretation informed
-by the user's water-nymph reference image. The unseen back is inferred.
+See data/README.md for source provenance and Blender Studio technique references.
+The generation recipe retains the PixelHack vertex palette and animation contract.
 """
 
+import json
 import math
+from pathlib import Path
 
 import bpy
 from mathutils import Matrix, Quaternion, Vector
+from mathutils.bvhtree import BVHTree
 
 import pixelhack_blender as ph
 from pixelhack_rig import bind, create_rig, envelope, set_bone_segment, solve_knee
 
-
 PART_BONES = {}
 ARM_POINTS = {}
 LEG_POINTS = {}
+GRASP_POINTS = {}
 
 
 def part(obj, bone):
@@ -41,60 +43,6 @@ def paint(obj, shade):
     return obj
 
 
-def loft(name, rings, color, sides=20):
-    """Closed oval loft with (z, x center, y center, x radius, y radius)."""
-    vertices = []
-    for z, x, y, rx, ry in rings:
-        for index in range(sides):
-            angle = math.tau * index / sides
-            vertices.append((x + rx * math.cos(angle), y + ry * math.sin(angle), z))
-    faces = [tuple(range(sides - 1, -1, -1))]
-    for row in range(len(rings) - 1):
-        for index in range(sides):
-            a = row * sides + index
-            b = row * sides + (index + 1) % sides
-            faces.append((a, b, b + sides, a + sides))
-    faces.append(tuple((len(rings) - 1) * sides + i for i in range(sides)))
-    return rounded(ph.mesh(name, vertices, faces, color))
-
-
-def ribbon(name, controls, color, thickness=.018):
-    """Closed flowing strip, with (x, y, z, width) control sections."""
-    controls = [Vector(section) for section in controls]
-    sections = []
-    for index in range(len(controls) - 1):
-        a, b = controls[index], controls[index + 1]
-        before = controls[index - 1] if index else 2 * a - b
-        after = controls[index + 2] if index + 2 < len(controls) else 2 * b - a
-        for step in range(4):
-            t = step / 4
-            sections.append(.5 * ((2 * a) + (-before + b) * t +
-                            (2 * before - 5 * a + 4 * b - after) * t * t +
-                            (-before + 3 * a - 3 * b + after) * t * t * t))
-    sections.append(controls[-1])
-    vertices = []
-    for index, section in enumerate(sections):
-        before = sections[max(0, index - 1)]
-        after = sections[min(len(sections) - 1, index + 1)]
-        tangent = Vector((after.x - before.x, after.z - before.z))
-        tangent.normalize()
-        normal = Vector((tangent.y, -tangent.x))
-        half = max(.003, section.w / 2)
-        for depth in (0, thickness):
-            for sign in (-1, 1):
-                vertices.append((section.x + normal.x * half * sign,
-                                 section.y + depth,
-                                 section.z + normal.y * half * sign))
-    faces = []
-    for index in range(len(sections) - 1):
-        a, b = index * 4, (index + 1) * 4
-        faces.extend(((a, b, b + 1, a + 1), (a + 2, a + 3, b + 3, b + 2),
-                      (a, a + 2, b + 2, b), (a + 1, b + 1, b + 3, a + 3)))
-    faces.extend(((0, 1, 3, 2),
-                  tuple(4 * (len(sections) - 1) + i for i in (0, 2, 3, 1))))
-    return rounded(ph.mesh(name, vertices, faces, color))
-
-
 def curl(name, controls, radii, color, bone, sides=11):
     """A smooth capped lock of hair or water mark, tapered through its bend."""
     controls = [Vector(point) for point in controls]
@@ -112,350 +60,358 @@ def curl(name, controls, radii, color, bone, sides=11):
             widths.append(radii[index] * (1 - t) + radii[index + 1] * t)
     points.append(controls[-1])
     widths.append(radii[-1])
-    flatness = .70 if bone.startswith("Hair.") else 1
+    flatness = .42 if name.startswith("Hair ") else 1
     return part(ph.swept_ellipse(name, points, widths,
                 [max(.003, width * flatness) for width in widths],
                 sides=sides, color=color), bone)
+
 
 
 def clamp01(value):
     return max(0, min(1, value))
 
 
-def distance_to_segment(point, start, end):
-    start, end = Vector(start), Vector(end)
-    along = clamp01((point - start).dot(end - start) / (end - start).length_squared)
-    return (point - start.lerp(end, along)).length
+def smoothstep(a, b, value):
+    t = clamp01((value - a) / (b - a))
+    return t * t * (3 - 2 * t)
 
 
-def skin_weights(point):
-    """Weights for the voxel-fused body; keep shoulder and hip joins flexible."""
-    point = Vector(point)
-    for side, (shoulder, elbow, hand) in ARM_POINTS.items():
-        upper = distance_to_segment(point, shoulder, elbow)
-        lower = distance_to_segment(point, elbow, hand)
-        if min(upper, lower) < .115 and (abs(point.x) > .18 or point.y < -.14):
-            amount = clamp01((abs(point.x) - .17) / .10)
-            if point.y < -.16:
-                amount = max(amount, clamp01((-point.y - .13) / .09))
-            upper_share = clamp01(.5 + (lower - upper) / .12)
-            result = {f"Arm.{side}.upper": amount * upper_share,
-                      f"Arm.{side}.lower": amount * (1 - upper_share),
-                      "Body": 1 - amount}
-            return {bone: value for bone, value in result.items() if value > .0001}
-    if point.z < 1.12 and abs(point.x) > .075:
-        side = "L" if point.x < 0 else "R"
-        if point.z < .16:
-            return {f"Foot.{side}": 1}
-        if point.z < .24:
-            foot = 1 - clamp01((point.z - .16) / .08)
-            return {f"Foot.{side}": foot, f"Leg.{side}.lower": 1 - foot}
-        if point.z < .53:
-            return {f"Leg.{side}.lower": 1}
-        if point.z < .64:
-            upper = clamp01((point.z - .53) / .11)
-            return {f"Leg.{side}.lower": 1 - upper, f"Leg.{side}.upper": upper}
-        if point.z < .98:
-            return {f"Leg.{side}.upper": 1}
-        upper = 1 - clamp01((point.z - .98) / .14)
-        return {f"Leg.{side}.upper": upper, "Body": 1 - upper}
-    return {"Body": 1}
+def anatomy_weights(p):
+    """Anatomical regions in the symmetrical source pose, before posing.
+
+    Preserve the face and joint loops of the CC0 cage instead of voxelizing it.
+    Fingers retain their topology and have a separate collective grasp bone.
+    """
+    x, y, z = p
+    side = 'L' if x < 0 else 'R'
+    x = abs(x)
+    if z > 1.28:
+        head = smoothstep(1.28, 1.35, z)
+        return {'Head': head, 'Body': 1 - head}
+    if x > (.135 if z > 1.10 else .16 if z > .93 else .205) and z > .70:
+        arm = smoothstep(.132, .19, x)
+        if z > 1.08:
+            return {f'Arm.{side}.upper': arm, 'Body': 1 - arm}
+        lower = 1 - smoothstep(1.00, 1.10, z)
+        hand = 1 - smoothstep(.835, .885, z)
+        grasp = 1 - smoothstep(.785, .815, z)
+        return {'Body': 1 - arm, f'Arm.{side}.upper': arm * (1 - lower),
+                f'Arm.{side}.lower': arm * lower * (1 - hand),
+                f'Hand.{side}': arm * lower * hand * (1 - grasp),
+                f'Grasp.{side}': arm * lower * hand * grasp}
+    if z < .94:
+        leg = 1 - smoothstep(.77, .94, z)
+        lower = 1 - smoothstep(.435, .525, z)
+        foot = 1 - smoothstep(.08, .15, z)
+        return {'Body': 1 - leg, f'Leg.{side}.upper': leg * (1 - lower),
+                f'Leg.{side}.lower': leg * lower * (1 - foot),
+                f'Foot.{side}': leg * lower * foot}
+    return {'Body': 1}
 
 
-def skin_color(point, normal, shadow, skin, highlight, marking):
-    base = blend(blend(shadow, skin, .82), highlight,
-                 .18 + .25 * max(0, -normal.y))
-    if .22 < point.z < .92 and abs(point.x) > .19 and normal.y < -.35:
-        side = -1 if point.x < 0 else 1
-        wave = side * (.29 + .045 * math.sin(point.z * 12.5))
-        trace = clamp01((.037 - abs(point.x - wave)) / .023)
-        return blend(base, marking, .72 * trace)
-    return base
+def segment_map(start, end, target_start, target_end):
+    start, end, target_start, target_end = map(Vector, (start, end, target_start, target_end))
+    q = (end - start).rotation_difference(target_end - target_start)
+    return Matrix.Translation(target_start) @ q.to_matrix().to_4x4() @ Matrix.Translation(-start)
 
 
 def build():
     PART_BONES.clear()
     ARM_POINTS.clear()
     LEG_POINTS.clear()
-    ph.VIEWS["hero"] = (2.1, -5, 1.9)
+    GRASP_POINTS.clear()
+    ph.VIEWS['hero'] = (2.1, -5, 1.25)
+    ph.VIEWS['front'] = (0, -5, .35)
     ph.PALETTE.clear()
     ph.PALETTE.update({
-        "shell": "a9e1f4", "ink": "264b77",
-        "skin_shadow": "729ac5", "skin": "a8d6f0", "skin_light": "d8f0fa",
-        "mark": "e9ffff", "socket": "6576a0", "sclera": "e2eefa",
-        "iris": "95a9d0", "pupil": "293f70", "lip": "8296b7",
-        "hair_shadow": "278bb7", "hair": "64c8e6",
-        "hair_light": "b1f0fa", "hair_glint": "d7fbff",
-        "cloth_dark": "1b7097", "cloth": "38a8ce",
-        "cloth_light": "77d9ec", "cloth_glint": "b4f2f6",
-        "gem_dark": "276a92", "gem": "a6eaf6",
+        'shell': 'a5d4e2', 'ink': '153d55',
+        'skin': 'a5cedf', 'skin_light': 'd0e9ed', 'skin_shadow': '77a1bd',
+        'lip': '63889d', 'sclera': 'e1f5f2', 'iris': '2b8a9b', 'pupil': '123442',
+        'hair': '24768e', 'hair_shadow': '174c69', 'hair_light': '399ab0',
+        'hair_glint': '70c6d0', 'cloth': '238f98', 'cloth_dark': '156570',
+        'cloth_light': '4fb6b8', 'cloth_glint': '9ce0d6', 'gem': 'c6f4ed',
+        'gem_dark': '527b85', 'mark': 'd4f4ef',
     })
+    source = json.loads((Path(__file__).parent / 'data/stylized-female-cc0.json').read_text())
+    body = rounded(ph.mesh('Skin | continuous anatomical figure', source['vertices'], source['faces'], 'skin'))
+    # Source hand placement and joint landmarks; all lengths stay anatomical.
+    transforms = {'Body': Matrix.Translation((0, 0, -.018)), 'Head': Matrix.Translation((0, 0, -.018))}
+    for sign, side in ((-1, 'L'), (1, 'R')):
+        shoulder = (sign * .15, .0, 1.235)
+        elbow = (sign * .255, -.005, 1.047)
+        wrist = (sign * .333, -.022, .862)
+        new_shoulder = (sign * .15, 0, 1.217)
+        if side == 'R':
+            new_elbow = (.265, -.018, 1.035)
+            direction = Vector((-.09, -.13, .13)).normalized()
+        else:
+            new_elbow = (-.225, -.015, 1.016)
+            direction = Vector((-.02, -.025, -.20)).normalized()
+        new_wrist = Vector(new_elbow) + direction * (Vector(wrist) - Vector(elbow)).length
+        ARM_POINTS[side] = (new_shoulder, new_elbow, new_wrist)
+        transforms[f'Arm.{side}.upper'] = segment_map(shoulder, elbow, new_shoulder, new_elbow)
+        lower = segment_map(elbow, wrist, new_elbow, new_wrist)
+        transforms[f'Arm.{side}.lower'] = lower
+        transforms[f'Hand.{side}'] = transforms[f'Grasp.{side}'] = lower
+        GRASP_POINTS[side] = (lower @ Vector((sign * .346, -.032, .803)),
+                              lower @ Vector((sign * .350, -.037, .754)))
+        hip, knee, ankle = (sign * .083, .015, .84), (sign * .073, -.035, .475), (sign * .075, .008, .095)
+        new_hip, new_knee, new_ankle = (sign * .083, .015, .822), (sign * .091, -.075, .468), (sign * .107, .008, .095)
+        toe = (sign * .107, -.12, .035)
+        LEG_POINTS[side] = (new_hip, new_knee, new_ankle, toe)
+        transforms[f'Leg.{side}.upper'] = segment_map(hip, knee, new_hip, new_knee)
+        transforms[f'Leg.{side}.lower'] = segment_map(knee, ankle, new_knee, new_ankle)
+        transforms[f'Foot.{side}'] = Matrix.Translation(Vector(new_ankle) - Vector(ankle))
+    weights = []
+    for vertex in body.data.vertices:
+        p = vertex.co.copy()
+        w = {n: v for n, v in anatomy_weights(p).items() if v > .00001}
+        total = sum(w.values())
+        w = {n: v / total for n, v in w.items()}
+        weights.append(w)
+        # Subtly reduce the cranium and cheeks, keeping the eyes in their sockets.
+        head = smoothstep(1.30, 1.39, p.z)
+        p.x *= 1 - .06 * head
+        p.z = p.z * (1 - .05 * head) + 1.43 * .05 * head
+        vertex.co = sum(((transforms[n] @ p) * v for n, v in w.items()), Vector())
+        # Split the torso between pelvis and chest after posing the source cage.
+        # This lets the shoulders counter the hips without deforming the hips.
+        chest = smoothstep(.94,1.17,p.z)
+        if w.get('Body',0) > 0:
+            torso = w['Body']
+            w['Body'] = torso * (1-chest)
+            w['Spine'] = torso * chest
+    body.data.update()
+    if ph.mesh_topology(body) != {'components': 1, 'nonManifoldEdges': 0}:
+        raise ValueError('Keep the entire connected, closed body under the clothes')
+    PART_BONES[body.name] = weights
+    skin, light = [ph.linear(ph.PALETTE[n]) for n in ('skin', 'skin_light')]
+    def complexion(p, n):
+        shade = blend(skin, light, .13 * max(0, -n.y))
+        # Lips are colored on the anatomical surface, never glued-on ellipsoids.
+        lip = math.exp(-((p.z - 1.352) / .010) ** 2 - (p.x / .034) ** 4)
+        return blend(shade, ph.linear(ph.PALETTE['lip']), .62 * lip if p.y < -.12 else 0)
+    paint(body, complexion)
 
-    # The exposed torso and tapered waist establish the figure before costume.
-    body = loft("Body | sculpted icy skin", [
-        (1.00, 0, .035, .18, .13), (1.12, 0, .025, .14, .115),
-        (1.28, 0, .015, .15, .125), (1.40, 0, 0, .185, .14),
-        (1.52, 0, 0, .205, .15), (1.59, 0, .005, .205, .13),
-        (1.64, 0, .005, .09, .08),
-    ], "skin")
-    light = ph.linear(ph.PALETTE["skin_light"])
-    blue = ph.linear(ph.PALETTE["skin"])
-    shade = ph.linear(ph.PALETTE["skin_shadow"])
-    paint(body, lambda p, n: blend(blend(shade, blue, .83), light,
-                                   .17 + .25 * max(0, -n.y) + .06 * max(0, n.z)))
-    part(body, "Body")
-    for sign, side in ((-1, "L"), (1, "R")):
-        part(rounded(ph.ellipsoid(f"Chest {side} | soft natural contour",
-             (sign * .094, -.105, 1.435), (.099, .077, .091),
-             "skin", 2)), "Body")
-    part(rounded(ph.ellipsoid("Neck | pale blue throat", (0, -.012, 1.66),
-         (.073, .076, .125), "skin", 2)), "Body")
-
-    # Two turquoise cloth wings meet at a circular sea-glass clasp.
-    for sign, side in ((-1, "L"), (1, "R")):
-        part(ribbon(f"Halter {side} | curved turquoise cup", [
-            (sign * .20, -.115, 1.39, .045),
-            (sign * .135, -.181, 1.44, .14),
-            (sign * .055, -.212, 1.50, .115),
-            (0, -.225, 1.54, .025)], "cloth", .022), "Body")
-        curl(f"Halter {side} | slim neck strap", [
-            (0, -.221, 1.55), (sign * .075, -.158, 1.63),
-            (sign * .10, -.015, 1.70)], [.013, .015, .009],
-            "cloth_dark", "Body", sides=8)
-        curl(f"Halter {side} | bright lower piping", [
-            (0, -.223, 1.49), (sign * .11, -.190, 1.39),
-            (sign * .20, -.109, 1.37)], [.007, .011, .003],
-            "cloth_light", "Body", sides=7)
-    part(rounded(ph.ellipsoid("Halter | sea-glass clasp setting",
-         (0, -.241, 1.535), (.069, .028, .066),
-         "gem_dark", 2)), "Body")
-    part(rounded(ph.ellipsoid("Halter | luminous spiral gem",
-         (0, -.268, 1.538), (.043, .018, .043),
-         "gem", 2)), "Body")
-    part(rounded(ph.ellipsoid("Halter | tiny gem light",
-         (-.012, -.286, 1.552), (.011, .006, .011),
-         "hair_glint", 1)), "Body")
-
-    # A short fitted wrap supports a diagonal flowing panel over one thigh.
-    hips = loft("Hip wrap | fitted blue fabric", [
-        (.83, -.01, .045, .235, .17), (.92, 0, .04, .265, .195),
-        (1.02, 0, .035, .24, .18), (1.105, 0, .03, .16, .13),
-    ], "cloth_dark")
-    deep = ph.linear(ph.PALETTE["cloth_dark"])
-    mid = ph.linear(ph.PALETTE["cloth"])
-    paint(hips, lambda p, n: blend(deep, mid, .54 + .27 * max(0, -n.y)))
-    part(hips, "Body")
-    part(ribbon("Hip wrap | sweeping front panel", [
-        (-.20, -.145, 1.07, .11), (-.04, -.205, .94, .30),
-        (.17, -.221, .73, .39), (.33, -.16, .50, .21),
-        (.40, -.07, .42, .015)], "cloth", .027), "Skirt.Front")
-    part(ribbon("Hip wrap | bright flowing inner fold", [
-        (-.01, -.232, .94, .025), (.19, -.250, .73, .15),
-        (.35, -.177, .49, .06)], "cloth_light", .015), "Skirt.Front")
-    curl("Hip wrap | pale sash along the waist", [
-        (-.22, -.084, 1.07), (-.10, -.156, 1.035),
-        (.09, -.155, 1.02), (.22, -.08, 1.05)],
-        [.009, .013, .013, .006], "cloth_glint", "Body", sides=8)
-
-    # Blue-white scrolls are raised just enough to read in a small 3D view.
-    for sign, side in ((-1, "L"), (1, "R")):
-        curl(f"Body {side} | pale shoulder current", [
-            (sign * .20, -.061, 1.59), (sign * .15, -.12, 1.55),
-            (sign * .12, -.147, 1.49)], [.005, .007, .003],
-            "mark", "Body", sides=6)
-    curl("Body | winding waist current", [
-        (-.10, -.112, 1.28), (-.04, -.13, 1.20),
-        (.03, -.128, 1.18), (.08, -.109, 1.26)],
-        [.004, .008, .008, .003], "mark", "Body", sides=7)
-
-    # A tapered jaw, luminous eyes, and a center-parted hairline replace the
-    # earlier blank oval face and dark helmet-like hair mass.
-    face = loft("Face | fine pale blue jaw", [
-        (1.66, 0, -.115, .064, .063), (1.73, 0, -.125, .12, .108),
-        (1.84, 0, -.13, .168, .145), (1.95, 0, -.115, .165, .14),
-        (2.035, 0, -.10, .119, .11),
-    ], "skin", sides=20)
-    paint(face, lambda p, n: blend(blue, light, .24 + .27 * max(0, -n.y)))
-    part(face, "Head")
-    part(rounded(ph.ellipsoid("Face | delicate nose", (0, -.263, 1.812),
-         (.016, .010, .026), "skin", 2)), "Head")
-    for sign, side in ((-1, "L"), (1, "R")):
-        part(rounded(ph.ellipsoid(f"Ear {side} | small pointed ear",
-             (sign * .165, -.072, 1.83), (.025, .041, .045),
-             "skin", 2)), "Head")
-        part(rounded(ph.ellipsoid(f"Eye {side} | violet blue socket",
-             (sign * .072, -.259, 1.87), (.051, .004, .033),
-             "socket", 2)), "Head")
-        part(rounded(ph.ellipsoid(f"Eye {side} | clear white",
-             (sign * .072, -.264, 1.87), (.043, .003, .026),
-             "sclera", 2)), "Head")
-        part(rounded(ph.ellipsoid(f"Eye {side} | icy iris",
-             (sign * .072, -.268, 1.87), (.024, .002, .025),
-             "iris", 2)), "Head")
-        part(rounded(ph.ellipsoid(f"Eye {side} | focused pupil",
-             (sign * .072, -.271, 1.87), (.011, .001, .017),
-             "pupil", 1)), "Head")
-        curl(f"Eye {side} | lowered upper lid", [
-            (sign * .029, -.268, 1.895), (sign * .072, -.275, 1.898),
-            (sign * .118, -.260, 1.894)], [.004, .010, .003],
-            "skin_shadow", "Head", sides=7)
-        curl(f"Face {side} | arched eyebrow", [
-            (sign * .028, -.254, 1.943), (sign * .075, -.266, 1.943),
-            (sign * .125, -.243, 1.939)], [.004, .006, .003],
-            "hair_shadow", "Head", sides=6)
-        for dot in range(2):
-            part(rounded(ph.ellipsoid(f"Face {side} | pearly cheek dot {dot}",
-                 (sign * (.102 + dot * .027), -.232 + dot * .013,
-                  1.785 - dot * .027), (.007, .006, .007),
-                 "mark", 1)), "Head")
-    part(rounded(ph.ellipsoid("Face | closed blue lips", (0, -.231, 1.733),
-         (.039, .006, .009), "lip", 2)), "Head")
-    part(rounded(ph.ellipsoid("Face | lower lip sheen", (0, -.234, 1.727),
-         (.026, .004, .004), "skin_light", 1)), "Head")
-
-    part(rounded(ph.ellipsoid("Hair | luminous crown", (0, .042, 1.91),
-         (.216, .201, .236), "hair", 2)), "Head")
-    for sign, side in ((-1, "L"), (1, "R")):
-        mass = loft(f"Hair {side} | layered flowing volume", [
-            (1.055, sign * .50, .17, .025, .045),
-            (1.18, sign * .46, .16, .095, .105),
-            (1.39, sign * .39, .17, .127, .125),
-            (1.62, sign * .31, .13, .13, .135),
-            (1.83, sign * .245, .095, .11, .12),
-            (2.005, sign * .18, .05, .045, .075),
-        ], "hair", sides=16)
-        part(mass, f"Hair.{side}")
-        part(ribbon(f"Hair {side} | parted bright fringe", [
-            (0, -.158, 2.095, .045),
-            (sign * .115, -.211, 2.038, .135),
-            (sign * .205, -.169, 1.947, .040)],
-            "hair_light", .032), "Head")
-        curl(f"Hair {side} | principal cascading lock", [
-            (sign * .17, .055, 2.02), (sign * .32, .035, 1.78),
-            (sign * .38, .07, 1.47), (sign * .53, .01, 1.16),
-            (sign * .58, -.04, 1.00), (sign * .57, -.11, .955),
-            (sign * .48, -.10, 1.02)],
-            [.070, .075, .073, .062, .043, .028, .004],
-            "hair", f"Hair.{side}", sides=13)
-        curl(f"Hair {side} | bright outer curl", [
-            (sign * .19, .135, 1.96), (sign * .36, .18, 1.73),
-            (sign * .40, .21, 1.43), (sign * .61, .23, 1.19),
-            (sign * .71, .16, 1.05), (sign * .65, .08, .98),
-            (sign * .59, .06, 1.08)],
-            [.053, .062, .062, .052, .035, .024, .004],
-            "hair_light", f"Hair.{side}", sides=12)
-        curl(f"Hair {side} | cool inner wave", [
-            (sign * .20, -.018, 1.96), (sign * .29, -.075, 1.73),
-            (sign * .30, -.105, 1.44), (sign * .40, -.12, 1.16),
-            (sign * .46, -.08, 1.03)],
-            [.048, .051, .045, .037, .004],
-            "hair_shadow", f"Hair.{side}", sides=11)
-        curl(f"Hair {side} | glint through upper curls", [
-            (sign * .21, -.034, 2.01), (sign * .32, -.025, 1.77),
-            (sign * .40, -.004, 1.48), (sign * .51, -.04, 1.17)],
-            [.010, .014, .011, .003], "hair_glint", f"Hair.{side}", sides=7)
-
-    ARM_POINTS.update({
-        "L": ((-.205, -.005, 1.55), (-.305, -.06, 1.25), (-.33, -.16, 1.045)),
-        "R": ((.205, -.005, 1.55), (.405, -.17, 1.37), (.19, -.35, 1.56)),
-    })
-    for side, (shoulder, elbow, hand) in ARM_POINTS.items():
-        part(ph.tube(f"Arm {side} | smooth upper arm", [shoulder,
-             Vector(shoulder).lerp(Vector(elbow), .53), elbow],
-             [.079, .074, .06], sides=14, color="skin"), f"Arm.{side}.upper")
-        part(rounded(ph.ellipsoid(f"Arm {side} | soft elbow", elbow,
-             (.063, .063, .065), "skin", 2)), f"Arm.{side}.upper")
-        part(ph.tube(f"Arm {side} | slender forearm", [elbow,
-             Vector(elbow).lerp(Vector(hand), .53), hand],
-             [.061, .054, .043], sides=14, color="skin"), f"Arm.{side}.lower")
-        part(rounded(ph.ellipsoid(f"Hand {side} | palm", hand,
-             (.068, .047, .043), "skin_light", 2)), f"Hand.{side}")
-        for finger in range(3):
-            shift = (finger - 1) * .032
-            sign = -1 if side == "L" else 1
-            part(ph.tube(f"Hand {side} | curved finger {finger + 1}", [
-                 (hand[0] + sign * .035, hand[1] -.02, hand[2] + shift),
-                 (hand[0] + sign * .087, hand[1] -.07, hand[2] + shift - .015),
-                 (hand[0] + sign * .074, hand[1] -.09, hand[2] + shift - .05)],
-                 [.015, .012, .003], sides=7, color="skin_light"),
-                 f"Grasp.{side}")
-        if side == "R":
-            curl("Arm R | pale tidal curl", [
-                (.245, -.09, 1.53), (.29, -.15, 1.47),
-                (.34, -.196, 1.42)], [.005, .007, .003],
-                "mark", "Arm.R.upper", sides=6)
-
-    for sign, side in ((-1, "L"), (1, "R")):
-        hip = (sign * .15, .035, 1.045)
-        knee = (sign * .35, -.29, .58)
-        ankle = (sign * .38, -.07, .15)
-        toe = (sign * .38, -.31, .10)
-        LEG_POINTS[side] = (hip, knee, ankle, toe)
-        part(ph.tube(f"Leg {side} | curved thigh", [hip,
-             Vector(hip).lerp(Vector(knee), .52), knee],
-             [.106, .101, .079], sides=14, color="skin"),
-             f"Leg.{side}.upper")
-        part(rounded(ph.ellipsoid(f"Leg {side} | round knee", knee,
-             (.079, .071, .079), "skin", 2)), f"Leg.{side}.upper")
-        part(ph.tube(f"Leg {side} | long tapered calf", [knee,
-             Vector(knee).lerp(Vector(ankle), .53), ankle],
-             [.079, .068, .05], sides=14, color="skin"),
-             f"Leg.{side}.lower")
-        part(rounded(ph.ellipsoid(f"Foot {side} | bare instep",
-             (sign * .38, -.20, .085), (.079, .143, .064),
-             "skin", 2)), f"Foot.{side}")
-        part(rounded(ph.ellipsoid(f"Foot {side} | shaded sole",
-             (sign * .38, -.21, .021), (.081, .144, .021),
-             "skin_shadow", 2)), f"Foot.{side}")
-        part(rounded(ph.ellipsoid(f"Foot {side} | pale toes",
-             (sign * .38, -.333, .065), (.067, .044, .026),
-             "skin_light", 1)), f"Foot.{side}")
-
-    # Fuse the skin after constructing editable anatomical source parts. This
-    # removes the toy-like seams at shoulders, elbows, hips, knees, and ankles.
-    skin_objects = [obj for obj in bpy.context.scene.objects if obj.type == "MESH" and (
-        obj.name.startswith(("Body | sculpted", "Chest ", "Neck |", "Foot ")) or
-        (obj.name.startswith("Arm ") and "tidal curl" not in obj.name) or
-        obj.name.startswith("Hand ") and "| palm" in obj.name or
-        (obj.name.startswith("Leg ") and "water scroll" not in obj.name))]
-    skin = ph.voxel_union("Skin | continuous figure", skin_objects,
-                          voxel_size=.04, smooth_iterations=2)
-    topology = ph.mesh_topology(skin)
-    if topology != {"components": 1, "nonManifoldEdges": 0}:
-        raise ValueError(f"Skin needs one closed connected surface: {topology}")
-    marking = ph.linear(ph.PALETTE["mark"])
-    paint(skin, lambda p, n: skin_color(p, n, shade, blue, light, marking))
-    PART_BONES[skin.name] = [skin_weights(vertex.co) for vertex in skin.data.vertices]
+    # One continuous quad garment: fitted neckline -> waist -> draped hem.
+    # Projection is the same surface-fitting principle as Shrinkwrap. Only the
+    # bodice is fitted tightly; the skirt keeps authored volume and sculpted folds.
+    surface = BVHTree.FromPolygons([v.co for v in body.data.vertices], [list(p.vertices) for p in body.data.polygons])
+    vertices, faces = [], []
+    columns, skirt_rows, bodice_rows = 32, 8, 8
+    def neckline(angle):
+        front = max(0, -math.sin(angle))
+        return 1.226 - .052 * front ** 4
+    def hemline(angle):
+        return .52 - .155 * math.cos(angle) + .015 * math.sin(2 * angle)
+    def fit(angle, z):
+        direction = Vector((math.cos(angle), math.sin(angle), 0))
+        hit, _, _, _ = surface.ray_cast(Vector((0, 0, z)), direction)
+        if hit is None:
+            raise ValueError('Dress projection missed the torso')
+        return hit + direction * .008
+    def skirt_radius(z):
+        sections = [(.30,.227,.156),(.64,.196,.165),(.78,.197,.164),(.86,.167,.132),(.96,.113,.083)]
+        for a,b in zip(sections,sections[1:]):
+            if z <= b[0]:
+                t = smoothstep(a[0],b[0],z)
+                return a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t
+        return sections[-1][1:]
+    for row in range(skirt_rows + bodice_rows + 1):
+        for col in range(columns):
+            angle = math.tau * col / columns
+            if row <= skirt_rows:
+                t = row / skirt_rows
+                z = hemline(angle) + (.96 - hemline(angle)) * t
+                rx, ry = skirt_radius(z)
+                p = Vector((rx * math.cos(angle), -.010 + ry * math.sin(angle), z))
+                if z > .86:
+                    p = p.lerp(fit(angle,z), smoothstep(.86,.96,z))
+                # Curved vertical folds grow gradually below the fitted hips.
+                fold = .009 * (1 - smoothstep(.57,.94,z)) * math.sin(6*angle + (z-.5)*3)
+                p += Vector((math.cos(angle),math.sin(angle),0)) * fold
+            else:
+                t = (row - skirt_rows) / bodice_rows
+                z = .96 + (neckline(angle) - .96) * t
+                p = fit(angle,z)
+            vertices.append(p)
+    for row in range(skirt_rows + bodice_rows):
+        for col in range(columns):
+            a = row * columns + col; b = row * columns + (col + 1) % columns
+            faces.append((a,b,b+columns,a+columns))
+    dress = rounded(ph.mesh('Dress | continuous sea silk',vertices,faces,'cloth'))
+    # Solidify closes neckline and hem rims with a thin inner surface, preserving
+    # the open neck/leg passages. The resulting garment is one manifold shell.
+    bpy.context.view_layer.objects.active = dress
+    thickness = dress.modifiers.new('Tailored fabric thickness','SOLIDIFY')
+    thickness.thickness = .0025
+    thickness.offset = 1
+    bpy.ops.object.modifier_apply(modifier=thickness.name)
+    topology = ph.mesh_topology(dress)
+    if topology != {'components':1,'nonManifoldEdges':0}:
+        raise ValueError(f'Dress must be one connected manifold garment: {topology}')
+    dress['construction'] = 'Continuous fitted quad surface; sculpted folds; solidified rims'
+    dress['topology_components'] = topology['components']
+    dress['topology_nonmanifold_edges'] = topology['nonManifoldEdges']
+    def fabric_color(p,n):
+        angle = math.atan2(p.y+.01,p.x)
+        base = blend(ph.linear(ph.PALETTE['cloth_dark']),ph.linear(ph.PALETTE['cloth']),.65+.25*max(0,-n.y))
+        edge = max(1-smoothstep(.001,.013,abs(p.z-neckline(angle))),
+                   1-smoothstep(.001,.012,abs(p.z-hemline(angle))))
+        fold = .13 * (1-smoothstep(.65,.96,p.z)) * (.5+.5*math.sin(6*angle+(p.z-.5)*3))
+        return blend(blend(base,ph.linear(ph.PALETTE['cloth_light']),fold),ph.linear(ph.PALETTE['cloth_glint']),.8*edge)
+    paint(dress,fabric_color)
+    dress_weights = []
+    for v in dress.data.vertices:
+        flow = .075 * (1 - smoothstep(.46,.86,v.co.z))
+        legs = .90 * (1 - smoothstep(.78,.96,v.co.z))
+        right = smoothstep(-.07,.07,v.co.x)
+        chest = smoothstep(.94,1.17,v.co.z)
+        torso = 1-flow-legs
+        dress_weights.append({'Body':torso*(1-chest),'Spine':torso*chest,'Skirt.Front':flow,
+                              'Leg.L.upper':legs*(1-right),'Leg.R.upper':legs*right})
+    PART_BONES[dress.name] = dress_weights
+    part(rounded(ph.ellipsoid('Jewelry | sea glass clasp',(0,-.108,1.182),(.019,.008,.026),'gem',2)),'Spine')
 
 
-def rotate_world_axis(bone, axis, angle):
-    local_axis = bone.bone.matrix_local.to_3x3().inverted() @ Vector(axis)
-    bone.rotation_quaternion = Quaternion(local_axis, angle)
+    # Small spherical eyes are seated inside the existing eyelid loops.
+    for sign, side in ((-1, 'L'), (1, 'R')):
+        eye = (sign * .04449, -.0804, 1.4436)
+        part(rounded(ph.ellipsoid(f'Eye {side} | inset sclera', eye, (.036,.036,.036), 'sclera', 2)), 'Head')
+        part(rounded(ph.ellipsoid(f'Eye {side} | teal iris', (eye[0], -.1152, eye[2]), (.015,.004,.018), 'iris', 2)), 'Head')
+        part(rounded(ph.ellipsoid(f'Eye {side} | pupil', (eye[0], -.119, eye[2]), (.007,.002,.011), 'pupil', 1)), 'Head')
+        part(rounded(ph.ellipsoid(f'Eye {side} | catchlight', (eye[0]-.004, -.121, eye[2]+.006), (.003,.001,.003), 'gem', 1)), 'Head')
+        curl(f'Face {side} | calm brow', [(sign*.020,-.133,1.49),(sign*.045,-.134,1.498),(sign*.073,-.118,1.487)], [.002,.004,.001], 'hair_shadow','Head',6)
 
-
-def rotate_world_axes(bone, first_axis, first_angle, second_axis, second_angle):
-    inverse = bone.bone.matrix_local.to_3x3().inverted()
-    bone.rotation_quaternion = (Quaternion(inverse @ Vector(first_axis), first_angle) @
-                                Quaternion(inverse @ Vector(second_axis), second_angle))
+    # A fitted scalp cap hides root gaps; separate overlapping curve clumps
+    # build the hairstyle in back, side and fringe layers. No fused hair curtain.
+    # See data/README.md for the guide-curve and profile references.
+    columns, cap_rows = 32, 6
+    center = Vector((0,-.015,1.46))
+    def scalp_point(angle, theta):
+        direction = Vector((math.sin(theta)*math.cos(angle),
+                            math.sin(theta)*math.sin(angle), math.cos(theta)))
+        hit, _, _, _ = surface.ray_cast(center,direction,.25)
+        if hit is None:
+            raise ValueError('Hair scalp projection missed the head')
+        return hit + direction * .010
+    cap_vertices = [scalp_point(0,0)]
+    cap_faces = []
+    for row in range(1,cap_rows+1):
+        for col in range(columns):
+            angle=math.tau*col/columns
+            extent=1.55-.5*max(0,-math.sin(angle))-.05*max(0,math.sin(angle))
+            cap_vertices.append(scalp_point(angle,extent*row/cap_rows))
+    for col in range(columns):
+        cap_faces.append((0,1+col,1+(col+1)%columns))
+    for row in range(cap_rows-1):
+        for col in range(columns):
+            a=1+row*columns+col; b=1+row*columns+(col+1)%columns
+            cap_faces.append((a,b,b+columns,a+columns))
+    hair=rounded(ph.mesh('Hair | fitted scalp cap',cap_vertices,cap_faces,'hair'))
+    bpy.context.view_layer.objects.active=hair
+    solid=hair.modifiers.new('Closed hair volume','SOLIDIFY')
+    solid.thickness=.003
+    solid.offset=1
+    bpy.ops.object.modifier_apply(modifier=solid.name)
+    topology=ph.mesh_topology(hair)
+    if topology != {'components':1,'nonManifoldEdges':0}:
+        raise ValueError(f'Hair foundation must be closed and connected: {topology}')
+    hair['topology_components']=topology['components']
+    hair['topology_nonmanifold_edges']=topology['nonManifoldEdges']
+    def hair_weights(p):
+        loose=1-smoothstep(1.17,1.45,p.z)
+        right=smoothstep(-.05,.05,p.x)
+        return {'Head':1-loose,'Hair.L':loose*(1-right),'Hair.R':loose*right}
+    PART_BONES[hair.name]='Head'
+    paint(hair,lambda p,n: blend(ph.linear(ph.PALETTE['hair_shadow']),ph.linear(ph.PALETTE['hair']),
+                                .55+.23*max(0,n.y)+.10*math.sin(8*math.atan2(p.y+.015,p.x))))
+    # Dense short root locks follow the scalp itself. Their profiled surfaces
+    # overlap across the whole crown, so the cap is only an underlay, never a
+    # broad smooth bald-looking patch between the long guide clumps.
+    for index in range(10):
+        vertices, faces = [], []
+        rows, across = 7, 4
+        for row in range(rows):
+            t = row / (rows - 1)
+            for col in range(across):
+                u = col / (across - 1)
+                angle = math.tau * index / 10 + (u - .5) * .76 + .08 * math.sin(t * math.pi)
+                extent = 1.55-.5*max(0,-math.sin(angle))-.05*max(0,math.sin(angle))
+                theta = .025 + (extent - .025) * t
+                p = scalp_point(angle,theta)
+                normal = (p-center).normalized()
+                relief = .002 + .007 * math.sin(math.pi*u) * math.sin(math.pi*t) ** .5
+                vertices.append(p + normal * relief)
+        for row in range(rows-1):
+            for col in range(across-1):
+                a = row*across+col
+                faces.append((a,a+1,a+1+across,a+across))
+        lock = rounded(ph.mesh(f'Hair roots | scalp-following lock {index+1}',vertices,faces,'hair'))
+        bpy.context.view_layer.objects.active=lock
+        solid=lock.modifiers.new('Fine root-lock thickness','SOLIDIFY')
+        solid.thickness=.0015
+        solid.offset=1
+        bpy.ops.object.modifier_apply(modifier=solid.name)
+        part(lock,'Head')
+        base=ph.linear(ph.PALETTE['hair'])
+        bright=ph.linear(ph.PALETTE['hair_light'])
+        paint(lock,lambda p,n: blend(base,bright,.20+.18*max(0,n.z)))
+    # Bottom layer: seven independent S-curved locks cover the back. Their
+    # widths overlap while their staggered, tapered tips stay visibly separate.
+    for index in range(7):
+        angle = math.pi * index / 6
+        u = math.cos(angle)
+        root = scalp_point(angle,.58)
+        upper = scalp_point(angle,1.15) + Vector((0,.008,0))
+        finish = .89 + .055 * math.cos(index * 1.9)
+        x_tip = .30 * u + .018 * math.sin(index * 1.7)
+        controls = [root, upper, (u*.145,.12+.06*math.sin(angle),1.30),
+                    (u*.18+.015*math.sin(index),.15+.055*math.sin(angle),1.10),
+                    (x_tip,.09+.07*math.sin(angle),finish),
+                    (x_tip+.035*u,.065+.05*math.sin(angle),finish+.035)]
+        lock = curl(f'Hair back | lower lock {index+1}',controls,
+                    [.016,.043,.057,.058,.026,.0015],
+                    'hair' if index%2==0 else 'hair_light',
+                    'Hair.L' if u<0 else 'Hair.R',8)
+        PART_BONES[lock.name] = [hair_weights(v.co) for v in lock.data.vertices]
+    # Shorter top-layer clumps break up the long parallel channels without
+    # turning the hairstyle into a single inflated silhouette.
+    for index in range(3):
+        u=(index-1)*.065
+        root=scalp_point(math.pi/2 + (index-1)*.48,.34)
+        lock=curl(f'Hair back | upper lock {index+1}',
+            [root,(u,.117,1.49),(u+.014,.195,1.33),
+             (u-.016,.226,1.16),(u+.024,.207,1.03),(u+.04,.184,1.06)],
+            [.010,.037,.042,.037,.020,.001],
+            'hair_light' if index==1 else 'hair','Hair.R',8)
+        PART_BONES[lock.name]=[hair_weights(v.co) for v in lock.data.vertices]
+    for sign,side in ((-1,'L'),(1,'R')):
+        curl(f'Hair {side} | swept temple',[(sign*.008,-.06,1.615),(sign*.07,-.118,1.57),(sign*.112,-.079,1.49),(sign*.13,-.01,1.35)],[.014,.032,.029,.005],'hair_light','Head',10)
+        wave=curl(f'Hair {side} | face framing wave',[(sign*.115,-.015,1.49),(sign*.143,-.012,1.34),(sign*.156,-.022,1.23),(sign*.21,.015,1.10),(sign*.26,.035,1.02)],[.030,.034,.030,.020,.002],'hair','Hair.'+side,10)
+        PART_BONES[wave.name]=[hair_weights(v.co) for v in wave.data.vertices]
+        glint=curl(f'Hair {side} | narrow reflected ribbon',[(sign*.045,-.122,1.575),(sign*.105,-.103,1.49),(sign*.141,-.04,1.34),(sign*.156,-.046,1.24)],[.002,.004,.003,.001],'hair_glint','Head',6)
+        PART_BONES[glint.name]=[hair_weights(v.co) for v in glint.data.vertices]
+        shoulder,elbow,wrist=map(Vector,ARM_POINTS[side])
+        curl(f'Arm {side} | tidal bracelet',[wrist+Vector((-.026,-.015,.009)),wrist+Vector((0,-.031,.008)),wrist+Vector((.026,-.014,.009))],[.003,.004,.003],'cloth_glint',f'Arm.{side}.lower',6)
 
 
 def rig_model(objects, transform):
     specs = {
         "Root": ((0, 0, .06), (0, 0, .27), None),
-        "Body": ((0, .025, 1.10), (0, 0, 1.50), "Root"),
-        "Head": ((0, -.012, 1.66), (0, -.012, 1.96), "Body"),
-        "Hair.L": ((-.18, .055, 2.02), (-.45, .08, 1.39), "Head"),
-        "Hair.R": ((.18, .055, 2.02), (.45, .08, 1.39), "Head"),
-        "Skirt.Front": ((-.20, -.145, 1.07), (.25, -.18, .66), "Body"),
+        "Body": ((0, .01, .86), (0, 0, 1.23), "Root"),
+        "Spine": ((0, .01, .96), (0, 0, 1.25), "Body"),
+        "Head": ((0, 0, 1.30), (0, 0, 1.53), "Spine"),
+        "Hair.L": ((-.10, .03, 1.53), (-.25, .10, 1.03), "Head"),
+        "Hair.R": ((.10, .03, 1.53), (.25, .10, 1.03), "Head"),
+        "Skirt.Front": ((-.10, -.09, .87), (.13, -.12, .50), "Body"),
     }
     for side, (shoulder, elbow, hand) in ARM_POINTS.items():
-        specs[f"Arm.{side}.upper"] = (shoulder, elbow, "Body")
+        specs[f"Arm.{side}.upper"] = (shoulder, elbow, "Spine")
         specs[f"Arm.{side}.lower"] = (elbow, hand, f"Arm.{side}.upper")
-        sign = -1 if side == "L" else 1
-        specs[f"Hand.{side}"] = (hand, (hand[0] + sign * .095,
-                                         hand[1] -.06, hand[2]), f"Arm.{side}.lower")
-        specs[f"Grasp.{side}"] = (hand, (hand[0] + sign * .10,
-                                          hand[1] -.08, hand[2] -.04), f"Hand.{side}")
+        grasp, tips = GRASP_POINTS[side]
+        specs[f"Hand.{side}"] = (hand, grasp, f"Arm.{side}.lower")
+        specs[f"Grasp.{side}"] = (grasp, tips, f"Hand.{side}")
     for side, (hip, knee, ankle, toe) in LEG_POINTS.items():
         specs[f"Leg.{side}.upper"] = (hip, knee, "Body")
         specs[f"Leg.{side}.lower"] = (knee, ankle, f"Leg.{side}.upper")
@@ -463,86 +419,181 @@ def rig_model(objects, transform):
     rig = create_rig("Water nymph female | deform rig", specs, transform)
     for obj in objects:
         bind(obj, rig, PART_BONES[obj.name])
-    animate(rig, transform)
+    skin = next(obj for obj in objects if obj.name.startswith('Skin |'))
+    foot_support = {}
+    for side in ('L','R'):
+        ankle = transform @ Vector(LEG_POINTS[side][2])
+        foot_support[side] = [v.co - ankle for v,w in zip(skin.data.vertices,PART_BONES[skin.name])
+                              if w.get(f'Foot.{side}',0) > .99]
+    animate(rig, transform, foot_support)
     return rig
 
 
-def animate(rig, transform):
+def animate(rig, transform, foot_support):
+    """Body mechanics and overlapping action, sampled into portable GLB clips.
+
+    Walk has 55% stance / 45% swing and a short double-support period. Stance
+    moves backward at controller speed; the Hermite swing matches its velocity
+    at toe-off and contact. All secondary movement is bounded and periodic.
+    """
     scene = bpy.context.scene
     scene.render.fps = 60
     rig.animation_data_create()
     scale = transform.to_scale().x
-    for name, frames in (("Idle", 121), ("Walk", 31), ("Attack", 31)):
+    legs = {side:[transform @ Vector(p) for p in raw] for side,raw in LEG_POINTS.items()}
+    arms = {side:[transform @ Vector(p) for p in raw] for side,raw in ARM_POINTS.items()}
+    body = rig.pose.bones['Body']
+    spine = rig.pose.bones['Spine']
+    pivot = body.bone.head_local.copy()
+    def turn(name, pitch=0, roll=0, yaw=0):
+        bone = rig.pose.bones[name]
+        inverse = bone.bone.matrix_local.to_3x3().inverted()
+        bone.rotation_quaternion = (Quaternion(inverse @ Vector((0,0,1)),yaw) @
+                                    Quaternion(inverse @ Vector((0,1,0)),roll) @
+                                    Quaternion(inverse @ Vector((1,0,0)),pitch))
+    def wave(phase, lag=0):
+        return math.sin(phase-lag) + math.sin(lag)
+    for name, frames in (('Idle',241),('Walk',31),('Attack',31)):
         action = bpy.data.actions.new(name)
         action.use_fake_user = True
         rig.animation_data.action = action
+        previous_quaternions = {}
         for frame in range(frames):
             scene.frame_set(frame)
             for bone in rig.pose.bones:
                 bone.matrix_basis.identity()
-            t = frame / (frames - 1)
-            phase = math.tau * t
-            strike = envelope(t, [(0, 0), (1 / 30, .30), (4 / 30, .82),
-                                  (7 / 30, 1), (11 / 30, .82),
-                                  (20 / 30, .16), (27 / 30, 0), (1, 0)]) if name == "Attack" else 0
-            grasp = envelope(t, [(0, 0), (2 / 30, -.25), (5 / 30, -.32),
-                                 (7 / 30, .75), (11 / 30, .75),
-                                 (21 / 30, .09), (27 / 30, 0), (1, 0)]) if name == "Attack" else 0
-            bob = (.009 * math.sin(phase) if name == "Idle" else
-                   .012 * (1 - math.cos(phase * 2)) if name == "Walk" else .020 * strike)
-            body_offset = Vector((0, -.30 * strike if name == "Attack" else 0,
-                                  bob)) * scale
-            body = rig.pose.bones["Body"]
-            body.matrix = Matrix.Translation(body_offset) @ body.bone.matrix_local
+            t = frame/(frames-1)
+            phase = math.tau*t
+            strike = reach = settle = 0
+            if name == 'Attack':
+                strike = envelope(t,[(0,0),(1/30,.27),(4/30,.80),(7/30,1),
+                                     (10/30,.98),(18/30,.34),(26/30,.015),(1,0)])
+                reach = envelope(t,[(0,0),(1/30,.32),(4/30,.85),(7/30,1),
+                                    (10/30,1),(17/30,.28),(25/30,.025),(1,0)])
+                settle = envelope(t,[(0,0),(5/30,.12),(10/30,1),(17/30,.35),(25/30,-.12),(1,0)])
+            if name == 'Walk':
+                offset = Vector((.009*math.sin(phase),0,
+                                 -.057+.011*(1-math.cos(2*phase-.4))))*scale
+                pelvis_yaw = .035*math.sin(phase)
+                pelvis_roll = .017*math.sin(phase)
+                pelvis_pitch = .007*math.sin(2*phase)
+                spine_yaw = -.065*math.sin(phase-.12)
+                spine_roll = -.023*math.sin(phase-.10)
+                spine_pitch = -.006*math.sin(2*phase-.25)
+            elif name == 'Idle':
+                offset = Vector((.002*math.sin(phase),0,.002*math.sin(phase)))*scale
+                pelvis_yaw = pelvis_roll = pelvis_pitch = 0
+                spine_yaw = .008*wave(phase,.15)
+                spine_roll = 0
+                spine_pitch = .006*math.sin(phase)
+            else:
+                offset = Vector((.006*strike,-.16/scale*strike,-.035*strike))*scale
+                pelvis_yaw = -.012*strike
+                pelvis_roll = 0
+                pelvis_pitch = .007*strike
+                spine_yaw = .035*strike
+                spine_roll = 0
+                spine_pitch = .023*strike
+            rotation = (Quaternion((0,0,1),pelvis_yaw) @ Quaternion((0,1,0),pelvis_roll) @
+                        Quaternion((1,0,0),pelvis_pitch)).to_matrix().to_4x4()
+            body.matrix = (Matrix.Translation(pivot+offset) @ rotation @
+                           Matrix.Translation(-pivot) @ body.bone.matrix_local)
+            turn('Spine',spine_pitch,spine_roll,spine_yaw)
+            # Small counter-motion keeps the gaze steadier than the torso.
+            turn('Head',-.45*spine_pitch-.015*strike,-.4*spine_roll,-.5*spine_yaw)
             bpy.context.view_layer.update()
-            rotate_world_axis(rig.pose.bones["Head"], (1, 0, 0),
-                              .018 * math.sin(phase) - .055 * strike)
-            for side, sign in (("L", -1), ("R", 1)):
-                rotate_world_axis(rig.pose.bones[f"Hair.{side}"], (0, 0, 1),
-                                  sign * (.055 * math.sin(phase + sign * .6) + .14 * strike))
-            rotate_world_axis(rig.pose.bones["Skirt.Front"], (0, 0, 1),
-                              .04 * math.sin(phase + .8) + .10 * strike)
-            swing = .22 * math.sin(phase) if name == "Walk" else 0
-            rotate_world_axis(rig.pose.bones["Arm.R.upper"], (1, 0, 0),
-                              -.65 * strike - swing)
-            rotate_world_axes(rig.pose.bones["Arm.R.lower"],
-                              (0, 0, 1), .65 * strike,
-                              (1, 0, 0), .72 * strike)
-            rotate_world_axis(rig.pose.bones["Hand.R"], (1, 0, 0),
-                              -.14 * strike)
-            rotate_world_axis(rig.pose.bones["Grasp.R"], (1, 0, 0), grasp)
-            rotate_world_axis(rig.pose.bones["Arm.L.upper"], (1, 0, 0),
-                              .10 * strike + swing)
-            bpy.context.view_layer.update()
-            for side, raw in LEG_POINTS.items():
-                hip0, knee0, ankle0, toe0 = [transform @ Vector(p) for p in raw]
-                hip = hip0 + body_offset
+            body_delta = body.matrix @ body.bone.matrix_local.inverted()
+            spine_delta = spine.matrix @ spine.bone.matrix_local.inverted()
+
+            for side,sign in (('L',-1),('R',1)):
+                if name == 'Walk':
+                    drag = .033*math.sin(phase-.65+sign*.16)
+                    turn(f'Hair.{side}',.016*math.sin(phase-.8),0,sign*drag)
+                else:
+                    drag = .022*wave(phase,.65+sign*.12) if name == 'Idle' else .065*settle
+                    turn(f'Hair.{side}',.010*wave(phase,.8) if name=='Idle' else .023*settle,0,sign*drag)
+            cloth = (.024*math.sin(phase-.55) if name=='Walk' else
+                     .013*wave(phase,.7) if name=='Idle' else .045*settle)
+            turn('Skirt.Front',.3*cloth,0,cloth)
+            if name == 'Walk':
+                turn('Arm.L.upper',.18*math.sin(phase-.08),.022*math.sin(phase),0)
+                turn('Arm.L.lower',.055*(1-math.cos(phase-.28)),0,0)
+                turn('Hand.L',.035*math.sin(phase-.55),0,0)
+                turn('Arm.R.upper',-.075*math.sin(phase-.10),0,0)
+                turn('Arm.R.lower',-.045*math.sin(phase-.35),0,0)
+                turn('Hand.R',-.032*math.sin(phase-.60),0,0)
+                turn('Grasp.R',.022*math.sin(phase-.75),0,0)
+            elif name == 'Idle':
+                turn('Arm.L.upper',.009*wave(phase,.3),0,0)
+                turn('Arm.L.lower',.014*wave(phase,.5),0,0)
+                turn('Arm.R.lower',.012*wave(phase,.45),0,0)
+                turn('Hand.R',.018*wave(phase,.65),0,0)
+                turn('Grasp.R',.018*wave(phase,.85),0,0)
+            else:
+                turn('Arm.L.upper',.065*strike,0,-.035*strike)
+                turn('Arm.L.lower',.04*settle,0,0)
+                turn('Hand.R',-.10*reach-.035*settle,0,0)
+                grasp = envelope(t,[(0,0),(2/30,-.25),(5/30,-.32),(7/30,.75),
+                                    (11/30,.75),(19/30,.18),(27/30,.01),(1,0)])
+                turn('Grasp.R',grasp,0,0)
+                shoulder0, elbow0, wrist0 = arms['R']
+                shoulder = spine_delta @ shoulder0
+                target = transform @ Vector((.19,-.282,1.29))
+                wrist = spine_delta @ wrist0.lerp(target,reach)
+                # The reaching hand follows an arc; torso and fingers have
+                # separate lead/follow timing instead of moving as one lever.
+                wrist += Vector((.012,0,.015))*scale*math.sin(math.pi*reach)
+                elbow = solve_knee(shoulder,wrist,spine_delta @ elbow0,
+                                   (elbow0-shoulder0).length,(wrist0-elbow0).length)
+                set_bone_segment(rig,'Arm.R.upper',shoulder,elbow)
+                set_bone_segment(rig,'Arm.R.lower',elbow,wrist)
+
+            for side,(hip0,knee0,ankle0,toe0) in legs.items():
+                hip = body_delta @ hip0
                 ankle = ankle0.copy()
-                toe_offset = toe0 - ankle0
-                if name == "Walk":
-                    cycle = (t + (0 if side == "L" else .5)) % 1
-                    if cycle < .5:
-                        ankle.y += (-.39 + 1.56 * cycle) * scale
+                foot_rotation = Quaternion((1,0,0),0)
+                if name == 'Walk':
+                    cycle = (t+(0 if side=='L' else .5))%1
+                    if cycle <= .55:
+                        ankle.y += -.275+cycle
+                        pitch = (-.12*(1-smoothstep(0,.12,cycle)) +
+                                 .18*smoothstep(.40,.55,cycle))
+                        clearance = 0
                     else:
-                        step = (cycle - .5) * 2
-                        ankle.y += (.39 - .78 * step) * scale
-                        ankle.z += .20 * math.sin(math.pi * step) ** 2 * scale
-                upper = (knee0 - hip0).length
-                lower = (ankle0 - knee0).length
-                knee = solve_knee(hip, ankle, knee0, upper, lower)
-                set_bone_segment(rig, f"Leg.{side}.upper", hip, knee)
-                set_bone_segment(rig, f"Leg.{side}.lower", knee, ankle)
-                set_bone_segment(rig, f"Foot.{side}", ankle, ankle + toe_offset)
+                        step = (cycle-.55)/.45
+                        h00=2*step**3-3*step**2+1
+                        h10=step**3-2*step**2+step
+                        h01=-2*step**3+3*step**2
+                        h11=step**3-step**2
+                        ankle.y += .275*h00+.45*h10-.275*h01+.45*h11
+                        clearance = .095*math.sin(math.pi*step)**2
+                        pitch = .18*(1-smoothstep(0,.55,step))-.12*smoothstep(.45,1,step)
+                    foot_rotation = Quaternion((1,0,0),pitch)
+                    # Ground the actual sole through heel contact and toe-off;
+                    # keeping just the ankle at a fixed height causes clipping.
+                    floor = min((ankle0+foot_rotation @ p).z for p in foot_support[side])
+                    ankle.z += clearance-floor
+                upper,lower=(knee0-hip0).length,(ankle0-knee0).length
+                knee=solve_knee(hip,ankle,hip+Vector((0,-scale,0)),upper,lower)
+                set_bone_segment(rig,f'Leg.{side}.upper',hip,knee)
+                set_bone_segment(rig,f'Leg.{side}.lower',knee,ankle)
+                set_bone_segment(rig,f'Foot.{side}',ankle,ankle+foot_rotation @ (toe0-ankle0))
             for bone in rig.pose.bones:
-                for channel in ("location", "rotation_quaternion", "scale"):
-                    bone.keyframe_insert(channel, frame=frame, group=bone.name)
+                previous=previous_quaternions.get(bone.name)
+                if previous is not None and bone.rotation_quaternion.dot(previous)<0:
+                    bone.rotation_quaternion.negate()
+                previous_quaternions[bone.name]=bone.rotation_quaternion.copy()
+                for channel in ('location','rotation_quaternion','scale'):
+                    bone.keyframe_insert(channel,frame=frame,group=bone.name)
+        # Smooth trajectories above are baked at 60 Hz. Linear interpolation
+        # between dense samples is stable in Blender and the runtime GLB mixer.
         for layer in action.layers:
             for strip in layer.strips:
                 for bag in strip.channelbags:
                     for curve in bag.fcurves:
                         for key in curve.keyframe_points:
-                            key.interpolation = "LINEAR"
-    rig.animation_data.action = None
+                            key.interpolation='LINEAR'
+    rig.animation_data.action=None
     for bone in rig.pose.bones:
         bone.matrix_basis.identity()
     scene.frame_set(0)

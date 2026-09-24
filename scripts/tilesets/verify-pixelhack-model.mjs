@@ -429,13 +429,14 @@ if (metadata.id === 'dwarf-male') {
 if (metadata.id === 'water-nymph-female') {
   const findBone = (name) => mesh.skeleton.bones.find((bone) => boneName(bone) === name);
   const body = findBone('Body');
+  const spine = findBone('Spine');
   const arm = findBone('Arm.R.lower');
   const fingers = findBone('Grasp.R');
   const hair = ['Hair.L', 'Hair.R'].map(findBone);
   const skirt = findBone('Skirt.Front');
   const feet = ['Foot.L', 'Foot.R'].map(findBone);
-  assert.equal(mesh.skeleton.bones.length, 20, 'Nymph retains all planned joints');
-  assert.ok(body && arm && fingers && hair.every(Boolean) && skirt && feet.every(Boolean),
+  assert.equal(mesh.skeleton.bones.length, 21, 'Nymph has separate pelvis and spine control');
+  assert.ok(body && spine && arm && fingers && hair.every(Boolean) && skirt && feet.every(Boolean),
     'Hair, cloth, grabbing hand, and both feet have independent bones');
   const skinIndex = mesh.geometry.attributes.skinIndex;
   const ownedVertices = (bone) => {
@@ -447,7 +448,7 @@ if (metadata.id === 'water-nymph-female') {
   };
   const fingerVertices = ownedVertices(fingers);
   const footVertices = feet.map(ownedVertices);
-  const bodyIndex = mesh.skeleton.bones.indexOf(body);
+  const bodyIndex = mesh.skeleton.bones.indexOf(spine);
   const armIndex = mesh.skeleton.bones.indexOf(findBone('Arm.R.upper'));
   let softShoulderVertices = 0;
   for (let i = 0; i < skinIndex.count; i += 1) {
@@ -525,6 +526,57 @@ if (metadata.id === 'water-nymph-female') {
   Object.assign(report.clips.Walk, { travelSpeedTilesPerSecond: 2, strideCycles: 1,
     stanceFootSpeed, swingFootHeight });
   walkMixer.stopAllAction();
+}
+if (metadata.id === 'water-nymph-female') {
+  // Check body mechanics in the exported mesh, including in-between frames.
+  mesh.skeleton.pose();
+  model.updateMatrixWorld(true);
+  const findBone = (name) => mesh.skeleton.bones.find((bone) => boneName(bone) === name);
+  const pelvis = findBone('Body'), chest = findBone('Spine');
+  const feet = ['Foot.L', 'Foot.R'].map(findBone);
+  const restPelvis = pelvis.getWorldQuaternion(new THREE.Quaternion());
+  const restChest = chest.getWorldQuaternion(new THREE.Quaternion());
+  const restFeet = feet.map((foot) => foot.getWorldQuaternion(new THREE.Quaternion()));
+  const skinIndex = mesh.geometry.attributes.skinIndex;
+  const soleVertices = feet.map((foot) => {
+    const joint = mesh.skeleton.bones.indexOf(foot);
+    return Array.from({ length: skinIndex.count }, (_, i) => i)
+      .filter((i) => skinIndex.getX(i) === joint && weights.getX(i) > .99);
+  });
+  const clip = gltf.animations.find((item) => item.name === 'Walk');
+  const mixer = new THREE.AnimationMixer(model);
+  mixer.clipAction(clip).setLoop(THREE.LoopOnce, 1).play();
+  let doubleSupportSamples = 0, maximumFootRoll = 0;
+  for (let step = 0; step < 60; step += 1) {
+    mixer.setTime(clip.duration * step / 60);
+    const sample = points();
+    const heights = soleVertices.map((indices) => Math.min(...indices.map((i) => sample[i].y)));
+    assert.ok(Math.min(...heights) < .008, 'Walking retains a supporting foot throughout the cycle');
+    if (heights.every((height) => height < .008)) doubleSupportSamples += 1;
+    for (let side = 0; side < 2; side += 1) {
+      maximumFootRoll = Math.max(maximumFootRoll,
+        feet[side].getWorldQuaternion(new THREE.Quaternion()).angleTo(restFeet[side]));
+      const cycle = (step / 60 + side * .5) % 1;
+      if (cycle <= .55 + 1e-6) assert.ok(Math.abs(heights[side]) < .008, 'The stance sole stays grounded while the foot rolls');
+    }
+  }
+  const yawFromRest = (bone, rest) => {
+    const delta = bone.getWorldQuaternion(new THREE.Quaternion()).multiply(rest.clone().invert());
+    const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(delta);
+    return Math.atan2(forward.x, forward.z);
+  };
+  const torsoCounterRotation = [];
+  for (const phase of [.25, .75]) {
+    mixer.setTime(clip.duration * phase);
+    model.updateMatrixWorld(true);
+    const hipYaw = yawFromRest(pelvis, restPelvis), chestYaw = yawFromRest(chest, restChest);
+    assert.ok(hipYaw * chestYaw < -.0002, 'Chest and pelvis counter-rotate during each half of the gait');
+    torsoCounterRotation.push({ hipYaw, chestYaw });
+  }
+  assert.ok(doubleSupportSamples >= 4, 'Walk has a double-support interval instead of switching feet instantly');
+  assert.ok(maximumFootRoll > .15, 'Heel contact and toe-off articulate the feet');
+  Object.assign(report.clips.Walk, { doubleSupportSamples, maximumFootRoll, torsoCounterRotation });
+  mixer.stopAllAction();
 }
 writeFileSync(path.join(directory, 'validation.json'), `${JSON.stringify(report, null, 2)}\n`);
 console.log(JSON.stringify(report, null, 2));

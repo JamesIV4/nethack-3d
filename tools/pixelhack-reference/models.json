@@ -91,14 +91,15 @@
       "tileIds": [141],
       "directory": "tools/pixelhack-reference/models/0141-water-nymph-female",
       "script": "scripts/tilesets/models/water_nymph_female.py",
-      "triangleBudget": 13000,
+      "triangleBudget": 16000,
+      "footprint": 0.84,
       "reviewSmallView": "hero",
       "viewer": {
         "badge": "MODEL 005",
-        "summary": "An icy water nymph with luminous blue curls, a sea-glass halter, flowing hip wrap, and pale water markings.",
+        "summary": "An icy water nymph with flowing blue hair, a fitted sea-silk dress, and a sea-glass clasp.",
         "visualHeading": "A calm water spirit ready to steal.",
-        "visualDescription": "Long bright curls frame a delicate face. A jeweled turquoise halter and diagonal flowing wrap leave pale blue skin and winding water marks visible.",
-        "motionDescription": "Idle holds one hand near the clasp as hair and cloth drift. Walk uses a complete left-right cycle over a half-second tile move. Attack sends the raised hand forward in a quick stealing grab, closes the fingers at impact, and returns to the ready stance."
+        "visualDescription": "Swept blue hair covers the crown and back and frames an anatomical face. One continuous turquoise dress flows from the neckline into an asymmetric hem.",
+        "motionDescription": "Idle breathes gently over four seconds, with delayed hand and hair movement. Walk combines hip-shoulder counter-motion, grounded heel-to-toe steps, and a smooth swing over a half-second tile move. Attack leads with the torso, reaches in an arc, closes the fingers at impact, and settles back into the ready stance."
       },
       "animations": {
         "Idle": { "loop": true, "maxDisplacement": 0.08 },

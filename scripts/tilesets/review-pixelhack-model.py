@@ -63,7 +63,7 @@ def main():
         "killer-bee": "Hovering body, pale raised wings, dark face and legs, visible rear stinger: the killer bee silhouette.",
         "soldier-ant": "Broad olive gaster, tan highlights, long dark legs, red eyes, hooked jaws: the soldier ant silhouette.",
         "dwarf-male": "Blue-gray horned helmet, ivory beard, raised curved pick, red tunic and shield: the male dwarf silhouette.",
-        "water-nymph-female": "Icy skin, pale water marks, luminous curls, jeweled halter, and flowing wrap: a water spirit inspired by the tile.",
+        "water-nymph-female": "Full anatomical body, inset eyes, layered blue hair, and one continuous sea-silk dress: a water spirit inspired by the tile.",
     }).get(stats["id"],
            "The model interprets the source tile's defining colors and character features in 3D.")
     draw.text((28, 1033), note, font=font(17), fill="#e1e8e1")

@@ -8,28 +8,28 @@
   "sourceAtlasSha256": "4a9327f7164afd28962d9a713e581cf28ae6b85467bc6d31981a681b1267170d",
   "sourceScript": "scripts/tilesets/models/water_nymph_female.py",
   "blenderVersion": "5.1.2",
-  "parts": 59,
-  "triangles": 12148,
+  "parts": 42,
+  "triangles": 15502,
   "materials": 1,
   "boundsBlender": {
     "min": [
-      -0.46000003814697266,
-      -0.22773660719394684,
-      -2.8455007239358565e-09
+      -0.4200000464916229,
+      -0.29518401622772217,
+      -8.909923465694192e-09
     ],
     "max": [
-      0.46000003814697266,
-      0.22773657739162445,
-      1.3240293264389038
+      0.4200000762939453,
+      0.295183926820755,
+      1.998478651046753
     ]
   },
   "dimensionsBlender": [
-    0.9200000762939453,
-    0.4554731845855713,
-    1.3240293264389038
+    0.8400001525878906,
+    0.5903679132461548,
+    1.998478651046753
   ],
-  "glbBytes": 493348,
-  "bones": 20,
+  "glbBytes": 662776,
+  "bones": 21,
   "animations": [
     "Attack",
     "Idle",
@@ -53,38 +53,38 @@
     }
   },
   "reviewSmallView": "hero",
-  "footprint": 0.92,
+  "footprint": 0.84,
   "groundClearance": 0,
   "views": [
     "hero",
     "side",
     "front",
-    "top"
+    "top",
+    "back"
   ],
   "resolution": 768,
   "directory": "tools/pixelhack-reference/models/0141-water-nymph-female",
   "palette": {
-    "shell": "a9e1f4",
-    "ink": "264b77",
-    "skin_shadow": "729ac5",
-    "skin": "a8d6f0",
-    "skin_light": "d8f0fa",
-    "mark": "e9ffff",
-    "socket": "6576a0",
-    "sclera": "e2eefa",
-    "iris": "95a9d0",
-    "pupil": "293f70",
-    "lip": "8296b7",
-    "hair_shadow": "278bb7",
-    "hair": "64c8e6",
-    "hair_light": "b1f0fa",
-    "hair_glint": "d7fbff",
-    "cloth_dark": "1b7097",
-    "cloth": "38a8ce",
-    "cloth_light": "77d9ec",
-    "cloth_glint": "b4f2f6",
-    "gem_dark": "276a92",
-    "gem": "a6eaf6"
+    "shell": "a5d4e2",
+    "ink": "153d55",
+    "skin": "a5cedf",
+    "skin_light": "d0e9ed",
+    "skin_shadow": "77a1bd",
+    "lip": "63889d",
+    "sclera": "e1f5f2",
+    "iris": "2b8a9b",
+    "pupil": "123442",
+    "hair": "24768e",
+    "hair_shadow": "174c69",
+    "hair_light": "399ab0",
+    "hair_glint": "70c6d0",
+    "cloth": "238f98",
+    "cloth_dark": "156570",
+    "cloth_light": "4fb6b8",
+    "cloth_glint": "9ce0d6",
+    "gem": "c6f4ed",
+    "gem_dark": "527b85",
+    "mark": "d4f4ef"
   },
   "status": "baseline-candidate"
 }

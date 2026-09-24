@@ -61,7 +61,7 @@ for (const [file, value] of [["research.json", research], ["research-queue.json"
   const text = JSON.stringify(value, null, 2) + "\n";
   const path = join(reference, file);
   if (check) {
-    if (readFileSync(path, "utf8") !== text) throw new Error(`${file} is stale`);
+    if (readFileSync(path, "utf8").replace(/\r\n/g, "\n") !== text) throw new Error(`${file} is stale`);
   } else {
     writeFileSync(path, text);
   }

@@ -114,7 +114,7 @@ const catalog = { schemaVersion: 1, atlas: "/assets/5.0/PixelHack.png", atlasSha
   tileSize: 32, columns: 40, rows: 58, sourceVersion: "NetHack 5.0", sourceFiles, tiles };
 const serialized = JSON.stringify(catalog, null, 2) + "\n";
 if (check) {
-  if (readFileSync(output, "utf8") !== serialized) throw new Error("PixelHack reference catalog is stale");
+  if (readFileSync(output, "utf8").replace(/\r\n/g, "\n") !== serialized) throw new Error("PixelHack reference catalog is stale");
   console.log("PixelHack reference catalog is current");
 } else {
   writeFileSync(output, serialized);
