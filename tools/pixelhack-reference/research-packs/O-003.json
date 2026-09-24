@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:dart": {
+      "wikiTitle": "Dart",
+      "visualDescription": "PixelHack shows a slim diagonal dart with a brown middle and pale metal point. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the dart as a small stackable weapon thrown by hand.",
+      "modelBrief": "Build a short straight dart with a narrow metal tip, brown grip, and dark tail. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: dart",
+          "url": "https://nethackwiki.com/wiki/dart"
+        }
+      ]
+    },
+    "object:throwing star / shuriken": {
+      "wikiTitle": "Shuriken",
+      "visualDescription": "PixelHack shows a dark slate four-point throwing star with small notches and a dim center. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the shuriken as a stackable metal projectile thrown by hand. Its visible name in this tile is throwing star; the atlas association alone does not make the appearance a second weapon.",
+      "modelBrief": "Build a flat four-point metal star with sharp tips and a central recess. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: shuriken",
+          "url": "https://nethackwiki.com/wiki/shuriken"
+        }
+      ]
+    },
+    "object:boomerang": {
+      "wikiTitle": "Boomerang",
+      "visualDescription": "PixelHack shows a thick ochre boomerang bent into an open V, with dark reddish tips. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the boomerang as a throwable boomerang weapon.",
+      "modelBrief": "Build a single broad curved wooden arm with angular bend and darker end caps. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: boomerang",
+          "url": "https://nethackwiki.com/wiki/boomerang"
+        }
+      ]
+    },
+    "object:spear": {
+      "wikiTitle": "Spear",
+      "visualDescription": "PixelHack shows a long brown diagonal shaft ending in a dark blue-gray spearhead. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the spear as a one-handed spear usable in melee or as a projectile.",
+      "modelBrief": "Build a slender wooden shaft and a compact dark metal leaf point. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: spear",
+          "url": "https://nethackwiki.com/wiki/spear"
+        }
+      ]
+    },
+    "object:runed spear / elven spear": {
+      "wikiTitle": "Elven spear",
+      "visualDescription": "PixelHack shows a brown shaft with an elongated dark blue-gray point and narrow pale glint. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the elven spear as a wooden elven spear. Its visible name in this tile is runed spear; the atlas association alone does not make the appearance a second weapon.",
+      "modelBrief": "Build a refined slim shaft with a longer polished dark point and restrained runic detail. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: elven spear",
+          "url": "https://nethackwiki.com/wiki/elven_spear"
+        }
+      ]
+    },
+    "object:crude spear / orcish spear": {
+      "wikiTitle": "Orcish spear",
+      "visualDescription": "PixelHack shows a rough brown shaft with a small bright ochre point and dark rear. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the orcish spear as an iron orcish spear. Its visible name in this tile is crude spear; the atlas association alone does not make the appearance a second weapon.",
+      "modelBrief": "Build an uneven brown haft with a small crude metal point and minimal ornament. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: orcish spear",
+          "url": "https://nethackwiki.com/wiki/orcish_spear"
+        }
+      ]
+    },
+    "object:stout spear / dwarvish spear": {
+      "wikiTitle": "Dwarvish spear",
+      "visualDescription": "PixelHack shows a sturdy brown shaft carrying a broad dark slate spearhead. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the dwarvish spear as an iron dwarvish spear. Its visible name in this tile is stout spear; the atlas association alone does not make the appearance a second weapon.",
+      "modelBrief": "Build a thick compact spear with a wide heavy metal point. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: dwarvish spear",
+          "url": "https://nethackwiki.com/wiki/dwarvish_spear"
+        }
+      ]
+    },
+    "object:silver spear": {
+      "wikiTitle": "Silver spear",
+      "visualDescription": "PixelHack shows a pale silver-gray shaft and point, both nearly the same light color. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the silver spear as a silver spear usable in melee or thrown.",
+      "modelBrief": "Build an all-silver spear with a small pointed head and cool gray shading. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: silver spear",
+          "url": "https://nethackwiki.com/wiki/silver_spear"
+        }
+      ]
+    },
+    "object:throwing spear / javelin": {
+      "wikiTitle": "Javelin",
+      "visualDescription": "PixelHack shows a long brown shaft with a small dark spear tip and plain blunt rear. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the javelin as a light spear intended for throwing. Its visible name in this tile is throwing spear; the atlas association alone does not make the appearance a second weapon.",
+      "modelBrief": "Build a narrow balanced javelin with modest dark metal point. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: javelin",
+          "url": "https://nethackwiki.com/wiki/javelin"
+        }
+      ]
+    },
+    "object:trident": {
+      "wikiTitle": "Trident",
+      "visualDescription": "PixelHack shows a brown haft topped by three dark blue-gray tines that spread apart. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the trident as an iron three-pronged melee weapon.",
+      "modelBrief": "Build a trident with three clearly separated tines and a long wooden haft. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: trident",
+          "url": "https://nethackwiki.com/wiki/trident"
+        }
+      ]
+    },
+    "object:dagger": {
+      "wikiTitle": "Dagger",
+      "visualDescription": "PixelHack shows a small pale curved blade crossing a short dark-brown grip. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the dagger as a one-handed blade usable in melee or thrown.",
+      "modelBrief": "Build a short dagger with an ivory-highlighted metal blade, simple guard, and brown grip. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: dagger",
+          "url": "https://nethackwiki.com/wiki/dagger"
+        }
+      ]
+    },
+    "object:runed dagger / elven dagger": {
+      "wikiTitle": "Elven dagger",
+      "visualDescription": "PixelHack shows a short ivory blade with dark edge and a warm gold hilt. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the elven dagger as an elven dagger usable in melee or thrown. Its visible name in this tile is runed dagger; the atlas association alone does not make the appearance a second weapon.",
+      "modelBrief": "Build a refined small dagger with bright blade and gold-toned grip or guard. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: elven dagger",
+          "url": "https://nethackwiki.com/wiki/elven_dagger"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

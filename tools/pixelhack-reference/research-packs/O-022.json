@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:horn / frost horn": {
+      "wikiTitle": "Frost horn",
+      "visualDescription": "A curved cream bone horn has a wide dark bell, dotted side tooling, and an upturned narrow tip.",
+      "wikiDescription": "The wiki identifies the frost horn as a magical bone horn whose use sends a blast of cold.",
+      "modelBrief": "Reuse the shared ivory horn silhouette with dark hollow mouth; keep cold projection as an effect, not permanent ice.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Frost horn",
+          "url": "https://nethackwiki.com/wiki/Frost_horn"
+        }
+      ]
+    },
+    "object:horn / fire horn": {
+      "wikiTitle": "Fire horn",
+      "visualDescription": "The tile repeats the same cream curved horn with brown mouth and dotted side.",
+      "wikiDescription": "The wiki identifies the fire horn as the fire-affinity counterpart to the frost horn.",
+      "modelBrief": "Reuse the ordinary horn geometry and palette; its fire blast belongs to gameplay or animation.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Fire horn",
+          "url": "https://nethackwiki.com/wiki/Fire_horn"
+        }
+      ]
+    },
+    "object:horn / horn of plenty": {
+      "wikiTitle": "Horn of plenty",
+      "visualDescription": "The same short ivory horn curves upward and shows a dark open bell and small carved dots.",
+      "wikiDescription": "The wiki describes the horn of plenty as a magical bone horn that produces food or potions from charges.",
+      "modelBrief": "Reuse the shared bone horn appearance without showing food stuffed inside.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Horn of plenty",
+          "url": "https://nethackwiki.com/wiki/Horn_of_plenty"
+        }
+      ]
+    },
+    "object:harp / wooden harp": {
+      "wikiTitle": "Wooden harp",
+      "visualDescription": "A small brown harp has a tall vertical post, curved neck, flat base, and several pale blue strings.",
+      "wikiDescription": "The wiki identifies the wooden harp as a non-magical wooden tonal instrument.",
+      "modelBrief": "Build a compact standing harp with dark reddish frame and thin pale strings.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wooden harp",
+          "url": "https://nethackwiki.com/wiki/Wooden_harp"
+        }
+      ]
+    },
+    "object:harp / magic harp": {
+      "wikiTitle": "Magic harp",
+      "visualDescription": "The tile repeats the brown standing harp with curved arm and light strings.",
+      "wikiDescription": "The wiki identifies the magic harp as a magical wooden instrument capable of taming nearby monsters.",
+      "modelBrief": "Reuse the plain harp model; keep its taming effect separate from the wood and strings.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Magic harp",
+          "url": "https://nethackwiki.com/wiki/Magic_harp"
+        }
+      ]
+    },
+    "object:bell": {
+      "wikiTitle": "Bell",
+      "visualDescription": "A small gold handbell stands upright with a slim handle, flared body, and burgundy shadow on one side.",
+      "wikiDescription": "The wiki identifies the bell as a copper atonal instrument distinct from the special Bell of Opening.",
+      "modelBrief": "Make a simple polished gold-colored handbell with slender grip and flared bell body.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Bell",
+          "url": "https://nethackwiki.com/wiki/Bell"
+        }
+      ]
+    },
+    "object:bugle": {
+      "wikiTitle": "Bugle",
+      "visualDescription": "A brass bugle points right with a wide yellow bell, long straight tubing, and dark red looped lower pipe.",
+      "wikiDescription": "The wiki identifies the bugle as a copper tonal instrument without a magical counterpart.",
+      "modelBrief": "Build a compact valveless brass bugle with looped tube and large flared bell.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Bugle",
+          "url": "https://nethackwiki.com/wiki/Bugle"
+        }
+      ]
+    },
+    "object:drum / leather drum": {
+      "wikiTitle": "Leather drum",
+      "visualDescription": "A round brown leather drum has a pale taut top, woodlike vertical sides, and darker bottom rim.",
+      "wikiDescription": "The wiki identifies the leather drum as a non-magical atonal instrument.",
+      "modelBrief": "Make a squat cylindrical hand drum with cream skin head and reddish-brown body.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Leather drum",
+          "url": "https://nethackwiki.com/wiki/Leather_drum"
+        }
+      ]
+    },
+    "object:drum / drum of earthquake": {
+      "wikiTitle": "Drum of earthquake",
+      "visualDescription": "The tile repeats the same brown drum with pale head and dark lower rim.",
+      "wikiDescription": "The wiki identifies the drum of earthquake as a magical leather drum that can cause an earthquake when charged.",
+      "modelBrief": "Reuse the plain drum appearance; ground cracking should occur only as an effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Drum of earthquake",
+          "url": "https://nethackwiki.com/wiki/Drum_of_earthquake"
+        }
+      ]
+    },
+    "object:pick-axe": {
+      "wikiTitle": "Pick-axe",
+      "visualDescription": "A steel pick-axe has a pointed double-ended head, short wooden socket, and long diagonal brown handle.",
+      "wikiDescription": "The wiki identifies the pick-axe as an iron digging tool that can also serve as a weapon.",
+      "modelBrief": "Build a long wood haft with a dark steel curved pick on one side and shorter blunt edge on the other.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Pick-axe",
+          "url": "https://nethackwiki.com/wiki/Pick-axe"
+        }
+      ]
+    },
+    "object:grappling hook": {
+      "wikiTitle": "Grappling hook",
+      "visualDescription": "A gray multi-pronged grappling hook is attached to a tan-brown rope coil near its base.",
+      "wikiDescription": "The wiki identifies the grappling hook as an iron hook tool used to snag or pull things at range.",
+      "modelBrief": "Model a heavy three- or four-pronged steel hook with attached coil of brown rope.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Grappling hook",
+          "url": "https://nethackwiki.com/wiki/Grappling_hook"
+        }
+      ]
+    },
+    "object:unicorn horn": {
+      "wikiTitle": "Unicorn horn",
+      "visualDescription": "A long tapered unicorn horn lies diagonally, brown at its broad base and pale cream toward its sharp tip.",
+      "wikiDescription": "The wiki identifies the unicorn horn as a bone tool and weapon used to cure several harmful conditions.",
+      "modelBrief": "Sculpt a single spiraled tapering horn with tan base and ivory tip; keep healing effects separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Unicorn horn",
+          "url": "https://nethackwiki.com/wiki/Unicorn_horn"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

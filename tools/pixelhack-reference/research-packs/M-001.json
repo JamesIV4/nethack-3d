@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:chickatrice": {
+      "wikiTitle": "Chickatrice",
+      "visualDescription": "PixelHack shows a small ochre, bird-like creature in profile, with a bright face and chest, dark folded wing, two short legs, and a long curled tail. The male- and female-labeled tiles 18 and 19 are pixel-identical.",
+      "wikiDescription": "The NetHack Wiki describes a tiny animal and the weaker young member of the cockatrice family. It can bite and petrify by touch; these are identity cues rather than a reason to add stone texture to the living creature.",
+      "modelBrief": "Give the chickatrice a compact chick-like body, pointed beak, folded dark wing, short legs, and a prominent curved tail. Keep the warm ochre and brown palette and small scale relative to the cockatrice. One model can serve both identical tiles.",
+      "sources": [
+        { "label": "NetHack Wiki: chickatrice", "url": "https://nethackwiki.com/wiki/Chickatrice" }
+      ]
+    },
+    "monster:cockatrice": {
+      "wikiTitle": "Cockatrice",
+      "visualDescription": "PixelHack depicts a larger reddish-brown bird-reptile in profile, with a bright red comb, curved neck, broad tan-gray wings, dark body, clawed feet, and a long looping tail. Tiles 20 and 21 are pixel-identical.",
+      "wikiDescription": "The NetHack Wiki describes a small, egg-laying animal that bites and can turn creatures to stone through touch. Its mythical origin combines a rooster-like head with a serpentine body and wings; the PixelHack tile determines the actual proportions and colors here.",
+      "modelBrief": "Build a rooster-headed, winged reptile with a curved neck, clawed feet, and a sweeping looped tail. Preserve the low side-view silhouette, reddish-brown body, red comb, and muted wings. Compare size with the smaller chickatrice and reuse one model for both identical tiles.",
+      "sources": [
+        { "label": "NetHack Wiki: cockatrice", "url": "https://nethackwiki.com/wiki/Cockatrice" }
+      ]
+    },
+    "monster:pyrolisk": {
+      "wikiTitle": "Pyrolisk",
+      "visualDescription": "PixelHack uses the cockatrice's long-necked, winged silhouette, but colors the head and neck orange and magenta, gives the wings blue-gray edges, and adds a pink accent to the curled tail. Tiles 22 and 23 are pixel-identical.",
+      "wikiDescription": "The NetHack Wiki describes a small animal related to the cockatrice, distinguished in game by a fiery gaze and bite rather than petrifying touch. Its origin also describes a cockatrice-like body with red accents.",
+      "modelBrief": "Reuse the cockatrice's core winged body and curved tail where practical, then make a distinct fire-colored variant with vivid orange-magenta head and neck, blue-gray wing edges, and bright tail accent. Keep the side-view silhouette and one shared model for the identical pair.",
+      "sources": [
+        { "label": "NetHack Wiki: pyrolisk", "url": "https://nethackwiki.com/wiki/Pyrolisk" }
+      ]
+    }
+  },
+  "tiles": {}
+}

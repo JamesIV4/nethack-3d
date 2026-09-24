@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:Master Assassin": {
+      "wikiTitle": "Master Assassin",
+      "visualDescription": "A near-black hooded killer stands with a dark cape, red hands or blades, and a pointed weapon in each hand.",
+      "wikiDescription": "NetHack Wiki identifies the Master Assassin as the Rogue quest nemesis and a strong human.",
+      "modelBrief": "Build a lean masked assassin in black layered cloth with two short red-edged weapons and low threatening stance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Master Assassin",
+          "url": "https://nethackwiki.com/wiki/Master_Assassin"
+        }
+      ]
+    },
+    "monster:Ashikaga Takauji": {
+      "wikiTitle": "Ashikaga Takauji",
+      "visualDescription": "A helmeted samurai wears dark red armor over gray garments, carries a curved sword, and has a broad red lower silhouette.",
+      "wikiDescription": "NetHack Wiki identifies Ashikaga Takauji as the Samurai quest nemesis and a human swordsman.",
+      "modelBrief": "Sculpt a heavily armored samurai lord with horned helmet, red lacquered armor, curved katana, and dark boots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ashikaga Takauji",
+          "url": "https://nethackwiki.com/wiki/Ashikaga_Takauji"
+        }
+      ]
+    },
+    "monster:Lord Surtur": {
+      "wikiTitle": "Lord Surtur",
+      "visualDescription": "An immense crimson giant is almost a wall of fire, with huge shoulders, broad jaw, orange highlights, and heavy legs.",
+      "wikiDescription": "NetHack Wiki describes Lord Surtur as the Valkyrie quest nemesis and a unique fire giant.",
+      "modelBrief": "Build a towering muscular fire giant in deep red with orange glowing seams, large head, and massive hands; keep the sprite's blocky bulk.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lord Surtur",
+          "url": "https://nethackwiki.com/wiki/Lord_Surtur"
+        }
+      ]
+    },
+    "monster:Dark One": {
+      "wikiTitle": "Dark One",
+      "visualDescription": "A small gray-robed figure sits or crouches with a black hooded face and reddish hands, framed by a dark stone-like base.",
+      "wikiDescription": "NetHack Wiki identifies the Dark One as the Wizard quest nemesis, a human magic user.",
+      "modelBrief": "Model a compact sinister hooded mage with layered gray robe, deep black facial void, and low seated or crouched posture.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dark One",
+          "url": "https://nethackwiki.com/wiki/Dark_One"
+        }
+      ]
+    },
+    "monster:student": {
+      "wikiTitle": "Student",
+      "visualDescription": "A young brown-haired human in tan and gray clothes stands beside a broad dark blue shape with a bright blue tip at shoulder height. The small tile does not clearly identify that shape as a particular tool.",
+      "wikiDescription": "NetHack Wiki identifies the student as an Archeologist quest guardian.",
+      "modelBrief": "Build a junior explorer in tan field clothes with brown hair and boots. Keep the dark blue shoulder-height shape as a simple separate prop until its identity can be confirmed from the source art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Student",
+          "url": "https://nethackwiki.com/wiki/Student"
+        }
+      ]
+    },
+    "monster:chieftain": {
+      "wikiTitle": "Chieftain",
+      "visualDescription": "A muscular fighter with gray helmet wears brown leather and fur, holding a curved weapon and standing wide.",
+      "wikiDescription": "NetHack Wiki describes the chieftain as a Barbarian quest guardian.",
+      "modelBrief": "Sculpt a robust tribal warrior with horned gray helmet, leather torso, fur accents, and broad curved blade.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Chieftain",
+          "url": "https://nethackwiki.com/wiki/Chieftain"
+        }
+      ]
+    },
+    "monster:neanderthal": {
+      "wikiTitle": "Neanderthal",
+      "visualDescription": "A shaggy orange-brown prehistoric human wears a rough green hide and grips a tall wooden club.",
+      "wikiDescription": "NetHack Wiki identifies the neanderthal as a Cave Dweller quest guardian.",
+      "modelBrief": "Build a heavy browed, hairy human with crude hide clothing, bare limbs, and oversized club.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Neanderthal",
+          "url": "https://nethackwiki.com/wiki/Neanderthal"
+        }
+      ]
+    },
+    "monster:High-elf": {
+      "wikiTitle": "High-elf",
+      "visualDescription": "A fair-haired elf wears blue-green and gold armor with a brown cape, holding a thin silver blade.",
+      "wikiDescription": "NetHack Wiki describes the High-elf as a deferred elven monster that formerly served as an Elf quest guardian.",
+      "modelBrief": "Model a tall elegant elf with blond hair, blue and gold layered armor, cape, and slender sword; label as legacy tile art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: High-elf",
+          "url": "https://nethackwiki.com/wiki/High-elf"
+        }
+      ]
+    },
+    "monster:attendant": {
+      "wikiTitle": "Attendant",
+      "visualDescription": "A plain-clothed human in tan and gray stands with short dark hair, pale sleeves, and a small red item in hand.",
+      "wikiDescription": "NetHack Wiki identifies the attendant as a Healer quest guardian.",
+      "modelBrief": "Build an unarmored medical helper in simple tan robe and pale sleeves, with a small red supply item.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Attendant",
+          "url": "https://nethackwiki.com/wiki/Attendant"
+        }
+      ]
+    },
+    "monster:page": {
+      "wikiTitle": "Page",
+      "visualDescription": "A youthful short human wears a green tunic over gray trousers, with brown hair and a small side weapon.",
+      "wikiDescription": "NetHack Wiki identifies the page as a Knight quest guardian with two weapon attacks.",
+      "modelBrief": "Model a young squire in green tunic, belt, gray leggings, and light boots; keep the proportions less armored than a knight.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Page",
+          "url": "https://nethackwiki.com/wiki/Page"
+        }
+      ]
+    },
+    "monster:abbot": {
+      "wikiTitle": "Abbot",
+      "visualDescription": "An elder in long rust-red robes has a pale bald head or cap, dark brown beard, and hands close to the body.",
+      "wikiDescription": "NetHack Wiki describes the abbot as a Monk quest guardian able to fight and cast clerical spells.",
+      "modelBrief": "Sculpt a calm senior monk in dark red-brown robe with pale head and simple wrap; avoid conspicuous weapons.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Abbot",
+          "url": "https://nethackwiki.com/wiki/Abbot"
+        }
+      ]
+    },
+    "monster:acolyte": {
+      "wikiTitle": "Acolyte (quest guardian)",
+      "visualDescription": "A pale gray-robed figure has a black hooded face, white shoulder cloth, brown belt, and long skirt.",
+      "wikiDescription": "NetHack Wiki identifies the acolyte as a Cleric quest guardian, distinct from the Cleric role's rank title.",
+      "modelBrief": "Build a junior temple cleric in white-gray hooded vestments with dark face opening and simple belt.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Acolyte (quest guardian)",
+          "url": "https://nethackwiki.com/wiki/Acolyte_(quest_guardian)"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

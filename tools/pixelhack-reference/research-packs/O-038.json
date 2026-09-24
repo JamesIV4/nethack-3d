@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:orange / jacinth": {
+      "wikiTitle": "Jacinth",
+      "visualDescription": "PixelHack shows a squat irregular faceted orange stone, shaded in burnt orange with brown facets and a checker of gold highlights. Tiles 1233, 1250, 1256 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies jacinth as a named gem. Its orange appearance in this atlas shares identical artwork with tile IDs 1233, 1250, 1256; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in burnt orange with brown facets and a checker of gold highlights. Reuse this visible color model for tile IDs 1233, 1250, 1256, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Jacinth",
+          "url": "https://nethackwiki.com/wiki/Jacinth"
+        }
+      ]
+    },
+    "object:blue / sapphire": {
+      "wikiTitle": "Sapphire",
+      "visualDescription": "PixelHack shows a squat irregular faceted blue stone, shaded in saturated blue with cyan facets and a pale upper glint. Tiles 1234, 1253 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies sapphire as a named gem. Its blue appearance in this atlas shares identical artwork with tile IDs 1234, 1253; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in saturated blue with cyan facets and a pale upper glint. Reuse this visible color model for tile IDs 1234, 1253, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Sapphire",
+          "url": "https://nethackwiki.com/wiki/Sapphire"
+        }
+      ]
+    },
+    "object:black / black opal": {
+      "wikiTitle": "Black opal",
+      "visualDescription": "PixelHack shows a squat irregular faceted black stone, shaded in near-black navy with dark violet and slate facets. Tiles 1235, 1242, 1249, 1258 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies black opal as a named gem. Its black appearance in this atlas shares identical artwork with tile IDs 1235, 1242, 1249, 1258; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in near-black navy with dark violet and slate facets. Reuse this visible color model for tile IDs 1235, 1242, 1249, 1258, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Black opal",
+          "url": "https://nethackwiki.com/wiki/Black_opal"
+        }
+      ]
+    },
+    "object:green / emerald": {
+      "wikiTitle": "Emerald",
+      "visualDescription": "PixelHack shows a squat irregular faceted green stone, shaded in forest green with olive sides and a pale lime central flash. Tiles 1236, 1237, 1239, 1251, 1259 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies emerald as a named gem. Its green appearance in this atlas shares identical artwork with tile IDs 1236, 1237, 1239, 1251, 1259; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in forest green with olive sides and a pale lime central flash. Reuse this visible color model for tile IDs 1236, 1237, 1239, 1251, 1259, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Emerald",
+          "url": "https://nethackwiki.com/wiki/Emerald"
+        }
+      ]
+    },
+    "object:green / turquoise": {
+      "wikiTitle": "Turquoise",
+      "visualDescription": "PixelHack shows a squat irregular faceted green stone, shaded in forest green with olive sides and a pale lime central flash. Tiles 1236, 1237, 1239, 1251, 1259 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies turquoise as a named gem. Its green appearance in this atlas shares identical artwork with tile IDs 1236, 1237, 1239, 1251, 1259; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in forest green with olive sides and a pale lime central flash. Reuse this visible color model for tile IDs 1236, 1237, 1239, 1251, 1259, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Turquoise",
+          "url": "https://nethackwiki.com/wiki/Turquoise"
+        }
+      ]
+    },
+    "object:yellow / citrine": {
+      "wikiTitle": "Citrine",
+      "visualDescription": "PixelHack shows a squat irregular faceted yellow stone, shaded in bright honey yellow with cream top and amber side. Tiles 1238, 1244, 1257 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies citrine as a named gem. Its yellow appearance in this atlas shares identical artwork with tile IDs 1238, 1244, 1257; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in bright honey yellow with cream top and amber side. Reuse this visible color model for tile IDs 1238, 1244, 1257, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Citrine",
+          "url": "https://nethackwiki.com/wiki/Citrine"
+        }
+      ]
+    },
+    "object:green / aquamarine": {
+      "wikiTitle": "Aquamarine",
+      "visualDescription": "PixelHack shows a squat irregular faceted green stone, shaded in forest green with olive sides and a pale lime central flash. Tiles 1236, 1237, 1239, 1251, 1259 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies aquamarine as a named gem. Its green appearance in this atlas shares identical artwork with tile IDs 1236, 1237, 1239, 1251, 1259; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in forest green with olive sides and a pale lime central flash. Reuse this visible color model for tile IDs 1236, 1237, 1239, 1251, 1259, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Aquamarine",
+          "url": "https://nethackwiki.com/wiki/Aquamarine"
+        }
+      ]
+    },
+    "object:yellowish brown / amber": {
+      "wikiTitle": "Amber",
+      "visualDescription": "PixelHack shows a squat irregular faceted yellowish brown stone, shaded in amber-brown with orange-gold central highlight. Tiles 1240, 1241, 1255 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies amber as a named gem. Its yellowish brown appearance in this atlas shares identical artwork with tile IDs 1240, 1241, 1255; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in amber-brown with orange-gold central highlight. Reuse this visible color model for tile IDs 1240, 1241, 1255, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amber",
+          "url": "https://nethackwiki.com/wiki/Amber"
+        }
+      ]
+    },
+    "object:yellowish brown / topaz": {
+      "wikiTitle": "Topaz",
+      "visualDescription": "PixelHack shows a squat irregular faceted yellowish brown stone, shaded in amber-brown with orange-gold central highlight. Tiles 1240, 1241, 1255 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies topaz as a named gem. Its yellowish brown appearance in this atlas shares identical artwork with tile IDs 1240, 1241, 1255; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in amber-brown with orange-gold central highlight. Reuse this visible color model for tile IDs 1240, 1241, 1255, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Topaz",
+          "url": "https://nethackwiki.com/wiki/Topaz"
+        }
+      ]
+    },
+    "object:black / jet": {
+      "wikiTitle": "Jet",
+      "visualDescription": "PixelHack shows a squat irregular faceted black stone, shaded in near-black navy with dark violet and slate facets. Tiles 1235, 1242, 1249, 1258 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies jet as a named gem. Its black appearance in this atlas shares identical artwork with tile IDs 1235, 1242, 1249, 1258; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in near-black navy with dark violet and slate facets. Reuse this visible color model for tile IDs 1235, 1242, 1249, 1258, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Jet",
+          "url": "https://nethackwiki.com/wiki/Jet"
+        }
+      ]
+    },
+    "object:white / opal": {
+      "wikiTitle": "Opal",
+      "visualDescription": "PixelHack shows a squat irregular faceted white stone, shaded in ivory-white with taupe facets and a bright cream tip. Tiles 1230, 1231, 1243, 1252 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies opal as a named gem. Its white appearance in this atlas shares identical artwork with tile IDs 1230, 1231, 1243, 1252; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in ivory-white with taupe facets and a bright cream tip. Reuse this visible color model for tile IDs 1230, 1231, 1243, 1252, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Opal",
+          "url": "https://nethackwiki.com/wiki/Opal"
+        }
+      ]
+    },
+    "object:yellow / chrysoberyl": {
+      "wikiTitle": "Chrysoberyl",
+      "visualDescription": "PixelHack shows a squat irregular faceted yellow stone, shaded in bright honey yellow with cream top and amber side. Tiles 1238, 1244, 1257 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies chrysoberyl as a named gem. Its yellow appearance in this atlas shares identical artwork with tile IDs 1238, 1244, 1257; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in bright honey yellow with cream top and amber side. Reuse this visible color model for tile IDs 1238, 1244, 1257, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Chrysoberyl",
+          "url": "https://nethackwiki.com/wiki/Chrysoberyl"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

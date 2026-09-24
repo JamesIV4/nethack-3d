@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:swirly / enlightenment": {
+      "wikiTitle": "Potion of enlightenment",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and dark liquid crossed by a vivid green curled stripe. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of enlightenment as a potion that reveals information about the drinker. The swirly liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with dark liquid with one clearly visible green swirl. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of enlightenment",
+          "url": "https://nethackwiki.com/wiki/Potion_of_enlightenment"
+        }
+      ]
+    },
+    "object:bubbly / monster detection": {
+      "wikiTitle": "Potion of monster detection",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and bright pink-magenta liquid showing rounded lighter bubbles. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of monster detection as a potion that detects monsters. The bubbly liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with magenta liquid with several distinct pale bubbles. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of monster detection",
+          "url": "https://nethackwiki.com/wiki/Potion_of_monster_detection"
+        }
+      ]
+    },
+    "object:smoky / object detection": {
+      "wikiTitle": "Potion of object detection",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and gray-brown liquid clouded by a soft smoke-like patch. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of object detection as a potion that detects objects. The smoky liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with smoke-gray liquid with diffuse cloudy center. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of object detection",
+          "url": "https://nethackwiki.com/wiki/Potion_of_object_detection"
+        }
+      ]
+    },
+    "object:cloudy / gain energy": {
+      "wikiTitle": "Potion of gain energy",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and tan-gray haze above a blue lower patch. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of gain energy as a potion that restores magical energy. The cloudy liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with cloudy tan liquid with a small blue lower pool. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of gain energy",
+          "url": "https://nethackwiki.com/wiki/Potion_of_gain_energy"
+        }
+      ]
+    },
+    "object:effervescent / sleeping": {
+      "wikiTitle": "Potion of sleeping",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and bright scarlet-orange liquid with scattered light yellow bubbles. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of sleeping as a potion that puts its drinker to sleep. The effervescent liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with fiery red liquid dotted with pale effervescent spots. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of sleeping",
+          "url": "https://nethackwiki.com/wiki/Potion_of_sleeping"
+        }
+      ]
+    },
+    "object:black / full healing": {
+      "wikiTitle": "Potion of full healing",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and near-black liquid with only a gray central gleam. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of full healing as a potion that provides powerful healing. The black liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with opaque black liquid with restrained dark-gray glint. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of full healing",
+          "url": "https://nethackwiki.com/wiki/Potion_of_full_healing"
+        }
+      ]
+    },
+    "object:golden / polymorph": {
+      "wikiTitle": "Potion of polymorph",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and warm golden-amber liquid with a light yellow center. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of polymorph as a potion that polymorphs the drinker. The golden liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with golden amber liquid with pale center. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of polymorph",
+          "url": "https://nethackwiki.com/wiki/Potion_of_polymorph"
+        }
+      ]
+    },
+    "object:brown / booze": {
+      "wikiTitle": "Potion of booze",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and warm brown liquid with a caramel center. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of booze as a potion that is an alcoholic drink. The brown liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with brown liquor-like liquid with warm center. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of booze",
+          "url": "https://nethackwiki.com/wiki/Potion_of_booze"
+        }
+      ]
+    },
+    "object:fizzy / sickness": {
+      "wikiTitle": "Potion of sickness",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and violet-blue liquid broken by pink fizzing patches. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of sickness as a potion that causes sickness. The fizzy liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with purple liquid with scattered bright pink bubbles. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of sickness",
+          "url": "https://nethackwiki.com/wiki/Potion_of_sickness"
+        }
+      ]
+    },
+    "object:dark / fruit juice": {
+      "wikiTitle": "Potion of fruit juice",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and deep blue-violet liquid with a dim purple center. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of fruit juice as a potion that is fruit juice made from the nameable fruit. The dark liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with dark indigo liquid with purple highlight. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of fruit juice",
+          "url": "https://nethackwiki.com/wiki/Potion_of_fruit_juice"
+        }
+      ]
+    },
+    "object:white / acid": {
+      "wikiTitle": "Potion of acid",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and opaque pale cream-white liquid with faint warm shading. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of acid as a potion that contains harmful acid. The white liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with opaque white liquid with barely visible cream shading. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of acid",
+          "url": "https://nethackwiki.com/wiki/Potion_of_acid"
+        }
+      ]
+    },
+    "object:murky / oil": {
+      "wikiTitle": "Potion of oil",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and dark teal liquid with a bright yellow-green slick near the bottom. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of oil as a potion that contains oil that can be burned. The murky liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with murky dark liquid with floating green-yellow sheen. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of oil",
+          "url": "https://nethackwiki.com/wiki/Potion_of_oil"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

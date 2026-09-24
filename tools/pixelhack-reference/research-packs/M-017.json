@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:kobold mummy": {
+      "wikiTitle": "Kobold mummy",
+      "visualDescription": "A tiny gray-brown mummy has a long snout, pale wrappings, exposed claw hands, and a red eye.",
+      "wikiDescription": "The wiki identifies this as the weakest mummy: an embalmed kobold that attacks with a claw.",
+      "modelBrief": "Make a small hunched kobold with pointed muzzle and layered dingy bandages, leaving hands and red eye visible. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kobold mummy",
+          "url": "https://nethackwiki.com/wiki/Kobold_mummy"
+        }
+      ]
+    },
+    "monster:gnome mummy": {
+      "wikiTitle": "Gnome mummy",
+      "visualDescription": "A short bulky mummy wears gray-brown wrapping, a pointed head silhouette, and a dark lower shroud.",
+      "wikiDescription": "The wiki describes a mummified gnome with a claw attack.",
+      "modelBrief": "Preserve the compact gnome stature beneath uneven linen bands and a pointed head shape. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gnome mummy",
+          "url": "https://nethackwiki.com/wiki/Gnome_mummy"
+        }
+      ]
+    },
+    "monster:orc mummy": {
+      "wikiTitle": "Orc mummy",
+      "visualDescription": "A thin long-limbed mummy has a pale rectangular orcish head, red eye, and dark gray wrappings.",
+      "wikiDescription": "The wiki identifies an undead orc mummy that claws and still collects valuables.",
+      "modelBrief": "Give a lanky orc body a square snout, reaching arms, and sparse gray-brown bandages. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orc mummy",
+          "url": "https://nethackwiki.com/wiki/Orc_mummy"
+        }
+      ]
+    },
+    "monster:dwarf mummy": {
+      "wikiTitle": "Dwarf mummy",
+      "visualDescription": "A stocky wrapped figure has a broad pale beardlike lower face, two pointed upper shapes, and heavy feet.",
+      "wikiDescription": "The wiki describes a mummified dwarf with a claw attack and an interest in gold and gems.",
+      "modelBrief": "Model a short wide dwarf mummy with face protrusions and dense beige wrappings; keep the broad stance. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dwarf mummy",
+          "url": "https://nethackwiki.com/wiki/Dwarf_mummy"
+        }
+      ]
+    },
+    "monster:elf mummy": {
+      "wikiTitle": "Elf mummy",
+      "visualDescription": "A tall narrow mummy has a long neck, slim arms, dark banded torso, and a pale face strip.",
+      "wikiDescription": "The wiki identifies an elf mummy as an undead elf, faster than many other mummies.",
+      "modelBrief": "Use elongated elven proportions with thin limbs and alternating dark and pale wraps. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Elf mummy",
+          "url": "https://nethackwiki.com/wiki/Elf_mummy"
+        }
+      ]
+    },
+    "monster:human mummy": {
+      "wikiTitle": "Human mummy",
+      "visualDescription": "A human-shaped mummy has a small pale head, visible red eyes, striped wrapping across the chest, and long arms.",
+      "wikiDescription": "The wiki describes a human mummy that behaves as an undead humanoid despite an unusual internal monster-attribute classification.",
+      "modelBrief": "Build a normal human skeleton under beige and brown bandages, with face and reaching hands exposed. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Human mummy",
+          "url": "https://nethackwiki.com/wiki/Human_mummy"
+        }
+      ]
+    },
+    "monster:ettin mummy": {
+      "wikiTitle": "Ettin mummy",
+      "visualDescription": "A huge round-bodied wrapped monster shows two small heads, broad shoulders, dangling arms, and a red loincloth.",
+      "wikiDescription": "The wiki identifies the ettin mummy as a mummified two-headed ettin with claw attacks.",
+      "modelBrief": "Make one enormous bandaged body with two distinct heads and long arms; preserve the heavy rounded silhouette. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ettin mummy",
+          "url": "https://nethackwiki.com/wiki/Ettin_mummy"
+        }
+      ]
+    },
+    "monster:giant mummy": {
+      "wikiTitle": "Giant mummy",
+      "visualDescription": "A large one-headed mummy has a pale rounded torso, thick arms, dark feet, and red waist cloth.",
+      "wikiDescription": "The wiki calls the giant mummy the strongest mummy and describes its claw attacks.",
+      "modelBrief": "Use giant scale and wide heavy limbs under layered pale wraps, keeping a single head and red lower cloth. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Giant mummy",
+          "url": "https://nethackwiki.com/wiki/Giant_mummy"
+        }
+      ]
+    },
+    "monster:red naga hatchling": {
+      "wikiTitle": "Red naga hatchling",
+      "visualDescription": "A small naga has a brown upright head above a short red coil with a warm peach patch and tipped tail.",
+      "wikiDescription": "The wiki identifies a juvenile red naga that bites and is associated with fire and poison resistance.",
+      "modelBrief": "Make a child-sized serpent body with a raised head, tight crimson coil, and orange-peach belly; omit adult-scale fire breath. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Red naga hatchling",
+          "url": "https://nethackwiki.com/wiki/Red_naga_hatchling"
+        }
+      ]
+    },
+    "monster:black naga hatchling": {
+      "wikiTitle": "Black naga hatchling",
+      "visualDescription": "A small naga has the same raised brown head above a blue-black coil with a pale white belly.",
+      "wikiDescription": "The wiki identifies a juvenile black naga that bites and has acid and poison resistance.",
+      "modelBrief": "Use the hatchling naga form with dark blue-gray body, pale belly, and compact curled tail. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Black naga hatchling",
+          "url": "https://nethackwiki.com/wiki/Black_naga_hatchling"
+        }
+      ]
+    },
+    "monster:golden naga hatchling": {
+      "wikiTitle": "Golden naga hatchling",
+      "visualDescription": "A tiny raised naga head sits above a red-gold coil with a bright yellow-orange belly patch.",
+      "wikiDescription": "The wiki identifies a juvenile golden naga with a single bite attack.",
+      "modelBrief": "Build a short coiled hatchling with golden face and warm red-orange body, rather than the long adult silhouette. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Golden naga hatchling",
+          "url": "https://nethackwiki.com/wiki/Golden_naga_hatchling"
+        }
+      ]
+    },
+    "monster:guardian naga hatchling": {
+      "wikiTitle": "Guardian naga hatchling",
+      "visualDescription": "A small naga head rises over a dark coil marked with a vivid lime-green belly patch.",
+      "wikiDescription": "The wiki identifies a juvenile guardian naga, mechanically similar to the golden hatchling.",
+      "modelBrief": "Use the shared young naga anatomy, but give it dark skin and bright yellow-green coil marking. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Guardian naga hatchling",
+          "url": "https://nethackwiki.com/wiki/Guardian_naga_hatchling"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:dwarf leader": {
+      "wikiTitle": "Dwarf leader",
+      "visualDescription": "A short bearded warrior wears a blue-gray horned helmet and red tunic, raising an axe beside a gray shield.",
+      "wikiDescription": "NetHack Wiki describes the dwarf leader as a stronger dwarf and leader among dwarven monsters.",
+      "modelBrief": "Use the dwarf base body with a heavier horned helm, full beard, red clothing, and a clearly raised axe and shield.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dwarf leader",
+          "url": "https://nethackwiki.com/wiki/Dwarf_leader"
+        }
+      ]
+    },
+    "monster:dwarf ruler": {
+      "wikiTitle": "Dwarf ruler",
+      "visualDescription": "A crowned bearded dwarf wears gold armor over red cloth, holding a large axe and a round shield.",
+      "wikiDescription": "NetHack Wiki identifies the dwarf ruler as the strongest dwarf and an overlord of dwarf-kind.",
+      "modelBrief": "Build a regal compact dwarf with gold crown and armor, long pale beard, red mantle, axe, and shield; make the crown the immediate rank cue.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dwarf ruler",
+          "url": "https://nethackwiki.com/wiki/Dwarf_ruler"
+        }
+      ]
+    },
+    "monster:mind flayer": {
+      "wikiTitle": "Mind flayer",
+      "visualDescription": "A robed figure has a pale yellow bulbous head with dangling face tentacles, a dark robe, and a gold clawed hand.",
+      "wikiDescription": "NetHack Wiki describes a humanoid with an octopus-like tentacled head, telepathy, and intelligence-draining tentacle attacks.",
+      "modelBrief": "Sculpt a tall robed humanoid with a smooth domed head and several thick mouth tentacles; retain the dark robe and gold-lit skin.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Mind flayer",
+          "url": "https://nethackwiki.com/wiki/Mind_flayer"
+        }
+      ]
+    },
+    "monster:master mind flayer": {
+      "wikiTitle": "Master mind flayer",
+      "visualDescription": "A blue-robed or blue-skinned figure has a long tentacled face, high dark head crest, red eye, and gold staff.",
+      "wikiDescription": "NetHack Wiki describes a stronger mind flayer with weapon and multiple tentacle attacks.",
+      "modelBrief": "Build a taller blue variant of the mind flayer with a more elaborate head silhouette, visible face tentacles, and held staff.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Master mind flayer",
+          "url": "https://nethackwiki.com/wiki/Master_mind_flayer"
+        }
+      ]
+    },
+    "monster:manes": {
+      "wikiTitle": "Manes",
+      "visualDescription": "A pink, squat fleshy demon has a wide torso, short thick legs, clawed hands, and a tiny dark face.",
+      "wikiDescription": "NetHack Wiki identifies manes as the most basic nonliving minor demon.",
+      "modelBrief": "Model a low pink demon with broad soft-looking flesh masses, short claws, and small dark facial recesses; keep its ungainly stance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Manes",
+          "url": "https://nethackwiki.com/wiki/Manes"
+        }
+      ]
+    },
+    "monster:homunculus": {
+      "wikiTitle": "Homunculus",
+      "visualDescription": "A tiny red-orange humanoid stands on bent legs with a bright yellow head, dark open mouth, and outstretched arms.",
+      "wikiDescription": "NetHack Wiki describes a tiny flying minor demon that can bite.",
+      "modelBrief": "Build a small impish humanoid with thin limbs, red body, yellow-orange head, and dark mouth; preserve the compact sprite scale.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Homunculus",
+          "url": "https://nethackwiki.com/wiki/Homunculus"
+        }
+      ]
+    },
+    "monster:imp": {
+      "wikiTitle": "Imp",
+      "visualDescription": "A little crimson devil stands upright with two thin horns, black wings or back spines, narrow arms, and yellow eyes.",
+      "wikiDescription": "NetHack Wiki identifies the imp as a tiny regenerating minor demon with a claw attack.",
+      "modelBrief": "Sculpt a narrow red demon with horns, pointed extremities, and dark winglike accents; use yellow eyes as the focal points.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Imp",
+          "url": "https://nethackwiki.com/wiki/Imp"
+        }
+      ]
+    },
+    "monster:lemure": {
+      "wikiTitle": "Lemure",
+      "visualDescription": "A pink-brown squat demon has a tall pale skull-like face, heavy draped flesh, short arms, and a dark open mouth.",
+      "wikiDescription": "NetHack Wiki describes a medium-sized regenerating minor demon with a claw attack.",
+      "modelBrief": "Make a lumpy low demon with a skull-like pale face, drooping pink flesh, and stubby claws; distinguish it from the smoother manes.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lemure",
+          "url": "https://nethackwiki.com/wiki/Lemure"
+        }
+      ]
+    },
+    "monster:quasit": {
+      "wikiTitle": "Quasit",
+      "visualDescription": "A small moss-green creature crouches with long upward horns, yellow eyes, large clawed hands, and a tapering tail.",
+      "wikiDescription": "NetHack Wiki describes a small minor demon that uses poisonous claws.",
+      "modelBrief": "Build a wiry green horned demon with exaggerated claws and a thin tail; keep the forward crouch and angular limbs.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Quasit",
+          "url": "https://nethackwiki.com/wiki/Quasit"
+        }
+      ]
+    },
+    "monster:tengu": {
+      "wikiTitle": "Tengu",
+      "visualDescription": "A birdlike upright creature has a blue-violet body, large black swept wings, a long beak, red-brown lower body, and clawed feet.",
+      "wikiDescription": "NetHack Wiki describes the tengu as a teleporting minor demon with a bite attack; its birdlike form is supplied by the sprite.",
+      "modelBrief": "Model a dark winged bird-demon with prominent beak, layered blue-purple feathers, and bird talons; preserve the upright side pose.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Tengu",
+          "url": "https://nethackwiki.com/wiki/Tengu"
+        }
+      ]
+    },
+    "monster:blue jelly": {
+      "wikiTitle": "Blue jelly",
+      "visualDescription": "A low cobalt-blue dome shows a broad bright cyan-white glossy patch and dark base, with no eyes or limbs.",
+      "wikiDescription": "NetHack Wiki describes an eyeless amorphous sessile jelly with a passive cold attack.",
+      "modelBrief": "Make a squat translucent blue jelly mound with a white-cyan highlight and soft uneven edge; leave it faceless.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Blue jelly",
+          "url": "https://nethackwiki.com/wiki/Blue_jelly"
+        }
+      ]
+    },
+    "monster:spotted jelly": {
+      "wikiTitle": "Spotted jelly",
+      "visualDescription": "A low gray-green jelly dome is marked with red spots, pale sheen, and a dark olive base.",
+      "wikiDescription": "NetHack Wiki identifies an eyeless amorphous sessile jelly whose passive attack is acidic.",
+      "modelBrief": "Build a rounded gray-olive jelly with scattered red inclusions and a pale top sheen; avoid facial features or limbs.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spotted jelly",
+          "url": "https://nethackwiki.com/wiki/Spotted_jelly"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

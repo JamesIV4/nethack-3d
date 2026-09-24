@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:combat boots / speed boots": {
+      "wikiTitle": "Speed boots",
+      "visualDescription": "A pair of dark reddish combat boots has wide open tops, heavy laces, and rounded reinforced toes.",
+      "wikiDescription": "The wiki identifies speed boots as magical footwear whose default unidentified appearance is combat boots. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Build a matched pair of sturdy dark-red lace-up boots with reinforced toe and thick soles. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Speed boots",
+          "url": "https://nethackwiki.com/wiki/Speed_boots"
+        }
+      ]
+    },
+    "object:jungle boots / water walking boots": {
+      "wikiTitle": "Water walking boots",
+      "visualDescription": "Two olive jungle boots have high open shafts, dark lace bands, and broad brown toes.",
+      "wikiDescription": "The wiki describes water walking boots as magical leather footwear defaulting to jungle boots. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Model tall olive-brown field boots with heavy tread and laces; keep water walking as an ability. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Water walking boots",
+          "url": "https://nethackwiki.com/wiki/Water_walking_boots"
+        }
+      ]
+    },
+    "object:hiking boots / jumping boots": {
+      "wikiTitle": "Jumping boots",
+      "visualDescription": "A pair of tan hiking boots has black open tops, dark lacing, and wide brown toe caps.",
+      "wikiDescription": "The wiki identifies jumping boots as magical leather boots defaulting to hiking boots. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Build high tan trail boots with laced fronts and broad dark soles, without springs absent from the tile. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Jumping boots",
+          "url": "https://nethackwiki.com/wiki/Jumping_boots"
+        }
+      ]
+    },
+    "object:mud boots / elven boots": {
+      "wikiTitle": "Elven boots",
+      "visualDescription": "Two plain olive-tan mud boots have soft rounded shafts and few visible fasteners.",
+      "wikiDescription": "The wiki identifies elven boots as magical leather footwear whose default unidentified appearance is mud boots. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Make soft simple light-brown boots with rounded toes and narrow cuffs; reserve stealth for item data. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Elven boots",
+          "url": "https://nethackwiki.com/wiki/Elven_boots"
+        }
+      ]
+    },
+    "object:buckled boots / kicking boots": {
+      "wikiTitle": "Kicking boots",
+      "visualDescription": "Dark brown buckled boots have thick soles, wide shafts, and pale fastening marks.",
+      "wikiDescription": "The wiki identifies kicking boots as magical iron footwear defaulting to buckled boots. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Build sturdy dark brown boots with visible buckles, wide shafts, and thick rounded toes. Match the buckled appearance; choose actual material from the identified item at runtime.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kicking boots",
+          "url": "https://nethackwiki.com/wiki/Kicking_boots"
+        }
+      ]
+    },
+    "object:riding boots / fumble boots": {
+      "wikiTitle": "Fumble boots",
+      "visualDescription": "Two dark blue-gray riding boots have tall straight shafts, low toes, and nearly black soles.",
+      "wikiDescription": "The wiki identifies fumble boots as magical leather footwear whose default unidentified appearance is riding boots. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Model tall slate riding boots with clean shafts and dark heels; no visible stumble effect. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Fumble boots",
+          "url": "https://nethackwiki.com/wiki/Fumble_boots"
+        }
+      ]
+    },
+    "object:snow boots / levitation boots": {
+      "wikiTitle": "Levitation boots",
+      "visualDescription": "A pale tan pair of snow boots has shaggy cuffs and mottled thick lower sections.",
+      "wikiDescription": "The wiki identifies levitation boots as magical leather footwear defaulting to snow boots. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Build thick insulated beige boots with fur-like cuffs and broad pale soles; levitation is an effect, not permanent floating geometry. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Levitation boots",
+          "url": "https://nethackwiki.com/wiki/Levitation_boots"
+        }
+      ]
+    },
+    "object:wooden / adornment": {
+      "wikiTitle": "Ring of adornment",
+      "visualDescription": "A tiny orange-brown ring is a plain chunky wooden band with no jewel.",
+      "wikiDescription": "The wiki says a ring of adornment affects the wearer's appearance or charisma. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Model a small smooth carved-wood hoop in warm amber-brown, with no gem or magic mark. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of adornment",
+          "url": "https://nethackwiki.com/wiki/Ring_of_adornment"
+        }
+      ]
+    },
+    "object:granite / gain strength": {
+      "wikiTitle": "Ring of gain strength",
+      "visualDescription": "A little pale granite ring has a squared gray-beige band and dark central opening.",
+      "wikiDescription": "The wiki says a ring of gain strength increases strength while worn. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a rough light-stone band with blocky edges; do not carve a strength emblem. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of gain strength",
+          "url": "https://nethackwiki.com/wiki/Ring_of_gain_strength"
+        }
+      ]
+    },
+    "object:opal / gain constitution": {
+      "wikiTitle": "Ring of gain constitution",
+      "visualDescription": "A gray-brown ring carries a small vivid cyan opal at its lower edge.",
+      "wikiDescription": "The wiki says a ring of gain constitution improves constitution while worn. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a dark stone band and small turquoise-blue opal cabochon, preserving the tiny gem accent. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of gain constitution",
+          "url": "https://nethackwiki.com/wiki/Ring_of_gain_constitution"
+        }
+      ]
+    },
+    "object:clay / increase accuracy": {
+      "wikiTitle": "Ring of increase accuracy",
+      "visualDescription": "A plain reddish clay ring has a thick rounded band and dark center.",
+      "wikiDescription": "The wiki says a ring of increase accuracy changes the accuracy of attacks. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Model a simple fired-clay reddish-brown band with no gemstone, keeping its slightly uneven handmade rim. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of increase accuracy",
+          "url": "https://nethackwiki.com/wiki/Ring_of_increase_accuracy"
+        }
+      ]
+    },
+    "object:coral / increase damage": {
+      "wikiTitle": "Ring of increase damage",
+      "visualDescription": "A compact coral-red ring has a thick round band, salmon highlights, and dark central opening.",
+      "wikiDescription": "The wiki says a ring of increase damage modifies damage dealt by attacks. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a smooth pink-red coral hoop with uneven organic surface, without visible damage effects. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of increase damage",
+          "url": "https://nethackwiki.com/wiki/Ring_of_increase_damage"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

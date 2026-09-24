@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:clear / water": {
+      "wikiTitle": "Potion of water",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and almost colorless pale cyan liquid visible mainly through blue glints. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki says a potion of water is a non-magical potion that always appears clear when unidentified. Its blessing or curse can change use, but the tile does not reveal that state.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with clear water with faint cyan glass reflections. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of water",
+          "url": "https://nethackwiki.com/wiki/Potion_of_water"
+        }
+      ]
+    },
+    "object:ZELGO MER / enchant armor": {
+      "wikiTitle": "Scroll of enchant armor",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"ZELGO MER\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of enchant armor, which can enchant armor. Its association with the inscription ZELGO MER is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of enchant armor",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_enchant_armor"
+        }
+      ]
+    },
+    "object:JUYED AWK YACC / destroy armor": {
+      "wikiTitle": "Scroll of destroy armor",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"JUYED AWK YACC\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of destroy armor, which can destroy armor. Its association with the inscription JUYED AWK YACC is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of destroy armor",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_destroy_armor"
+        }
+      ]
+    },
+    "object:NR 9 / confuse monster": {
+      "wikiTitle": "Scroll of confuse monster",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"NR 9\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of confuse monster, which can make later attacks confuse monsters. Its association with the inscription NR 9 is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of confuse monster",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_confuse_monster"
+        }
+      ]
+    },
+    "object:XIXAXA XOXAXA XUXAXA / scare monster": {
+      "wikiTitle": "Scroll of scare monster",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"XIXAXA XOXAXA XUXAXA\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of scare monster, which can scare monsters. Its association with the inscription XIXAXA XOXAXA XUXAXA is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of scare monster",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_scare_monster"
+        }
+      ]
+    },
+    "object:PRATYAVAYAH / remove curse": {
+      "wikiTitle": "Scroll of remove curse",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"PRATYAVAYAH\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of remove curse, which can remove curses from items. Its association with the inscription PRATYAVAYAH is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of remove curse",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_remove_curse"
+        }
+      ]
+    },
+    "object:DAIYEN FOOELS / enchant weapon": {
+      "wikiTitle": "Scroll of enchant weapon",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"DAIYEN FOOELS\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of enchant weapon, which can enchant a weapon. Its association with the inscription DAIYEN FOOELS is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of enchant weapon",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_enchant_weapon"
+        }
+      ]
+    },
+    "object:LEP GEX VEN ZEA / create monster": {
+      "wikiTitle": "Scroll of create monster",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"LEP GEX VEN ZEA\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of create monster, which creates monsters near the reader. Its association with the inscription LEP GEX VEN ZEA is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of create monster",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_create_monster"
+        }
+      ]
+    },
+    "object:PRIRUTSENIE / taming": {
+      "wikiTitle": "Scroll of taming",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"PRIRUTSENIE\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of taming, which can tame nearby monsters. Its association with the inscription PRIRUTSENIE is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of taming",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_taming"
+        }
+      ]
+    },
+    "object:ELBIB YLOH / genocide": {
+      "wikiTitle": "Scroll of genocide",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"ELBIB YLOH\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of genocide, which can eliminate a chosen monster type. Its association with the inscription ELBIB YLOH is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of genocide",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_genocide"
+        }
+      ]
+    },
+    "object:VERR YED HORRE / light": {
+      "wikiTitle": "Scroll of light",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"VERR YED HORRE\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of light, which lights a dark area. Its association with the inscription VERR YED HORRE is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of light",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_light"
+        }
+      ]
+    },
+    "object:VENZAR BORGAVVE / teleportation": {
+      "wikiTitle": "Scroll of teleportation",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"VENZAR BORGAVVE\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of teleportation, which teleports the reader. Its association with the inscription VENZAR BORGAVVE is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of teleportation",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_teleportation"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

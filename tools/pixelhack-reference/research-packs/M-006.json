@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:ochre jelly": {
+      "wikiTitle": "Ochre jelly",
+      "visualDescription": "The tile shows a low ochre-brown mound with a pale glowing yellow spot near its top and an uneven spreading base.",
+      "wikiDescription": "NetHack Wiki describes a mobile acidic amoeboid jelly that can engulf a target.",
+      "modelBrief": "Build a broad flowing ochre mass with an irregular puddle edge and one translucent yellow highlight; do not add limbs or a face.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ochre jelly",
+          "url": "https://nethackwiki.com/wiki/Ochre_jelly"
+        }
+      ]
+    },
+    "monster:kobold": {
+      "wikiTitle": "Kobold",
+      "visualDescription": "A small red-brown reptilian humanoid stands sideways with a long snout, thin tail, bent legs, and short arms.",
+      "wikiDescription": "NetHack Wiki identifies the kobold as the basic weapon-using member of its monster group.",
+      "modelBrief": "Model a little biped with narrow lizardlike muzzle, long tail, and reddish-brown skin; leave room for a held weapon.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kobold",
+          "url": "https://nethackwiki.com/wiki/Kobold"
+        }
+      ]
+    },
+    "monster:large kobold": {
+      "wikiTitle": "Large kobold",
+      "visualDescription": "A taller brown reptilian humanoid has a long tail, angular snout, forward reaching arm, and a small raised weapon.",
+      "wikiDescription": "NetHack Wiki describes a slightly larger and stronger version of the kobold.",
+      "modelBrief": "Lengthen the kobold's torso, legs, and tail while keeping the same reptilian anatomy and warm brown palette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Large kobold",
+          "url": "https://nethackwiki.com/wiki/Large_kobold"
+        }
+      ]
+    },
+    "monster:kobold leader": {
+      "wikiTitle": "Kobold lord",
+      "visualDescription": "A dark red-brown kobold crouches with a pale snout and crest, carrying a gray tridentlike pole weapon.",
+      "wikiDescription": "The wiki's corresponding article is titled Kobold lord and describes the strongest weapon attack among kobolds; the tile source calls this entry kobold leader.",
+      "modelBrief": "Give the kobold a stronger stance, pale facial crest, and tall three-pronged weapon; keep the tile label while citing the current wiki title.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kobold lord",
+          "url": "https://nethackwiki.com/wiki/Kobold_lord"
+        }
+      ]
+    },
+    "monster:kobold shaman": {
+      "wikiTitle": "Kobold shaman",
+      "visualDescription": "A brown kobold in pale headgear or hair holds a tall staff, with a long tail and hunched profile.",
+      "wikiDescription": "NetHack Wiki describes the kobold shaman as a spellcasting member of the kobold group.",
+      "modelBrief": "Build a small tailed reptilian caster with staff, pale head ornament, and brown robes or body accents; make its staff the main silhouette cue.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kobold shaman",
+          "url": "https://nethackwiki.com/wiki/Kobold_shaman"
+        }
+      ]
+    },
+    "monster:leprechaun": {
+      "wikiTitle": "Leprechaun",
+      "visualDescription": "A tiny green-hatted humanoid has a bright green face, red beard and vest, pale sleeves, and a gold-colored object at its side.",
+      "wikiDescription": "NetHack Wiki identifies leprechauns as small gold-loving humanoids that teleport.",
+      "modelBrief": "Model a compact figure with green cap and clothing, red beard, pointed features, and a gold purse or object; keep its playful size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Leprechaun",
+          "url": "https://nethackwiki.com/wiki/Leprechaun"
+        }
+      ]
+    },
+    "monster:small mimic": {
+      "wikiTitle": "Small mimic",
+      "visualDescription": "A low pale objectlike lump reveals a large red-rimmed black mouth full of square yellow teeth.",
+      "wikiDescription": "NetHack Wiki describes a small mimic that hides by disguising itself as an item or dungeon feature.",
+      "modelBrief": "Build a squat pale creature with one oversized horizontal toothy mouth; allow a closed disguised pose without inventing a fixed object shell.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Small mimic",
+          "url": "https://nethackwiki.com/wiki/Small_mimic"
+        }
+      ]
+    },
+    "monster:large mimic": {
+      "wikiTitle": "Large mimic",
+      "visualDescription": "A tall ivory multi-limbed mass has a dark red toothy mouth and several curling arms or tentacles.",
+      "wikiDescription": "NetHack Wiki describes a larger sticky mimic that can hide as an item or feature.",
+      "modelBrief": "Sculpt a pale irregular body with curling appendages and a large inset toothy mouth; preserve the creature form shown in tile 134.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Large mimic",
+          "url": "https://nethackwiki.com/wiki/Large_mimic"
+        }
+      ]
+    },
+    "monster:giant mimic": {
+      "wikiTitle": "Giant mimic",
+      "visualDescription": "A huge pale-beige rounded mass fills the tile, with a wide red mouth, square teeth, and thick curled limbs.",
+      "wikiDescription": "NetHack Wiki identifies the giant mimic as the strongest mimic, which also disguises itself and traps by sticking.",
+      "modelBrief": "Scale the mimic body up into a heavy asymmetrical pale mass with broad mouth and thick limbs; give it a distinct closed disguise state later.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Giant mimic",
+          "url": "https://nethackwiki.com/wiki/Giant_mimic"
+        }
+      ]
+    },
+    "monster:wood nymph": {
+      "wikiTitle": "Wood nymph",
+      "visualDescription": "A slender female figure has long brown hair, olive-brown dress or barklike body, pale face, and one arm extended.",
+      "wikiDescription": "NetHack Wiki describes wood nymphs as humanoid women that teleport and steal items.",
+      "modelBrief": "Model a slim woodland woman with flowing brown hair, twiglike or draped brown clothing, and an outstretched arm; keep the natural olive palette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wood nymph",
+          "url": "https://nethackwiki.com/wiki/Wood_nymph"
+        }
+      ]
+    },
+    "monster:water nymph": {
+      "wikiTitle": "Water nymph",
+      "visualDescription": "A pale blue-green woman has long dark-blue flowing hair, cyan skin or dress, and a green lower garment that resembles water.",
+      "wikiDescription": "NetHack Wiki identifies a humanoid nymph that teleports and can take the hero's possessions.",
+      "modelBrief": "Sculpt a slender female form with sweeping blue hair and layered aqua-green garment; use flowing shapes to echo the sprite's motion.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Water nymph",
+          "url": "https://nethackwiki.com/wiki/Water_nymph"
+        }
+      ]
+    },
+    "monster:mountain nymph": {
+      "wikiTitle": "Mountain nymph",
+      "visualDescription": "A light-haired female figure wears a blue-gray cap or hood and brown dress, with pale limbs and an upright stance.",
+      "wikiDescription": "NetHack Wiki describes the mountain nymph as a humanoid woman with the same teleporting and theft behavior as other nymphs.",
+      "modelBrief": "Build an upright nymph with pale blue hair or hood, brown draped clothing, and exposed pale arms and legs; retain a distinct mountain-earth palette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Mountain nymph",
+          "url": "https://nethackwiki.com/wiki/Mountain_nymph"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

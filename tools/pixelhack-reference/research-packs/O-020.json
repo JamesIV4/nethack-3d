@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:brass lantern": {
+      "wikiTitle": "Brass lantern",
+      "visualDescription": "A copper-brown lantern has a top handle, glass chamber with pale flame, and broad vented base.",
+      "wikiDescription": "The wiki identifies the brass lantern as a refillable or chargeable copper light source.",
+      "modelBrief": "Build a squat handled lantern with warm metal frame and pale lit chamber.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Brass lantern",
+          "url": "https://nethackwiki.com/wiki/Brass_lantern"
+        }
+      ]
+    },
+    "object:lamp / oil lamp": {
+      "wikiTitle": "Oil lamp",
+      "visualDescription": "A golden oil lamp has a low foot, central spout, broad bowl, and curling handle.",
+      "wikiDescription": "The wiki identifies the oil lamp as a copper light source that appears as a lamp before identification.",
+      "modelBrief": "Model a gold-colored traditional lamp with long spout and curled handle, matching the shared lamp silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Oil lamp",
+          "url": "https://nethackwiki.com/wiki/Oil_lamp"
+        }
+      ]
+    },
+    "object:lamp / magic lamp": {
+      "wikiTitle": "Magic lamp",
+      "visualDescription": "The tile repeats the gold lamp with a long left spout, raised center, and curled right handle.",
+      "wikiDescription": "The wiki identifies the magic lamp as a magical copper lamp whose unidentified appearance is the same plain lamp.",
+      "modelBrief": "Reuse the ordinary gold lamp model; keep magical function or genie effects separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Magic lamp",
+          "url": "https://nethackwiki.com/wiki/Magic_lamp"
+        }
+      ]
+    },
+    "object:expensive camera": {
+      "wikiTitle": "Expensive camera",
+      "visualDescription": "A boxy brown camera has a black central lens, pale flash area, and a tall rectangular upper attachment.",
+      "wikiDescription": "The wiki identifies the expensive camera as a plastic tool whose flash can blind creatures.",
+      "modelBrief": "Make a small vintage box camera with black lens circle and raised flash housing.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Expensive camera",
+          "url": "https://nethackwiki.com/wiki/Expensive_camera"
+        }
+      ]
+    },
+    "object:looking glass / mirror": {
+      "wikiTitle": "Mirror",
+      "visualDescription": "A handheld looking glass has a warm gold oval frame, pale reflective face, and long brown handle.",
+      "wikiDescription": "The wiki identifies the mirror as a glass tool appearing as a looking glass before identification.",
+      "modelBrief": "Build a handheld oval mirror with slim wood handle and broad cool reflective surface.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Mirror",
+          "url": "https://nethackwiki.com/wiki/Mirror"
+        }
+      ]
+    },
+    "object:glass orb / crystal ball": {
+      "wikiTitle": "Crystal ball",
+      "visualDescription": "A glass orb rests on a brown stepped stand, with a bright cream glint and deep blue-gray shadow.",
+      "wikiDescription": "The wiki identifies the crystal ball as a glass divination tool that appears as a glass orb.",
+      "modelBrief": "Make a polished spherical glass ball in a small dark wooden cradle, with a restrained large highlight.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Crystal ball",
+          "url": "https://nethackwiki.com/wiki/Crystal_ball"
+        }
+      ]
+    },
+    "object:lenses": {
+      "wikiTitle": "Pair of lenses",
+      "visualDescription": "A pair of pale gold spectacles has two square lenses, a thin bridge, and reddish temple arms.",
+      "wikiDescription": "The wiki identifies lenses as wearable glass eyewear.",
+      "modelBrief": "Build a small pair of square framed eyeglasses with clear lenses and brown side arms.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Pair of lenses",
+          "url": "https://nethackwiki.com/wiki/Pair_of_lenses"
+        }
+      ]
+    },
+    "object:blindfold": {
+      "wikiTitle": "Blindfold",
+      "visualDescription": "A dark maroon blindfold is folded into a long cloth band with loose ends.",
+      "wikiDescription": "The wiki identifies the blindfold as a cloth tool used to cover the wearer's eyes.",
+      "modelBrief": "Make a soft burgundy cloth eye band with tied ends and dark folds.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Blindfold",
+          "url": "https://nethackwiki.com/wiki/Blindfold"
+        }
+      ]
+    },
+    "object:towel": {
+      "wikiTitle": "Towel",
+      "visualDescription": "A pale cream towel lies as a folded rectangular cloth with white highlights and soft uneven edges.",
+      "wikiDescription": "The wiki identifies the towel as a cloth tool that can wipe the face or be worn over the eyes.",
+      "modelBrief": "Model a folded off-white towel with a few thick fabric folds and no printed logo.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Towel",
+          "url": "https://nethackwiki.com/wiki/Towel"
+        }
+      ]
+    },
+    "object:saddle": {
+      "wikiTitle": "Saddle",
+      "visualDescription": "A brown leather saddle has a raised front and rear, curved seat, and hanging stirrup or straps.",
+      "wikiDescription": "The wiki identifies the saddle as leather tack used to ride a suitable monster.",
+      "modelBrief": "Build a small horse-style saddle with high pommel and cantle, dark leather seat, and visible hanging strap.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Saddle",
+          "url": "https://nethackwiki.com/wiki/Saddle"
+        }
+      ]
+    },
+    "object:leash": {
+      "wikiTitle": "Leash",
+      "visualDescription": "A reddish-brown leash lies in a loose S coil with a darker grip and gray metal clip.",
+      "wikiDescription": "The wiki identifies the leash as a leather tool used to tether a pet.",
+      "modelBrief": "Make a long flexible leather strap coiled on the ground, ending in a small metal clasp.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Leash",
+          "url": "https://nethackwiki.com/wiki/Leash"
+        }
+      ]
+    },
+    "object:stethoscope": {
+      "wikiTitle": "Stethoscope",
+      "visualDescription": "A stethoscope has pale gray earpieces, flexible brown tubing, and a darker chest piece.",
+      "wikiDescription": "The wiki identifies the stethoscope as a tool for inspecting the status of monsters and the hero.",
+      "modelBrief": "Model a U-shaped listening tool with gray metal ends and russet flexible tube.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Stethoscope",
+          "url": "https://nethackwiki.com/wiki/Stethoscope"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

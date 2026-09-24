@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:lump of royal jelly": {
+      "wikiTitle": "Lump of royal jelly",
+      "visualDescription": "PixelHack shows a low pale golden mound of jelly with a soft highlight and tiny pink center fleck. The patterned teal floor is background.",
+      "wikiDescription": "Royal jelly is a NetHack comestible. Its source name supports a soft edible lump but not a container.",
+      "modelBrief": "Build a single squat glossy yellow-gold jelly mound with rounded edges and tiny pink glint. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: lump of royal jelly",
+          "url": "https://nethackwiki.com/wiki/lump_of_royal_jelly"
+        }
+      ]
+    },
+    "object:cream pie": {
+      "wikiTitle": "Cream pie",
+      "visualDescription": "PixelHack shows a shallow tan pie dish topped by thick white cream with uneven pale peaks. The patterned teal floor is background.",
+      "wikiDescription": "A cream pie is an edible item that can also be thrown. The tile shows the whole pie with cream topping.",
+      "modelBrief": "Build a low round pastry shell filled with a raised mound of white cream. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: cream pie",
+          "url": "https://nethackwiki.com/wiki/cream_pie"
+        }
+      ]
+    },
+    "object:candy bar": {
+      "wikiTitle": "Candy bar",
+      "visualDescription": "PixelHack shows a dark brown rectangular bar with a lighter brown upper slab and blunt edges. The patterned teal floor is background.",
+      "wikiDescription": "A candy bar is an edible sweet in NetHack. No wrapper is visible in this PixelHack tile.",
+      "modelBrief": "Build a simple unwrapped rectangular brown candy bar with slightly uneven top face. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: candy bar",
+          "url": "https://nethackwiki.com/wiki/candy_bar"
+        }
+      ]
+    },
+    "object:fortune cookie": {
+      "wikiTitle": "Fortune cookie",
+      "visualDescription": "PixelHack shows a golden folded fortune cookie with a central crease, thick rim, and dark opening. The patterned teal floor is background.",
+      "wikiDescription": "A fortune cookie is an edible item that gives a fortune when eaten. The tile depicts the folded cookie, not a separate paper slip.",
+      "modelBrief": "Build one folded golden cookie with crescent-like split and dark inner crease. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: fortune cookie",
+          "url": "https://nethackwiki.com/wiki/fortune_cookie"
+        }
+      ]
+    },
+    "object:pancake": {
+      "wikiTitle": "Pancake",
+      "visualDescription": "PixelHack shows a flat golden pancake with darker central mottling and a broad pale rim. The patterned teal floor is background.",
+      "wikiDescription": "A pancake is a NetHack comestible. The wiki identity supports a cooked flat cake; toppings are not fixed.",
+      "modelBrief": "Build one low round pancake with warm brown patches and no invented syrup bottle. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: pancake",
+          "url": "https://nethackwiki.com/wiki/pancake"
+        }
+      ]
+    },
+    "object:lembas wafer": {
+      "wikiTitle": "Lembas wafer",
+      "visualDescription": "PixelHack shows a thick irregular tan wafer with brown crumbly patches and light lower edge. The patterned teal floor is background.",
+      "wikiDescription": "A lembas wafer is an edible Elven food in NetHack. PixelHack gives it a chunky bread-like form.",
+      "modelBrief": "Build one irregular pale-gold baked wafer with darker baked spots and low flat profile. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: lembas wafer",
+          "url": "https://nethackwiki.com/wiki/lembas_wafer"
+        }
+      ]
+    },
+    "object:cram ration": {
+      "wikiTitle": "Cram ration",
+      "visualDescription": "PixelHack shows stacked small tan-and-pink ration portions beside a tall teal bottle-like form. The patterned teal floor is background.",
+      "wikiDescription": "A cram ration is a vegan comestible in NetHack. The bottle-like prop is an artwork detail rather than a stated ingredient.",
+      "modelBrief": "Build a compact ration arrangement of stacked rectangular portions and slim teal container, matching the sprite's proportions. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: cram ration",
+          "url": "https://nethackwiki.com/wiki/cram_ration"
+        }
+      ]
+    },
+    "object:food ration": {
+      "wikiTitle": "Food ration",
+      "visualDescription": "PixelHack shows a large tan wrapped loaf or packet beside a tall teal bottle-like form. The patterned teal floor is background.",
+      "wikiDescription": "A food ration is a basic vegan comestible in NetHack. Its exact packaging is supplied by PixelHack.",
+      "modelBrief": "Build a bulky tan ration packet with brown upper fold and the narrow teal container behind it. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: food ration",
+          "url": "https://nethackwiki.com/wiki/food_ration"
+        }
+      ]
+    },
+    "object:K-ration": {
+      "wikiTitle": "K-ration",
+      "visualDescription": "PixelHack shows a pale yellow rectangular ration carton with red cross-like mark and brown side panel. The patterned teal floor is background.",
+      "wikiDescription": "A K-ration is an edible ration in NetHack. The letter-like colored mark and box are sprite details.",
+      "modelBrief": "Build a squat pale ration box with a visible red mark and warm brown side face. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: K-ration",
+          "url": "https://nethackwiki.com/wiki/K-ration"
+        }
+      ]
+    },
+    "object:C-ration": {
+      "wikiTitle": "C-ration",
+      "visualDescription": "PixelHack shows a tan rectangular ration carton with a dark C-like mark and brown upper rim. The patterned teal floor is background.",
+      "wikiDescription": "A C-ration is an edible ration in NetHack. This tile uses a separate marked box from the K-ration.",
+      "modelBrief": "Build a tan ration carton with dark C-like front mark and restrained warm highlights. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: C-ration",
+          "url": "https://nethackwiki.com/wiki/C-ration"
+        }
+      ]
+    },
+    "object:tin": {
+      "wikiTitle": "Tin",
+      "visualDescription": "PixelHack shows a dark cylindrical metal tin with pale gray rolled rim and cool side reflection. The patterned teal floor is background.",
+      "wikiDescription": "A tin is metal-packaged preserved food in NetHack. Its contents vary, so this tile does not identify what is inside.",
+      "modelBrief": "Build a closed dark gray cylindrical can with pale crimped lid and simple reflective band. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: tin",
+          "url": "https://nethackwiki.com/wiki/tin"
+        }
+      ]
+    },
+    "object:ruby / gain ability": {
+      "wikiTitle": "Potion of gain ability",
+      "visualDescription": "PixelHack shows a bulb-bottom glass flask with a narrow neck, brown cork, dark rim, and a deep ruby-red pool with a bright orange-red center. The patterned teal floor is background.",
+      "wikiDescription": "The NetHack Wiki describes the potion of gain ability as a potion that can improve an attribute. The ruby liquid is this atlas slot's appearance; most potion appearances can shuffle between games.",
+      "modelBrief": "Use one shared narrow-neck clear bottle and brown cork, filling it with ruby-red liquid with a small warm central glint. Keep the visible liquid appearance separate from its possible game effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Potion of gain ability",
+          "url": "https://nethackwiki.com/wiki/Potion_of_gain_ability"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

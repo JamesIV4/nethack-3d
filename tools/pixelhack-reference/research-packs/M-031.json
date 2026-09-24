@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:Twoflower": {
+      "wikiTitle": "Twoflower",
+      "visualDescription": "A lightly dressed traveler wears a brown brimmed hat, bright blue-purple patterned shirt, tan shorts, and small shoes.",
+      "wikiDescription": "NetHack Wiki identifies Twoflower as the Tourist quest leader.",
+      "modelBrief": "Model a cheerful tourist with straw hat, colorful short-sleeved shirt, shorts, and casual stance; echo the Tourist role without copying it exactly.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Twoflower",
+          "url": "https://nethackwiki.com/wiki/Twoflower"
+        }
+      ]
+    },
+    "monster:Norn": {
+      "wikiTitle": "Norn",
+      "visualDescription": "A red-haired woman in a long dark brown cloak stands with a strong upright stance and warm red inner garment.",
+      "wikiDescription": "NetHack Wiki identifies the Norn as the Valkyrie quest leader and a powerful human woman.",
+      "modelBrief": "Sculpt a tall mature woman with red hair, dark cloak, reddish dress or armor, and grounded commanding posture.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Norn",
+          "url": "https://nethackwiki.com/wiki/Norn"
+        }
+      ]
+    },
+    "monster:Neferet the Green": {
+      "wikiTitle": "Neferet the Green",
+      "visualDescription": "A dark-faced hooded sorceress wears bright emerald robes and raises a staff with a violet orb.",
+      "wikiDescription": "NetHack Wiki identifies Neferet the Green as the Wizard quest leader, a strong human spellcaster.",
+      "modelBrief": "Build a robed mage with vivid green hood and layered skirt, dark face shadow, and purple-topped staff.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Neferet the Green",
+          "url": "https://nethackwiki.com/wiki/Neferet_the_Green"
+        }
+      ]
+    },
+    "monster:Minion of Huhetotl": {
+      "wikiTitle": "Minion of Huhetotl",
+      "visualDescription": "A lean crimson demon with long arms, pointed ears or horns, and a red loincloth holds a staff or blade in one hand.",
+      "wikiDescription": "NetHack Wiki identifies the Minion of Huhetotl as the Archeologist quest nemesis and a unique major demon.",
+      "modelBrief": "Sculpt a tall red demon with angular limbs, narrow head, dark claws, and an upright weapon; preserve the thin silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Minion of Huhetotl",
+          "url": "https://nethackwiki.com/wiki/Minion_of_Huhetotl"
+        }
+      ]
+    },
+    "monster:Thoth Amon": {
+      "wikiTitle": "Thoth Amon",
+      "visualDescription": "A dark-robed sorcerer wears a gold crown or hood, raises both arms, and holds two green-glowing staff tips.",
+      "wikiDescription": "NetHack Wiki identifies Thoth Amon as the Barbarian quest nemesis, a covetous human spellcaster.",
+      "modelBrief": "Model a human mage in indigo and gold robes with raised arms and two green magical accents; retain the strong shoulder silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Thoth Amon",
+          "url": "https://nethackwiki.com/wiki/Thoth_Amon"
+        }
+      ]
+    },
+    "monster:Chromatic Dragon": {
+      "wikiTitle": "Chromatic Dragon",
+      "visualDescription": "A crouched dark blue dragon has bright magenta neck and wing, yellow-pink patterned membrane, and a massive horned head.",
+      "wikiDescription": "NetHack Wiki identifies the Chromatic Dragon as the Cave Dweller quest nemesis and a unique dragon also known as Tiamat.",
+      "modelBrief": "Build a large multi-colored dragon with deep blue body, pink-magenta head and wings, golden membrane patches, heavy claws, and curled tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Chromatic Dragon",
+          "url": "https://nethackwiki.com/wiki/Chromatic_Dragon"
+        }
+      ]
+    },
+    "monster:Goblin King": {
+      "wikiTitle": "Goblin King",
+      "visualDescription": "A small olive-green goblin wears a tall gold crown and carries a dark sword, with a long nose and thin limbs.",
+      "wikiDescription": "NetHack Wiki records the Goblin King as a former unique Elf quest nemesis.",
+      "modelBrief": "Model a spindly green goblin with oversized golden crown, pointed nose, and dark sword; label as legacy quest art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Goblin King",
+          "url": "https://nethackwiki.com/wiki/Goblin_King"
+        }
+      ]
+    },
+    "monster:Cyclops": {
+      "wikiTitle": "Cyclops",
+      "visualDescription": "A huge bald orange-pink giant has one central eye, broad arms, round torso, and small brown loincloth.",
+      "wikiDescription": "NetHack Wiki identifies the Cyclops as the unique Healer quest nemesis and a giant.",
+      "modelBrief": "Sculpt a massive one-eyed humanoid with broad chest, pink-orange skin, huge hands, and simple loincloth.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cyclops",
+          "url": "https://nethackwiki.com/wiki/Cyclops"
+        }
+      ]
+    },
+    "monster:Ixoth": {
+      "wikiTitle": "Ixoth",
+      "visualDescription": "A tall crimson dragon rears with a long neck, wings, powerful hind legs, claws, and curling tail.",
+      "wikiDescription": "NetHack Wiki identifies Ixoth as the unique red dragon guarding the Knight quest.",
+      "modelBrief": "Build a large red dragon with extended neck, raised wings, horned head, heavy claws, and long coiled tail; differentiate it from baby red dragons by scale.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ixoth",
+          "url": "https://nethackwiki.com/wiki/Ixoth"
+        }
+      ]
+    },
+    "monster:Master Kaen": {
+      "wikiTitle": "Master Kaen",
+      "visualDescription": "A stern bare-armed human monk has pale skin, dark hair, gray upper wrap, red lower robe, and squared fighting pose.",
+      "wikiDescription": "NetHack Wiki identifies Master Kaen as the Monk quest nemesis, a human martial artist.",
+      "modelBrief": "Model an older formidable monk with gray chest wrap, red trousers, exposed arms, and planted fighting stance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Master Kaen",
+          "url": "https://nethackwiki.com/wiki/Master_Kaen"
+        }
+      ]
+    },
+    "monster:Nalzok": {
+      "wikiTitle": "Nalzok",
+      "visualDescription": "A gray-brown horned beastlike demon crouches with long clawed forelimbs, ridged back, and a broad red mouth.",
+      "wikiDescription": "NetHack Wiki identifies Nalzok as the Priest quest nemesis and a unique major demon.",
+      "modelBrief": "Sculpt a powerful quadrupedal-looking demon with curved horns, heavy shoulders, gray-brown hide, and red maw; keep the low predatory pose.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Nalzok",
+          "url": "https://nethackwiki.com/wiki/Nalzok"
+        }
+      ]
+    },
+    "monster:Scorpius": {
+      "wikiTitle": "Scorpius",
+      "visualDescription": "An enormous purple-black scorpion has huge pale front claws, curled segmented tail, and broad armored body.",
+      "wikiDescription": "NetHack Wiki identifies Scorpius as the Ranger quest nemesis and a unique giant scorpion.",
+      "modelBrief": "Build a massive scorpion with thick violet carapace, oversized pale pincers, eight legs, and raised stinging tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scorpius",
+          "url": "https://nethackwiki.com/wiki/Scorpius"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

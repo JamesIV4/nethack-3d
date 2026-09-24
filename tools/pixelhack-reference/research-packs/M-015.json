@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:violet fungus": {
+      "wikiTitle": "Violet fungus",
+      "visualDescription": "A deep violet mushroom-like mass has a magenta-spotted dome, dark stem, and several curling purple tentacles.",
+      "wikiDescription": "The wiki identifies violet fungus as the strongest fungus or mold and describes a sticky touch that restrains prey.",
+      "modelBrief": "Model a thick dark stalk with a broad violet cap and flexible tendrils, matching the magenta spots and low ground shadow. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Violet fungus",
+          "url": "https://nethackwiki.com/wiki/Violet_fungus"
+        }
+      ]
+    },
+    "monster:gnome": {
+      "wikiTitle": "Gnome (monster)",
+      "visualDescription": "A small gnome wears a green pointed cap, dark tunic, and brown boots, with a large nose and compact body.",
+      "wikiDescription": "The wiki describes the basic gnome as a small humanoid that can use weapons and collect equipment.",
+      "modelBrief": "Make a short broad-nosed figure with a pointed green hat and dark work clothes, leaving hands suitable for carried gear. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gnome (monster)",
+          "url": "https://nethackwiki.com/wiki/Gnome_%28monster%29"
+        }
+      ]
+    },
+    "monster:gnome leader": {
+      "wikiTitle": "Gnome leader",
+      "visualDescription": "A sturdier gnome wears a yellow-orange pointed cap and a red-orange tunic with brown boots.",
+      "wikiDescription": "The wiki calls a gnome leader a stronger, lordly form of the standard gnome; male and female names differ in the game.",
+      "modelBrief": "Use the basic gnome proportions with richer red clothing and a brighter cap, giving the leader a more assured stance. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gnome leader",
+          "url": "https://nethackwiki.com/wiki/Gnome_leader"
+        }
+      ]
+    },
+    "monster:gnomish wizard": {
+      "wikiTitle": "Gnomish wizard",
+      "visualDescription": "A short hooded figure wears a large magenta wizard hat and purple robe with raised sleeves.",
+      "wikiDescription": "The wiki identifies the gnomish wizard as a spellcasting gnome with the same infravision as its kin.",
+      "modelBrief": "Build a small robed gnome with a very broad pointed hat, magenta trim, and free hands for spell gestures. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gnomish wizard",
+          "url": "https://nethackwiki.com/wiki/Gnomish_wizard"
+        }
+      ]
+    },
+    "monster:gnome ruler": {
+      "wikiTitle": "Gnome ruler",
+      "visualDescription": "A bearded gnome in a blue coat and pale shirt carries a pale blue-tipped staff or spear.",
+      "wikiDescription": "The wiki identifies the gnome ruler as the strongest gnome and notes king and queen names for the sexes.",
+      "modelBrief": "Make a short regal gnome with a substantial pale beard, blue coat, and slim pale-tipped staff; do not impose a visible crown absent from the tile. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gnome ruler",
+          "url": "https://nethackwiki.com/wiki/Gnome_ruler"
+        }
+      ]
+    },
+    "monster:giant": {
+      "wikiTitle": "Giant (monster)",
+      "visualDescription": "A hulking brown humanoid has a broad exposed chest, long thick arms, small head, and red loincloth.",
+      "wikiDescription": "The wiki describes the ordinary giant as an enormous, strong humanoid capable of handling boulders and clubs.",
+      "modelBrief": "Sculpt a very wide torso and powerful arms with comparatively small head and short red waist cloth; keep scale imposing. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Giant (monster)",
+          "url": "https://nethackwiki.com/wiki/Giant_%28monster%29"
+        }
+      ]
+    },
+    "monster:stone giant": {
+      "wikiTitle": "Stone giant",
+      "visualDescription": "A huge gray humanoid has a rounded chest, dark limbs, pale stony highlights, and red loincloth.",
+      "wikiDescription": "The wiki identifies the stone giant as a giant humanoid with the standard giant strength and weapon use.",
+      "modelBrief": "Use the giant silhouette with rough gray stone-colored skin and pale flecks, retaining the red loincloth and heavy hands. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Stone giant",
+          "url": "https://nethackwiki.com/wiki/Stone_giant"
+        }
+      ]
+    },
+    "monster:hill giant": {
+      "wikiTitle": "Hill giant",
+      "visualDescription": "A broad brown giant has an ochre chest, dark legs, long arms, and a red waist cloth.",
+      "wikiDescription": "The wiki describes a hill giant as a strong giant humanoid that gathers gems and items.",
+      "modelBrief": "Keep the stout giant proportions and bare brown body, with an ochre belly and simple dark-red cloth. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Hill giant",
+          "url": "https://nethackwiki.com/wiki/Hill_giant"
+        }
+      ]
+    },
+    "monster:fire giant": {
+      "wikiTitle": "Fire giant",
+      "visualDescription": "A giant with thick arms glows red and orange across its broad body and wears a dark red loincloth.",
+      "wikiDescription": "The wiki identifies the fire giant as a strong giant with fire resistance and fire-themed identity.",
+      "modelBrief": "Use the common giant body with red skin and bright orange planes; avoid a full flame silhouette since the tile reads as flesh. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Fire giant",
+          "url": "https://nethackwiki.com/wiki/Fire_giant"
+        }
+      ]
+    },
+    "monster:frost giant": {
+      "wikiTitle": "Frost giant",
+      "visualDescription": "A thick-limbed giant has dark blue-gray skin, bright cyan highlights, and a maroon waist cloth.",
+      "wikiDescription": "The wiki describes a frost giant as a giant humanoid associated with cold resistance.",
+      "modelBrief": "Model the same broad giant anatomy in cold blue and gray, using cyan patches for icy skin highlights. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Frost giant",
+          "url": "https://nethackwiki.com/wiki/Frost_giant"
+        }
+      ]
+    },
+    "monster:ettin": {
+      "wikiTitle": "Ettin",
+      "visualDescription": "A massive brown giant shows two small heads above a wide chest and a red loincloth.",
+      "wikiDescription": "The wiki describes the ettin as an animalistic, two-headed giant humanoid.",
+      "modelBrief": "Preserve two separate heads and a single massive torso, with long arms and the same earth-brown palette. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ettin",
+          "url": "https://nethackwiki.com/wiki/Ettin"
+        }
+      ]
+    },
+    "monster:storm giant": {
+      "wikiTitle": "Storm giant",
+      "visualDescription": "A giant with ochre highlights and a red waist cloth has the same broad, long-armed form as neighboring giants.",
+      "wikiDescription": "The wiki identifies the storm giant as the most powerful of the ordinary giant types.",
+      "modelBrief": "Use the giant proportions with warm brown and gold skin planes; imply storm power through restrained effects, not permanent lightning absent from the crop. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Storm giant",
+          "url": "https://nethackwiki.com/wiki/Storm_giant"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

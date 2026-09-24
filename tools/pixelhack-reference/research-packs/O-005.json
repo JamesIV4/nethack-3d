@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:crude short sword / orcish short sword": {
+      "wikiTitle": "Orcish short sword",
+      "visualDescription": "PixelHack shows a short muddy-brown blade with a darker reddish hilt. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the orcish short sword as a one-handed orcish short sword. It uses the appearance name crude short sword here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a rough, broad short sword with muted brown steel and plain dark grip. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: orcish short sword",
+          "url": "https://nethackwiki.com/wiki/orcish_short_sword"
+        }
+      ]
+    },
+    "object:broad short sword / dwarvish short sword": {
+      "wikiTitle": "Dwarvish short sword",
+      "visualDescription": "PixelHack shows a broad pale-gray short blade above an ochre-brown grip. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the dwarvish short sword as an iron dwarvish short sword. It uses the appearance name broad short sword here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a stout wide short sword with bright steel blade and compact warm hilt. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: dwarvish short sword",
+          "url": "https://nethackwiki.com/wiki/dwarvish_short_sword"
+        }
+      ]
+    },
+    "object:curved sword / scimitar": {
+      "wikiTitle": "Scimitar",
+      "visualDescription": "PixelHack shows a long blue-gray blade curving toward its tip, with a dark brown hilt. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the scimitar as an iron one-handed curved sword. It uses the appearance name curved sword here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a visibly curved single-edged scimitar, dark steel with a simple brown grip. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: scimitar",
+          "url": "https://nethackwiki.com/wiki/scimitar"
+        }
+      ]
+    },
+    "object:silver saber": {
+      "wikiTitle": "Silver saber",
+      "visualDescription": "PixelHack shows a long light silver blade that curves gently, with a dark reddish hilt. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the silver saber as a one-handed saber made of silver.",
+      "modelBrief": "Build a slim polished silver saber with slight curve and a dark grip. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: silver saber",
+          "url": "https://nethackwiki.com/wiki/silver_saber"
+        }
+      ]
+    },
+    "object:broadsword": {
+      "wikiTitle": "Broadsword",
+      "visualDescription": "PixelHack shows a wide straight pale blade with stepped blue-gray edge and golden guard. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the broadsword as a one-handed broadsword.",
+      "modelBrief": "Build a broad straight sword with a substantial metal blade, small crossguard, and brown grip. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: broadsword",
+          "url": "https://nethackwiki.com/wiki/broadsword"
+        }
+      ]
+    },
+    "object:runed broadsword / elven broadsword": {
+      "wikiTitle": "Elven broadsword",
+      "visualDescription": "PixelHack shows a wide pale blade with darker stepped markings, above an ochre hilt. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the elven broadsword as a one-handed elven broadsword. It uses the appearance name runed broadsword here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a broad silver-gray blade with restrained darker runic etching and warm hilt. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: elven broadsword",
+          "url": "https://nethackwiki.com/wiki/elven_broadsword"
+        }
+      ]
+    },
+    "object:long sword": {
+      "wikiTitle": "Long sword",
+      "visualDescription": "PixelHack shows a long straight light-gray blade with a small gold guard and brown handle. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the long sword as an iron one-handed long sword.",
+      "modelBrief": "Build a long clean straight blade, small crossguard, and short brown grip. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: long sword",
+          "url": "https://nethackwiki.com/wiki/long_sword"
+        }
+      ]
+    },
+    "object:two-handed sword": {
+      "wikiTitle": "Two-handed sword",
+      "visualDescription": "PixelHack shows a broad long pale blade with dark outline and an oversized reddish-brown hilt. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the two-handed sword as a two-handed sword.",
+      "modelBrief": "Build a heavy straight greatsword with long two-hand grip and broad blade. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: two-handed sword",
+          "url": "https://nethackwiki.com/wiki/two-handed_sword"
+        }
+      ]
+    },
+    "object:samurai sword / katana": {
+      "wikiTitle": "Katana",
+      "visualDescription": "PixelHack shows a slim dark-gray sword with a pale narrow edge and dark hilt. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the katana as a one-handed samurai sword. It uses the appearance name samurai sword here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a long narrow katana with restrained curve, dark blade shading, and compact grip. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: katana",
+          "url": "https://nethackwiki.com/wiki/katana"
+        }
+      ]
+    },
+    "object:long samurai sword / tsurugi": {
+      "wikiTitle": "Tsurugi",
+      "visualDescription": "PixelHack shows a long pale sword with a warm gold guard and dark brown extended handle. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the tsurugi as a two-handed long samurai sword. It uses the appearance name long samurai sword here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a large tsurugi with broad light blade, gold-toned guard, and two-hand grip. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: tsurugi",
+          "url": "https://nethackwiki.com/wiki/tsurugi"
+        }
+      ]
+    },
+    "object:runed broadsword / runesword": {
+      "wikiTitle": "Runesword",
+      "visualDescription": "PixelHack shows a dark gray broad sword with bright orange-red rune-like blocks and red hilt. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the runesword as a one-handed runed broadsword. It uses the appearance name runed broadsword here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a dark broad blade with sparse luminous orange rune accents and a deep red grip. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: runesword",
+          "url": "https://nethackwiki.com/wiki/runesword"
+        }
+      ]
+    },
+    "object:vulgar polearm / partisan": {
+      "wikiTitle": "Partisan",
+      "visualDescription": "PixelHack shows a brown pole with a short blue-gray pointed metal head. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the partisan as a two-handed iron partisan polearm. It uses the appearance name vulgar polearm here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a long wooden pole with a modest pointed metal head and small side wings. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: partisan",
+          "url": "https://nethackwiki.com/wiki/partisan"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

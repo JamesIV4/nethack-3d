@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:hezrou": {
+      "wikiTitle": "Hezrou",
+      "visualDescription": "A squat olive-brown demon lurches forward with thick arms, red open mouth, small horns, and heavy feet.",
+      "wikiDescription": "NetHack Wiki identifies the hezrou as a humanoid major demon with two claw attacks and a bite.",
+      "modelBrief": "Build a bulky toadlike humanoid demon with broad shoulders, small horns, red maw, and muddy olive hide.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Hezrou",
+          "url": "https://nethackwiki.com/wiki/Hezrou"
+        }
+      ]
+    },
+    "monster:bone devil": {
+      "wikiTitle": "Bone devil",
+      "visualDescription": "A pale bony demon has long hooked horns, an exposed riblike torso, narrow claws, and a spined tail.",
+      "wikiDescription": "NetHack Wiki describes the bone devil as a major demon that uses a weapon and poisonous sting.",
+      "modelBrief": "Sculpt a skeletal beige devil with rib cage, long horns, thin limbs, and sharp tail tip; keep the brittle bone silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Bone devil",
+          "url": "https://nethackwiki.com/wiki/Bone_devil"
+        }
+      ]
+    },
+    "monster:ice devil": {
+      "wikiTitle": "Ice devil",
+      "visualDescription": "A slate-blue angular demon has huge backward horns, long blade-like arms, sharp knees, and a crouched insectoid body.",
+      "wikiDescription": "NetHack Wiki identifies an ice devil with claw, bite, and cold sting attacks.",
+      "modelBrief": "Build a dark blue chitinous devil with high horns, mantis-like forearms, pointed legs, and frosty pale highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ice devil",
+          "url": "https://nethackwiki.com/wiki/Ice_devil"
+        }
+      ]
+    },
+    "monster:nalfeshnee": {
+      "wikiTitle": "Nalfeshnee",
+      "visualDescription": "A heavy reddish demon has a boarlike face, black horns or wings, broad belly, long clawed hands, and short legs.",
+      "wikiDescription": "NetHack Wiki describes the nalfeshnee as a spellcasting humanoid major demon.",
+      "modelBrief": "Model a thick-bodied red boar-faced demon with horned head, dark wing stubs, belly folds, and broad claws.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Nalfeshnee",
+          "url": "https://nethackwiki.com/wiki/Nalfeshnee"
+        }
+      ]
+    },
+    "monster:pit fiend": {
+      "wikiTitle": "Pit fiend",
+      "visualDescription": "A large crimson devil stands in profile with swept horns, thick torso, clawed feet, and huge red bat wings.",
+      "wikiDescription": "NetHack Wiki identifies the pit fiend as a major demon with weapon and crushing grab attacks.",
+      "modelBrief": "Sculpt a broad muscular devil with dark red skin, long horns, huge leathery wings, and heavy hands capable of gripping.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Pit fiend",
+          "url": "https://nethackwiki.com/wiki/Pit_fiend"
+        }
+      ]
+    },
+    "monster:sandestin": {
+      "wikiTitle": "Sandestin",
+      "visualDescription": "A pale cyan-white slender humanoid floats above the floor with a narrow head, long arms, and tapered legs.",
+      "wikiDescription": "NetHack Wiki describes the sandestin as a strong humanoid shapeshifter in the demon monster class but not itself a demon.",
+      "modelBrief": "Model the pale default form as a tall thin spectral humanoid with blue edges and floating feet; allow later shape changes.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Sandestin",
+          "url": "https://nethackwiki.com/wiki/Sandestin"
+        }
+      ]
+    },
+    "monster:balrog": {
+      "wikiTitle": "Balrog",
+      "visualDescription": "A massive brown demon carries a long dark weapon, with broad hunched shoulders, fiery orange rim light, horns, and heavy legs.",
+      "wikiDescription": "NetHack Wiki identifies the balrog as a flying, fire-resistant major demon and a physically imposing non-unique foe.",
+      "modelBrief": "Build an oversized horned demon with powerful limbs, dark weapon, brown hide, and orange flame accents around its silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Balrog",
+          "url": "https://nethackwiki.com/wiki/Balrog"
+        }
+      ]
+    },
+    "monster:Juiblex": {
+      "wikiTitle": "Juiblex",
+      "visualDescription": "A towering blue-black amorphous mass sprouts many tendrils, glowing green spots, and a dripping turquoise lower body.",
+      "wikiDescription": "NetHack Wiki describes Juiblex as a unique amorphous demon lord with amphibious movement.",
+      "modelBrief": "Sculpt a semi-fluid dark slime column with branching tentacles and teal-green inner glow; leave rigid skeletal anatomy absent.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Juiblex",
+          "url": "https://nethackwiki.com/wiki/Juiblex"
+        }
+      ]
+    },
+    "monster:Yeenoghu": {
+      "wikiTitle": "Yeenoghu",
+      "visualDescription": "A large purple-red demon hunches with long arms, angular muzzle, dark mane, and heavy clawed feet.",
+      "wikiDescription": "NetHack Wiki identifies Yeenoghu as a unique demon lord who can fly and wield weapons.",
+      "modelBrief": "Build a hulking hunched demon with canine-like head, long arms, crimson-purple hide, and dark ridge or mane.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Yeenoghu",
+          "url": "https://nethackwiki.com/wiki/Yeenoghu"
+        }
+      ]
+    },
+    "monster:Orcus": {
+      "wikiTitle": "Orcus",
+      "visualDescription": "A horned reddish demon prince has huge magenta wings, heavy central body, cloven-looking feet, and an aggressive pose.",
+      "wikiDescription": "NetHack Wiki describes Orcus as a powerful unique demon prince.",
+      "modelBrief": "Sculpt a thick-bodied horned prince with large pink-red wing membranes, deep brown torso, and imposing front-facing stance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orcus",
+          "url": "https://nethackwiki.com/wiki/Orcus"
+        }
+      ]
+    },
+    "monster:Geryon": {
+      "wikiTitle": "Geryon",
+      "visualDescription": "A dark gray monstrous head or body crouches beneath two wide pink bat wings, with curved horns and a broad toothy mouth; paired tiles vary slightly.",
+      "wikiDescription": "NetHack Wiki identifies Geryon as a demon prince who may appear through demon summoning.",
+      "modelBrief": "Build a low broad dark demon with massive arched magenta wings, curved horns, and central jaw; compare tiles 626 and 627.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Geryon",
+          "url": "https://nethackwiki.com/wiki/Geryon"
+        }
+      ]
+    },
+    "monster:Dispater": {
+      "wikiTitle": "Dispater",
+      "visualDescription": "A tall humanoid demon wears violet lower robes and brown upper garments, with orange-red hair or horns and a formal upright stance.",
+      "wikiDescription": "NetHack Wiki describes Dispater as a unique humanoid demon prince.",
+      "modelBrief": "Model a regal infernal figure in layered purple robes, brown shoulders, and fiery orange head detail; retain a slim commanding posture.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dispater",
+          "url": "https://nethackwiki.com/wiki/Dispater"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "626": {
+      "variantNote": "Paired Geryon tiles differ subtly in facial and wing pixels; inspect both before finalizing. This is the first source slot."
+    },
+    "627": {
+      "variantNote": "Paired Geryon tiles differ subtly in facial and wing pixels; inspect both before finalizing. This is the second source slot."
+    }
+  }
+}

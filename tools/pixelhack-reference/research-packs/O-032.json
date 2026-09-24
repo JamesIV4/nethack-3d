@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:mottled / sleep": {
+      "wikiTitle": "Spellbook of sleep",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with an ivory cover blotched by several large charcoal-gray mottles. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of sleep as a book that teaches the sleep spell. The mottled cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and ivory cover with irregular gray stains. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of sleep",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_sleep"
+        }
+      ]
+    },
+    "object:stained / finger of death": {
+      "wikiTitle": "Spellbook of finger of death",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with an ochre-brown cover spotted and streaked with dark maroon stains. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of finger of death as a book that teaches the finger of death spell. The stained cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and brown cover with scattered dark red stains. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of finger of death",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_finger_of_death"
+        }
+      ]
+    },
+    "object:cloth / light": {
+      "wikiTitle": "Spellbook of light",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a bright blue woven-looking cover with repeating cyan blocks and dark slate side. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of light as a book that teaches the light spell. The cloth cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and blue cloth cover with coarse cyan weave pattern. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of light",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_light"
+        }
+      ]
+    },
+    "object:leathery / detect monsters": {
+      "wikiTitle": "Spellbook of detect monsters",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a dark reddish-brown leather cover with a raised central patch and pale pages. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of detect monsters as a book that teaches the detect monsters spell. The leathery cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and plain brown leather cover with subtle raised center. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of detect monsters",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_detect_monsters"
+        }
+      ]
+    },
+    "object:white / healing": {
+      "wikiTitle": "Spellbook of healing",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a mostly blank cream-white cover above a thick pale page block. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of healing as a book that teaches the healing spell. The white cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and plain cream-white cover with minimal ornament. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of healing",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_healing"
+        }
+      ]
+    },
+    "object:pink / knock": {
+      "wikiTitle": "Spellbook of knock",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a salmon-pink cover filled with pale pink checker or weave pixels. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of knock as a book that teaches the knock spell. The pink cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and pink cover with dense light checker texture. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of knock",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_knock"
+        }
+      ]
+    },
+    "object:red / force bolt": {
+      "wikiTitle": "Spellbook of force bolt",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a flat brilliant red cover with a dark upper edge and white page block. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of force bolt as a book that teaches the force bolt spell. The red cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and unpatterned vivid red cover. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of force bolt",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_force_bolt"
+        }
+      ]
+    },
+    "object:orange / confuse monster": {
+      "wikiTitle": "Spellbook of confuse monster",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a bright orange cover with a tight gold-and-red checker pattern. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of confuse monster as a book that teaches the confuse monster spell. The orange cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and orange cover with small gold crosshatch squares. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of confuse monster",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_confuse_monster"
+        }
+      ]
+    },
+    "object:yellow / cure blindness": {
+      "wikiTitle": "Spellbook of cure blindness",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a smooth saturated yellow cover with ochre upper edge. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of cure blindness as a book that teaches the cure blindness spell. The yellow cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and plain bright yellow cover. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of cure blindness",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_cure_blindness"
+        }
+      ]
+    },
+    "object:velvet / drain life": {
+      "wikiTitle": "Spellbook of drain life",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a dark blue velvet-like cover with swirling cyan-blue motifs. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of drain life as a book that teaches the drain life spell. The velvet cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and deep navy cover with a few soft blue scrollwork patches. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of drain life",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_drain_life"
+        }
+      ]
+    },
+    "object:light green / slow monster": {
+      "wikiTitle": "Spellbook of slow monster",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a smooth light green cover with a pale mint glint on the right edge. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of slow monster as a book that teaches the slow monster spell. The light green cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and plain spring-green cover with light edge highlight. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of slow monster",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_slow_monster"
+        }
+      ]
+    },
+    "object:dark green / wizard lock": {
+      "wikiTitle": "Spellbook of wizard lock",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a flat dark forest-green cover with very little ornament. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of wizard lock as a book that teaches the wizard lock spell. The dark green cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and plain dark green cover with restrained edge contrast. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of wizard lock",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_wizard_lock"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

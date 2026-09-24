@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:winter wolf": {
+      "wikiTitle": "Winter wolf",
+      "visualDescription": "A large pale wolf stands broadside with an icy white coat, blue-gray shadows, pointed ears, and a thick downturned tail.",
+      "wikiDescription": "NetHack Wiki describes a large, strong cold-aligned canine and adult form of the winter wolf cub.",
+      "modelBrief": "Extend the cub's shapes into a tall wolf with thick white fur, blue-gray shading, and a long full tail; preserve the crisp profile.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Winter wolf",
+          "url": "https://nethackwiki.com/wiki/Winter_wolf"
+        }
+      ]
+    },
+    "monster:hell hound pup": {
+      "wikiTitle": "Hell hound pup",
+      "visualDescription": "A squat black-gray puppy has a red muzzle, throat, paws, and tail tip, plus pointed ears and a low stance.",
+      "wikiDescription": "NetHack Wiki identifies a juvenile hell hound with a fire affinity.",
+      "modelBrief": "Build a compact hellhound pup with charcoal fur, red-hot face and extremities, short legs, and pointed ears; keep the fiery accents tied to visible anatomy.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Hell hound pup",
+          "url": "https://nethackwiki.com/wiki/Hell_hound_pup"
+        }
+      ]
+    },
+    "monster:hell hound": {
+      "wikiTitle": "Hell hound",
+      "visualDescription": "A tall muscular charcoal hound carries a red muzzle, chest, paws, and tail tip, with glowing yellow eyes.",
+      "wikiDescription": "NetHack Wiki describes a fire-aligned carnivorous canine stronger than its pup.",
+      "modelBrief": "Enlarge the pup design into a powerful four-legged hound with long jaws, strong shoulders, and restrained red heat accents.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Hell hound",
+          "url": "https://nethackwiki.com/wiki/Hell_hound"
+        }
+      ]
+    },
+    "monster:Cerberus": {
+      "wikiTitle": "Cerberus (monster)",
+      "visualDescription": "The tile shows a large black three-headed hound with red jaws, chest and legs, a twisting tail, and bright eyes; the two paired images differ in a few details.",
+      "wikiDescription": "NetHack Wiki identifies Cerberus as a deferred vanilla monster with three bite attacks; its source form is a strong canine.",
+      "modelBrief": "Model one heavy hound body carrying three distinct black heads and red muzzles, with dark tail and fiery red lower body; compare both tile 54 and 55 details.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cerberus (monster)",
+          "url": "https://nethackwiki.com/wiki/Cerberus_(monster)"
+        }
+      ]
+    },
+    "monster:gas spore": {
+      "wikiTitle": "Gas spore",
+      "visualDescription": "A floating dark-green orb has a luminous mottled yellow-green crown and thin black tendrils dangling beneath it.",
+      "wikiDescription": "NetHack Wiki describes a mindless, limbless sphere that explodes when destroyed.",
+      "modelBrief": "Build an uneven gas-filled globe with green rim, glowing yellow patches, and a few hanging tendrils; place it above the ground shadow.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gas spore",
+          "url": "https://nethackwiki.com/wiki/Gas_spore"
+        }
+      ]
+    },
+    "monster:floating eye": {
+      "wikiTitle": "Floating eye",
+      "visualDescription": "A single large blue-green iris fills a pale fleshy eyeball, held in a gray-brown outer ring with small reddish dangling tendrils.",
+      "wikiDescription": "NetHack Wiki describes an intelligent flying eye whose passive gaze can paralyze attackers.",
+      "modelBrief": "Form one oversized eye in a rounded fleshy housing, with a clear iris, dark pupil, and short tendrils; keep it visibly suspended.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Floating eye",
+          "url": "https://nethackwiki.com/wiki/Floating_eye"
+        }
+      ]
+    },
+    "monster:freezing sphere": {
+      "wikiTitle": "Freezing sphere",
+      "visualDescription": "The sprite is a hovering round blue sphere with a bright white-cyan icy center, deep cobalt edge, and a dark shadow below.",
+      "wikiDescription": "NetHack Wiki identifies a cold-affinity sphere whose explosion deals cold damage.",
+      "modelBrief": "Make a simple hovering orb with faceted blue ice around a bright frosty center; avoid adding eyes or limbs.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Freezing sphere",
+          "url": "https://nethackwiki.com/wiki/Freezing_sphere"
+        }
+      ]
+    },
+    "monster:flaming sphere": {
+      "wikiTitle": "Flaming sphere",
+      "visualDescription": "A round red-orange sphere glows around a hot yellow core and floats over a red-tinted ground shadow.",
+      "wikiDescription": "NetHack Wiki describes a light-emitting fiery sphere with an explosive fire attack.",
+      "modelBrief": "Build a compact fireball with a yellow core, orange mantle, jagged dark-red rim, and clear floating gap.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Flaming sphere",
+          "url": "https://nethackwiki.com/wiki/Flaming_sphere"
+        }
+      ]
+    },
+    "monster:shocking sphere": {
+      "wikiTitle": "Shocking sphere",
+      "visualDescription": "A floating violet orb contains a jagged pink-white electric center, surrounded by deep purple pixels.",
+      "wikiDescription": "NetHack Wiki describes an electricity-aligned sphere that emits light and explodes with shock damage.",
+      "modelBrief": "Shape a spherical purple energy mass with a luminous irregular pink center and sharp lightning-like highlights; keep it limbless.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Shocking sphere",
+          "url": "https://nethackwiki.com/wiki/Shocking_sphere"
+        }
+      ]
+    },
+    "monster:beholder": {
+      "wikiTitle": "Beholder (monster)",
+      "visualDescription": "A reddish-brown round head floats with one large central eye, a broad toothy mouth, and several curling eye stalks or tentacles.",
+      "wikiDescription": "NetHack Wiki identifies the vanilla beholder as a deferred flying monster in the eye or sphere class.",
+      "modelBrief": "Sculpt a floating spherical body with a dominant eye, open toothed jaw, and multiple curled stalks; use red-brown flesh and dark recesses from the tile.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Beholder (monster)",
+          "url": "https://nethackwiki.com/wiki/Beholder_(monster)"
+        }
+      ]
+    },
+    "monster:kitten": {
+      "wikiTitle": "Kitten",
+      "visualDescription": "A tiny cream kitten sits upright with dark ear tips, square face, pale muzzle, and a thin raised tail.",
+      "wikiDescription": "NetHack Wiki describes the kitten as a small domestic feline and the juvenile form that can grow into a housecat.",
+      "modelBrief": "Make a small sitting cat with oversized head, triangular ears, short paws, and a high thin tail; preserve its cream coat.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kitten",
+          "url": "https://nethackwiki.com/wiki/Kitten"
+        }
+      ]
+    },
+    "monster:housecat": {
+      "wikiTitle": "Housecat",
+      "visualDescription": "A pale gray-white cat sits sideways with dark ear and tail markings, narrow face, and a long tail curled along the floor.",
+      "wikiDescription": "NetHack Wiki identifies the housecat as a domestic feline that can be tamed and may grow into a large cat.",
+      "modelBrief": "Build a medium domestic cat with a slender seated body, pointed ears, and a long dark-tipped tail; scale above the kitten.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Housecat",
+          "url": "https://nethackwiki.com/wiki/Housecat"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "54": {
+      "variantNote": "PixelHack differs subtly from the paired tile 55; inspect both crops before finalizing pose and details."
+    },
+    "55": {
+      "variantNote": "PixelHack differs subtly from the paired tile 54; inspect both crops before finalizing pose and details."
+    }
+  }
+}

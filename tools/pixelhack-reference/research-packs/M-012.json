@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:plains centaur": {
+      "wikiTitle": "Plains centaur",
+      "visualDescription": "A brown horse body supports a tan human torso in a dark cap; the figure holds a curved bow and has a dark tail.",
+      "wikiDescription": "NetHack Wiki describes the plains centaur as a horse-bodied humanoid with weapon and kick attacks.",
+      "modelBrief": "Join a compact brown horse body to an upright archer torso, keeping the bow, dark headgear, and low tail visible.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Plains centaur",
+          "url": "https://nethackwiki.com/wiki/Plains_centaur"
+        }
+      ]
+    },
+    "monster:forest centaur": {
+      "wikiTitle": "Forest centaur",
+      "visualDescription": "A dark brown horse body carries a tan archer wearing a green headpiece, with a curved bow and green saddle-like accent.",
+      "wikiDescription": "NetHack Wiki identifies the forest centaur as the middle-strength centaur form with weapon and kick attacks.",
+      "modelBrief": "Build a dark horse-human hybrid with green forest accents, upright torso, and bow; preserve the long horse hindquarters.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Forest centaur",
+          "url": "https://nethackwiki.com/wiki/Forest_centaur"
+        }
+      ]
+    },
+    "monster:mountain centaur": {
+      "wikiTitle": "Mountain centaur",
+      "visualDescription": "A pale gray horse body supports a tan armored human archer with dark head covering, bow, and yellow-brown chest piece.",
+      "wikiDescription": "NetHack Wiki describes the mountain centaur as the strongest centaur form, attacking with weapon and kicks.",
+      "modelBrief": "Use a muscular pale horse body, tan humanoid torso, darker headgear, and bow; make it sturdier than the plains centaur.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Mountain centaur",
+          "url": "https://nethackwiki.com/wiki/Mountain_centaur"
+        }
+      ]
+    },
+    "monster:baby gray dragon": {
+      "wikiTitle": "Baby gray dragon",
+      "visualDescription": "A small crouched slate-gray dragon has tiny pale wings, short neck, light muzzle, horns, and a curled tail.",
+      "wikiDescription": "NetHack Wiki identifies the baby gray dragon as a juvenile dragon associated with magic.",
+      "modelBrief": "Build a compact quadrupedal dragon with gray scales, short horns, small folded wings, and curled tail; keep adult features juvenile.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby gray dragon",
+          "url": "https://nethackwiki.com/wiki/Baby_gray_dragon"
+        }
+      ]
+    },
+    "monster:baby gold dragon": {
+      "wikiTitle": "Baby gold dragon",
+      "visualDescription": "A small golden dragon crouches with deep ochre back, bright yellow wing membrane, short horns, and heavy dark claws.",
+      "wikiDescription": "NetHack Wiki describes the baby gold dragon as a juvenile dragon introduced in NetHack 5.0.0.",
+      "modelBrief": "Reuse the baby-dragon body with warm gold scales, ochre shadowing, small golden wings, and dark feet.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby gold dragon",
+          "url": "https://nethackwiki.com/wiki/Baby_gold_dragon"
+        }
+      ]
+    },
+    "monster:baby silver dragon": {
+      "wikiTitle": "Baby silver dragon",
+      "visualDescription": "A squat silver and dark-plum dragon has pale metallic wing membranes, a yellow-gold neck accent, and short curled tail.",
+      "wikiDescription": "NetHack Wiki identifies the baby silver dragon as the juvenile silver form, before its scales grant reflection.",
+      "modelBrief": "Model a young dragon with silver-white wing panels, plum-dark body shadows, gold neck detail, and stout claws.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby silver dragon",
+          "url": "https://nethackwiki.com/wiki/Baby_silver_dragon"
+        }
+      ]
+    },
+    "monster:baby shimmering dragon": {
+      "wikiTitle": "Baby shimmering dragon (monster)",
+      "visualDescription": "A pale cyan-white dragon has sparkling yellow highlights, swept-back icy blue wings, a gray body, and curled tail.",
+      "wikiDescription": "NetHack Wiki lists the baby shimmering dragon as a deferred vanilla monster; the PixelHack atlas nevertheless supplies a dedicated sprite.",
+      "modelBrief": "Build a juvenile gray dragon with iridescent cyan-white wings and small gold glints; treat this as a tile-based asset even if the monster is deferred.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby shimmering dragon (monster)",
+          "url": "https://nethackwiki.com/wiki/Baby_shimmering_dragon_(monster)"
+        }
+      ]
+    },
+    "monster:baby red dragon": {
+      "wikiTitle": "Baby red dragon",
+      "visualDescription": "A crouched red dragon has dark crimson body, hot pink-red wing, horned head, and curled tail.",
+      "wikiDescription": "NetHack Wiki describes the baby red dragon as the juvenile fire-associated dragon.",
+      "modelBrief": "Use the shared young-dragon anatomy with crimson scales, bright red-pink wing membrane, horns, and thick tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby red dragon",
+          "url": "https://nethackwiki.com/wiki/Baby_red_dragon"
+        }
+      ]
+    },
+    "monster:baby white dragon": {
+      "wikiTitle": "Baby white dragon",
+      "visualDescription": "A small icy gray-white dragon has pale peach wing membrane, light cyan body shading, and dark claws.",
+      "wikiDescription": "NetHack Wiki identifies the baby white dragon as a juvenile cold-associated dragon.",
+      "modelBrief": "Build a pale cold dragon with compact body, translucent peach-white wings, blue-gray shadows, and dark feet.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby white dragon",
+          "url": "https://nethackwiki.com/wiki/Baby_white_dragon"
+        }
+      ]
+    },
+    "monster:baby orange dragon": {
+      "wikiTitle": "Baby orange dragon",
+      "visualDescription": "A bright red-orange baby dragon crouches with yellow-orange wing edge, deep red body shadows, and a long curled tail.",
+      "wikiDescription": "NetHack Wiki describes the baby orange dragon as a juvenile dragon associated with sleep.",
+      "modelBrief": "Model the same young dragon form in saturated orange-red scales with yellow wing trim; keep its color cue separate from the red dragon.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby orange dragon",
+          "url": "https://nethackwiki.com/wiki/Baby_orange_dragon"
+        }
+      ]
+    },
+    "monster:baby black dragon": {
+      "wikiTitle": "Baby black dragon",
+      "visualDescription": "A dark charcoal dragon has plum wing shadows, pale eye, long snout, and a curled near-black tail.",
+      "wikiDescription": "NetHack Wiki identifies the baby black dragon as a juvenile dragon associated with disintegration.",
+      "modelBrief": "Use the compact horned dragon body with black scales, subtle plum highlights, dark wing membranes, and a pale eye.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby black dragon",
+          "url": "https://nethackwiki.com/wiki/Baby_black_dragon"
+        }
+      ]
+    },
+    "monster:baby blue dragon": {
+      "wikiTitle": "Baby blue dragon",
+      "visualDescription": "A deep indigo young dragon has electric-blue wing and back plates, purple shadows, dark claws, and a curled tail.",
+      "wikiDescription": "NetHack Wiki describes the baby blue dragon as a juvenile lightning-associated dragon.",
+      "modelBrief": "Build a small stout dragon with dark cobalt scales, bright blue wing surfaces, violet shadows, and visible horns.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby blue dragon",
+          "url": "https://nethackwiki.com/wiki/Baby_blue_dragon"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

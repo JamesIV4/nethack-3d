@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:hunter": {
+      "wikiTitle": "Hunter",
+      "visualDescription": "A dark-haired human wears a brown-green short tunic over blue-gray trousers, with a tan shoulder wrap and boots.",
+      "wikiDescription": "NetHack Wiki identifies the hunter as a Ranger quest guardian.",
+      "modelBrief": "Build a practical field hunter with dark hair, brown vest, green scarf, blue trousers, and light equipment; keep a ready standing pose.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Hunter",
+          "url": "https://nethackwiki.com/wiki/Hunter"
+        }
+      ]
+    },
+    "monster:thug": {
+      "wikiTitle": "Thug",
+      "visualDescription": "A rough human with brown cap wears dark blue-gray chest armor, reddish sleeves, and brown trousers, with one hand raised.",
+      "wikiDescription": "NetHack Wiki describes the thug as a Rogue quest guardian with two weapon attacks.",
+      "modelBrief": "Model a stocky street fighter in dark vest, brown hat, rolled sleeves, and sturdy boots; give the hands room to hold paired weapons.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Thug",
+          "url": "https://nethackwiki.com/wiki/Thug"
+        }
+      ]
+    },
+    "monster:ninja": {
+      "wikiTitle": "Ninja",
+      "visualDescription": "A black-blue masked figure crouches with one arm raised and a dark blade, wrapped in layered stealth clothing.",
+      "wikiDescription": "NetHack Wiki identifies ninja as strong human Samurai quest guardians with two weapon attacks and thrown weapon skills.",
+      "modelBrief": "Build a low crouched masked fighter with navy wrappings, short blades, and small visible eyes; preserve the dynamic silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ninja",
+          "url": "https://nethackwiki.com/wiki/Ninja"
+        }
+      ]
+    },
+    "monster:roshi": {
+      "wikiTitle": "Roshi",
+      "visualDescription": "An elder in blue-black robes has a pale face, long gray hair, and a dark sword held near the body.",
+      "wikiDescription": "NetHack Wiki identifies the roshi as a Samurai quest guardian with two weapon attacks.",
+      "modelBrief": "Sculpt an aged swordsman in dark indigo robes with gray hair, calm posture, and sheathed or lowered blade.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Roshi",
+          "url": "https://nethackwiki.com/wiki/Roshi"
+        }
+      ]
+    },
+    "monster:guide": {
+      "wikiTitle": "Guide",
+      "visualDescription": "A human traveler wears a green coat, pale scarf, tan trousers, and dark shoes, standing upright with one hand lowered.",
+      "wikiDescription": "NetHack Wiki identifies the guide as a Tourist quest guardian.",
+      "modelBrief": "Model a helpful traveler in green jacket and cream scarf, with tan trousers and ordinary walking shoes.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Guide",
+          "url": "https://nethackwiki.com/wiki/Guide"
+        }
+      ]
+    },
+    "monster:warrior": {
+      "wikiTitle": "Warrior",
+      "visualDescription": "A tall blond woman in bronze-red armor stands wide with a long gray sword and dark red lower garments.",
+      "wikiDescription": "NetHack Wiki identifies the warrior as a Valkyrie quest guardian and a female human.",
+      "modelBrief": "Build a sturdy armored woman with blond hair, copper-brown breastplate, red leggings, and raised sword.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Warrior",
+          "url": "https://nethackwiki.com/wiki/Warrior"
+        }
+      ]
+    },
+    "monster:apprentice": {
+      "wikiTitle": "Apprentice",
+      "visualDescription": "A young brown-haired human wears an olive-green robe and cap, carrying a dark book or satchel at the side.",
+      "wikiDescription": "NetHack Wiki identifies the apprentice as a Wizard quest guardian who can collect magical items.",
+      "modelBrief": "Model a junior mage in simple green clothes with brown hair, belt, and carried book or pouch; keep less ornament than the Wizard.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Apprentice",
+          "url": "https://nethackwiki.com/wiki/Apprentice"
+        }
+      ]
+    },
+    "monster:invisible monster, nogender": {
+      "wikiTitle": "Invisibility",
+      "visualDescription": "The tile shows a large white question mark with a dark shadow on the blue-gray patterned ground; it gives no anatomical evidence.",
+      "wikiDescription": "NetHack Wiki explains invisibility as a property that hides a monster from observers; this atlas entry is a visibility placeholder rather than a creature species.",
+      "modelBrief": "Do not invent a fixed creature mesh from the question mark. Use it as a visibility or unknown-identity marker and choose the underlying monster's model only after its identity is known.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Invisibility",
+          "url": "https://nethackwiki.com/wiki/Invisibility"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

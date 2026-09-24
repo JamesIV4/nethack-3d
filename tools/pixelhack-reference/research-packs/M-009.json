@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:cave spider": {
+      "wikiTitle": "Cave spider",
+      "visualDescription": "A low brown spider has a rounded amber abdomen, dark head, and eight splayed angular legs.",
+      "wikiDescription": "NetHack Wiki describes the cave spider as a tiny egg-laying spider that moves across webs and can hide under items.",
+      "modelBrief": "Build a small low spider with two body segments, bent brown legs, and amber abdomen; retain its compact cave-floor profile.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cave spider",
+          "url": "https://nethackwiki.com/wiki/Cave_spider"
+        }
+      ]
+    },
+    "monster:centipede": {
+      "wikiTitle": "Centipede",
+      "visualDescription": "A long red-brown segmented arthropod curls across the tile, with many short legs, dark pincers, and an orange central band.",
+      "wikiDescription": "NetHack Wiki identifies the centipede as a tiny carnivorous multi-legged animal in the arachnid group.",
+      "modelBrief": "Model a flexible chain of reddish segments with many paired legs and a dark head; keep the curled side silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Centipede",
+          "url": "https://nethackwiki.com/wiki/Centipede"
+        }
+      ]
+    },
+    "monster:giant spider": {
+      "wikiTitle": "Giant spider",
+      "visualDescription": "A broad black-purple spider fills the tile with a heavy abdomen, large downward legs, red eyes, and pale fanglike jaws.",
+      "wikiDescription": "NetHack Wiki describes a large spider that resides on webs rather than hiding under items.",
+      "modelBrief": "Build an oversized eight-legged spider with deep plum body, heavy legs, red eyes, and long pale chelicerae.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Giant spider",
+          "url": "https://nethackwiki.com/wiki/Giant_spider"
+        }
+      ]
+    },
+    "monster:scorpion": {
+      "wikiTitle": "Scorpion",
+      "visualDescription": "A curled red-brown scorpion has broad front pincers, many legs, and a thick tail arched forward to a pointed stinger.",
+      "wikiDescription": "NetHack Wiki identifies a small carnivorous scorpion with claw attacks and a poisonous sting.",
+      "modelBrief": "Sculpt paired large claws, segmented reddish body, and a high arched tail ending in a sharp stinger.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scorpion",
+          "url": "https://nethackwiki.com/wiki/Scorpion"
+        }
+      ]
+    },
+    "monster:lurker above": {
+      "wikiTitle": "Lurker above",
+      "visualDescription": "A dark blue-gray manta-like body floats over a shadow, with wide sweeping lobes, hanging tendrils, and a red mouth beneath.",
+      "wikiDescription": "NetHack Wiki describes a flying eyeless, limbless, headless carnivore that engulfs prey from above.",
+      "modelBrief": "Build a suspended flattened mantle with broad lobes, central red underside maw, and curling tendrils; keep eyes absent.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lurker above",
+          "url": "https://nethackwiki.com/wiki/Lurker_above"
+        }
+      ]
+    },
+    "monster:trapper": {
+      "wikiTitle": "Trapper",
+      "visualDescription": "A dark red ringlike mouth with white teeth appears against gray stone, as if opening from a wall or floor surface.",
+      "wikiDescription": "NetHack Wiki describes the trapper as a nonflying engulfing predator that hides on the ground.",
+      "modelBrief": "Make a low concealed fleshy body whose visible feature is a red tooth-lined opening in the surface; allow an open ambush pose.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Trapper",
+          "url": "https://nethackwiki.com/wiki/Trapper"
+        }
+      ]
+    },
+    "monster:pony": {
+      "wikiTitle": "Pony",
+      "visualDescription": "A small russet-brown horse stands in profile with short legs, dark mane and tail, and a lighter muzzle.",
+      "wikiDescription": "NetHack Wiki identifies the pony as the smallest domestic horse stage, tameable with vegetable food.",
+      "modelBrief": "Build a compact pony with short legs, chestnut coat, dark mane, and modest tail; keep it shorter than the horse sprite.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Pony",
+          "url": "https://nethackwiki.com/wiki/Pony"
+        }
+      ]
+    },
+    "monster:white unicorn": {
+      "wikiTitle": "Unicorn",
+      "visualDescription": "A bright white horse-like creature rears slightly, with a long straight horn, gray mane and tail, and blue eye.",
+      "wikiDescription": "NetHack Wiki describes white unicorns as the lawful color form of the unicorn monster.",
+      "modelBrief": "Build a slender white horse with a single long forehead horn, lifted foreleg, gray mane, and pale tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Unicorn",
+          "url": "https://nethackwiki.com/wiki/Unicorn"
+        }
+      ]
+    },
+    "monster:gray unicorn": {
+      "wikiTitle": "Unicorn",
+      "visualDescription": "A gray-purple unicorn stands tall with one dark forehead horn, darker mane and tail, and lifted front leg.",
+      "wikiDescription": "NetHack Wiki identifies gray unicorns as the neutral color form of the unicorn.",
+      "modelBrief": "Reuse the unicorn anatomy with gray-violet coat, dark mane, and visible horn; preserve the rearing side pose.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Unicorn",
+          "url": "https://nethackwiki.com/wiki/Unicorn"
+        }
+      ]
+    },
+    "monster:black unicorn": {
+      "wikiTitle": "Unicorn",
+      "visualDescription": "A nearly black unicorn has a long dark horn, russet highlights, dark mane, and raised front leg.",
+      "wikiDescription": "NetHack Wiki identifies black unicorns as the chaotic color form of the unicorn.",
+      "modelBrief": "Use the same horse-and-horn silhouette with near-black coat and restrained reddish edge lighting; keep the horn legible.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Unicorn",
+          "url": "https://nethackwiki.com/wiki/Unicorn"
+        }
+      ]
+    },
+    "monster:horse": {
+      "wikiTitle": "Horse",
+      "visualDescription": "A full-sized chestnut horse runs in profile with dark mane, lifted legs, long muzzle, and a trailing dark tail.",
+      "wikiDescription": "NetHack Wiki describes the horse as a strong domestic herbivore that can be tamed and grow into a warhorse.",
+      "modelBrief": "Model a lean running horse with chestnut coat, dark mane and tail, and longer limbs than the pony.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Horse",
+          "url": "https://nethackwiki.com/wiki/Horse"
+        }
+      ]
+    },
+    "monster:warhorse": {
+      "wikiTitle": "Warhorse",
+      "visualDescription": "A large muscular brown horse has a high dark mane, heavy chest, powerful legs, and a dark sweeping tail.",
+      "wikiDescription": "NetHack Wiki identifies the warhorse as the strongest domestic horse stage.",
+      "modelBrief": "Build a broad-chested horse with thick neck and legs, deep brown coat, and flowing dark mane and tail; scale above the regular horse.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Warhorse",
+          "url": "https://nethackwiki.com/wiki/Warhorse"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

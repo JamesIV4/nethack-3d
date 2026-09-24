@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:spherical / amulet of life saving": {
+      "wikiTitle": "Amulet of life saving",
+      "visualDescription": "A long golden neck loop holds a spherical dark blue-gray pendant with a white crosslike sparkle.",
+      "wikiDescription": "The wiki says an amulet of life saving prevents one fatal outcome and is then consumed. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a round blue-gray pendant on a long gold cord, with a single white glint rather than a literal medical emblem. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of life saving",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_life_saving"
+        }
+      ]
+    },
+    "object:oval / amulet of strangulation": {
+      "wikiTitle": "Amulet of strangulation",
+      "visualDescription": "An oval slate pendant hangs from a broad gold loop, with a pale vertical oval highlight.",
+      "wikiDescription": "The wiki says an amulet of strangulation tightens around the wearer and can kill if not removed. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a dark oval pendant on the standard gold cord; represent strangulation through gameplay, not a visibly closed noose. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of strangulation",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_strangulation"
+        }
+      ]
+    },
+    "object:triangular / amulet of restful sleep": {
+      "wikiTitle": "Amulet of restful sleep",
+      "visualDescription": "A dark triangular pendant hangs point-down from the same long gold neck loop.",
+      "wikiDescription": "The wiki says an amulet of restful sleep periodically makes its wearer fall asleep. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a simple charcoal triangular medallion and gold cord with no sleep icon. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of restful sleep",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_restful_sleep"
+        }
+      ]
+    },
+    "object:pyramidal / amulet versus poison": {
+      "wikiTitle": "Amulet versus poison",
+      "visualDescription": "A narrow dark pyramid-like pendant points downward from a gold neck loop.",
+      "wikiDescription": "The wiki says an amulet versus poison grants poison resistance. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a pointed gray pyramidal charm on the common gold cord; keep the protection effect separate. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet versus poison",
+          "url": "https://nethackwiki.com/wiki/Amulet_versus_poison"
+        }
+      ]
+    },
+    "object:square / amulet of change": {
+      "wikiTitle": "Amulet of change",
+      "visualDescription": "A gray square pendant is turned like a diamond beneath a long gold necklace loop.",
+      "wikiDescription": "The wiki says an amulet of change changes the wearer's sex when put on. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a small four-cornered stone or metal medallion with dark edge and gold cord; keep transformation out of the mesh. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of change",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_change"
+        }
+      ]
+    },
+    "object:concave / amulet of unchanging": {
+      "wikiTitle": "Amulet of unchanging",
+      "visualDescription": "A dark round concave pendant has a recessed pale center and hangs from a gold cord.",
+      "wikiDescription": "The wiki says an amulet of unchanging prevents form changes while worn. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Create a shallow inward-bowled circular pendant with gray center and dark rim, suspended from the standard necklace. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of unchanging",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_unchanging"
+        }
+      ]
+    },
+    "object:hexagonal / amulet of reflection": {
+      "wikiTitle": "Amulet of reflection",
+      "visualDescription": "A gray six-sided pendant with pale upper facets hangs below a gold neck loop.",
+      "wikiDescription": "The wiki says an amulet of reflection turns back ray and gaze attacks. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a faceted hexagonal gray medallion with restrained pale highlights; avoid painting incoming rays on it. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of reflection",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_reflection"
+        }
+      ]
+    },
+    "object:octagonal / amulet of magical breathing": {
+      "wikiTitle": "Amulet of magical breathing",
+      "visualDescription": "A broad pale gray octagonal charm with dark lower facets hangs from a long gold necklace.",
+      "wikiDescription": "The wiki says an amulet of magical breathing lets its wearer breathe underwater and survive without air. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a chunky eight-sided stone pendant with a simple gold cord, without bubbles fixed to the asset. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of magical breathing",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_magical_breathing"
+        }
+      ]
+    },
+    "object:perforated / amulet of guarding": {
+      "wikiTitle": "Amulet of guarding",
+      "visualDescription": "A dark gray perforated charm is a small ring with a visible hole, suspended from gold cord.",
+      "wikiDescription": "The wiki says an amulet of guarding improves intrinsic protection. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Model an open-centered dark medallion with thick rim; leave armor bonuses to item data. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of guarding",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_guarding"
+        }
+      ]
+    },
+    "object:cubical / amulet of flying": {
+      "wikiTitle": "Amulet of flying",
+      "visualDescription": "A pale gray cube-shaped pendant with dark bottom facets hangs from the standard gold neck loop.",
+      "wikiDescription": "The wiki says an amulet of flying grants flight while worn. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a small faceted cubic pendant with gold cord, keeping it as a worn item rather than a floating object. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of flying",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_flying"
+        }
+      ]
+    },
+    "object:Amulet of Yendor / cheap plastic imitation of the Amulet of Yendor": {
+      "wikiTitle": "Cheap plastic imitation of the Amulet of Yendor",
+      "visualDescription": "A dull gold circular amulet carries a bright red center and hangs from a tan neck cord.",
+      "wikiDescription": "The wiki identifies this as a plastic imitation of the real Amulet of Yendor, sharing its apparent name until identified.",
+      "modelBrief": "Build a slightly dull, cheaper-looking round gold-colored frame with simple red inset; preserve its similarity to the real amulet.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cheap plastic imitation of the Amulet of Yendor",
+          "url": "https://nethackwiki.com/wiki/Cheap_plastic_imitation_of_the_Amulet_of_Yendor"
+        }
+      ]
+    },
+    "object:Amulet of Yendor / Amulet of Yendor": {
+      "wikiTitle": "Amulet of Yendor",
+      "visualDescription": "A richer round golden amulet has a deep crimson center, bright gold rim, and a long pale-gold cord.",
+      "wikiDescription": "The wiki identifies the genuine Amulet of Yendor as the unique mithril quest artifact.",
+      "modelBrief": "Make an ornate yet compact gold-toned frame with a dark ruby-red center and bright rim; it should read close to, but finer than, the imitation.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of Yendor",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_Yendor"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:water troll": {
+      "wikiTitle": "Water troll",
+      "visualDescription": "A long-armed troll has dark purple-blue skin, cyan patches, a black mane, and a maroon waist cloth.",
+      "wikiDescription": "The wiki describes a water troll as a swimming member of the regenerative troll family.",
+      "modelBrief": "Use the hunched troll frame with elongated blue-violet limbs and aquatic cyan highlights; keep claws and hair dark. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Water troll",
+          "url": "https://nethackwiki.com/wiki/Water_troll"
+        }
+      ]
+    },
+    "monster:Olog-hai": {
+      "wikiTitle": "Olog-hai",
+      "visualDescription": "An especially dark troll has slate skin, black hair, huge reaching arms, tusks, and a red loincloth.",
+      "wikiDescription": "The wiki identifies Olog-hai as the strongest trolls, retaining the family's regeneration.",
+      "modelBrief": "Give the troll family a heavier dark silhouette and longer black claws, avoiding invented armor absent from the crop. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Olog-hai",
+          "url": "https://nethackwiki.com/wiki/Olog-hai"
+        }
+      ]
+    },
+    "monster:umber hulk": {
+      "wikiTitle": "Umber hulk",
+      "visualDescription": "A broad tan-brown insectoid brute has a squat head, red eyes, oversized forearms, and heavy legs.",
+      "wikiDescription": "The wiki describes the umber hulk as a powerful rock-tunneling carnivore with claws and a confusing gaze.",
+      "modelBrief": "Build a bulky arthropod-like humanoid with heavy digging claws, red eyes, and tan plated hide. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Umber hulk",
+          "url": "https://nethackwiki.com/wiki/Umber_hulk"
+        }
+      ]
+    },
+    "monster:vampire": {
+      "wikiTitle": "Vampire",
+      "visualDescription": "A pale-faced upright vampire wears a simple brown suit or robe with white collar and dark shoes.",
+      "wikiDescription": "The wiki describes a flying, regenerating human undead that drains life by biting and can change into bat or fog forms.",
+      "modelBrief": "Model a slim pale humanoid in restrained brown clothing, with fangs subtle enough that the white collar remains visible. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Vampire",
+          "url": "https://nethackwiki.com/wiki/Vampire"
+        }
+      ]
+    },
+    "monster:vampire leader": {
+      "wikiTitle": "Vampire lord",
+      "visualDescription": "A pale vampire leader wears a deep crimson robe with high red collar and a dark red lower drape.",
+      "wikiDescription": "The linked wiki page calls this stronger vampire a vampire lord and describes its life-draining bite and shapeshifting.",
+      "modelBrief": "Use taller, more regal vampire proportions with crimson layers and a sharp high collar; retain pale face and hands. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Vampire lord",
+          "url": "https://nethackwiki.com/wiki/Vampire_lord"
+        }
+      ]
+    },
+    "monster:vampire mage": {
+      "wikiTitle": "Vampire (monster class)",
+      "visualDescription": "A pale-faced vampire mage wears a blue hooded robe, holds a green wand or staff tip, and has a long dark hem.",
+      "wikiDescription": "The wiki lists vampire mage as a deferred member of the vampire class, whose members are flying, regenerating human undead.",
+      "modelBrief": "Build a robed vampire spellcaster in indigo and blue with a small green magical focus; preserve the visible pale face. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Vampire (monster class)",
+          "url": "https://nethackwiki.com/wiki/Vampire_%28monster_class%29"
+        }
+      ]
+    },
+    "monster:Vlad the Impaler": {
+      "wikiTitle": "Vlad the Impaler",
+      "visualDescription": "Vlad has a pale face, red eyes, a dark red cape, brown-red clothes, and a visible long blade.",
+      "wikiDescription": "The wiki identifies Vlad the Impaler as a unique vampire lord and keeper of the Candelabrum of Invocation.",
+      "modelBrief": "Make a distinct regal vampire with layered red cloak, straight weapon, pale face, and a compact stern pose. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Vlad the Impaler",
+          "url": "https://nethackwiki.com/wiki/Vlad_the_Impaler"
+        }
+      ]
+    },
+    "monster:barrow wight": {
+      "wikiTitle": "Barrow wight",
+      "visualDescription": "A skeletal wight leans forward with long thin legs, bony hands, a pale skull, and ragged brown cloak.",
+      "wikiDescription": "The wiki describes a barrow wight as a weapon-bearing undead with life-draining attacks and spellcasting.",
+      "modelBrief": "Build a gaunt walking corpse with exposed skull, long hands, and torn dark-brown cloak rather than a fully floating ghost. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Barrow wight",
+          "url": "https://nethackwiki.com/wiki/Barrow_wight"
+        }
+      ]
+    },
+    "monster:wraith": {
+      "wikiTitle": "Wraith",
+      "visualDescription": "A gray ragged wraith hangs above a small shadow, with hollow hood and trailing strips of cloth.",
+      "wikiDescription": "The wiki describes the wraith as an unsolid undead that drains life by touch.",
+      "modelBrief": "Create a hovering hollow-hood form of torn gray fabric and misty lower wisps, with no solid legs. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wraith",
+          "url": "https://nethackwiki.com/wiki/Wraith"
+        }
+      ]
+    },
+    "monster:Nazgul": {
+      "wikiTitle": "Nazgul",
+      "visualDescription": "A black-hooded specter holds a tall pale sword; its face is a featureless dark void.",
+      "wikiDescription": "The wiki identifies Nazgul as wraithlike undead with life-draining weapons and sleep breath.",
+      "modelBrief": "Sculpt a floating charcoal robe around an empty hood and long upright sword, keeping the face invisible. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Nazgul",
+          "url": "https://nethackwiki.com/wiki/Nazgul"
+        }
+      ]
+    },
+    "monster:xorn": {
+      "wikiTitle": "Xorn",
+      "visualDescription": "A brown xorn has a wide toothed mouth, several branching claw arms, squat legs, and a thick trunk.",
+      "wikiDescription": "The wiki describes a wall-phasing metallivore with three claw attacks and a strong bite.",
+      "modelBrief": "Build a three-armed, broad-mouthed alien body with branching claws and stout lower limbs; use ochre-brown skin and a magenta mouth. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Xorn",
+          "url": "https://nethackwiki.com/wiki/Xorn"
+        }
+      ]
+    },
+    "monster:monkey": {
+      "wikiTitle": "Monkey",
+      "visualDescription": "A small pink-brown monkey stands on two legs with long curved tail, raised hands, and an open red mouth.",
+      "wikiDescription": "The wiki describes a small ape-like omnivore that can grab items and be tamed with bananas.",
+      "modelBrief": "Make a small lively primate with long prehensile-looking tail, pink face and belly, and narrow limbs. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Monkey",
+          "url": "https://nethackwiki.com/wiki/Monkey"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:large box": {
+      "wikiTitle": "Large box",
+      "visualDescription": "A squat reddish wooden box has a flat golden lid, dark side planks, and a small metal front lock.",
+      "wikiDescription": "The wiki identifies the large box as a lockable wooden container, smaller and simpler than a chest.",
+      "modelBrief": "Build a low rectangular wood box with bright hinged lid and centered gray lock plate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Large box",
+          "url": "https://nethackwiki.com/wiki/Large_box"
+        }
+      ]
+    },
+    "object:chest": {
+      "wikiTitle": "Chest",
+      "visualDescription": "A taller dark wood chest has a curved gold-trimmed lid, black interior seam, and orange front lock.",
+      "wikiDescription": "The wiki identifies the chest as a lockable wooden container related to the large box.",
+      "modelBrief": "Make a tall heavy chest with arched slatted lid, deep dark opening line, and conspicuous central latch.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Chest",
+          "url": "https://nethackwiki.com/wiki/Chest"
+        }
+      ]
+    },
+    "object:ice box": {
+      "wikiTitle": "Ice box",
+      "visualDescription": "A rectangular blue ice box has a bright cyan lid, pale front lip, dark hinge side, and deep blue base.",
+      "wikiDescription": "The wiki describes the ice box as a plastic container for preserving food.",
+      "modelBrief": "Build a hard-sided blue cooler with pale cyan hinged top and dark side hardware.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ice box",
+          "url": "https://nethackwiki.com/wiki/Ice_box"
+        }
+      ]
+    },
+    "object:bag / sack": {
+      "wikiTitle": "Sack",
+      "visualDescription": "A tan drawstring sack has a narrow tied mouth, rounded body, darker seams, and flat base.",
+      "wikiDescription": "The wiki identifies the sack as an ordinary cloth container appearing as a bag.",
+      "modelBrief": "Make one simple lumpy beige cloth bag with a dark tied neck; this appearance is shared by the nearby bag variants.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Sack",
+          "url": "https://nethackwiki.com/wiki/Sack"
+        }
+      ]
+    },
+    "object:bag / oilskin sack": {
+      "wikiTitle": "Oilskin sack",
+      "visualDescription": "The tile repeats the tan tied sack, with rounded body and dark brown mouth.",
+      "wikiDescription": "The wiki identifies the oilskin sack as a cloth container that protects contents from water and appears as a bag.",
+      "modelBrief": "Reuse the plain tan bag shape; any waterproof coating should be subtle and must not change the catalog appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Oilskin sack",
+          "url": "https://nethackwiki.com/wiki/Oilskin_sack"
+        }
+      ]
+    },
+    "object:bag / bag of holding": {
+      "wikiTitle": "Bag of holding",
+      "visualDescription": "The same pale tan drawstring bag sits upright with a small tied neck and broad lower body.",
+      "wikiDescription": "The wiki describes the bag of holding as a magical cloth container with unusual storage capacity.",
+      "modelBrief": "Reuse the ordinary bag appearance without depicting an oversized interior or magical glow.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Bag of holding",
+          "url": "https://nethackwiki.com/wiki/Bag_of_holding"
+        }
+      ]
+    },
+    "object:bag / bag of tricks": {
+      "wikiTitle": "Bag of tricks",
+      "visualDescription": "A tan tied cloth bag has the same simple rounded silhouette as the other bag tiles.",
+      "wikiDescription": "The wiki identifies the bag of tricks as a magical cloth bag that can produce monsters when applied.",
+      "modelBrief": "Reuse the plain sack model; keep the trick effect separate from the visible bag.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Bag of tricks",
+          "url": "https://nethackwiki.com/wiki/Bag_of_tricks"
+        }
+      ]
+    },
+    "object:key / skeleton key": {
+      "wikiTitle": "Skeleton key",
+      "visualDescription": "A gold skeleton key lies diagonally, with a round bow, narrow shaft, and two dark teeth.",
+      "wikiDescription": "The wiki describes the skeleton key as an iron unlocking tool appearing simply as a key.",
+      "modelBrief": "Model a small old-fashioned key with circular head and notched bit, using the tile's warm gold color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Skeleton key",
+          "url": "https://nethackwiki.com/wiki/Skeleton_key"
+        }
+      ]
+    },
+    "object:lock pick": {
+      "wikiTitle": "Lock pick",
+      "visualDescription": "A thin dark-gray lock pick lies diagonally and bends into a tiny hook at one end.",
+      "wikiDescription": "The wiki identifies the lock pick as an iron tool for opening locks.",
+      "modelBrief": "Make a narrow steel pick with straight grip and sharply bent working tip.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lock pick",
+          "url": "https://nethackwiki.com/wiki/Lock_pick"
+        }
+      ]
+    },
+    "object:credit card": {
+      "wikiTitle": "Credit card",
+      "visualDescription": "A small black credit card has a gold corner square and two pale rows of markings.",
+      "wikiDescription": "The wiki identifies the credit card as a plastic lock-opening tool.",
+      "modelBrief": "Build a thin black rectangle with gold chip-like patch and minimal pale printed stripes.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Credit card",
+          "url": "https://nethackwiki.com/wiki/Credit_card"
+        }
+      ]
+    },
+    "object:candle / tallow candle": {
+      "wikiTitle": "Light source",
+      "visualDescription": "An unlit white candle is a short diagonal waxy rod with pale cream edge and dark lower outline.",
+      "wikiDescription": "The wiki distinguishes tallow candle from wax candle by material, value, and shorter burning time; both are light sources.",
+      "modelBrief": "Make a small plain unlit ivory candle with no holder or flame, matching the paired candle tile.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Light source",
+          "url": "https://nethackwiki.com/wiki/Light_source"
+        }
+      ]
+    },
+    "object:candle / wax candle": {
+      "wikiTitle": "Light source",
+      "visualDescription": "The same small unlit white candle lies diagonally with cream highlight and dark edge.",
+      "wikiDescription": "The wiki distinguishes wax candle from tallow candle by material, value, and longer burning time.",
+      "modelBrief": "Reuse the plain unlit ivory candle model; material identity can differ without a visible shape change.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Light source",
+          "url": "https://nethackwiki.com/wiki/Light_source"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

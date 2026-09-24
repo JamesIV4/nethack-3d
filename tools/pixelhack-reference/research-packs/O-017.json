@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:brass / cold resistance": {
+      "wikiTitle": "Ring of cold resistance",
+      "visualDescription": "A warm orange-brass ring is a simple round band with a dark open center and no stone.",
+      "wikiDescription": "The wiki says a ring of cold resistance protects the wearer against cold damage. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Model a plain polished brass hoop with slight orange variation and no frost effect. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of cold resistance",
+          "url": "https://nethackwiki.com/wiki/Ring_of_cold_resistance"
+        }
+      ]
+    },
+    "object:copper / shock resistance": {
+      "wikiTitle": "Ring of shock resistance",
+      "visualDescription": "A copper-orange band has pale highlights on its lower rim and a wide dark center.",
+      "wikiDescription": "The wiki says a ring of shock resistance protects against electric damage. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a small warm copper hoop with subtle wear and no drawn lightning. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of shock resistance",
+          "url": "https://nethackwiki.com/wiki/Ring_of_shock_resistance"
+        }
+      ]
+    },
+    "object:twisted / free action": {
+      "wikiTitle": "Ring of free action",
+      "visualDescription": "A muted gold ring is visibly twisted into an uneven spiral-like band.",
+      "wikiDescription": "The wiki says a ring of free action protects against paralysis from certain attacks. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Sculpt a single intertwined gold band with a deliberate twist, leaving its protective effect invisible. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of free action",
+          "url": "https://nethackwiki.com/wiki/Ring_of_free_action"
+        }
+      ]
+    },
+    "object:steel / slow digestion": {
+      "wikiTitle": "Ring of slow digestion",
+      "visualDescription": "A plain steel-gray band has a smooth circular opening and bright rim highlight.",
+      "wikiDescription": "The wiki says a ring of slow digestion reduces the wearer's food consumption. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a thin cool-gray steel hoop with no gemstone or etched food motif. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of slow digestion",
+          "url": "https://nethackwiki.com/wiki/Ring_of_slow_digestion"
+        }
+      ]
+    },
+    "object:silver / teleportation": {
+      "wikiTitle": "Ring of teleportation",
+      "visualDescription": "A broad silver ring has pale white outer facets, gray shading, and an empty center.",
+      "wikiDescription": "The wiki says a ring of teleportation can teleport its wearer unpredictably. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a bright silver faceted hoop; teleportation belongs to gameplay, not a visible portal. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of teleportation",
+          "url": "https://nethackwiki.com/wiki/Ring_of_teleportation"
+        }
+      ]
+    },
+    "object:gold / teleport control": {
+      "wikiTitle": "Ring of teleport control",
+      "visualDescription": "A bright yellow-gold band has thick shiny rims and a dark central opening.",
+      "wikiDescription": "The wiki says a ring of teleport control lets its wearer influence teleports. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Model a polished heavy gold hoop without adding a location marker. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of teleport control",
+          "url": "https://nethackwiki.com/wiki/Ring_of_teleport_control"
+        }
+      ]
+    },
+    "object:ivory / polymorph": {
+      "wikiTitle": "Ring of polymorph",
+      "visualDescription": "A creamy ivory ring has a thick pale band with warm brown interior shadow.",
+      "wikiDescription": "The wiki says a ring of polymorph can change the wearer's form. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Carve a smooth pale ivory hoop with organic grain; do not bake any one transformed form into it. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of polymorph",
+          "url": "https://nethackwiki.com/wiki/Ring_of_polymorph"
+        }
+      ]
+    },
+    "object:emerald / polymorph control": {
+      "wikiTitle": "Ring of polymorph control",
+      "visualDescription": "A gray metal ring carries a tall narrow emerald-green stone below the opening.",
+      "wikiDescription": "The wiki says a ring of polymorph control gives the wearer control over form changes. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a dark band with a long green inset gem and keep transformation visuals separate. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of polymorph control",
+          "url": "https://nethackwiki.com/wiki/Ring_of_polymorph_control"
+        }
+      ]
+    },
+    "object:wire / invisibility": {
+      "wikiTitle": "Ring of invisibility",
+      "visualDescription": "A thin gray wire is bent into a nearly circular ring with small overlapping ends.",
+      "wikiDescription": "The wiki says a ring of invisibility renders its wearer invisible. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a delicate coiled silver-gray wire loop, still visibly present as an object. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of invisibility",
+          "url": "https://nethackwiki.com/wiki/Ring_of_invisibility"
+        }
+      ]
+    },
+    "object:engagement / see invisible": {
+      "wikiTitle": "Ring of see invisible",
+      "visualDescription": "A yellow-gold engagement ring has a small bright white stone on its lower front.",
+      "wikiDescription": "The wiki says a ring of see invisible enables the wearer to perceive invisible creatures. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a simple gold band with one small clear gem, without adding a visible eye emblem. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of see invisible",
+          "url": "https://nethackwiki.com/wiki/Ring_of_see_invisible"
+        }
+      ]
+    },
+    "object:shiny / protection from shape changers": {
+      "wikiTitle": "Ring of protection from shape changers",
+      "visualDescription": "A shiny pale silver ring has strong white square reflections around a dark open center.",
+      "wikiDescription": "The wiki says a ring of protection from shape changers prevents nearby shapeshifters from changing form. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Use a smooth silver hoop with exaggerated white specular glints, reserving its effect for game logic. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of protection from shape changers",
+          "url": "https://nethackwiki.com/wiki/Ring_of_protection_from_shape_changers"
+        }
+      ]
+    },
+    "object:circular / amulet of ESP": {
+      "wikiTitle": "Amulet of ESP",
+      "visualDescription": "A long gold neck loop suspends a dark circular medallion with a blue-gray center.",
+      "wikiDescription": "The wiki says an amulet of ESP grants telepathic awareness of nearby minds. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a round slate pendant on a golden cord or chain; keep ESP as a separate item property. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amulet of ESP",
+          "url": "https://nethackwiki.com/wiki/Amulet_of_ESP"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

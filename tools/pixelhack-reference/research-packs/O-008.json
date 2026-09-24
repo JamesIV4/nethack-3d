@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:runed bow / elven bow": {
+      "wikiTitle": "Elven bow",
+      "visualDescription": "PixelHack shows a dark ochre-brown recurved bow standing upright against a pale string. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the elven bow as a wooden elven launcher for arrows. This tile shows the runed bow appearance associated with that item.",
+      "modelBrief": "Build a slim refined recurved bow with a taut string and subdued carved detail. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: elven bow",
+          "url": "https://nethackwiki.com/wiki/elven_bow"
+        }
+      ]
+    },
+    "object:crude bow / orcish bow": {
+      "wikiTitle": "Orcish bow",
+      "visualDescription": "PixelHack shows a dark gray angular bow with brown-red grip and pale straight string. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the orcish bow as an orcish bow for arrows. This tile shows the crude bow appearance associated with that item.",
+      "modelBrief": "Build a crude dark bow with uneven limbs, reddish center wrapping, and pale string. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: orcish bow",
+          "url": "https://nethackwiki.com/wiki/orcish_bow"
+        }
+      ]
+    },
+    "object:long bow / yumi": {
+      "wikiTitle": "Yumi",
+      "visualDescription": "PixelHack shows a long slanted tan-brown bow with pronounced curve and pale string. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the yumi as a long bow made for ya arrows. This tile shows the long bow appearance associated with that item.",
+      "modelBrief": "Build an asymmetrical long yumi with a tall curved wood stave and taut light string. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: yumi",
+          "url": "https://nethackwiki.com/wiki/yumi"
+        }
+      ]
+    },
+    "object:sling": {
+      "wikiTitle": "Sling",
+      "visualDescription": "PixelHack shows a loop of tan strap around a dark brown leather pouch. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the sling as a leather launcher for stones.",
+      "modelBrief": "Build a flexible sling with two straps and a small dark central pouch. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: sling",
+          "url": "https://nethackwiki.com/wiki/sling"
+        }
+      ]
+    },
+    "object:crossbow": {
+      "wikiTitle": "Crossbow",
+      "visualDescription": "PixelHack shows a wood-brown stock crossed by dark metal bow limbs and a pale upper bowstring. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the crossbow as a launcher for crossbow bolts.",
+      "modelBrief": "Build a compact crossbow with wood stock, transverse dark bow arms, central lock, and taut line. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: crossbow",
+          "url": "https://nethackwiki.com/wiki/crossbow"
+        }
+      ]
+    },
+    "object:leather hat / elven leather helm": {
+      "wikiTitle": "Elven leather helm",
+      "visualDescription": "PixelHack shows a soft reddish-brown pointed leather cap with folded sides and dark base. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the elven leather helm as a leather elven helm seen as a leather hat. Helm appearance names may shuffle between games, so this model follows the pictured hat rather than implying a fixed magical identity.",
+      "modelBrief": "Build a low folded leather cap with pointed crown and warm brown panels. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: elven leather helm",
+          "url": "https://nethackwiki.com/wiki/elven_leather_helm"
+        }
+      ]
+    },
+    "object:iron skull cap / orcish helm": {
+      "wikiTitle": "Orcish helm",
+      "visualDescription": "PixelHack shows a squat dark iron-gray skull cap with a bright circular crown highlight. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the orcish helm as an iron orcish helm seen as an iron skull cap. Helm appearance names may shuffle between games, so this model follows the pictured hat rather than implying a fixed magical identity.",
+      "modelBrief": "Build a close-fitting metal skull cap with blunt rim and mottled gray crown. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: orcish helm",
+          "url": "https://nethackwiki.com/wiki/orcish_helm"
+        }
+      ]
+    },
+    "object:hard hat / dwarvish iron helm": {
+      "wikiTitle": "Dwarvish iron helm",
+      "visualDescription": "PixelHack shows a bulky olive-brown hard hat with a pale hammered crown and dark lower rim. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the dwarvish iron helm as an iron dwarvish helm seen as a hard hat. Helm appearance names may shuffle between games, so this model follows the pictured hat rather than implying a fixed magical identity.",
+      "modelBrief": "Build a stout rounded helm with reinforced lower rim and pale hammered metal crown. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: dwarvish iron helm",
+          "url": "https://nethackwiki.com/wiki/dwarvish_iron_helm"
+        }
+      ]
+    },
+    "object:fedora": {
+      "wikiTitle": "Fedora",
+      "visualDescription": "PixelHack shows a brown fedora with indented crown and broad uneven brim. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the fedora as a cloth helm. The soft crown and wide brim in this tile are its visible form; they do not imply a magical property.",
+      "modelBrief": "Build a soft low-crowned brown hat with a wide brim and visibly pinched crown. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: fedora",
+          "url": "https://nethackwiki.com/wiki/fedora"
+        }
+      ]
+    },
+    "object:conical hat / cornuthaum": {
+      "wikiTitle": "Cornuthaum",
+      "visualDescription": "PixelHack shows a bright blue pointed cone hat with broad upturned brim and dark red band. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the cornuthaum as a cloth magical cornuthaum that can appear as a conical hat. Helm appearance names may shuffle between games, so this model follows the pictured hat rather than implying a fixed magical identity.",
+      "modelBrief": "Build a tall flexible blue cone with a wide blue brim and dark reddish hatband. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: cornuthaum",
+          "url": "https://nethackwiki.com/wiki/cornuthaum"
+        }
+      ]
+    },
+    "object:conical hat / dunce cap": {
+      "wikiTitle": "Dunce cap",
+      "visualDescription": "PixelHack shows the same bright blue pointed cone, broad brim, and dark red band as tile 882. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the dunce cap as a cloth dunce cap that can appear as a conical hat. Helm appearance names may shuffle between games, so this model follows the pictured hat rather than implying a fixed magical identity.",
+      "modelBrief": "Build reuse the tile 882 conical-hat mesh and materials because both PixelHack crops are identical. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: dunce cap",
+          "url": "https://nethackwiki.com/wiki/dunce_cap"
+        }
+      ]
+    },
+    "object:dented pot": {
+      "wikiTitle": "Dented pot",
+      "visualDescription": "PixelHack shows a squat dented brownish metal pot with a flat dark mouth and pale scuffs. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the dented pot as a makeshift helm. Its battered shape here comes from the PixelHack tile rather than a special magical identity.",
+      "modelBrief": "Build an inverted battered metal cooking pot with irregular dents and a dark open underside. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: dented pot",
+          "url": "https://nethackwiki.com/wiki/dented_pot"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "882": {
+      "variantNote": "The conical-hat image is pixel-identical to tile 883; its cornuthaum association is an identification, not a separate visible mesh."
+    },
+    "883": {
+      "variantNote": "The conical-hat image is pixel-identical to tile 882; use the same visible model for both appearance slots."
+    }
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:white-handed shield / Uruk-hai shield": {
+      "wikiTitle": "Uruk-hai shield",
+      "visualDescription": "A dark iron shield has a broad flat top, tapered point, and a large pale white hand motif.",
+      "wikiDescription": "The wiki says the Uruk-hai shield is iron armor appearing as a white-handed shield.",
+      "modelBrief": "Model a black-brown pointed shield with a centered pale handprint, using the mark as the main identifying detail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Uruk-hai shield",
+          "url": "https://nethackwiki.com/wiki/Uruk-hai_shield"
+        }
+      ]
+    },
+    "object:red-eyed shield / orcish shield": {
+      "wikiTitle": "Orcish shield",
+      "visualDescription": "A dark iron shield has a tapered outline and a bright red eye emblem in its center.",
+      "wikiDescription": "The wiki says the orcish shield appears as a red-eyed iron shield when unidentified.",
+      "modelBrief": "Build a simple pointed dark shield with one red eye symbol; keep the emblem flat and readable.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orcish shield",
+          "url": "https://nethackwiki.com/wiki/Orcish_shield"
+        }
+      ]
+    },
+    "object:large shield": {
+      "wikiTitle": "Large shield",
+      "visualDescription": "A tall iron shield has a rounded top, pointed bottom, dark rim, and broad red center panel.",
+      "wikiDescription": "The wiki identifies the large shield as heavy iron shield armor.",
+      "modelBrief": "Make a broad body-height shield with iron border and vertical crimson inset, heavier than the small shields.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Large shield",
+          "url": "https://nethackwiki.com/wiki/Large_shield"
+        }
+      ]
+    },
+    "object:large round shield / dwarvish roundshield": {
+      "wikiTitle": "Dwarvish roundshield",
+      "visualDescription": "A circular olive-gray shield has a thick outer ring and a small pale central boss.",
+      "wikiDescription": "The wiki identifies the dwarvish roundshield as an iron shield appearing as a large round shield.",
+      "modelBrief": "Model a sturdy round shield with raised rim, muted metal face, and centered boss.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dwarvish roundshield",
+          "url": "https://nethackwiki.com/wiki/Dwarvish_roundshield"
+        }
+      ]
+    },
+    "object:polished silver shield / shield of reflection": {
+      "wikiTitle": "Shield of reflection",
+      "visualDescription": "A pale silver pointed shield has a thick reflective outer border and narrow dark central inset.",
+      "wikiDescription": "The wiki identifies the shield of reflection as a silver magical shield with a polished silver appearance.",
+      "modelBrief": "Make a highly polished silver shield with clean bright edge and dark recessed center, avoiding painted magic symbols.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Shield of reflection",
+          "url": "https://nethackwiki.com/wiki/Shield_of_reflection"
+        }
+      ]
+    },
+    "object:old gloves / leather gloves": {
+      "wikiTitle": "Leather gloves",
+      "visualDescription": "A pair of brown leather gloves lies diagonally, one overlapping the other, with visible finger ridges.",
+      "wikiDescription": "The wiki identifies leather gloves as leather hand armor whose unidentified appearance can vary. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Build a soft brown glove pair with stitched fingers and cuffs, matching the worn old-glove look. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Leather gloves",
+          "url": "https://nethackwiki.com/wiki/Leather_gloves"
+        }
+      ]
+    },
+    "object:padded gloves / gauntlets of fumbling": {
+      "wikiTitle": "Gauntlets of fumbling",
+      "visualDescription": "A bulky dark blue-gray gauntlet has padded back panels, finger seams, and heavy cuff.",
+      "wikiDescription": "The wiki describes gauntlets of fumbling as magical leather gloves with a padded-glove default appearance. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Model a thick padded glove with dark blue-gray quilting and large cuff; represent fumbling through gameplay, not the mesh. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gauntlets of fumbling",
+          "url": "https://nethackwiki.com/wiki/Gauntlets_of_fumbling"
+        }
+      ]
+    },
+    "object:riding gloves / gauntlets of power": {
+      "wikiTitle": "Gauntlets of power",
+      "visualDescription": "A pair of pale gray riding gauntlets has long cuffs, separate fingers, and dark outlines.",
+      "wikiDescription": "The wiki identifies gauntlets of power as iron gloves whose default unidentified appearance is riding gloves. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Build long-cuffed gray riding gloves with articulated fingers and pale front panels. Match the visible appearance; choose actual material from the identified item at runtime.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gauntlets of power",
+          "url": "https://nethackwiki.com/wiki/Gauntlets_of_power"
+        }
+      ]
+    },
+    "object:fencing gloves / gauntlets of dexterity": {
+      "wikiTitle": "Gauntlets of dexterity",
+      "visualDescription": "A slender brown fencing glove lies diagonally with long narrow fingers and a soft cuff.",
+      "wikiDescription": "The wiki identifies gauntlets of dexterity as magical leather gloves defaulting to fencing gloves. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Model a fitted brown glove with extended cuff and narrow fingers; keep dexterity as metadata. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gauntlets of dexterity",
+          "url": "https://nethackwiki.com/wiki/Gauntlets_of_dexterity"
+        }
+      ]
+    },
+    "object:walking shoes / low boots": {
+      "wikiTitle": "Low boots",
+      "visualDescription": "Two low brown walking shoes have short ankles, rounded toes, and darker soles.",
+      "wikiDescription": "The wiki identifies low boots as leather footwear appearing as walking shoes.",
+      "modelBrief": "Build a matched pair of ankle-high brown shoes with plain uppers and broad dark soles.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Low boots",
+          "url": "https://nethackwiki.com/wiki/Low_boots"
+        }
+      ]
+    },
+    "object:hard shoes / iron shoes": {
+      "wikiTitle": "Iron shoes",
+      "visualDescription": "Two tall pale gray iron shoes have stiff upright shafts, hard toe caps, and dark interior openings.",
+      "wikiDescription": "The wiki identifies iron shoes as metal footwear that appears as hard shoes.",
+      "modelBrief": "Model a matched pair of rigid gray iron boots with squared shafts and heavy metal toes.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Iron shoes",
+          "url": "https://nethackwiki.com/wiki/Iron_shoes"
+        }
+      ]
+    },
+    "object:jackboots / high boots": {
+      "wikiTitle": "High boots",
+      "visualDescription": "A pair of high reddish-brown jackboots has tall shafts, black open tops, and lighter toe caps.",
+      "wikiDescription": "The wiki identifies high boots as leather footwear appearing as jackboots.",
+      "modelBrief": "Build knee-high dark brown boots with wide cuffs and rounded russet toe highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: High boots",
+          "url": "https://nethackwiki.com/wiki/High_boots"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

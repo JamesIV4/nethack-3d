@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:titan": {
+      "wikiTitle": "Titan",
+      "visualDescription": "A very large gold-brown humanoid has a broad chest, heavy arms, dark legs, and pale trim at one shoulder.",
+      "wikiDescription": "The wiki describes a titan as a strong giant-sized humanoid that flies and can use weapons, armor, and magic.",
+      "modelBrief": "Build a towering broad-shouldered humanoid with bronze skin and a little pale shoulder detail; convey its supernatural status without replacing the tile's bodily form. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Titan",
+          "url": "https://nethackwiki.com/wiki/Titan"
+        }
+      ]
+    },
+    "monster:minotaur": {
+      "wikiTitle": "Minotaur",
+      "visualDescription": "A horned bull head sits on a muscular red-brown humanoid body with broad arms and dark legs.",
+      "wikiDescription": "The wiki identifies the minotaur as a powerful horned humanoid animal with claw and butt attacks.",
+      "modelBrief": "Model a bull muzzle, two tall horns, and muscular humanlike torso, keeping the compact brown-red silhouette. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Minotaur",
+          "url": "https://nethackwiki.com/wiki/Minotaur"
+        }
+      ]
+    },
+    "monster:jabberwock": {
+      "wikiTitle": "Jabberwock",
+      "visualDescription": "A lanky dragonlike creature has a long curling neck, small toothy head, orange wings, and a coiled tail.",
+      "wikiDescription": "The wiki describes a flying jabberwock with biting jaws and catching claws, vulnerable to Vorpal Blade.",
+      "modelBrief": "Build an elongated serpentine body with two wings and prominent jaws, using brown, orange, and dark red from the crop. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Jabberwock",
+          "url": "https://nethackwiki.com/wiki/Jabberwock"
+        }
+      ]
+    },
+    "monster:vorpal jabberwock": {
+      "wikiTitle": "Vorpal jabberwock (monster)",
+      "visualDescription": "A similarly lanky dragonlike creature has teal-green body parts, lime wings, curled neck, and visible jaws.",
+      "wikiDescription": "The wiki lists the vorpal jabberwock as a deferred monster related to the normal jabberwock, with stronger bites and claws.",
+      "modelBrief": "Reuse the jabberwock anatomy with teal body and bright lime wing membranes; keep this a distinct color variant, even though the monster is deferred. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Vorpal jabberwock (monster)",
+          "url": "https://nethackwiki.com/wiki/Vorpal_jabberwock_%28monster%29"
+        }
+      ]
+    },
+    "monster:Keystone Kop": {
+      "wikiTitle": "Keystone Kop",
+      "visualDescription": "A slim uniformed officer wears a tall white-topped helmet, dark blue tunic, tan belt, and boots; one arm is raised.",
+      "wikiDescription": "The wiki identifies the Keystone Kop as the basic member of the police-themed Kop class with a weapon attack.",
+      "modelBrief": "Make a small upright comic officer with blue uniform, white helmet panel, belt, and simple baton-ready hands. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Keystone Kop",
+          "url": "https://nethackwiki.com/wiki/Keystone_Kop"
+        }
+      ]
+    },
+    "monster:Kop Sergeant": {
+      "wikiTitle": "Kop Sergeant",
+      "visualDescription": "A stockier officer wears a tall white-topped helmet, blue uniform, dark cape or coat, and broad belt.",
+      "wikiDescription": "The wiki describes the Kop Sergeant as a more capable rank of Keystone Kop with a weapon attack.",
+      "modelBrief": "Keep the police-uniform family but broaden the torso and add darker shoulder clothing and a stronger stance. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kop Sergeant",
+          "url": "https://nethackwiki.com/wiki/Kop_Sergeant"
+        }
+      ]
+    },
+    "monster:Kop Lieutenant": {
+      "wikiTitle": "Kop Lieutenant",
+      "visualDescription": "A blue-coated officer has a tall pale helmet, dark shoulder cape, and a broad tan belt.",
+      "wikiDescription": "The wiki identifies the Kop Lieutenant as an upper rank in the Keystone Kop class.",
+      "modelBrief": "Use the same helmet and blue coat language, with higher-rank bulk and dark shoulder panels that match the tile. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kop Lieutenant",
+          "url": "https://nethackwiki.com/wiki/Kop_Lieutenant"
+        }
+      ]
+    },
+    "monster:Kop Kaptain": {
+      "wikiTitle": "Kop Kaptain",
+      "visualDescription": "The broadest Kop wears a white-topped helmet, blue chest panel, dark outer coat, and gold epaulet-like squares.",
+      "wikiDescription": "The wiki places the Kop Kaptain at the top of the Keystone Kop class.",
+      "modelBrief": "Model a commanding broad officer with a tall hat, gold shoulder accents, blue front panel, and dark coat. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kop Kaptain",
+          "url": "https://nethackwiki.com/wiki/Kop_Kaptain"
+        }
+      ]
+    },
+    "monster:lich": {
+      "wikiTitle": "Lich",
+      "visualDescription": "A skull-faced figure in a plain dark brown hooded robe has pale hands and a narrow hanging hem.",
+      "wikiDescription": "The wiki describes a lich as an undead spellcaster with cold touch and magical attacks.",
+      "modelBrief": "Build a skeletal face and hands within a simple brown hooded robe; keep the body mostly concealed. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lich",
+          "url": "https://nethackwiki.com/wiki/Lich"
+        }
+      ]
+    },
+    "monster:demilich": {
+      "wikiTitle": "Demilich",
+      "visualDescription": "A pale skull and hands emerge from a deep navy hooded robe with a broad lower drape.",
+      "wikiDescription": "The wiki identifies the demilich as a stronger lich with cold touch and more dangerous spellcasting.",
+      "modelBrief": "Reuse skeletal proportions under a dark blue robe, making the pale skull stand out against the broad hood. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Demilich",
+          "url": "https://nethackwiki.com/wiki/Demilich"
+        }
+      ]
+    },
+    "monster:master lich": {
+      "wikiTitle": "Master lich",
+      "visualDescription": "A skull-faced lich wears an olive-brown wide robe with a red collar and pale hanging hands.",
+      "wikiDescription": "The wiki describes the master lich as a powerful undead caster that seeks important magical artifacts.",
+      "modelBrief": "Give this rank a heavier robe, red collar, and exposed skull, while preserving the squat triangular cloth silhouette. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Master lich",
+          "url": "https://nethackwiki.com/wiki/Master_lich"
+        }
+      ]
+    },
+    "monster:arch-lich": {
+      "wikiTitle": "Arch-lich",
+      "visualDescription": "A crowned skull wears a broad red-purple robe and holds a green-tipped staff.",
+      "wikiDescription": "The wiki identifies the arch-lich as the most powerful lich, with potent magic and artifact-seeking behavior.",
+      "modelBrief": "Build a skeletal royal caster with gold crown, oversized red and purple robes, and slim staff with green head. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Arch-lich",
+          "url": "https://nethackwiki.com/wiki/Arch-lich"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

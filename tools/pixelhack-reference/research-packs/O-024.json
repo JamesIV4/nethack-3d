@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:glob of black pudding": {
+      "wikiTitle": "Glob",
+      "visualDescription": "PixelHack shows a nearly black low glob with slate-gray glints and a broad dark base. The patterned teal floor is background.",
+      "wikiDescription": "The black-pudding glob is a fleshy edible drop from black pudding.",
+      "modelBrief": "Build an irregular low black pudding mass with subtle cool gray reflective patches. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Glob",
+          "url": "https://nethackwiki.com/wiki/Glob"
+        }
+      ]
+    },
+    "object:kelp frond": {
+      "wikiTitle": "Kelp frond",
+      "visualDescription": "PixelHack shows a dark olive-brown branching kelp stem with several flat curling ochre blades and pale tan highlights. The broad blue-violet field with cyan flecks is water behind the kelp, not part of the plant.",
+      "wikiDescription": "A kelp frond is a vegan plant food in NetHack. The wiki identity supports seaweed, while this tile supplies its exaggerated violet color.",
+      "modelBrief": "Build one branching underwater frond: a narrow dark olive stipe with several curling flat brown-ochre ribbons and a few pale highlights. Keep the blue-violet water field out of the mesh; compare the kelp silhouette against both neutral and original backgrounds.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: kelp frond",
+          "url": "https://nethackwiki.com/wiki/kelp_frond"
+        }
+      ]
+    },
+    "object:eucalyptus leaf": {
+      "wikiTitle": "Eucalyptus leaf",
+      "visualDescription": "PixelHack shows one pointed dark green leaf with a yellow-brown center and short stem. The patterned teal floor is background.",
+      "wikiDescription": "An eucalyptus leaf is a plant-based edible item. Its exact leaf pattern is set by PixelHack.",
+      "modelBrief": "Build a narrow pointed green leaf with clear central vein, slightly curled tip, and short stem. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: eucalyptus leaf",
+          "url": "https://nethackwiki.com/wiki/eucalyptus_leaf"
+        }
+      ]
+    },
+    "object:apple": {
+      "wikiTitle": "Apple",
+      "visualDescription": "PixelHack shows a round red apple with pale peach highlight, dark upper notch, and short brown stem. The patterned teal floor is background.",
+      "wikiDescription": "An apple is an edible fruit in NetHack. The familiar apple form matches the sprite.",
+      "modelBrief": "Build a compact red apple with notched top, stubby brown stem, and one pale highlight. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: apple",
+          "url": "https://nethackwiki.com/wiki/apple"
+        }
+      ]
+    },
+    "object:orange": {
+      "wikiTitle": "Orange",
+      "visualDescription": "PixelHack shows a round orange fruit with mottled warm-yellow center and dark bottom shadow. The patterned teal floor is background.",
+      "wikiDescription": "An orange is a fruit comestible in NetHack. The sprite shows one whole fruit.",
+      "modelBrief": "Build a single near-spherical orange with orange peel, small mottled yellow highlight, and dark base. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: orange",
+          "url": "https://nethackwiki.com/wiki/orange"
+        }
+      ]
+    },
+    "object:pear": {
+      "wikiTitle": "Pear",
+      "visualDescription": "PixelHack shows an upright golden pear tapering to a narrow neck, with a dark brown stem. The patterned teal floor is background.",
+      "wikiDescription": "A pear is a fruit comestible in NetHack. The wiki does not specify a variety or color.",
+      "modelBrief": "Build a plump gold pear with narrow neck, brown stem, and pale front glint. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: pear",
+          "url": "https://nethackwiki.com/wiki/pear"
+        }
+      ]
+    },
+    "object:melon": {
+      "wikiTitle": "Melon",
+      "visualDescription": "PixelHack shows a large mottled olive-brown melon with small green patches and a short stem. The patterned teal floor is background.",
+      "wikiDescription": "A melon is an edible fruit in NetHack. The rough mottled surface is specific to this tile.",
+      "modelBrief": "Build a bulky round melon with irregular olive rind, subtle green mottling, and short stem. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: melon",
+          "url": "https://nethackwiki.com/wiki/melon"
+        }
+      ]
+    },
+    "object:banana": {
+      "wikiTitle": "Banana",
+      "visualDescription": "PixelHack shows a curved golden banana with dark brown ends and pale inner edge. The patterned teal floor is background.",
+      "wikiDescription": "A banana is a fruit comestible in NetHack. The tile depicts a whole unpeeled banana.",
+      "modelBrief": "Build one curved golden banana with tapered dark ends and broad pale inner highlight. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: banana",
+          "url": "https://nethackwiki.com/wiki/banana"
+        }
+      ]
+    },
+    "object:carrot": {
+      "wikiTitle": "Carrot",
+      "visualDescription": "PixelHack shows an orange tapered carrot slanting down right beneath two short green leaves. The patterned teal floor is background.",
+      "wikiDescription": "A carrot is a plant food in NetHack. The tapered orange root and leafy crown are visible tile details.",
+      "modelBrief": "Build a single tapered orange carrot root with a small dark green leafy top. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: carrot",
+          "url": "https://nethackwiki.com/wiki/carrot"
+        }
+      ]
+    },
+    "object:sprig of wolfsbane": {
+      "wikiTitle": "Sprig of wolfsbane",
+      "visualDescription": "PixelHack shows a cluster of dark green leaves and stems topped by several violet-blue flowers. The patterned teal floor is background.",
+      "wikiDescription": "A sprig of wolfsbane is a plant comestible in NetHack. The wiki name supports a flowering sprig, not a fixed flower hue.",
+      "modelBrief": "Build a small upright herb sprig with branching dark green leaves and a few blue-violet blooms. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: sprig of wolfsbane",
+          "url": "https://nethackwiki.com/wiki/sprig_of_wolfsbane"
+        }
+      ]
+    },
+    "object:clove of garlic": {
+      "wikiTitle": "Clove of garlic",
+      "visualDescription": "PixelHack shows a small off-white garlic clove with purple upper skin and brown lower shading. The patterned teal floor is background.",
+      "wikiDescription": "A clove of garlic is a plant comestible in NetHack. The sprite shows one clove rather than a full bulb.",
+      "modelBrief": "Build a single curved ivory garlic clove with purple-tinted skin near its pointed end. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: clove of garlic",
+          "url": "https://nethackwiki.com/wiki/clove_of_garlic"
+        }
+      ]
+    },
+    "object:slime mold": {
+      "wikiTitle": "Slime mold",
+      "visualDescription": "PixelHack shows a golden-brown cluster of many knobby lobes on a dark branched base. The patterned teal floor is background.",
+      "wikiDescription": "Slime mold is NetHack's default name for a customizable fruit. The tile supplies a knobby cluster even though the in-game name can change.",
+      "modelBrief": "Build an irregular golden-brown lobed cluster on a short dark base; preserve the tile rather than treating the configurable name as anatomy. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: slime mold",
+          "url": "https://nethackwiki.com/wiki/slime_mold"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

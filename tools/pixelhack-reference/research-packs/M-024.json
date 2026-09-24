@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:prisoner": {
+      "wikiTitle": "Prisoner",
+      "visualDescription": "A thin human in torn pale clothing stands barefoot with bare arms and legs, a warm orange head, and a dark waist band.",
+      "wikiDescription": "NetHack Wiki identifies the prisoner as a strong human monster that can seek weapons and other items.",
+      "modelBrief": "Build a gaunt captive with ragged light tunic, exposed limbs, dark belt, and unarmed slumped stance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Prisoner",
+          "url": "https://nethackwiki.com/wiki/Prisoner"
+        }
+      ]
+    },
+    "monster:Oracle": {
+      "wikiTitle": "Oracle (monster)",
+      "visualDescription": "A hooded figure sits or stands behind a brown lectern or bowl, with a deep black face opening and bright magenta head covering.",
+      "wikiDescription": "NetHack Wiki identifies the Oracle as the unique human who provides oracular consultations on the Oracle level.",
+      "modelBrief": "Model a robed seated oracle with purple hood, shadowed face, and a broad brown consultation stand; preserve the small orange flames at the sides as optional scene details.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Oracle (monster)",
+          "url": "https://nethackwiki.com/wiki/Oracle_(monster)"
+        }
+      ]
+    },
+    "monster:aligned cleric": {
+      "wikiTitle": "Aligned cleric",
+      "visualDescription": "A red-robed temple cleric bears a large round crimson shield and a tall pale hooked staff, with a dark head covering.",
+      "wikiDescription": "NetHack Wiki describes aligned clerics as human servants of the gods who tend dungeon temples.",
+      "modelBrief": "Build a human cleric in layered red vestments with round shield and crooked ivory staff; keep the religious silhouette distinct from army soldiers.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Aligned cleric",
+          "url": "https://nethackwiki.com/wiki/Aligned_cleric"
+        }
+      ]
+    },
+    "monster:high cleric": {
+      "wikiTitle": "High cleric",
+      "visualDescription": "A tall figure in purple and gold priestly robes holds a long curled staff; a violet mitre or hood frames the face.",
+      "wikiDescription": "NetHack Wiki identifies high clerics as senior human minions of a deity, called high priests or priestesses by gender.",
+      "modelBrief": "Model a ceremonial cleric with purple-and-gold robe panels, tall headdress, and ornate staff; increase stature and ornament over the aligned cleric.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: High cleric",
+          "url": "https://nethackwiki.com/wiki/High_cleric"
+        }
+      ]
+    },
+    "monster:soldier": {
+      "wikiTitle": "Soldier",
+      "visualDescription": "A helmeted human in bright green tunic stands squarely, holding a long spear and wearing brown boots.",
+      "wikiDescription": "NetHack Wiki describes the soldier as the lowest rank in the Yendorian army of human mercenaries.",
+      "modelBrief": "Build a simple green-uniformed infantryman with metal helmet, spear, belt, and brown boots; preserve the straight upright pose.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Soldier",
+          "url": "https://nethackwiki.com/wiki/Soldier"
+        }
+      ]
+    },
+    "monster:sergeant": {
+      "wikiTitle": "Sergeant (monster)",
+      "visualDescription": "A green-uniformed helmeted officer carries a tall pole weapon and a round blue-gray shield.",
+      "wikiDescription": "NetHack Wiki identifies the sergeant as a human Yendorian army fighter ranked above the soldier.",
+      "modelBrief": "Upgrade the soldier with a round metal shield, heavier helmet, and longer polearm; keep the green uniform.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Sergeant (monster)",
+          "url": "https://nethackwiki.com/wiki/Sergeant_(monster)"
+        }
+      ]
+    },
+    "monster:nurse": {
+      "wikiTitle": "Nurse",
+      "visualDescription": "A human in a white cap and long pale robe shows red markings across the chest and arms, with hands held outward.",
+      "wikiDescription": "NetHack Wiki describes the nurse as a human monster whose special touch can heal under certain conditions.",
+      "modelBrief": "Build a white-clad healer with cap, long skirt, and red trim or staining as shown by the tile; make the open-handed pose readable.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Nurse",
+          "url": "https://nethackwiki.com/wiki/Nurse"
+        }
+      ]
+    },
+    "monster:lieutenant": {
+      "wikiTitle": "Lieutenant",
+      "visualDescription": "A helmeted human officer wears gray upper armor and olive lower clothing, with a broad red shield and raised sword.",
+      "wikiDescription": "NetHack Wiki places lieutenants near the top of the Yendorian army, below captains, with two weapon attacks.",
+      "modelBrief": "Model an armored officer with steel helmet, red kite shield, sword, and olive uniform; distinguish rank through more armor.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lieutenant",
+          "url": "https://nethackwiki.com/wiki/Lieutenant"
+        }
+      ]
+    },
+    "monster:captain": {
+      "wikiTitle": "Captain",
+      "visualDescription": "A heavily armored human officer has a tall helmet, pale breastplate, crimson shield and cloak, and upright sword.",
+      "wikiDescription": "NetHack Wiki identifies the captain as the highest Yendorian army rank.",
+      "modelBrief": "Build a commanding soldier with bright armor, large red shield, sword, and red cape; keep the formal frontal pose.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Captain",
+          "url": "https://nethackwiki.com/wiki/Captain"
+        }
+      ]
+    },
+    "monster:watchman": {
+      "wikiTitle": "Watchman",
+      "visualDescription": "A town guard wears a gray helmet and ochre uniform, with a long dark spear and round gray shield.",
+      "wikiDescription": "NetHack Wiki describes watchmen and watch captains as the peacekeeping Minetown watch.",
+      "modelBrief": "Model a practical town guard with muted yellow-brown clothes, helmet, spear, and round shield; keep it distinct from green army soldiers.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Watchman",
+          "url": "https://nethackwiki.com/wiki/Watchman"
+        }
+      ]
+    },
+    "monster:watch captain": {
+      "wikiTitle": "Watchman",
+      "visualDescription": "A sturdier town guard wears a steel helmet and brown-gold coat, carrying a long pole weapon across the body.",
+      "wikiDescription": "NetHack Wiki groups the watch captain with Minetown watchmen as a higher-ranking peacekeeper.",
+      "modelBrief": "Build a broader, better-equipped watch guard with brown-gold coat, dark shoulder armor, helmet, and long weapon.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Watchman",
+          "url": "https://nethackwiki.com/wiki/Watchman"
+        }
+      ]
+    },
+    "monster:Medusa": {
+      "wikiTitle": "Medusa",
+      "visualDescription": "A green-skinned woman has living brown snake hair, red eyes, a gray draped skirt, and a long curved blade.",
+      "wikiDescription": "NetHack Wiki identifies Medusa as a unique humanoid with a petrifying gaze and snake-haired mythic identity.",
+      "modelBrief": "Sculpt a tall green woman with individual snake locks, red eyes, gray drapery, and raised curved sword; keep her stoning gaze visually central.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Medusa",
+          "url": "https://nethackwiki.com/wiki/Medusa"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:gray / detect treasure": {
+      "wikiTitle": "Spellbook of detect treasure",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a flat muted gray cover, cream pages, and little visible ornament. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of detect treasure as a book that teaches the detect treasure spell. Its gray binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and plain warm gray cover. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of detect treasure",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_detect_treasure"
+        }
+      ]
+    },
+    "object:wrinkled / remove curse": {
+      "wikiTitle": "Spellbook of remove curse",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a reddish-brown cover over rumpled, uneven cream page edges. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of remove curse as a book that teaches the remove curse spell. Its wrinkled binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and brown wrinkled cover and irregular page edge. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of remove curse",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_remove_curse"
+        }
+      ]
+    },
+    "object:dusty / magic mapping": {
+      "wikiTitle": "Spellbook of magic mapping",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a blue-gray book heavily speckled with tan dust marks and loose flecks. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of magic mapping as a book that teaches the magic mapping spell. Its dusty binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and dusty slate cover with tan speckles and a few detached flecks. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of magic mapping",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_magic_mapping"
+        }
+      ]
+    },
+    "object:bronze / identify": {
+      "wikiTitle": "Spellbook of identify",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a smooth warm bronze cover with a lighter broad central band. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of identify as a book that teaches the identify spell. Its bronze binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and bronze cover with a horizontal golden highlight band. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of identify",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_identify"
+        }
+      ]
+    },
+    "object:copper / turn undead": {
+      "wikiTitle": "Spellbook of turn undead",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a reddish copper cover with a broad pink-orange central band. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of turn undead as a book that teaches the turn undead spell. Its copper binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and copper cover with warm salmon middle band. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of turn undead",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_turn_undead"
+        }
+      ]
+    },
+    "object:silver / polymorph": {
+      "wikiTitle": "Spellbook of polymorph",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a pale silver-gray cover crossed by a white band and darker gray lower face. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of polymorph as a book that teaches the polymorph spell. Its silver binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and silver-gray cover with bright pale transverse band. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of polymorph",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_polymorph"
+        }
+      ]
+    },
+    "object:gold / teleport away": {
+      "wikiTitle": "Spellbook of teleport away",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a gold-orange cover with broad yellow middle band and tiny green flecks. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of teleport away as a book that teaches the teleport away spell. Its gold binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and bright gold binding with a yellow band and sparse green highlights. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of teleport away",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_teleport_away"
+        }
+      ]
+    },
+    "object:glittering / create familiar": {
+      "wikiTitle": "Spellbook of create familiar",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a silver-white cover packed with pastel cyan, peach, and yellow facets. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of create familiar as a book that teaches the create familiar spell. Its glittering binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and glittering pale binding with scattered colored faceted highlights. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of create familiar",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_create_familiar"
+        }
+      ]
+    },
+    "object:shining / cancellation": {
+      "wikiTitle": "Spellbook of cancellation",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a cool silver-gray cover with broad pale rainbow-tinted reflective bands. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of cancellation as a book that teaches the cancellation spell. Its shining binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and shining reflective gray binding with soft iridescent stripes. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of cancellation",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_cancellation"
+        }
+      ]
+    },
+    "object:dull / protection": {
+      "wikiTitle": "Spellbook of protection",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a dull tan-brown cover with a few darker ochre wear marks. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of protection as a book that teaches the protection spell. Its dull binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and matte tan binding with restrained ochre wear. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of protection",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_protection"
+        }
+      ]
+    },
+    "object:thin / jumping": {
+      "wikiTitle": "Spellbook of jumping",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a very slim dark green cover with a bright green lower edge. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of jumping as a book that teaches the jumping spell. Its thin binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and thin dark-green binding with small vivid green edge. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of jumping",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_jumping"
+        }
+      ]
+    },
+    "object:thick / stone to flesh": {
+      "wikiTitle": "Spellbook of stone to flesh",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a very thick reddish-brown book with a tall pale page block at its front. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spellbook of stone to flesh as a book that teaches the stone to flesh spell. Its thick binding is one shuffled visible appearance, so the cover does not identify the spell in play.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and thick brown binding and exaggerated cream page block. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of stone to flesh",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_stone_to_flesh"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

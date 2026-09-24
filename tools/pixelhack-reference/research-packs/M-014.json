@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:yellow dragon": {
+      "wikiTitle": "Yellow dragon",
+      "visualDescription": "The adult yellow dragon rears with a dark body, orange head, bright yellow wing, and thick amber tail curl.",
+      "wikiDescription": "The wiki identifies an adult yellow dragon whose breath is acidic rather than fiery.",
+      "modelBrief": "Use the common adult dragon shape with yellow membranes and orange edging; compare the two subtly different atlas slots. Check both atlas slots for small pixel differences.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Yellow dragon",
+          "url": "https://nethackwiki.com/wiki/Yellow_dragon"
+        }
+      ]
+    },
+    "monster:stalker": {
+      "wikiTitle": "Stalker",
+      "visualDescription": "A pale, partly transparent humanoid spirit rises from a wispy base, with long reaching arms and a skull-like face.",
+      "wikiDescription": "The wiki calls the stalker an always-invisible elemental with claw attacks; the visible tile is an artist's depiction of that normally unseen creature.",
+      "modelBrief": "Make a translucent ghostly upper body and tapering vapor base, with faint facial hollows; treat the visible form as a visualization of invisibility. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Stalker",
+          "url": "https://nethackwiki.com/wiki/Stalker"
+        }
+      ]
+    },
+    "monster:air elemental": {
+      "wikiTitle": "Air elemental",
+      "visualDescription": "A dark gray cloudlike figure rises from a spiral lower body with a hollow face and sweeping arms.",
+      "wikiDescription": "The wiki describes an unsolid, flying air elemental whose whirling body engulfs and batters targets.",
+      "modelBrief": "Sculpt a turbulent vortex with broad wind arms and hollow central face marks, using charcoal and gray-green translucency. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Air elemental",
+          "url": "https://nethackwiki.com/wiki/Air_elemental"
+        }
+      ]
+    },
+    "monster:fire elemental": {
+      "wikiTitle": "Fire elemental",
+      "visualDescription": "A red-orange flame figure has a narrow fiery head, wide sweeping arms, and a tapering base.",
+      "wikiDescription": "The wiki describes an unsolid, flying fire elemental that emits light and attacks with fiery claws.",
+      "modelBrief": "Build a humanoid flame silhouette from tapered tongues of red and orange, with bright yellow hotspots and no solid flesh. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Fire elemental",
+          "url": "https://nethackwiki.com/wiki/Fire_elemental"
+        }
+      ]
+    },
+    "monster:earth elemental": {
+      "wikiTitle": "Earth elemental",
+      "visualDescription": "A stocky earth figure is assembled from brown stone chunks, green seams, broad arms, and heavy feet.",
+      "wikiDescription": "The wiki describes a strong, thick-skinned earth elemental able to pass through walls and strike with a claw.",
+      "modelBrief": "Construct a bulky rock humanoid with blocky forearms, brown slabs, and green mosslike cracks; keep it squat and weighty. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Earth elemental",
+          "url": "https://nethackwiki.com/wiki/Earth_elemental"
+        }
+      ]
+    },
+    "monster:water elemental": {
+      "wikiTitle": "Water elemental",
+      "visualDescription": "A blue water figure rises from a broad puddle into a cresting head and two curled, splashlike arms.",
+      "wikiDescription": "The wiki describes an unsolid amphibious water elemental that swims and delivers a powerful claw attack.",
+      "modelBrief": "Shape a surging wave-body with curling water arms and a pool base, using cobalt, cyan, and white foam edges. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Water elemental",
+          "url": "https://nethackwiki.com/wiki/Water_elemental"
+        }
+      ]
+    },
+    "monster:lichen": {
+      "wikiTitle": "Lichen",
+      "visualDescription": "A low spreading lichen patch forms an irregular yellow-green mound with turquoise tips and no face.",
+      "wikiDescription": "The wiki identifies lichen as a very slow fungus with a sticky touch that holds an opponent in place.",
+      "modelBrief": "Build a ground-hugging mat of soft fronds and lobes, pale lime at the center and cyan-green at the edges; omit eyes and limbs. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lichen",
+          "url": "https://nethackwiki.com/wiki/Lichen"
+        }
+      ]
+    },
+    "monster:brown mold": {
+      "wikiTitle": "Brown mold",
+      "visualDescription": "A rounded brown mold mound has warm amber patches, a darker maroon rim, and no head or limbs.",
+      "wikiDescription": "The wiki says brown mold is sessile and headless, and its passive defense is associated with cold.",
+      "modelBrief": "Create a low domed fungal mat with brown and amber cell-like lobes; avoid an anthropomorphic face or frosty ice crystals. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Brown mold",
+          "url": "https://nethackwiki.com/wiki/Brown_mold"
+        }
+      ]
+    },
+    "monster:yellow mold": {
+      "wikiTitle": "Yellow mold",
+      "visualDescription": "A bright yellow mold mound has cream highlights and a black shadowed underside.",
+      "wikiDescription": "The wiki describes a sessile, limbless mold whose passive effect can stun attackers.",
+      "modelBrief": "Build a low porous yellow fungal dome with irregular bright patches, and keep the black underside as ground-contact shading. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Yellow mold",
+          "url": "https://nethackwiki.com/wiki/Yellow_mold"
+        }
+      ]
+    },
+    "monster:green mold": {
+      "wikiTitle": "Green mold",
+      "visualDescription": "A green mold mound has yellow-green center spots, darker emerald edges, and a flat black base.",
+      "wikiDescription": "The wiki identifies an acidic, sessile mold without eyes, head, or limbs.",
+      "modelBrief": "Make a low mound of irregular green fungal lobes with acid-yellow highlights; no mouth or creature-like torso. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Green mold",
+          "url": "https://nethackwiki.com/wiki/Green_mold"
+        }
+      ]
+    },
+    "monster:red mold": {
+      "wikiTitle": "Red mold",
+      "visualDescription": "A crimson mold mound has orange-yellow spots, darker red edges, and a flat ground shadow.",
+      "wikiDescription": "The wiki describes a sessile mold linked to fire through its passive defense.",
+      "modelBrief": "Use the same low fungus profile with red tissue and amber hot spots; keep any heat treatment secondary to the visible mound. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Red mold",
+          "url": "https://nethackwiki.com/wiki/Red_mold"
+        }
+      ]
+    },
+    "monster:shrieker": {
+      "wikiTitle": "Shrieker",
+      "visualDescription": "A squat mushroom has a dark purple cap, cyan underside, pink circular markings, and a brown stalk.",
+      "wikiDescription": "The wiki describes a fungus that cannot attack but intermittently shrieks and alerts nearby monsters.",
+      "modelBrief": "Build a squat cap-and-stalk fungus with magenta-ringed pores beneath the cyan cap; express its shriek through animation rather than adding a human mouth. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Shrieker",
+          "url": "https://nethackwiki.com/wiki/Shrieker"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "312": {
+      "variantNote": "Male-labeled atlas slot; art differs from the adjacent female-labeled slot. Compare both before deciding whether geometry must differ."
+    },
+    "313": {
+      "variantNote": "Female-labeled atlas slot; art differs from the adjacent male-labeled slot. Compare both before deciding whether geometry must differ."
+    }
+  }
+}

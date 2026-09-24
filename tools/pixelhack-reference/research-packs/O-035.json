@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:checkered / chain lightning": {
+      "wikiTitle": "Spellbook of chain lightning",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a tan-olive cover with faint square check pattern and thick pale pages. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The wiki documents the spellbook of chain lightning as teaching that spell, while its article treats the feature as upcoming for another NetHack branch. This local NetHack 5 atlas has a checkered appearance slot; the cover alone never proves the spell identity.",
+      "modelBrief": "Build the shared thick closed-book form lying diagonally, with cream page block and tan checkered cover with quiet square pattern. Keep its appearance separate from its shuffled spell identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of chain lightning",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_chain_lightning"
+        }
+      ]
+    },
+    "object:plain / blank paper": {
+      "wikiTitle": "Spellbook of blank paper",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a plain two-tone brown cover with no writing or ornament. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The wiki describes blank spellbooks as writable books from which a new spellbook can be made with a magic marker. The plain cover gives no spell identity.",
+      "modelBrief": "Build a closed book with unadorned brown cover and clean page block. Leave the cover free of spell markings and keep the pages clean.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of blank paper",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_blank_paper"
+        }
+      ]
+    },
+    "object:paperback / novel": {
+      "wikiTitle": "Novel",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a bright blue paperback cover with a dense cyan checker texture. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The wiki identifies the novel as a spellbook-class item that does not teach a spell. This atlas gives it a paperback appearance rather than a magical-book symbol.",
+      "modelBrief": "Build a modest flexible paperback with flexible blue paperback with visible cyan check pattern. Preserve its thin page block and do not add magic effects.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Novel",
+          "url": "https://nethackwiki.com/wiki/Novel"
+        }
+      ]
+    },
+    "object:papyrus / Book of the Dead": {
+      "wikiTitle": "Book of the Dead",
+      "visualDescription": "PixelHack shows a closed book lying diagonally, with a charcoal-black cover bearing a large pale skull-like emblem. Its pale page block is visible at lower left; the teal floor is background.",
+      "wikiDescription": "The Book of the Dead is a unique Invocation item, described by the wiki as a papyrus spellbook when unidentified. The pale skull motif on the dark cover is supplied by this PixelHack tile.",
+      "modelBrief": "Build a thick closed unique ritual book with dark papyrus-bound book with stark pale skull emblem. Keep the skull-like center motif as the main recognition cue.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Book of the Dead",
+          "url": "https://nethackwiki.com/wiki/Book_of_the_Dead"
+        }
+      ]
+    },
+    "object:glass / light": {
+      "wikiTitle": "Wand of light",
+      "visualDescription": "PixelHack shows a narrow pale icy-cyan rod with bright blue-white tip and dark lower end lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of light as a zap-usable wand. The glass descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a clear glass-like slim rod with pale cyan highlights. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of light",
+          "url": "https://nethackwiki.com/wiki/Wand_of_light"
+        }
+      ]
+    },
+    "object:balsa / secret door detection": {
+      "wikiTitle": "Wand of secret door detection",
+      "visualDescription": "PixelHack shows a slim salmon-tan rod with a dark brown lower end lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of secret door detection as a zap-usable wand. The balsa descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a light wood-colored straight balsa wand. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of secret door detection",
+          "url": "https://nethackwiki.com/wiki/Wand_of_secret_door_detection"
+        }
+      ]
+    },
+    "object:crystal / enlightenment": {
+      "wikiTitle": "Wand of enlightenment",
+      "visualDescription": "PixelHack shows a dark maroon rod capped with a magenta crystal-like upper tip lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of enlightenment as a zap-usable wand. The crystal descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a dark shaft carrying a small pink crystalline tip. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of enlightenment",
+          "url": "https://nethackwiki.com/wiki/Wand_of_enlightenment"
+        }
+      ]
+    },
+    "object:maple / create monster": {
+      "wikiTitle": "Wand of create monster",
+      "visualDescription": "PixelHack shows a simple warm maple-brown rod with pale ochre upper end lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of create monster as a zap-usable wand. The maple descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a plain straight maple-colored wooden wand. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of create monster",
+          "url": "https://nethackwiki.com/wiki/Wand_of_create_monster"
+        }
+      ]
+    },
+    "object:pine / wishing": {
+      "wikiTitle": "Wand of wishing",
+      "visualDescription": "PixelHack shows a pale cream-tan rod with warm brown ends lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of wishing as a zap-usable wand. The pine descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a plain straight light-pine wooden wand. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of wishing",
+          "url": "https://nethackwiki.com/wiki/Wand_of_wishing"
+        }
+      ]
+    },
+    "object:redwood / stasis": {
+      "wikiTitle": "Wand of stasis",
+      "visualDescription": "PixelHack shows a vivid red rod with darker crimson base and tip lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of stasis as a zap-usable wand. The redwood descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a straight saturated redwood-colored wand. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of stasis",
+          "url": "https://nethackwiki.com/wiki/Wand_of_stasis"
+        }
+      ]
+    },
+    "object:oak / nothing": {
+      "wikiTitle": "Wand of nothing",
+      "visualDescription": "PixelHack shows a mid-brown rod with golden upper end and dark lower foot lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The wiki identifies the wand of nothing as the non-magical wand that produces no useful zap effect. Its oak appearance here can shuffle, so the visible wood color is not a fixed identification.",
+      "modelBrief": "Build a plain oak-brown wand with subtle golden grain. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of nothing",
+          "url": "https://nethackwiki.com/wiki/Wand_of_nothing"
+        }
+      ]
+    },
+    "object:ebony / striking": {
+      "wikiTitle": "Wand of striking",
+      "visualDescription": "PixelHack shows a near-black brown rod with only a pale tan glint at its top lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of striking as a zap-usable wand. The ebony descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a dark ebony-colored wand with slim pale edge glint. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of striking",
+          "url": "https://nethackwiki.com/wiki/Wand_of_striking"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:lance": {
+      "wikiTitle": "Lance",
+      "visualDescription": "PixelHack shows a long slim dark lance angled upward, with a pale triangular hand guard near the base. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the lance as a riding weapon used for mounted combat.",
+      "modelBrief": "Build a long tapering metal lance with a distinct hand guard and dark grip. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: lance",
+          "url": "https://nethackwiki.com/wiki/lance"
+        }
+      ]
+    },
+    "object:mace": {
+      "wikiTitle": "Mace",
+      "visualDescription": "PixelHack shows a brown handle with a dark round blue-gray mace head pierced by a pale center. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the mace as a one-handed iron bludgeoning weapon.",
+      "modelBrief": "Build a short brown haft and round socketed metal striking head. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: mace",
+          "url": "https://nethackwiki.com/wiki/mace"
+        }
+      ]
+    },
+    "object:silver mace": {
+      "wikiTitle": "Silver mace",
+      "visualDescription": "PixelHack shows a brown handle topped by a pale silver mace head with dark central opening. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the silver mace as a one-handed bludgeoning weapon made of silver.",
+      "modelBrief": "Build a mace matching tile 862 but with a bright silver head and cool highlights. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: silver mace",
+          "url": "https://nethackwiki.com/wiki/silver_mace"
+        }
+      ]
+    },
+    "object:morning star": {
+      "wikiTitle": "Morning star",
+      "visualDescription": "PixelHack shows a brown shaft holding a large dark jagged ball with several blunt spikes. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the morning star as a one-handed iron morning star.",
+      "modelBrief": "Build a spiked dark iron striking head on a sturdy wooden haft. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: morning star",
+          "url": "https://nethackwiki.com/wiki/morning_star"
+        }
+      ]
+    },
+    "object:war hammer": {
+      "wikiTitle": "War hammer",
+      "visualDescription": "PixelHack shows a brown haft beneath a dark cross-shaped hammer head with a pale glint. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the war hammer as a one-handed iron hammer.",
+      "modelBrief": "Build a compact metal hammer head with opposing striking ends and brown handle. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: war hammer",
+          "url": "https://nethackwiki.com/wiki/war_hammer"
+        }
+      ]
+    },
+    "object:club": {
+      "wikiTitle": "Club",
+      "visualDescription": "PixelHack shows a thick tapered reddish-brown club with a narrow tan grip. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the club as a one-handed wooden club.",
+      "modelBrief": "Build a simple heavy wooden cudgel with broad dark upper end and pale hand grip. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: club",
+          "url": "https://nethackwiki.com/wiki/club"
+        }
+      ]
+    },
+    "object:rubber hose": {
+      "wikiTitle": "Rubber hose",
+      "visualDescription": "PixelHack shows a bright red flexible hose curling twice in a loose S shape. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the rubber hose as a one-handed plastic whip-class weapon.",
+      "modelBrief": "Build a soft red tube coiled into two open loops, with rounded ends and no metal tip. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: rubber hose",
+          "url": "https://nethackwiki.com/wiki/rubber_hose"
+        }
+      ]
+    },
+    "object:staff / quarterstaff": {
+      "wikiTitle": "Quarterstaff",
+      "visualDescription": "PixelHack shows a straight gold-brown staff running diagonally with darker ends. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the quarterstaff as a two-handed wooden quarterstaff. This tile shows the staff appearance associated with that item.",
+      "modelBrief": "Build one plain long wooden rod with subtle darker end caps and no magic ornament. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: quarterstaff",
+          "url": "https://nethackwiki.com/wiki/quarterstaff"
+        }
+      ]
+    },
+    "object:thonged club / aklys": {
+      "wikiTitle": "Aklys",
+      "visualDescription": "PixelHack shows a dark gray club head and brown grip attached to a looping reddish thong. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the aklys as an iron thonged club. This tile shows the thonged club appearance associated with that item.",
+      "modelBrief": "Build a compact weighted club with its visible leather thong loop kept distinct from the shaft. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: aklys",
+          "url": "https://nethackwiki.com/wiki/aklys"
+        }
+      ]
+    },
+    "object:flail": {
+      "wikiTitle": "Flail",
+      "visualDescription": "PixelHack shows a brown handle connected by a short dark chain to a dark hanging striking head. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the flail as a one-handed flail weapon.",
+      "modelBrief": "Build a wood grip, short articulated chain, and separate weighted head with open space between parts. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: flail",
+          "url": "https://nethackwiki.com/wiki/flail"
+        }
+      ]
+    },
+    "object:bullwhip": {
+      "wikiTitle": "Bullwhip",
+      "visualDescription": "PixelHack shows a coiled blue-gray lash beside a short tan-brown handle. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the bullwhip as a one-handed whip made of leather.",
+      "modelBrief": "Build a narrow flexible whip in a loose open coil with a small wooden-colored grip. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: bullwhip",
+          "url": "https://nethackwiki.com/wiki/bullwhip"
+        }
+      ]
+    },
+    "object:bow": {
+      "wikiTitle": "Bow",
+      "visualDescription": "PixelHack shows a narrow ochre curved bow standing upright with a pale straight string. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the bow as a wooden launcher for arrows.",
+      "modelBrief": "Build a simple bent wood bow with taut pale string and clear empty interior. Keep the main shape and palette readable at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: bow",
+          "url": "https://nethackwiki.com/wiki/bow"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

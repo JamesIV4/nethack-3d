@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:PHOL ENDE WODAN": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"PHOL ENDE WODAN\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. PHOL ENDE WODAN is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:GHOTI": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"GHOTI\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. GHOTI is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:MAPIRO MAHAMA DIROMAT": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"MAPIRO MAHAMA DIROMAT\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. MAPIRO MAHAMA DIROMAT is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:VAS CORP BET MANI": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"VAS CORP BET MANI\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. VAS CORP BET MANI is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:XOR OTA": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"XOR OTA\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. XOR OTA is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:STRC PRST SKRZ KRK": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"STRC PRST SKRZ KRK\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. STRC PRST SKRZ KRK is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:stamped / mail": {
+      "wikiTitle": "Scroll of mail",
+      "visualDescription": "PixelHack shows a short rolled tan parchment with a dark outer wrap and a bright red wax-like stamp on its face. It differs from the shared magic-scroll image. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies a scroll of mail as non-magical mail rather than a spell scroll. The stamped appearance is the visible cue in this atlas.",
+      "modelBrief": "Build a separate small rolled mail scroll with dark brown outer curl and a visible red seal. Keep it distinct from the shared tan magic-scroll model.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of mail",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_mail"
+        }
+      ]
+    },
+    "object:unlabeled / blank paper": {
+      "wikiTitle": "Scroll of blank paper",
+      "visualDescription": "PixelHack shows a pale cream loose sheet with uneven curled edges and no visible writing. It differs from the marked scroll image. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes blank paper as a non-magical scroll that can be written on. The unlabeled appearance and lack of marks are the model cues.",
+      "modelBrief": "Build a separate thin curled blank sheet with a clean pale face and no magical runes or red stamp.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of blank paper",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_blank_paper"
+        }
+      ]
+    },
+    "object:parchment / dig": {
+      "wikiTitle": "Spellbook of dig",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a parchment-tan cover with worn ochre flecks, rough pale page edges, and a dark lower spine. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of dig as a book that teaches the dig spell. The parchment cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and worn tan parchment with small ochre speckles. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of dig",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_dig"
+        }
+      ]
+    },
+    "object:vellum / magic missile": {
+      "wikiTitle": "Spellbook of magic missile",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a pale vellum cover with scattered faint pink flecks and thick ivory page edges. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of magic missile as a book that teaches the magic missile spell. The vellum cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and smooth pale vellum with subtle pink flecks. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of magic missile",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_magic_missile"
+        }
+      ]
+    },
+    "object:ragged / fireball": {
+      "wikiTitle": "Spellbook of fireball",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a deep brown ragged cover with a torn pale central patch and frayed page corner. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of fireball as a book that teaches the fireball spell. The ragged cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and ragged dark brown binding with a large torn patch. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of fireball",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_fireball"
+        }
+      ]
+    },
+    "object:dog eared / cone of cold": {
+      "wikiTitle": "Spellbook of cone of cold",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a coral-red cover with one bent pale lower corner and uneven page block. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of cone of cold as a book that teaches the cone of cold spell. The dog eared cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and coral-red cover with a clearly dog-eared ivory corner. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of cone of cold",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_cone_of_cold"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

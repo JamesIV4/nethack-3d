@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:candelabrum / Candelabrum of Invocation": {
+      "wikiTitle": "Candelabrum of Invocation",
+      "visualDescription": "PixelHack shows a gold seven-branched candelabrum with a wide foot and unlit cup-like tips. The patterned teal floor is background.",
+      "wikiDescription": "The Candelabrum of Invocation is a unique ritual item used in the Invocation. The source label names the artifact; the tile gives its gold multi-arm appearance.",
+      "modelBrief": "Build a stable gold pedestal rising into seven candle cups, keeping each branch separated and unlit. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Candelabrum of Invocation",
+          "url": "https://nethackwiki.com/wiki/Candelabrum_of_Invocation"
+        }
+      ]
+    },
+    "object:silver bell / Bell of Opening": {
+      "wikiTitle": "Bell of Opening",
+      "visualDescription": "PixelHack shows a tall silver bell with a loop handle, narrow neck, and broad dark-rimmed mouth. The patterned teal floor is background.",
+      "wikiDescription": "The Bell of Opening is a unique Invocation item. Its silver-bell appearance is visible here; the ritual role does not add visible glow.",
+      "modelBrief": "Build a small polished silver handbell with an oval loop, flared mouth, and dark opening. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Bell of Opening",
+          "url": "https://nethackwiki.com/wiki/Bell_of_Opening"
+        }
+      ]
+    },
+    "object:tripe ration": {
+      "wikiTitle": "Tripe ration",
+      "visualDescription": "PixelHack shows a heap of glossy dark reddish-brown folded meat with orange highlights. The patterned teal floor is background.",
+      "wikiDescription": "A tripe ration is a fleshy edible item in NetHack. The wiki does not prescribe this heap shape or color.",
+      "modelBrief": "Build an irregular folded heap of dark red tripe with broad wet-looking lobes and restrained highlights. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: tripe ration",
+          "url": "https://nethackwiki.com/wiki/tripe_ration"
+        }
+      ]
+    },
+    "object:corpse": {
+      "wikiTitle": "Corpse",
+      "visualDescription": "PixelHack shows a dark brown lump of meat with a red cut face, a pale protruding bone, and a small tail-like end. The patterned teal floor is background.",
+      "wikiDescription": "A corpse is the body of a dead monster and can vary by species. This generic tile should not imply a fixed creature anatomy.",
+      "modelBrief": "Build a compact generic carcass chunk with one pale bone protrusion and red exposed section, without species-specific limbs. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: corpse",
+          "url": "https://nethackwiki.com/wiki/corpse"
+        }
+      ]
+    },
+    "object:egg": {
+      "wikiTitle": "Egg",
+      "visualDescription": "PixelHack shows one upright ivory egg with tan lower shading and a bright white highlight. The patterned teal floor is background.",
+      "wikiDescription": "An egg is an edible item that may hatch into a monster if left uneaten. The pictured shell gives no species clue.",
+      "modelBrief": "Build a single oval cream shell with a broad pale glint and tan shadow near its base. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: egg",
+          "url": "https://nethackwiki.com/wiki/egg"
+        }
+      ]
+    },
+    "object:meatball": {
+      "wikiTitle": "Meatball",
+      "visualDescription": "PixelHack shows a small red-brown round meatball with yellow-orange speckles. The patterned teal floor is background.",
+      "wikiDescription": "A meatball is a fleshy comestible in NetHack. Its size and cooked-looking color are PixelHack choices.",
+      "modelBrief": "Build one compact round red-brown meatball with a few warm uneven surface highlights. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: meatball",
+          "url": "https://nethackwiki.com/wiki/meatball"
+        }
+      ]
+    },
+    "object:meat stick": {
+      "wikiTitle": "Meat stick",
+      "visualDescription": "PixelHack shows a thin red-brown meat stick bent slightly upward at one end. The patterned teal floor is background.",
+      "wikiDescription": "A meat stick is a fleshy comestible in NetHack, distinct from the spherical meatball.",
+      "modelBrief": "Build a narrow irregular sausage-like stick of meat with dark ends and a low curved silhouette. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: meat stick",
+          "url": "https://nethackwiki.com/wiki/meat_stick"
+        }
+      ]
+    },
+    "object:enormous meatball": {
+      "wikiTitle": "Huge chunk of meat",
+      "visualDescription": "PixelHack shows a very large red mound with orange flecks, broad flat base, and uneven top. The patterned teal floor is background.",
+      "wikiDescription": "The enormous meatball is an oversized fleshy food item. The tile emphasizes size relative to the ordinary meatball.",
+      "modelBrief": "Build an oversized irregular rounded mass of red meat with broad footprint and scattered warm flecks. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Huge chunk of meat",
+          "url": "https://nethackwiki.com/wiki/Huge_chunk_of_meat"
+        }
+      ]
+    },
+    "object:meat ring": {
+      "wikiTitle": "Meat ring",
+      "visualDescription": "PixelHack shows a dark red closed ring of meat with a clear central opening and brighter upper rim. The patterned teal floor is background.",
+      "wikiDescription": "A meat ring is a fleshy comestible. The edible ring identity supports the hole, while the exact red treatment comes from the tile.",
+      "modelBrief": "Build a thick torus of red meat with a visible open center and subtle warm highlights. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: meat ring",
+          "url": "https://nethackwiki.com/wiki/meat_ring"
+        }
+      ]
+    },
+    "object:glob of gray ooze": {
+      "wikiTitle": "Glob",
+      "visualDescription": "PixelHack shows a low gray-brown amorphous blob with a pale square highlight and dark base. The patterned teal floor is background.",
+      "wikiDescription": "Globs are edible remnants dropped by oozes and puddings; the gray-ooze glob is one of four types.",
+      "modelBrief": "Build a low soft gray ooze glob with an uneven rim and pale upper highlight, without a face. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Glob",
+          "url": "https://nethackwiki.com/wiki/Glob"
+        }
+      ]
+    },
+    "object:glob of brown pudding": {
+      "wikiTitle": "Glob",
+      "visualDescription": "PixelHack shows a low warm-brown amorphous glob with a pale gold highlight and dark foot. The patterned teal floor is background.",
+      "wikiDescription": "The brown-pudding glob is one of four edible globs dropped instead of a corpse.",
+      "modelBrief": "Build a squat brown pudding glob with rounded asymmetry and warm yellow glint. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Glob",
+          "url": "https://nethackwiki.com/wiki/Glob"
+        }
+      ]
+    },
+    "object:glob of green slime": {
+      "wikiTitle": "Glob",
+      "visualDescription": "PixelHack shows a vivid green mound with angular lime facets and a very dark base. The patterned teal floor is background.",
+      "wikiDescription": "The green-slime glob is an edible remnant of green slime, though eating it is dangerous.",
+      "modelBrief": "Build a small lumpy green slime mass with a bright lime face and no eyes or limbs. Keep the silhouette and sparse highlights clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Glob",
+          "url": "https://nethackwiki.com/wiki/Glob"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

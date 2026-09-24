@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:turquoise / create monster": {
+      "wikiTitle": "Spellbook of create monster",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a turquoise-green cover with a bright mint highlight near the right edge. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of create monster as a book that teaches the create monster spell. The turquoise cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and solid turquoise cover with mint glint. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of create monster",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_create_monster"
+        }
+      ]
+    },
+    "object:cyan / detect food": {
+      "wikiTitle": "Spellbook of detect food",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a pale cyan cover with blue edge and bright white highlight. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of detect food as a book that teaches the detect food spell. The cyan cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and pale cyan cover with bright right-edge shine. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of detect food",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_detect_food"
+        }
+      ]
+    },
+    "object:light blue / cause fear": {
+      "wikiTitle": "Spellbook of cause fear",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a strong light-blue cover with cyan highlight and dark top outline. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of cause fear as a book that teaches the cause fear spell. The light blue cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and solid sky-blue cover with subtle cyan side light. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of cause fear",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_cause_fear"
+        }
+      ]
+    },
+    "object:dark blue / clairvoyance": {
+      "wikiTitle": "Spellbook of clairvoyance",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a medium dark-blue cover with darker navy side and blue corner glint. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of clairvoyance as a book that teaches the clairvoyance spell. The dark blue cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and solid dark blue cover with one small brighter corner. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of clairvoyance",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_clairvoyance"
+        }
+      ]
+    },
+    "object:indigo / cure sickness": {
+      "wikiTitle": "Spellbook of cure sickness",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a deep indigo cover scattered with purple-blue and magenta flecks. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of cure sickness as a book that teaches the cure sickness spell. The indigo cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and indigo cover with sparse purple mottles. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of cure sickness",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_cure_sickness"
+        }
+      ]
+    },
+    "object:magenta / charm monster": {
+      "wikiTitle": "Spellbook of charm monster",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a dark magenta-purple cover with a small lighter pink edge. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of charm monster as a book that teaches the charm monster spell. The magenta cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and smooth wine-magenta cover with pink edge. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of charm monster",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_charm_monster"
+        }
+      ]
+    },
+    "object:purple / haste self": {
+      "wikiTitle": "Spellbook of haste self",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a purple cover packed with alternating blue and magenta checker marks. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of haste self as a book that teaches the haste self spell. The purple cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and bright purple cover with dense blue-red plaid checks. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of haste self",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_haste_self"
+        }
+      ]
+    },
+    "object:violet / detect unseen": {
+      "wikiTitle": "Spellbook of detect unseen",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a deep violet cover with dark maroon and blue check marks. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of detect unseen as a book that teaches the detect unseen spell. The violet cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and violet cover with dark red-blue checked pattern. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of detect unseen",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_detect_unseen"
+        }
+      ]
+    },
+    "object:tan / levitation": {
+      "wikiTitle": "Spellbook of levitation",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a plain warm tan cover with medium brown side and pale pages. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of levitation as a book that teaches the levitation spell. The tan cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and smooth tan leather-like cover. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of levitation",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_levitation"
+        }
+      ]
+    },
+    "object:plaid / extra healing": {
+      "wikiTitle": "Spellbook of extra healing",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a red-brown cover heavily crossed by bright orange and dark plaid lines. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of extra healing as a book that teaches the extra healing spell. The plaid cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and orange-red plaid cover with visible crossing bands. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of extra healing",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_extra_healing"
+        }
+      ]
+    },
+    "object:light brown / restore ability": {
+      "wikiTitle": "Spellbook of restore ability",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a plain light brown cover with warm ochre edge and ivory pages. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of restore ability as a book that teaches the restore ability spell. The light brown cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and plain warm light-brown cover. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of restore ability",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_restore_ability"
+        }
+      ]
+    },
+    "object:dark brown / invisibility": {
+      "wikiTitle": "Spellbook of invisibility",
+      "visualDescription": "PixelHack shows a thick closed book lying diagonally, with a plain dark chocolate-brown cover with almost black side. Its exposed page block is cream-colored, and the teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki describes the spellbook of invisibility as a book that teaches the invisibility spell. The dark brown cover is an atlas appearance that can shuffle between games; the visible binding does not identify the spell by itself.",
+      "modelBrief": "Build the shared thick closed-book form with pale page block and plain deep brown cover with dark spine. Keep the diagonal cover silhouette and 32-pixel legibility; do not add spell-specific symbols to this randomized appearance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Spellbook of invisibility",
+          "url": "https://nethackwiki.com/wiki/Spellbook_of_invisibility"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

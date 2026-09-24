@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:strange object": {
+      "wikiTitle": "Mimic",
+      "visualDescription": "A squat dark brown chest-like box sits below a bright ochre lid, with a narrow red slit and a pale glint near the front. It is the only pictorial tile in this first group; the teal pattern behind it is background.",
+      "wikiDescription": "The wiki notes that a strange-object display can indicate an object-disguised mimic. This atlas label is anomalous and should not be treated as a normal, identified chest item.",
+      "modelBrief": "Build a compact box silhouette with a thick gold-brown lid, dark recessed front, and tiny red and pale accents. Keep the mystery of the source marker; avoid adding chest hardware that the tile does not show.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: mimic",
+          "url": "https://nethackwiki.com/wiki/Mimic"
+        }
+      ]
+    },
+    "object:strange / generic strange": {
+      "wikiTitle": "Right square bracket",
+      "visualDescription": "A single pale cream right bracket with a dark blue-gray pixel outline occupies the center. It is a class marker rather than a pictured object.",
+      "wikiDescription": "The wiki explains that the right-square-bracket glyph can mark a strange object or an object-disguised mimic. This generic slot therefore has no fixed material or item effect.",
+      "modelBrief": "If a 3D icon is needed, make a thin upright bracket-shaped token with a cream face and dark edge. Preserve the abstract marker; do not invent a physical strange item.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: right square bracket",
+          "url": "https://nethackwiki.com/wiki/Right_square_bracket"
+        }
+      ]
+    },
+    "object:weapon / generic weapon": {
+      "wikiTitle": "Weapon",
+      "visualDescription": "A pale right parenthesis with a dark blue-gray outline appears alone in the tile. It has no blade, hilt, or other physical weapon detail.",
+      "wikiDescription": "NetHack uses the weapon class for items used to attack opponents. This is the generic class icon, not one named weapon.",
+      "modelBrief": "Represent the exact curved parenthesis as a shallow, readable cream-and-dark token if this fallback glyph must have depth. Keep named weapons in their separate tiles.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: weapon",
+          "url": "https://nethackwiki.com/wiki/Weapon"
+        }
+      ]
+    },
+    "object:armor / generic armor": {
+      "wikiTitle": "Armor",
+      "visualDescription": "A squared, open cream bracket with a dark outline stands upright against the patterned field. No suit of armor is depicted.",
+      "wikiDescription": "Armor is NetHack's wearable defensive item class and spans several equipment slots. This slot is a generic symbol, so it does not prescribe an armor shape.",
+      "modelBrief": "Use a thin bracket-shaped fallback marker with the same pale face and dark rim. Do not turn the marker into an arbitrary helmet or cuirass.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: armor",
+          "url": "https://nethackwiki.com/wiki/Armor"
+        }
+      ]
+    },
+    "object:ring / generic ring": {
+      "wikiTitle": "Ring",
+      "visualDescription": "A large cream equals-like ring glyph forms an octagonal loop with a dark central opening and blue-gray outline. It is deliberately schematic.",
+      "wikiDescription": "Rings are wearable magical items in NetHack and may confer different effects. Their individual unidentified appearances are separate from this generic class marker.",
+      "modelBrief": "Make a thick flat octagonal loop or low relief icon with a clear central hole. Keep its cream and slate colors, and avoid gemstones or effects that imply a particular ring.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: ring",
+          "url": "https://nethackwiki.com/wiki/Ring"
+        }
+      ]
+    },
+    "object:amulet / generic amulet": {
+      "wikiTitle": "Amulet",
+      "visualDescription": "Two short cream strokes lean together like an oversized quotation mark, edged in dark blue-gray. There is no pendant or cord in the tile.",
+      "wikiDescription": "Amulets are a NetHack item class worn around the neck. This generic class glyph does not identify any particular amulet or its power.",
+      "modelBrief": "Treat the two pale strokes as a shallow paired icon. Preserve their separation and diagonal tilt; reserve necklace geometry for the specific amulet tiles.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: amulet",
+          "url": "https://nethackwiki.com/wiki/Amulet"
+        }
+      ]
+    },
+    "object:tool / generic tool": {
+      "wikiTitle": "Tool",
+      "visualDescription": "A cream left parenthesis with a dark blue-gray outline stands alone. The curved stroke is a symbol, not a pictured implement.",
+      "wikiDescription": "NetHack tools are miscellaneous usable items, including containers, lights, and musical instruments. The class itself has no single physical form.",
+      "modelBrief": "Give the curved glyph slight thickness as a fallback icon, keeping its open side and cream face clear. Avoid choosing a specific tool for this generic slot.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: tool",
+          "url": "https://nethackwiki.com/wiki/Tool"
+        }
+      ]
+    },
+    "object:food / generic food": {
+      "wikiTitle": "Comestible",
+      "visualDescription": "A pale percent sign with two square-ended dots and a diagonal slash fills the cell. It is abstract and shows no edible object.",
+      "wikiDescription": "The wiki calls edible items comestibles; they provide nutrition or other effects when eaten. This percent-sign tile marks the class as a whole.",
+      "modelBrief": "Create a low relief percent-sign token with two separated dots and a crisp diagonal stroke. Do not model an arbitrary ration or fruit in place of the glyph.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: comestible",
+          "url": "https://nethackwiki.com/wiki/Comestible"
+        }
+      ]
+    },
+    "object:potion / generic potion": {
+      "wikiTitle": "Potion",
+      "visualDescription": "A pale exclamation mark has a tall rectangular stroke and detached square dot, both outlined in blue-gray. It is a punctuation marker, not a bottle.",
+      "wikiDescription": "Potions are quaffed magical drinks in NetHack, and their visible appearances can be randomized. The generic class marker does not specify a potion color or effect.",
+      "modelBrief": "Extrude the two separate punctuation shapes as a shallow cream-faced icon. Keep vial silhouettes for the later appearance-specific potion tiles.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: potion",
+          "url": "https://nethackwiki.com/wiki/Potion"
+        }
+      ]
+    },
+    "object:scroll / generic scroll": {
+      "wikiTitle": "Scroll",
+      "visualDescription": "A large cream question mark with a detached dot and a dark pixel edge sits at center. It has no paper or lettering.",
+      "wikiDescription": "A NetHack scroll produces magic when read and is then consumed. This generic question mark stands for the class, while individual scroll appearances are separate.",
+      "modelBrief": "Use a shallow question-mark relief, preserving the hook and isolated lower dot. Do not invent a scroll roll for the fallback class marker.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: scroll",
+          "url": "https://nethackwiki.com/wiki/Scroll"
+        }
+      ]
+    },
+    "object:spellbook / generic spellbook": {
+      "wikiTitle": "Spellbook",
+      "visualDescription": "A pale plus sign with broad straight bars and a dark blue-gray outline is the whole foreground. No book is drawn.",
+      "wikiDescription": "Spellbooks are the NetHack item class used mainly to learn or cast spells. The class sign does not identify a spellbook title or binding.",
+      "modelBrief": "Make a simple shallow cross-shaped marker with thick equal bars and a dark rim. Keep named spellbooks as distinct objects elsewhere in the atlas.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: spellbook",
+          "url": "https://nethackwiki.com/wiki/Spellbook"
+        }
+      ]
+    },
+    "object:wand / generic wand": {
+      "wikiTitle": "Wand",
+      "visualDescription": "A thin pale diagonal slash with a dark lower-right edge crosses the cell. It is schematic and has no handle or ornament.",
+      "wikiDescription": "NetHack wands are limited-use magical items that can be zapped or engraved with. A generic slash gives no clue to an individual wand's randomized appearance.",
+      "modelBrief": "Use a narrow diagonal rod with a square pixel-like profile and pale face. Keep this fallback symbol plain rather than assigning wood, crystal, or a specific wand effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: wand",
+          "url": "https://nethackwiki.com/wiki/Wand"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

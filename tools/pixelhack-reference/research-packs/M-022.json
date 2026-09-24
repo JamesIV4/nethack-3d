@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:ghoul": {
+      "wikiTitle": "Ghoul",
+      "visualDescription": "A crouched blue-gray ghoul holds a small pale skull; a dark face peers from a hoodlike head and a ragged cape trails.",
+      "wikiDescription": "The wiki describes the ghoul as an undead humanoid whose touch can paralyze.",
+      "modelBrief": "Build a hunched cadaverous figure in blue-black rags, with one pale skull prop and a menacing outstretched hand. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ghoul",
+          "url": "https://nethackwiki.com/wiki/Ghoul"
+        }
+      ]
+    },
+    "monster:giant zombie": {
+      "wikiTitle": "Giant zombie",
+      "visualDescription": "A huge green-brown giant zombie has a pale swollen belly, thick arms, dark head, and heavy short legs.",
+      "wikiDescription": "The wiki identifies the giant zombie as the strongest standard zombie, attacking with claws.",
+      "modelBrief": "Model a giant decaying body with broad gut and heavy reaching arms, using olive rot and pale exposed patches. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Giant zombie",
+          "url": "https://nethackwiki.com/wiki/Giant_zombie"
+        }
+      ]
+    },
+    "monster:skeleton": {
+      "wikiTitle": "Skeleton",
+      "visualDescription": "A thin tan skeleton stands upright with visible skull, ribs, pelvis, and long bony limbs.",
+      "wikiDescription": "The wiki describes a magically animated humanoid skeleton without organic tissue.",
+      "modelBrief": "Build a clean readable bone rig with open rib cage and skull, using tan bone against dark joints. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Skeleton",
+          "url": "https://nethackwiki.com/wiki/Skeleton"
+        }
+      ]
+    },
+    "monster:straw golem": {
+      "wikiTitle": "Straw golem",
+      "visualDescription": "A rough humanoid of straw-colored bundles raises one twiggy arm; its dark base spreads like loose fibers.",
+      "wikiDescription": "The wiki identifies the straw golem as a weak artificial humanoid whose body is made of straw.",
+      "modelBrief": "Assemble a loose scarecrow-shaped body from bundled straw and jutting stems, with no flesh underneath. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Straw golem",
+          "url": "https://nethackwiki.com/wiki/Straw_golem"
+        }
+      ]
+    },
+    "monster:paper golem": {
+      "wikiTitle": "Paper golem",
+      "visualDescription": "A pale gray paper figure has folded angular limbs, torn sheet-like edges, and a flattened base.",
+      "wikiDescription": "The wiki describes a paper-built golem that attacks with a claw and yields paper on destruction.",
+      "modelBrief": "Build a thin origami-like humanoid from layered pale sheets, preserving the jagged arms and folded head. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Paper golem",
+          "url": "https://nethackwiki.com/wiki/Paper_golem"
+        }
+      ]
+    },
+    "monster:rope golem": {
+      "wikiTitle": "Rope golem",
+      "visualDescription": "A brown rope figure twists around a narrow torso with looping arms and frayed lower strands.",
+      "wikiDescription": "The wiki describes a rope golem that claws and can hold or choke prey.",
+      "modelBrief": "Construct intertwined rope coils forming a humanoid, with dangling ends and flexible looped arms. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Rope golem",
+          "url": "https://nethackwiki.com/wiki/Rope_golem"
+        }
+      ]
+    },
+    "monster:gold golem": {
+      "wikiTitle": "Gold golem",
+      "visualDescription": "A bright gold humanoid has broad shoulders, a small peaked head, sturdy feet, and shiny cream highlights.",
+      "wikiDescription": "The wiki identifies a golem formed of gold, stronger and tougher than the weakest material golems.",
+      "modelBrief": "Model a dense faceted metal body with rounded block limbs and bright reflective gold planes. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gold golem",
+          "url": "https://nethackwiki.com/wiki/Gold_golem"
+        }
+      ]
+    },
+    "monster:leather golem": {
+      "wikiTitle": "Leather golem",
+      "visualDescription": "A brown leather golem has a narrow head, long arms, thick chest, and stitched-looking angular surfaces.",
+      "wikiDescription": "The wiki describes a leather-built golem with two claw attacks.",
+      "modelBrief": "Build a humanoid from overlapping dark-tan leather panels and seams, keeping it flexible and hand-shaped. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Leather golem",
+          "url": "https://nethackwiki.com/wiki/Leather_golem"
+        }
+      ]
+    },
+    "monster:wood golem": {
+      "wikiTitle": "Wood golem",
+      "visualDescription": "A tree-trunk humanoid has a log head, branchlike arms, rootlike feet, and dark carved marks on its torso.",
+      "wikiDescription": "The wiki describes a slow, thick-skinned wood golem vulnerable to axes.",
+      "modelBrief": "Carve a walking trunk with a cut-log crown, branching hands, and knotted root feet, in reddish brown wood. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wood golem",
+          "url": "https://nethackwiki.com/wiki/Wood_golem"
+        }
+      ]
+    },
+    "monster:flesh golem": {
+      "wikiTitle": "Flesh golem",
+      "visualDescription": "A salmon-pink flesh golem has a bulky hunched torso, long arms, exposed red patches, and dark lower legs.",
+      "wikiDescription": "The wiki identifies the flesh golem as assembled from flesh and notable for leaving a corpse.",
+      "modelBrief": "Make a stitched humanoid of uneven pink and red body sections, with thick shoulders and trailing hands. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Flesh golem",
+          "url": "https://nethackwiki.com/wiki/Flesh_golem"
+        }
+      ]
+    },
+    "monster:clay golem": {
+      "wikiTitle": "Clay golem",
+      "visualDescription": "A red-brown clay golem has a blocky head, broad bent arms, rounded chest, and thick tapering legs.",
+      "wikiDescription": "The wiki describes a strong thick-skinned clay golem whose animated body can be destroyed through its magic writing.",
+      "modelBrief": "Sculpt a dense rough-clay figure with hand-molded joints and warm terracotta highlights. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Clay golem",
+          "url": "https://nethackwiki.com/wiki/Clay_golem"
+        }
+      ]
+    },
+    "monster:stone golem": {
+      "wikiTitle": "Stone golem",
+      "visualDescription": "A blue-gray stone golem has squared shoulders, segmented rocky arms, short torso, and wide feet.",
+      "wikiDescription": "The wiki identifies a thick-skinned stone golem resistant to petrification.",
+      "modelBrief": "Build a faceted block-stone humanoid with heavy hands and feet, using slate and pale gray planes. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Stone golem",
+          "url": "https://nethackwiki.com/wiki/Stone_golem"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

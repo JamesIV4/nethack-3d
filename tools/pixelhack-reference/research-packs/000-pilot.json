@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:giant ant": {
+      "wikiTitle": "Giant ant",
+      "wikiDescription": "The NetHack Wiki describes a tiny, carnivorous ant-like animal with a bite attack and no hands. Those traits support a segmented insect body and visible jaws, but do not specify the sprite's colors or pose.",
+      "visualDescription": "PixelHack shows a low, side-view ant with a gray head and body, a red eye, thin dark antennae projecting from the head, dark outlines, and thin legs. The blue-gray patterned ground belongs to the tile background. Tiles 0 and 1 are pixel-identical.",
+      "modelBrief": "Build one compact six-legged ant with a low segmented silhouette, distinct thin antennae, and readable jaws. Keep the antennae separated from the head and backdrop at game size. Use gray surfaces, a red eye, and dark outlines; compare its side view with tile 0. Reuse the model for tile 1.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: giant ant",
+          "url": "https://nethackwiki.com/wiki/Giant_ant"
+        }
+      ]
+    },
+    "monster:killer bee": {
+      "wikiTitle": "Killer bee",
+      "wikiDescription": "The NetHack Wiki describes a tiny flying insect with a poisonous sting. Killer bees are female-only in the game; the two atlas slots do not imply two biological sexes.",
+      "visualDescription": "PixelHack shows a hovering golden-brown bee with pale wings raised above its body, a dark face, thin dangling legs, and a small ground shadow. Tiles 2 and 3 are pixel-identical.",
+      "modelBrief": "Make a compact airborne bee with a segmented golden-brown body, pale upright wings, thin legs, and a readable rear stinger. Keep the sprite's hovering silhouette and reuse one model for both tile slots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: killer bee",
+          "url": "https://nethackwiki.com/wiki/Killer_bee"
+        }
+      ]
+    },
+    "monster:soldier ant": {
+      "wikiTitle": "Soldier ant",
+      "wikiDescription": "The NetHack Wiki describes a tiny, fast insect that bites and delivers a poisonous sting. It is related to the giant ant but has stronger attacks, supporting a more formidable ant design without prescribing a precise color.",
+      "visualDescription": "PixelHack depicts a low olive-brown ant with a broad rear segment, long angular legs, dark outlines, and a red eye. Tiles 4 and 5 are pixel-identical.",
+      "modelBrief": "Use a sturdy six-legged ant silhouette with a larger abdomen, prominent biting head, and a small rear stinger. Keep the muted olive-brown palette and red eye; use one model for both tile slots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: soldier ant",
+          "url": "https://nethackwiki.com/wiki/Soldier_ant"
+        }
+      ]
+    },
+    "monster:fire ant": {
+      "wikiTitle": "Fire ant",
+      "wikiDescription": "The NetHack Wiki describes a tiny ant-like animal with two bite attacks, one of which deals fire damage. Its fire resistance and fire attack justify a fiery treatment, while the exact red design comes from PixelHack.",
+      "visualDescription": "PixelHack shows a slim, angular ant in deep red and magenta with a brighter red head, red eye, long legs, and a low body. Tiles 6 and 7 are pixel-identical.",
+      "modelBrief": "Make a six-legged red ant with an aggressive low stance, angular limbs, and visible jaws. Use restrained warm highlights to suggest heat while preserving the tile's dark crimson silhouette; share the model across both slots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: fire ant",
+          "url": "https://nethackwiki.com/wiki/Fire_ant"
+        }
+      ]
+    },
+    "monster:giant beetle": {
+      "wikiTitle": "Giant beetle",
+      "wikiDescription": "The NetHack Wiki describes a large carnivorous insect whose attack is a strong bite. Unlike the tiny ants around it in the atlas, this monster should read as bulky and shell-backed.",
+      "visualDescription": "PixelHack shows a squat dark indigo beetle with a rounded purple shell, darker head and legs, and a low side-view silhouette. Tiles 8 and 9 are pixel-identical.",
+      "modelBrief": "Build a broad, low beetle with a domed hard shell, six short sturdy legs, and biting mouthparts. Keep the indigo-purple palette and make it noticeably bulkier than the adjacent ant designs; use one mesh for both slots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: giant beetle",
+          "url": "https://nethackwiki.com/wiki/Giant_beetle"
+        }
+      ]
+    },
+    "monster:queen bee": {
+      "wikiTitle": "Queen bee",
+      "wikiDescription": "The NetHack Wiki describes a tiny flying queen bee with a poisonous sting and identifies the species as female. It is a stronger form of killer bee and rules a hive, though the sprite supplies the visual proportions.",
+      "visualDescription": "PixelHack depicts a golden-orange bee with a fuller body than the killer bee, pale wings lifted high, thin hanging legs, and a dark ground shadow. Tiles 10 and 11 are pixel-identical.",
+      "modelBrief": "Reuse the killer bee's wing and limb language, then give the queen a fuller golden body and broader hovering silhouette. Retain a stinger and compare her larger sprite against the killer bee; both queen tile slots can share one model.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: queen bee",
+          "url": "https://nethackwiki.com/wiki/Queen_bee"
+        }
+      ]
+    },
+    "monster:acid blob": {
+      "wikiTitle": "Acid blob",
+      "wikiDescription": "The NetHack Wiki describes a tiny acidic, amorphous blob that can flow under doors. It has no eyes, head, or limbs and no biological sex; its dangerous acid acts when it is struck.",
+      "visualDescription": "PixelHack shows a squat pale yellow-green puddle or mound with uneven bubbling lobes, darker olive shading, and no clear face or limbs. Tiles 12 and 13 are pixel-identical.",
+      "modelBrief": "Make a low asymmetrical mound of viscous acid with a spreading base and a few raised bubbles. Preserve the pale yellow-green and olive pixel palette; avoid adding eyes, limbs, or a head. Reuse one model for both slots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: acid blob",
+          "url": "https://nethackwiki.com/wiki/Acid_blob"
+        }
+      ]
+    },
+    "monster:quivering blob": {
+      "wikiTitle": "Quivering blob",
+      "wikiDescription": "The NetHack Wiki describes a small, very slow blob that attacks by touch. It is mindless and has no eyes, head, limbs, or biological sex; its quivering identity suggests motion through body deformation.",
+      "visualDescription": "PixelHack shows an upright layered blob in bright blue and cyan, with a wide dark-blue base, lighter bands, and a small raised tip. Tiles 14 and 15 are pixel-identical.",
+      "modelBrief": "Sculpt a soft upright mass with stacked, uneven folds and a wide base. Use saturated blue with cyan bands, and convey quivering through shape or animation rather than facial features. One model covers both slots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: quivering blob",
+          "url": "https://nethackwiki.com/wiki/Quivering_blob"
+        }
+      ]
+    },
+    "monster:gelatinous cube": {
+      "wikiTitle": "Gelatinous cube",
+      "wikiDescription": "The NetHack Wiki describes a large acidic blob with a cube-like body that engulfs objects and paralyzes by touch. It has no eyes, head, limbs, or biological sex, so any dark marks inside the sprite should remain internal shapes rather than a face.",
+      "visualDescription": "PixelHack shows a chunky green cube with irregular pixel-stepped edges, dark green internal patches, and yellow-green highlights. Tiles 16 and 17 are pixel-identical.",
+      "modelBrief": "Build a translucent or glossy green cube with softened, slightly uneven edges and suspended darker inclusions. Keep the square silhouette clear, avoid a face or limbs, and reuse the model for both atlas slots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: gelatinous cube",
+          "url": "https://nethackwiki.com/wiki/Gelatinous_cube"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "0": {
+      "variantNote": "Male-labeled source slot; PixelHack art is pixel-identical to tile 1."
+    },
+    "1": {
+      "variantNote": "Female-labeled source slot; PixelHack art is pixel-identical to tile 0."
+    },
+    "2": {
+      "variantNote": "Male-labeled source slot, but killer bees are female-only in NetHack; art is identical to tile 3."
+    },
+    "3": {
+      "variantNote": "Female-labeled source slot; art is identical to tile 2."
+    },
+    "4": {
+      "variantNote": "Male-labeled source slot; art is identical to tile 5."
+    },
+    "5": {
+      "variantNote": "Female-labeled source slot; art is identical to tile 4."
+    },
+    "6": {
+      "variantNote": "Male-labeled source slot; art is identical to tile 7."
+    },
+    "7": {
+      "variantNote": "Female-labeled source slot; art is identical to tile 6."
+    },
+    "8": {
+      "variantNote": "Male-labeled source slot; art is identical to tile 9."
+    },
+    "9": {
+      "variantNote": "Female-labeled source slot; art is identical to tile 8."
+    },
+    "10": {
+      "variantNote": "Male-labeled source slot, but queen bees are female-only in NetHack; art is identical to tile 11."
+    },
+    "11": {
+      "variantNote": "Female-labeled source slot; art is identical to tile 10."
+    },
+    "12": {
+      "variantNote": "Male-labeled source slot, but acid blobs are genderless; art is identical to tile 13."
+    },
+    "13": {
+      "variantNote": "Female-labeled source slot, but acid blobs are genderless; art is identical to tile 12."
+    },
+    "14": {
+      "variantNote": "Male-labeled source slot, but quivering blobs are genderless; art is identical to tile 15."
+    },
+    "15": {
+      "variantNote": "Female-labeled source slot, but quivering blobs are genderless; art is identical to tile 14."
+    },
+    "16": {
+      "variantNote": "Male-labeled source slot, but gelatinous cubes are genderless; art is identical to tile 17."
+    },
+    "17": {
+      "variantNote": "Female-labeled source slot, but gelatinous cubes are genderless; art is identical to tile 16."
+    }
+  }
+}

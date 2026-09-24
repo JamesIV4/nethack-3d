@@ -1,0 +1,5700 @@
+{
+  "schemaVersion": 1,
+  "batchSize": 12,
+  "batches": [
+    {
+      "id": "M-001",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:giant ant",
+          "firstTileId": 0,
+          "label": "giant ant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:killer bee",
+          "firstTileId": 2,
+          "label": "killer bee",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:soldier ant",
+          "firstTileId": 4,
+          "label": "soldier ant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:fire ant",
+          "firstTileId": 6,
+          "label": "fire ant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:giant beetle",
+          "firstTileId": 8,
+          "label": "giant beetle",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:queen bee",
+          "firstTileId": 10,
+          "label": "queen bee",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:acid blob",
+          "firstTileId": 12,
+          "label": "acid blob",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:quivering blob",
+          "firstTileId": 14,
+          "label": "quivering blob",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gelatinous cube",
+          "firstTileId": 16,
+          "label": "gelatinous cube",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:chickatrice",
+          "firstTileId": 18,
+          "label": "chickatrice",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:cockatrice",
+          "firstTileId": 20,
+          "label": "cockatrice",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:pyrolisk",
+          "firstTileId": 22,
+          "label": "pyrolisk",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-002",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:jackal",
+          "firstTileId": 24,
+          "label": "jackal",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:fox",
+          "firstTileId": 26,
+          "label": "fox",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:coyote",
+          "firstTileId": 28,
+          "label": "coyote",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:werejackal",
+          "firstTileId": 30,
+          "label": "werejackal",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:little dog",
+          "firstTileId": 32,
+          "label": "little dog",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:dingo",
+          "firstTileId": 34,
+          "label": "dingo",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:dog",
+          "firstTileId": 36,
+          "label": "dog",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:large dog",
+          "firstTileId": 38,
+          "label": "large dog",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:wolf",
+          "firstTileId": 40,
+          "label": "wolf",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:werewolf",
+          "firstTileId": 42,
+          "label": "werewolf",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:winter wolf cub",
+          "firstTileId": 44,
+          "label": "winter wolf cub",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:warg",
+          "firstTileId": 46,
+          "label": "warg",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-003",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:winter wolf",
+          "firstTileId": 48,
+          "label": "winter wolf",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:hell hound pup",
+          "firstTileId": 50,
+          "label": "hell hound pup",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:hell hound",
+          "firstTileId": 52,
+          "label": "hell hound",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Cerberus",
+          "firstTileId": 54,
+          "label": "Cerberus",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gas spore",
+          "firstTileId": 56,
+          "label": "gas spore",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:floating eye",
+          "firstTileId": 58,
+          "label": "floating eye",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:freezing sphere",
+          "firstTileId": 60,
+          "label": "freezing sphere",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:flaming sphere",
+          "firstTileId": 62,
+          "label": "flaming sphere",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:shocking sphere",
+          "firstTileId": 64,
+          "label": "shocking sphere",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:beholder",
+          "firstTileId": 66,
+          "label": "beholder",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:kitten",
+          "firstTileId": 68,
+          "label": "kitten",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:housecat",
+          "firstTileId": 70,
+          "label": "housecat",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-004",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:jaguar",
+          "firstTileId": 72,
+          "label": "jaguar",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:lynx",
+          "firstTileId": 74,
+          "label": "lynx",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:panther",
+          "firstTileId": 76,
+          "label": "panther",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:large cat",
+          "firstTileId": 78,
+          "label": "large cat",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:tiger",
+          "firstTileId": 80,
+          "label": "tiger",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:displacer beast",
+          "firstTileId": 82,
+          "label": "displacer beast",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gremlin",
+          "firstTileId": 84,
+          "label": "gremlin",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gargoyle",
+          "firstTileId": 86,
+          "label": "gargoyle",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:winged gargoyle",
+          "firstTileId": 88,
+          "label": "winged gargoyle",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:hobbit",
+          "firstTileId": 90,
+          "label": "hobbit",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:dwarf",
+          "firstTileId": 92,
+          "label": "dwarf",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:bugbear",
+          "firstTileId": 94,
+          "label": "bugbear",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-005",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:dwarf leader",
+          "firstTileId": 96,
+          "label": "dwarf leader",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:dwarf ruler",
+          "firstTileId": 98,
+          "label": "dwarf ruler",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:mind flayer",
+          "firstTileId": 100,
+          "label": "mind flayer",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:master mind flayer",
+          "firstTileId": 102,
+          "label": "master mind flayer",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:manes",
+          "firstTileId": 104,
+          "label": "manes",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:homunculus",
+          "firstTileId": 106,
+          "label": "homunculus",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:imp",
+          "firstTileId": 108,
+          "label": "imp",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:lemure",
+          "firstTileId": 110,
+          "label": "lemure",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:quasit",
+          "firstTileId": 112,
+          "label": "quasit",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:tengu",
+          "firstTileId": 114,
+          "label": "tengu",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:blue jelly",
+          "firstTileId": 116,
+          "label": "blue jelly",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:spotted jelly",
+          "firstTileId": 118,
+          "label": "spotted jelly",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-006",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:ochre jelly",
+          "firstTileId": 120,
+          "label": "ochre jelly",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:kobold",
+          "firstTileId": 122,
+          "label": "kobold",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:large kobold",
+          "firstTileId": 124,
+          "label": "large kobold",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:kobold leader",
+          "firstTileId": 126,
+          "label": "kobold leader",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:kobold shaman",
+          "firstTileId": 128,
+          "label": "kobold shaman",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:leprechaun",
+          "firstTileId": 130,
+          "label": "leprechaun",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:small mimic",
+          "firstTileId": 132,
+          "label": "small mimic",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:large mimic",
+          "firstTileId": 134,
+          "label": "large mimic",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:giant mimic",
+          "firstTileId": 136,
+          "label": "giant mimic",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:wood nymph",
+          "firstTileId": 138,
+          "label": "wood nymph",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:water nymph",
+          "firstTileId": 140,
+          "label": "water nymph",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:mountain nymph",
+          "firstTileId": 142,
+          "label": "mountain nymph",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-007",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:goblin",
+          "firstTileId": 144,
+          "label": "goblin",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:hobgoblin",
+          "firstTileId": 146,
+          "label": "hobgoblin",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:orc",
+          "firstTileId": 148,
+          "label": "orc",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:hill orc",
+          "firstTileId": 150,
+          "label": "hill orc",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Mordor orc",
+          "firstTileId": 152,
+          "label": "Mordor orc",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Uruk-hai",
+          "firstTileId": 154,
+          "label": "Uruk-hai",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:orc shaman",
+          "firstTileId": 156,
+          "label": "orc shaman",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:orc-captain",
+          "firstTileId": 158,
+          "label": "orc-captain",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:rock piercer",
+          "firstTileId": 160,
+          "label": "rock piercer",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:iron piercer",
+          "firstTileId": 162,
+          "label": "iron piercer",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:glass piercer",
+          "firstTileId": 164,
+          "label": "glass piercer",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:rothe",
+          "firstTileId": 166,
+          "label": "rothe",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-008",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:mumak",
+          "firstTileId": 168,
+          "label": "mumak",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:leocrotta",
+          "firstTileId": 170,
+          "label": "leocrotta",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:wumpus",
+          "firstTileId": 172,
+          "label": "wumpus",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:titanothere",
+          "firstTileId": 174,
+          "label": "titanothere",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baluchitherium",
+          "firstTileId": 176,
+          "label": "baluchitherium",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:mastodon",
+          "firstTileId": 178,
+          "label": "mastodon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:sewer rat",
+          "firstTileId": 180,
+          "label": "sewer rat",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:giant rat",
+          "firstTileId": 182,
+          "label": "giant rat",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:rabid rat",
+          "firstTileId": 184,
+          "label": "rabid rat",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:wererat",
+          "firstTileId": 186,
+          "label": "wererat",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:rock mole",
+          "firstTileId": 188,
+          "label": "rock mole",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:woodchuck",
+          "firstTileId": 190,
+          "label": "woodchuck",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-009",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:cave spider",
+          "firstTileId": 192,
+          "label": "cave spider",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:centipede",
+          "firstTileId": 194,
+          "label": "centipede",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:giant spider",
+          "firstTileId": 196,
+          "label": "giant spider",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:scorpion",
+          "firstTileId": 198,
+          "label": "scorpion",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:lurker above",
+          "firstTileId": 200,
+          "label": "lurker above",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:trapper",
+          "firstTileId": 202,
+          "label": "trapper",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:pony",
+          "firstTileId": 204,
+          "label": "pony",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:white unicorn",
+          "firstTileId": 206,
+          "label": "white unicorn",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gray unicorn",
+          "firstTileId": 208,
+          "label": "gray unicorn",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:black unicorn",
+          "firstTileId": 210,
+          "label": "black unicorn",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:horse",
+          "firstTileId": 212,
+          "label": "horse",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:warhorse",
+          "firstTileId": 214,
+          "label": "warhorse",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-010",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:fog cloud",
+          "firstTileId": 216,
+          "label": "fog cloud",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:dust vortex",
+          "firstTileId": 218,
+          "label": "dust vortex",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ice vortex",
+          "firstTileId": 220,
+          "label": "ice vortex",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:energy vortex",
+          "firstTileId": 222,
+          "label": "energy vortex",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:steam vortex",
+          "firstTileId": 224,
+          "label": "steam vortex",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:fire vortex",
+          "firstTileId": 226,
+          "label": "fire vortex",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby long worm",
+          "firstTileId": 228,
+          "label": "baby long worm",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby purple worm",
+          "firstTileId": 230,
+          "label": "baby purple worm",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:long worm",
+          "firstTileId": 232,
+          "label": "long worm",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:purple worm",
+          "firstTileId": 234,
+          "label": "purple worm",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:grid bug",
+          "firstTileId": 236,
+          "label": "grid bug",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:xan",
+          "firstTileId": 238,
+          "label": "xan",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-011",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:yellow light",
+          "firstTileId": 240,
+          "label": "yellow light",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:black light",
+          "firstTileId": 242,
+          "label": "black light",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:zruty",
+          "firstTileId": 244,
+          "label": "zruty",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:couatl",
+          "firstTileId": 246,
+          "label": "couatl",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Aleax",
+          "firstTileId": 248,
+          "label": "Aleax",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Angel",
+          "firstTileId": 250,
+          "label": "Angel",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ki-rin",
+          "firstTileId": 252,
+          "label": "ki-rin",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Archon",
+          "firstTileId": 254,
+          "label": "Archon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:bat",
+          "firstTileId": 256,
+          "label": "bat",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:giant bat",
+          "firstTileId": 258,
+          "label": "giant bat",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:raven",
+          "firstTileId": 260,
+          "label": "raven",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:vampire bat",
+          "firstTileId": 262,
+          "label": "vampire bat",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-012",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:plains centaur",
+          "firstTileId": 264,
+          "label": "plains centaur",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:forest centaur",
+          "firstTileId": 266,
+          "label": "forest centaur",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:mountain centaur",
+          "firstTileId": 268,
+          "label": "mountain centaur",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby gray dragon",
+          "firstTileId": 270,
+          "label": "baby gray dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby gold dragon",
+          "firstTileId": 272,
+          "label": "baby gold dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby silver dragon",
+          "firstTileId": 274,
+          "label": "baby silver dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby shimmering dragon",
+          "firstTileId": 276,
+          "label": "baby shimmering dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby red dragon",
+          "firstTileId": 278,
+          "label": "baby red dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby white dragon",
+          "firstTileId": 280,
+          "label": "baby white dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby orange dragon",
+          "firstTileId": 282,
+          "label": "baby orange dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby black dragon",
+          "firstTileId": 284,
+          "label": "baby black dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby blue dragon",
+          "firstTileId": 286,
+          "label": "baby blue dragon",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-013",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:baby green dragon",
+          "firstTileId": 288,
+          "label": "baby green dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby yellow dragon",
+          "firstTileId": 290,
+          "label": "baby yellow dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gray dragon",
+          "firstTileId": 292,
+          "label": "gray dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gold dragon",
+          "firstTileId": 294,
+          "label": "gold dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:silver dragon",
+          "firstTileId": 296,
+          "label": "silver dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:shimmering dragon",
+          "firstTileId": 298,
+          "label": "shimmering dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:red dragon",
+          "firstTileId": 300,
+          "label": "red dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:white dragon",
+          "firstTileId": 302,
+          "label": "white dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:orange dragon",
+          "firstTileId": 304,
+          "label": "orange dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:black dragon",
+          "firstTileId": 306,
+          "label": "black dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:blue dragon",
+          "firstTileId": 308,
+          "label": "blue dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:green dragon",
+          "firstTileId": 310,
+          "label": "green dragon",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-014",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:yellow dragon",
+          "firstTileId": 312,
+          "label": "yellow dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:stalker",
+          "firstTileId": 314,
+          "label": "stalker",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:air elemental",
+          "firstTileId": 316,
+          "label": "air elemental",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:fire elemental",
+          "firstTileId": 318,
+          "label": "fire elemental",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:earth elemental",
+          "firstTileId": 320,
+          "label": "earth elemental",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:water elemental",
+          "firstTileId": 322,
+          "label": "water elemental",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:lichen",
+          "firstTileId": 324,
+          "label": "lichen",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:brown mold",
+          "firstTileId": 326,
+          "label": "brown mold",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:yellow mold",
+          "firstTileId": 328,
+          "label": "yellow mold",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:green mold",
+          "firstTileId": 330,
+          "label": "green mold",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:red mold",
+          "firstTileId": 332,
+          "label": "red mold",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:shrieker",
+          "firstTileId": 334,
+          "label": "shrieker",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-015",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:violet fungus",
+          "firstTileId": 336,
+          "label": "violet fungus",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gnome",
+          "firstTileId": 338,
+          "label": "gnome",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gnome leader",
+          "firstTileId": 340,
+          "label": "gnome leader",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gnomish wizard",
+          "firstTileId": 342,
+          "label": "gnomish wizard",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gnome ruler",
+          "firstTileId": 344,
+          "label": "gnome ruler",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:giant",
+          "firstTileId": 346,
+          "label": "giant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:stone giant",
+          "firstTileId": 348,
+          "label": "stone giant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:hill giant",
+          "firstTileId": 350,
+          "label": "hill giant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:fire giant",
+          "firstTileId": 352,
+          "label": "fire giant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:frost giant",
+          "firstTileId": 354,
+          "label": "frost giant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ettin",
+          "firstTileId": 356,
+          "label": "ettin",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:storm giant",
+          "firstTileId": 358,
+          "label": "storm giant",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-016",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:titan",
+          "firstTileId": 360,
+          "label": "titan",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:minotaur",
+          "firstTileId": 362,
+          "label": "minotaur",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:jabberwock",
+          "firstTileId": 364,
+          "label": "jabberwock",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:vorpal jabberwock",
+          "firstTileId": 366,
+          "label": "vorpal jabberwock",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Keystone Kop",
+          "firstTileId": 368,
+          "label": "Keystone Kop",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Kop Sergeant",
+          "firstTileId": 370,
+          "label": "Kop Sergeant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Kop Lieutenant",
+          "firstTileId": 372,
+          "label": "Kop Lieutenant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Kop Kaptain",
+          "firstTileId": 374,
+          "label": "Kop Kaptain",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:lich",
+          "firstTileId": 376,
+          "label": "lich",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:demilich",
+          "firstTileId": 378,
+          "label": "demilich",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:master lich",
+          "firstTileId": 380,
+          "label": "master lich",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:arch-lich",
+          "firstTileId": 382,
+          "label": "arch-lich",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-017",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:kobold mummy",
+          "firstTileId": 384,
+          "label": "kobold mummy",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gnome mummy",
+          "firstTileId": 386,
+          "label": "gnome mummy",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:orc mummy",
+          "firstTileId": 388,
+          "label": "orc mummy",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:dwarf mummy",
+          "firstTileId": 390,
+          "label": "dwarf mummy",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:elf mummy",
+          "firstTileId": 392,
+          "label": "elf mummy",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:human mummy",
+          "firstTileId": 394,
+          "label": "human mummy",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ettin mummy",
+          "firstTileId": 396,
+          "label": "ettin mummy",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:giant mummy",
+          "firstTileId": 398,
+          "label": "giant mummy",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:red naga hatchling",
+          "firstTileId": 400,
+          "label": "red naga hatchling",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:black naga hatchling",
+          "firstTileId": 402,
+          "label": "black naga hatchling",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:golden naga hatchling",
+          "firstTileId": 404,
+          "label": "golden naga hatchling",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:guardian naga hatchling",
+          "firstTileId": 406,
+          "label": "guardian naga hatchling",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-018",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:red naga",
+          "firstTileId": 408,
+          "label": "red naga",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:black naga",
+          "firstTileId": 410,
+          "label": "black naga",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:golden naga",
+          "firstTileId": 412,
+          "label": "golden naga",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:guardian naga",
+          "firstTileId": 414,
+          "label": "guardian naga",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ogre",
+          "firstTileId": 416,
+          "label": "ogre",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ogre leader",
+          "firstTileId": 418,
+          "label": "ogre leader",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ogre tyrant",
+          "firstTileId": 420,
+          "label": "ogre tyrant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gray ooze",
+          "firstTileId": 422,
+          "label": "gray ooze",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:brown pudding",
+          "firstTileId": 424,
+          "label": "brown pudding",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:green slime",
+          "firstTileId": 426,
+          "label": "green slime",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:black pudding",
+          "firstTileId": 428,
+          "label": "black pudding",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:quantum mechanic",
+          "firstTileId": 430,
+          "label": "quantum mechanic",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-019",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:genetic engineer",
+          "firstTileId": 432,
+          "label": "genetic engineer",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:rust monster",
+          "firstTileId": 434,
+          "label": "rust monster",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:disenchanter",
+          "firstTileId": 436,
+          "label": "disenchanter",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:garter snake",
+          "firstTileId": 438,
+          "label": "garter snake",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:snake",
+          "firstTileId": 440,
+          "label": "snake",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:water moccasin",
+          "firstTileId": 442,
+          "label": "water moccasin",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:python",
+          "firstTileId": 444,
+          "label": "python",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:pit viper",
+          "firstTileId": 446,
+          "label": "pit viper",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:cobra",
+          "firstTileId": 448,
+          "label": "cobra",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:troll",
+          "firstTileId": 450,
+          "label": "troll",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ice troll",
+          "firstTileId": 452,
+          "label": "ice troll",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:rock troll",
+          "firstTileId": 454,
+          "label": "rock troll",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-020",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:water troll",
+          "firstTileId": 456,
+          "label": "water troll",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Olog-hai",
+          "firstTileId": 458,
+          "label": "Olog-hai",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:umber hulk",
+          "firstTileId": 460,
+          "label": "umber hulk",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:vampire",
+          "firstTileId": 462,
+          "label": "vampire",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:vampire leader",
+          "firstTileId": 464,
+          "label": "vampire leader",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:vampire mage",
+          "firstTileId": 466,
+          "label": "vampire mage",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Vlad the Impaler",
+          "firstTileId": 468,
+          "label": "Vlad the Impaler",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:barrow wight",
+          "firstTileId": 470,
+          "label": "barrow wight",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:wraith",
+          "firstTileId": 472,
+          "label": "wraith",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Nazgul",
+          "firstTileId": 474,
+          "label": "Nazgul",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:xorn",
+          "firstTileId": 476,
+          "label": "xorn",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:monkey",
+          "firstTileId": 478,
+          "label": "monkey",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-021",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:ape",
+          "firstTileId": 480,
+          "label": "ape",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:owlbear",
+          "firstTileId": 482,
+          "label": "owlbear",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:yeti",
+          "firstTileId": 484,
+          "label": "yeti",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:carnivorous ape",
+          "firstTileId": 486,
+          "label": "carnivorous ape",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:sasquatch",
+          "firstTileId": 488,
+          "label": "sasquatch",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:kobold zombie",
+          "firstTileId": 490,
+          "label": "kobold zombie",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gnome zombie",
+          "firstTileId": 492,
+          "label": "gnome zombie",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:orc zombie",
+          "firstTileId": 494,
+          "label": "orc zombie",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:dwarf zombie",
+          "firstTileId": 496,
+          "label": "dwarf zombie",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:elf zombie",
+          "firstTileId": 498,
+          "label": "elf zombie",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:human zombie",
+          "firstTileId": 500,
+          "label": "human zombie",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ettin zombie",
+          "firstTileId": 502,
+          "label": "ettin zombie",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-022",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:ghoul",
+          "firstTileId": 504,
+          "label": "ghoul",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:giant zombie",
+          "firstTileId": 506,
+          "label": "giant zombie",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:skeleton",
+          "firstTileId": 508,
+          "label": "skeleton",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:straw golem",
+          "firstTileId": 510,
+          "label": "straw golem",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:paper golem",
+          "firstTileId": 512,
+          "label": "paper golem",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:rope golem",
+          "firstTileId": 514,
+          "label": "rope golem",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gold golem",
+          "firstTileId": 516,
+          "label": "gold golem",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:leather golem",
+          "firstTileId": 518,
+          "label": "leather golem",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:wood golem",
+          "firstTileId": 520,
+          "label": "wood golem",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:flesh golem",
+          "firstTileId": 522,
+          "label": "flesh golem",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:clay golem",
+          "firstTileId": 524,
+          "label": "clay golem",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:stone golem",
+          "firstTileId": 526,
+          "label": "stone golem",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-023",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:glass golem",
+          "firstTileId": 528,
+          "label": "glass golem",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:iron golem",
+          "firstTileId": 530,
+          "label": "iron golem",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:human",
+          "firstTileId": 532,
+          "label": "human",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:elf",
+          "firstTileId": 540,
+          "label": "elf",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Woodland-elf",
+          "firstTileId": 542,
+          "label": "Woodland-elf",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Green-elf",
+          "firstTileId": 544,
+          "label": "Green-elf",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Grey-elf",
+          "firstTileId": 546,
+          "label": "Grey-elf",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:elf-noble",
+          "firstTileId": 548,
+          "label": "elf-noble",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:elven monarch",
+          "firstTileId": 550,
+          "label": "elven monarch",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:doppelganger",
+          "firstTileId": 552,
+          "label": "doppelganger",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:shopkeeper",
+          "firstTileId": 554,
+          "label": "shopkeeper",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:guard",
+          "firstTileId": 556,
+          "label": "guard",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-024",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:prisoner",
+          "firstTileId": 558,
+          "label": "prisoner",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Oracle",
+          "firstTileId": 560,
+          "label": "Oracle",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:aligned cleric",
+          "firstTileId": 562,
+          "label": "aligned cleric",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:high cleric",
+          "firstTileId": 564,
+          "label": "high cleric",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:soldier",
+          "firstTileId": 566,
+          "label": "soldier",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:sergeant",
+          "firstTileId": 568,
+          "label": "sergeant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:nurse",
+          "firstTileId": 570,
+          "label": "nurse",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:lieutenant",
+          "firstTileId": 572,
+          "label": "lieutenant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:captain",
+          "firstTileId": 574,
+          "label": "captain",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:watchman",
+          "firstTileId": 576,
+          "label": "watchman",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:watch captain",
+          "firstTileId": 578,
+          "label": "watch captain",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Medusa",
+          "firstTileId": 580,
+          "label": "Medusa",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-025",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:Wizard of Yendor",
+          "firstTileId": 582,
+          "label": "Wizard of Yendor",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Croesus",
+          "firstTileId": 584,
+          "label": "Croesus",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Charon",
+          "firstTileId": 586,
+          "label": "Charon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ghost",
+          "firstTileId": 588,
+          "label": "ghost",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:shade",
+          "firstTileId": 590,
+          "label": "shade",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:water demon",
+          "firstTileId": 592,
+          "label": "water demon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:amorous demon",
+          "firstTileId": 594,
+          "label": "amorous demon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:horned devil",
+          "firstTileId": 596,
+          "label": "horned devil",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:erinys",
+          "firstTileId": 598,
+          "label": "erinys",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:barbed devil",
+          "firstTileId": 600,
+          "label": "barbed devil",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:marilith",
+          "firstTileId": 602,
+          "label": "marilith",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:vrock",
+          "firstTileId": 604,
+          "label": "vrock",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-026",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:hezrou",
+          "firstTileId": 606,
+          "label": "hezrou",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:bone devil",
+          "firstTileId": 608,
+          "label": "bone devil",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ice devil",
+          "firstTileId": 610,
+          "label": "ice devil",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:nalfeshnee",
+          "firstTileId": 612,
+          "label": "nalfeshnee",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:pit fiend",
+          "firstTileId": 614,
+          "label": "pit fiend",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:sandestin",
+          "firstTileId": 616,
+          "label": "sandestin",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:balrog",
+          "firstTileId": 618,
+          "label": "balrog",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Juiblex",
+          "firstTileId": 620,
+          "label": "Juiblex",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Yeenoghu",
+          "firstTileId": 622,
+          "label": "Yeenoghu",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Orcus",
+          "firstTileId": 624,
+          "label": "Orcus",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Geryon",
+          "firstTileId": 626,
+          "label": "Geryon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Dispater",
+          "firstTileId": 628,
+          "label": "Dispater",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-027",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:Baalzebub",
+          "firstTileId": 630,
+          "label": "Baalzebub",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Asmodeus",
+          "firstTileId": 632,
+          "label": "Asmodeus",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Demogorgon",
+          "firstTileId": 634,
+          "label": "Demogorgon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Death",
+          "firstTileId": 636,
+          "label": "Death",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Pestilence",
+          "firstTileId": 638,
+          "label": "Pestilence",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Famine",
+          "firstTileId": 640,
+          "label": "Famine",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:mail daemon",
+          "firstTileId": 642,
+          "label": "mail daemon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:djinni",
+          "firstTileId": 644,
+          "label": "djinni",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:jellyfish",
+          "firstTileId": 646,
+          "label": "jellyfish",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:piranha",
+          "firstTileId": 648,
+          "label": "piranha",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:shark",
+          "firstTileId": 650,
+          "label": "shark",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:giant eel",
+          "firstTileId": 652,
+          "label": "giant eel",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-028",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:electric eel",
+          "firstTileId": 654,
+          "label": "electric eel",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:kraken",
+          "firstTileId": 656,
+          "label": "kraken",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:newt",
+          "firstTileId": 658,
+          "label": "newt",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:gecko",
+          "firstTileId": 660,
+          "label": "gecko",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:iguana",
+          "firstTileId": 662,
+          "label": "iguana",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:baby crocodile",
+          "firstTileId": 664,
+          "label": "baby crocodile",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:lizard",
+          "firstTileId": 666,
+          "label": "lizard",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:chameleon",
+          "firstTileId": 668,
+          "label": "chameleon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:crocodile",
+          "firstTileId": 670,
+          "label": "crocodile",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:salamander",
+          "firstTileId": 672,
+          "label": "salamander",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:long worm tail",
+          "firstTileId": 674,
+          "label": "long worm tail",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:archeologist",
+          "firstTileId": 676,
+          "label": "archeologist",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-029",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:barbarian",
+          "firstTileId": 678,
+          "label": "barbarian",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:cave dweller",
+          "firstTileId": 680,
+          "label": "cave dweller",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:healer",
+          "firstTileId": 682,
+          "label": "healer",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:knight",
+          "firstTileId": 684,
+          "label": "knight",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:monk",
+          "firstTileId": 686,
+          "label": "monk",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:cleric",
+          "firstTileId": 688,
+          "label": "cleric",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ranger",
+          "firstTileId": 690,
+          "label": "ranger",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:rogue",
+          "firstTileId": 692,
+          "label": "rogue",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:samurai",
+          "firstTileId": 694,
+          "label": "samurai",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:tourist",
+          "firstTileId": 696,
+          "label": "tourist",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:valkyrie",
+          "firstTileId": 698,
+          "label": "valkyrie",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:wizard",
+          "firstTileId": 700,
+          "label": "wizard",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-030",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:Lord Carnarvon",
+          "firstTileId": 702,
+          "label": "Lord Carnarvon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Pelias",
+          "firstTileId": 704,
+          "label": "Pelias",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Shaman Karnov",
+          "firstTileId": 706,
+          "label": "Shaman Karnov",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Earendil",
+          "firstTileId": 708,
+          "label": "Earendil",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Elwing",
+          "firstTileId": 710,
+          "label": "Elwing",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Hippocrates",
+          "firstTileId": 712,
+          "label": "Hippocrates",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:King Arthur",
+          "firstTileId": 714,
+          "label": "King Arthur",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Grand Master",
+          "firstTileId": 716,
+          "label": "Grand Master",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Arch Priest",
+          "firstTileId": 718,
+          "label": "Arch Priest",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Orion",
+          "firstTileId": 720,
+          "label": "Orion",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Master of Thieves",
+          "firstTileId": 722,
+          "label": "Master of Thieves",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Lord Sato",
+          "firstTileId": 724,
+          "label": "Lord Sato",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-031",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:Twoflower",
+          "firstTileId": 726,
+          "label": "Twoflower",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Norn",
+          "firstTileId": 728,
+          "label": "Norn",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Neferet the Green",
+          "firstTileId": 730,
+          "label": "Neferet the Green",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Minion of Huhetotl",
+          "firstTileId": 732,
+          "label": "Minion of Huhetotl",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Thoth Amon",
+          "firstTileId": 734,
+          "label": "Thoth Amon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Chromatic Dragon",
+          "firstTileId": 736,
+          "label": "Chromatic Dragon",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Goblin King",
+          "firstTileId": 738,
+          "label": "Goblin King",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Cyclops",
+          "firstTileId": 740,
+          "label": "Cyclops",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Ixoth",
+          "firstTileId": 742,
+          "label": "Ixoth",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Master Kaen",
+          "firstTileId": 744,
+          "label": "Master Kaen",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Nalzok",
+          "firstTileId": 746,
+          "label": "Nalzok",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Scorpius",
+          "firstTileId": 748,
+          "label": "Scorpius",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-032",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:Master Assassin",
+          "firstTileId": 750,
+          "label": "Master Assassin",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Ashikaga Takauji",
+          "firstTileId": 752,
+          "label": "Ashikaga Takauji",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Lord Surtur",
+          "firstTileId": 754,
+          "label": "Lord Surtur",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:Dark One",
+          "firstTileId": 756,
+          "label": "Dark One",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:student",
+          "firstTileId": 758,
+          "label": "student",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:chieftain",
+          "firstTileId": 760,
+          "label": "chieftain",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:neanderthal",
+          "firstTileId": 762,
+          "label": "neanderthal",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:High-elf",
+          "firstTileId": 764,
+          "label": "High-elf",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:attendant",
+          "firstTileId": 766,
+          "label": "attendant",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:page",
+          "firstTileId": 768,
+          "label": "page",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:abbot",
+          "firstTileId": 770,
+          "label": "abbot",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:acolyte",
+          "firstTileId": 772,
+          "label": "acolyte",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "M-033",
+      "category": "monster",
+      "subjects": [
+        {
+          "researchKey": "monster:hunter",
+          "firstTileId": 774,
+          "label": "hunter",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:thug",
+          "firstTileId": 776,
+          "label": "thug",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:ninja",
+          "firstTileId": 778,
+          "label": "ninja",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:roshi",
+          "firstTileId": 780,
+          "label": "roshi",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:guide",
+          "firstTileId": 782,
+          "label": "guide",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:warrior",
+          "firstTileId": 784,
+          "label": "warrior",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:apprentice",
+          "firstTileId": 786,
+          "label": "apprentice",
+          "researched": true
+        },
+        {
+          "researchKey": "monster:invisible monster, nogender",
+          "firstTileId": 788,
+          "label": "invisible monster, nogender",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-001",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:strange object",
+          "firstTileId": 789,
+          "label": "strange object",
+          "researched": true
+        },
+        {
+          "researchKey": "object:strange / generic strange",
+          "firstTileId": 790,
+          "label": "strange / generic strange",
+          "researched": true
+        },
+        {
+          "researchKey": "object:weapon / generic weapon",
+          "firstTileId": 791,
+          "label": "weapon / generic weapon",
+          "researched": true
+        },
+        {
+          "researchKey": "object:armor / generic armor",
+          "firstTileId": 792,
+          "label": "armor / generic armor",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ring / generic ring",
+          "firstTileId": 793,
+          "label": "ring / generic ring",
+          "researched": true
+        },
+        {
+          "researchKey": "object:amulet / generic amulet",
+          "firstTileId": 794,
+          "label": "amulet / generic amulet",
+          "researched": true
+        },
+        {
+          "researchKey": "object:tool / generic tool",
+          "firstTileId": 795,
+          "label": "tool / generic tool",
+          "researched": true
+        },
+        {
+          "researchKey": "object:food / generic food",
+          "firstTileId": 796,
+          "label": "food / generic food",
+          "researched": true
+        },
+        {
+          "researchKey": "object:potion / generic potion",
+          "firstTileId": 797,
+          "label": "potion / generic potion",
+          "researched": true
+        },
+        {
+          "researchKey": "object:scroll / generic scroll",
+          "firstTileId": 798,
+          "label": "scroll / generic scroll",
+          "researched": true
+        },
+        {
+          "researchKey": "object:spellbook / generic spellbook",
+          "firstTileId": 799,
+          "label": "spellbook / generic spellbook",
+          "researched": true
+        },
+        {
+          "researchKey": "object:wand / generic wand",
+          "firstTileId": 800,
+          "label": "wand / generic wand",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-002",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:coin / generic coin",
+          "firstTileId": 801,
+          "label": "coin / generic coin",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gem / generic gem",
+          "firstTileId": 802,
+          "label": "gem / generic gem",
+          "researched": true
+        },
+        {
+          "researchKey": "object:large rock / generic large rock",
+          "firstTileId": 803,
+          "label": "large rock / generic large rock",
+          "researched": true
+        },
+        {
+          "researchKey": "object:iron ball / generic iron ball",
+          "firstTileId": 804,
+          "label": "iron ball / generic iron ball",
+          "researched": true
+        },
+        {
+          "researchKey": "object:iron chain / generic iron chain",
+          "firstTileId": 805,
+          "label": "iron chain / generic iron chain",
+          "researched": true
+        },
+        {
+          "researchKey": "object:venom / generic venom",
+          "firstTileId": 806,
+          "label": "venom / generic venom",
+          "researched": true
+        },
+        {
+          "researchKey": "object:arrow",
+          "firstTileId": 807,
+          "label": "arrow",
+          "researched": true
+        },
+        {
+          "researchKey": "object:runed arrow / elven arrow",
+          "firstTileId": 808,
+          "label": "runed arrow / elven arrow",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crude arrow / orcish arrow",
+          "firstTileId": 809,
+          "label": "crude arrow / orcish arrow",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver arrow",
+          "firstTileId": 810,
+          "label": "silver arrow",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bamboo arrow / ya",
+          "firstTileId": 811,
+          "label": "bamboo arrow / ya",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crossbow bolt",
+          "firstTileId": 812,
+          "label": "crossbow bolt",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-003",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:dart",
+          "firstTileId": 813,
+          "label": "dart",
+          "researched": true
+        },
+        {
+          "researchKey": "object:throwing star / shuriken",
+          "firstTileId": 814,
+          "label": "throwing star / shuriken",
+          "researched": true
+        },
+        {
+          "researchKey": "object:boomerang",
+          "firstTileId": 815,
+          "label": "boomerang",
+          "researched": true
+        },
+        {
+          "researchKey": "object:spear",
+          "firstTileId": 816,
+          "label": "spear",
+          "researched": true
+        },
+        {
+          "researchKey": "object:runed spear / elven spear",
+          "firstTileId": 817,
+          "label": "runed spear / elven spear",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crude spear / orcish spear",
+          "firstTileId": 818,
+          "label": "crude spear / orcish spear",
+          "researched": true
+        },
+        {
+          "researchKey": "object:stout spear / dwarvish spear",
+          "firstTileId": 819,
+          "label": "stout spear / dwarvish spear",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver spear",
+          "firstTileId": 820,
+          "label": "silver spear",
+          "researched": true
+        },
+        {
+          "researchKey": "object:throwing spear / javelin",
+          "firstTileId": 821,
+          "label": "throwing spear / javelin",
+          "researched": true
+        },
+        {
+          "researchKey": "object:trident",
+          "firstTileId": 822,
+          "label": "trident",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dagger",
+          "firstTileId": 823,
+          "label": "dagger",
+          "researched": true
+        },
+        {
+          "researchKey": "object:runed dagger / elven dagger",
+          "firstTileId": 824,
+          "label": "runed dagger / elven dagger",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-004",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:crude dagger / orcish dagger",
+          "firstTileId": 825,
+          "label": "crude dagger / orcish dagger",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver dagger",
+          "firstTileId": 826,
+          "label": "silver dagger",
+          "researched": true
+        },
+        {
+          "researchKey": "object:athame",
+          "firstTileId": 827,
+          "label": "athame",
+          "researched": true
+        },
+        {
+          "researchKey": "object:scalpel",
+          "firstTileId": 828,
+          "label": "scalpel",
+          "researched": true
+        },
+        {
+          "researchKey": "object:knife",
+          "firstTileId": 829,
+          "label": "knife",
+          "researched": true
+        },
+        {
+          "researchKey": "object:stiletto",
+          "firstTileId": 830,
+          "label": "stiletto",
+          "researched": true
+        },
+        {
+          "researchKey": "object:worm tooth",
+          "firstTileId": 831,
+          "label": "worm tooth",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crysknife",
+          "firstTileId": 832,
+          "label": "crysknife",
+          "researched": true
+        },
+        {
+          "researchKey": "object:axe",
+          "firstTileId": 833,
+          "label": "axe",
+          "researched": true
+        },
+        {
+          "researchKey": "object:double-headed axe / battle-axe",
+          "firstTileId": 834,
+          "label": "double-headed axe / battle-axe",
+          "researched": true
+        },
+        {
+          "researchKey": "object:short sword",
+          "firstTileId": 835,
+          "label": "short sword",
+          "researched": true
+        },
+        {
+          "researchKey": "object:runed short sword / elven short sword",
+          "firstTileId": 836,
+          "label": "runed short sword / elven short sword",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-005",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:crude short sword / orcish short sword",
+          "firstTileId": 837,
+          "label": "crude short sword / orcish short sword",
+          "researched": true
+        },
+        {
+          "researchKey": "object:broad short sword / dwarvish short sword",
+          "firstTileId": 838,
+          "label": "broad short sword / dwarvish short sword",
+          "researched": true
+        },
+        {
+          "researchKey": "object:curved sword / scimitar",
+          "firstTileId": 839,
+          "label": "curved sword / scimitar",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver saber",
+          "firstTileId": 840,
+          "label": "silver saber",
+          "researched": true
+        },
+        {
+          "researchKey": "object:broadsword",
+          "firstTileId": 841,
+          "label": "broadsword",
+          "researched": true
+        },
+        {
+          "researchKey": "object:runed broadsword / elven broadsword",
+          "firstTileId": 842,
+          "label": "runed broadsword / elven broadsword",
+          "researched": true
+        },
+        {
+          "researchKey": "object:long sword",
+          "firstTileId": 843,
+          "label": "long sword",
+          "researched": true
+        },
+        {
+          "researchKey": "object:two-handed sword",
+          "firstTileId": 844,
+          "label": "two-handed sword",
+          "researched": true
+        },
+        {
+          "researchKey": "object:samurai sword / katana",
+          "firstTileId": 845,
+          "label": "samurai sword / katana",
+          "researched": true
+        },
+        {
+          "researchKey": "object:long samurai sword / tsurugi",
+          "firstTileId": 846,
+          "label": "long samurai sword / tsurugi",
+          "researched": true
+        },
+        {
+          "researchKey": "object:runed broadsword / runesword",
+          "firstTileId": 847,
+          "label": "runed broadsword / runesword",
+          "researched": true
+        },
+        {
+          "researchKey": "object:vulgar polearm / partisan",
+          "firstTileId": 848,
+          "label": "vulgar polearm / partisan",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-006",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:hilted polearm / ranseur",
+          "firstTileId": 849,
+          "label": "hilted polearm / ranseur",
+          "researched": true
+        },
+        {
+          "researchKey": "object:forked polearm / spetum",
+          "firstTileId": 850,
+          "label": "forked polearm / spetum",
+          "researched": true
+        },
+        {
+          "researchKey": "object:single-edged polearm / glaive",
+          "firstTileId": 851,
+          "label": "single-edged polearm / glaive",
+          "researched": true
+        },
+        {
+          "researchKey": "object:angled poleaxe / halberd",
+          "firstTileId": 852,
+          "label": "angled poleaxe / halberd",
+          "researched": true
+        },
+        {
+          "researchKey": "object:long poleaxe / bardiche",
+          "firstTileId": 853,
+          "label": "long poleaxe / bardiche",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pole cleaver / voulge",
+          "firstTileId": 854,
+          "label": "pole cleaver / voulge",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pole sickle / fauchard",
+          "firstTileId": 855,
+          "label": "pole sickle / fauchard",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pruning hook / guisarme",
+          "firstTileId": 856,
+          "label": "pruning hook / guisarme",
+          "researched": true
+        },
+        {
+          "researchKey": "object:hooked polearm / bill-guisarme",
+          "firstTileId": 857,
+          "label": "hooked polearm / bill-guisarme",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pronged polearm / lucern hammer",
+          "firstTileId": 858,
+          "label": "pronged polearm / lucern hammer",
+          "researched": true
+        },
+        {
+          "researchKey": "object:beaked polearm / bec de corbin",
+          "firstTileId": 859,
+          "label": "beaked polearm / bec de corbin",
+          "researched": true
+        },
+        {
+          "researchKey": "object:broad pick / dwarvish mattock",
+          "firstTileId": 860,
+          "label": "broad pick / dwarvish mattock",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-007",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:lance",
+          "firstTileId": 861,
+          "label": "lance",
+          "researched": true
+        },
+        {
+          "researchKey": "object:mace",
+          "firstTileId": 862,
+          "label": "mace",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver mace",
+          "firstTileId": 863,
+          "label": "silver mace",
+          "researched": true
+        },
+        {
+          "researchKey": "object:morning star",
+          "firstTileId": 864,
+          "label": "morning star",
+          "researched": true
+        },
+        {
+          "researchKey": "object:war hammer",
+          "firstTileId": 865,
+          "label": "war hammer",
+          "researched": true
+        },
+        {
+          "researchKey": "object:club",
+          "firstTileId": 866,
+          "label": "club",
+          "researched": true
+        },
+        {
+          "researchKey": "object:rubber hose",
+          "firstTileId": 867,
+          "label": "rubber hose",
+          "researched": true
+        },
+        {
+          "researchKey": "object:staff / quarterstaff",
+          "firstTileId": 868,
+          "label": "staff / quarterstaff",
+          "researched": true
+        },
+        {
+          "researchKey": "object:thonged club / aklys",
+          "firstTileId": 869,
+          "label": "thonged club / aklys",
+          "researched": true
+        },
+        {
+          "researchKey": "object:flail",
+          "firstTileId": 870,
+          "label": "flail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bullwhip",
+          "firstTileId": 871,
+          "label": "bullwhip",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bow",
+          "firstTileId": 872,
+          "label": "bow",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-008",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:runed bow / elven bow",
+          "firstTileId": 873,
+          "label": "runed bow / elven bow",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crude bow / orcish bow",
+          "firstTileId": 874,
+          "label": "crude bow / orcish bow",
+          "researched": true
+        },
+        {
+          "researchKey": "object:long bow / yumi",
+          "firstTileId": 875,
+          "label": "long bow / yumi",
+          "researched": true
+        },
+        {
+          "researchKey": "object:sling",
+          "firstTileId": 876,
+          "label": "sling",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crossbow",
+          "firstTileId": 877,
+          "label": "crossbow",
+          "researched": true
+        },
+        {
+          "researchKey": "object:leather hat / elven leather helm",
+          "firstTileId": 878,
+          "label": "leather hat / elven leather helm",
+          "researched": true
+        },
+        {
+          "researchKey": "object:iron skull cap / orcish helm",
+          "firstTileId": 879,
+          "label": "iron skull cap / orcish helm",
+          "researched": true
+        },
+        {
+          "researchKey": "object:hard hat / dwarvish iron helm",
+          "firstTileId": 880,
+          "label": "hard hat / dwarvish iron helm",
+          "researched": true
+        },
+        {
+          "researchKey": "object:fedora",
+          "firstTileId": 881,
+          "label": "fedora",
+          "researched": true
+        },
+        {
+          "researchKey": "object:conical hat / cornuthaum",
+          "firstTileId": 882,
+          "label": "conical hat / cornuthaum",
+          "researched": true
+        },
+        {
+          "researchKey": "object:conical hat / dunce cap",
+          "firstTileId": 883,
+          "label": "conical hat / dunce cap",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dented pot",
+          "firstTileId": 884,
+          "label": "dented pot",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-009",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:crystal helmet / helm of brilliance",
+          "firstTileId": 885,
+          "label": "crystal helmet / helm of brilliance",
+          "researched": true
+        },
+        {
+          "researchKey": "object:plumed helmet / helmet",
+          "firstTileId": 886,
+          "label": "plumed helmet / helmet",
+          "researched": true
+        },
+        {
+          "researchKey": "object:etched helmet / helm of caution",
+          "firstTileId": 887,
+          "label": "etched helmet / helm of caution",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crested helmet / helm of opposite alignment",
+          "firstTileId": 888,
+          "label": "crested helmet / helm of opposite alignment",
+          "researched": true
+        },
+        {
+          "researchKey": "object:visored helmet / helm of telepathy",
+          "firstTileId": 889,
+          "label": "visored helmet / helm of telepathy",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gray dragon scale mail",
+          "firstTileId": 890,
+          "label": "gray dragon scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gold dragon scale mail",
+          "firstTileId": 891,
+          "label": "gold dragon scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver dragon scale mail",
+          "firstTileId": 892,
+          "label": "silver dragon scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:shimmering dragon scale mail",
+          "firstTileId": 893,
+          "label": "shimmering dragon scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:red dragon scale mail",
+          "firstTileId": 894,
+          "label": "red dragon scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:white dragon scale mail",
+          "firstTileId": 895,
+          "label": "white dragon scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:orange dragon scale mail",
+          "firstTileId": 896,
+          "label": "orange dragon scale mail",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-010",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:black dragon scale mail",
+          "firstTileId": 897,
+          "label": "black dragon scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:blue dragon scale mail",
+          "firstTileId": 898,
+          "label": "blue dragon scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:green dragon scale mail",
+          "firstTileId": 899,
+          "label": "green dragon scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:yellow dragon scale mail",
+          "firstTileId": 900,
+          "label": "yellow dragon scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gray dragon scales",
+          "firstTileId": 901,
+          "label": "gray dragon scales",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gold dragon scales",
+          "firstTileId": 902,
+          "label": "gold dragon scales",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver dragon scales",
+          "firstTileId": 903,
+          "label": "silver dragon scales",
+          "researched": true
+        },
+        {
+          "researchKey": "object:shimmering dragon scales",
+          "firstTileId": 904,
+          "label": "shimmering dragon scales",
+          "researched": true
+        },
+        {
+          "researchKey": "object:red dragon scales",
+          "firstTileId": 905,
+          "label": "red dragon scales",
+          "researched": true
+        },
+        {
+          "researchKey": "object:white dragon scales",
+          "firstTileId": 906,
+          "label": "white dragon scales",
+          "researched": true
+        },
+        {
+          "researchKey": "object:orange dragon scales",
+          "firstTileId": 907,
+          "label": "orange dragon scales",
+          "researched": true
+        },
+        {
+          "researchKey": "object:black dragon scales",
+          "firstTileId": 908,
+          "label": "black dragon scales",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-011",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:blue dragon scales",
+          "firstTileId": 909,
+          "label": "blue dragon scales",
+          "researched": true
+        },
+        {
+          "researchKey": "object:green dragon scales",
+          "firstTileId": 910,
+          "label": "green dragon scales",
+          "researched": true
+        },
+        {
+          "researchKey": "object:yellow dragon scales",
+          "firstTileId": 911,
+          "label": "yellow dragon scales",
+          "researched": true
+        },
+        {
+          "researchKey": "object:plate mail",
+          "firstTileId": 912,
+          "label": "plate mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crystal plate mail",
+          "firstTileId": 913,
+          "label": "crystal plate mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bronze plate mail",
+          "firstTileId": 914,
+          "label": "bronze plate mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:splint mail",
+          "firstTileId": 915,
+          "label": "splint mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:banded mail",
+          "firstTileId": 916,
+          "label": "banded mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dwarvish mithril-coat",
+          "firstTileId": 917,
+          "label": "dwarvish mithril-coat",
+          "researched": true
+        },
+        {
+          "researchKey": "object:elven mithril-coat",
+          "firstTileId": 918,
+          "label": "elven mithril-coat",
+          "researched": true
+        },
+        {
+          "researchKey": "object:chain mail",
+          "firstTileId": 919,
+          "label": "chain mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crude chain mail / orcish chain mail",
+          "firstTileId": 920,
+          "label": "crude chain mail / orcish chain mail",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-012",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:scale mail",
+          "firstTileId": 921,
+          "label": "scale mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:studded leather armor",
+          "firstTileId": 922,
+          "label": "studded leather armor",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ring mail",
+          "firstTileId": 923,
+          "label": "ring mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crude ring mail / orcish ring mail",
+          "firstTileId": 924,
+          "label": "crude ring mail / orcish ring mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:leather armor",
+          "firstTileId": 925,
+          "label": "leather armor",
+          "researched": true
+        },
+        {
+          "researchKey": "object:leather jacket",
+          "firstTileId": 926,
+          "label": "leather jacket",
+          "researched": true
+        },
+        {
+          "researchKey": "object:Hawaiian shirt",
+          "firstTileId": 927,
+          "label": "Hawaiian shirt",
+          "researched": true
+        },
+        {
+          "researchKey": "object:T-shirt",
+          "firstTileId": 928,
+          "label": "T-shirt",
+          "researched": true
+        },
+        {
+          "researchKey": "object:mummy wrapping",
+          "firstTileId": 929,
+          "label": "mummy wrapping",
+          "researched": true
+        },
+        {
+          "researchKey": "object:faded pall / elven cloak",
+          "firstTileId": 930,
+          "label": "faded pall / elven cloak",
+          "researched": true
+        },
+        {
+          "researchKey": "object:coarse mantelet / orcish cloak",
+          "firstTileId": 931,
+          "label": "coarse mantelet / orcish cloak",
+          "researched": true
+        },
+        {
+          "researchKey": "object:hooded cloak / dwarvish cloak",
+          "firstTileId": 932,
+          "label": "hooded cloak / dwarvish cloak",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-013",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:slippery cloak / oilskin cloak",
+          "firstTileId": 933,
+          "label": "slippery cloak / oilskin cloak",
+          "researched": true
+        },
+        {
+          "researchKey": "object:robe",
+          "firstTileId": 934,
+          "label": "robe",
+          "researched": true
+        },
+        {
+          "researchKey": "object:apron / alchemy smock",
+          "firstTileId": 935,
+          "label": "apron / alchemy smock",
+          "researched": true
+        },
+        {
+          "researchKey": "object:leather cloak",
+          "firstTileId": 936,
+          "label": "leather cloak",
+          "researched": true
+        },
+        {
+          "researchKey": "object:tattered cape / cloak of protection",
+          "firstTileId": 937,
+          "label": "tattered cape / cloak of protection",
+          "researched": true
+        },
+        {
+          "researchKey": "object:opera cloak / cloak of invisibility",
+          "firstTileId": 938,
+          "label": "opera cloak / cloak of invisibility",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ornamental cope / cloak of magic resistance",
+          "firstTileId": 939,
+          "label": "ornamental cope / cloak of magic resistance",
+          "researched": true
+        },
+        {
+          "researchKey": "object:piece of cloth / cloak of displacement",
+          "firstTileId": 940,
+          "label": "piece of cloth / cloak of displacement",
+          "researched": true
+        },
+        {
+          "researchKey": "object:wooden shield / small shield",
+          "firstTileId": 941,
+          "label": "wooden shield / small shield",
+          "researched": true
+        },
+        {
+          "researchKey": "object:wooden shield / shield of drain resistance",
+          "firstTileId": 942,
+          "label": "wooden shield / shield of drain resistance",
+          "researched": true
+        },
+        {
+          "researchKey": "object:wooden shield / shield of shock resistance",
+          "firstTileId": 943,
+          "label": "wooden shield / shield of shock resistance",
+          "researched": true
+        },
+        {
+          "researchKey": "object:blue and green shield / elven shield",
+          "firstTileId": 944,
+          "label": "blue and green shield / elven shield",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-014",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:white-handed shield / Uruk-hai shield",
+          "firstTileId": 945,
+          "label": "white-handed shield / Uruk-hai shield",
+          "researched": true
+        },
+        {
+          "researchKey": "object:red-eyed shield / orcish shield",
+          "firstTileId": 946,
+          "label": "red-eyed shield / orcish shield",
+          "researched": true
+        },
+        {
+          "researchKey": "object:large shield",
+          "firstTileId": 947,
+          "label": "large shield",
+          "researched": true
+        },
+        {
+          "researchKey": "object:large round shield / dwarvish roundshield",
+          "firstTileId": 948,
+          "label": "large round shield / dwarvish roundshield",
+          "researched": true
+        },
+        {
+          "researchKey": "object:polished silver shield / shield of reflection",
+          "firstTileId": 949,
+          "label": "polished silver shield / shield of reflection",
+          "researched": true
+        },
+        {
+          "researchKey": "object:old gloves / leather gloves",
+          "firstTileId": 950,
+          "label": "old gloves / leather gloves",
+          "researched": true
+        },
+        {
+          "researchKey": "object:padded gloves / gauntlets of fumbling",
+          "firstTileId": 951,
+          "label": "padded gloves / gauntlets of fumbling",
+          "researched": true
+        },
+        {
+          "researchKey": "object:riding gloves / gauntlets of power",
+          "firstTileId": 952,
+          "label": "riding gloves / gauntlets of power",
+          "researched": true
+        },
+        {
+          "researchKey": "object:fencing gloves / gauntlets of dexterity",
+          "firstTileId": 953,
+          "label": "fencing gloves / gauntlets of dexterity",
+          "researched": true
+        },
+        {
+          "researchKey": "object:walking shoes / low boots",
+          "firstTileId": 954,
+          "label": "walking shoes / low boots",
+          "researched": true
+        },
+        {
+          "researchKey": "object:hard shoes / iron shoes",
+          "firstTileId": 955,
+          "label": "hard shoes / iron shoes",
+          "researched": true
+        },
+        {
+          "researchKey": "object:jackboots / high boots",
+          "firstTileId": 956,
+          "label": "jackboots / high boots",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-015",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:combat boots / speed boots",
+          "firstTileId": 957,
+          "label": "combat boots / speed boots",
+          "researched": true
+        },
+        {
+          "researchKey": "object:jungle boots / water walking boots",
+          "firstTileId": 958,
+          "label": "jungle boots / water walking boots",
+          "researched": true
+        },
+        {
+          "researchKey": "object:hiking boots / jumping boots",
+          "firstTileId": 959,
+          "label": "hiking boots / jumping boots",
+          "researched": true
+        },
+        {
+          "researchKey": "object:mud boots / elven boots",
+          "firstTileId": 960,
+          "label": "mud boots / elven boots",
+          "researched": true
+        },
+        {
+          "researchKey": "object:buckled boots / kicking boots",
+          "firstTileId": 961,
+          "label": "buckled boots / kicking boots",
+          "researched": true
+        },
+        {
+          "researchKey": "object:riding boots / fumble boots",
+          "firstTileId": 962,
+          "label": "riding boots / fumble boots",
+          "researched": true
+        },
+        {
+          "researchKey": "object:snow boots / levitation boots",
+          "firstTileId": 963,
+          "label": "snow boots / levitation boots",
+          "researched": true
+        },
+        {
+          "researchKey": "object:wooden / adornment",
+          "firstTileId": 964,
+          "label": "wooden / adornment",
+          "researched": true
+        },
+        {
+          "researchKey": "object:granite / gain strength",
+          "firstTileId": 965,
+          "label": "granite / gain strength",
+          "researched": true
+        },
+        {
+          "researchKey": "object:opal / gain constitution",
+          "firstTileId": 966,
+          "label": "opal / gain constitution",
+          "researched": true
+        },
+        {
+          "researchKey": "object:clay / increase accuracy",
+          "firstTileId": 967,
+          "label": "clay / increase accuracy",
+          "researched": true
+        },
+        {
+          "researchKey": "object:coral / increase damage",
+          "firstTileId": 968,
+          "label": "coral / increase damage",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-016",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:black onyx / protection",
+          "firstTileId": 969,
+          "label": "black onyx / protection",
+          "researched": true
+        },
+        {
+          "researchKey": "object:moonstone / regeneration",
+          "firstTileId": 970,
+          "label": "moonstone / regeneration",
+          "researched": true
+        },
+        {
+          "researchKey": "object:tiger eye / searching",
+          "firstTileId": 971,
+          "label": "tiger eye / searching",
+          "researched": true
+        },
+        {
+          "researchKey": "object:jade / stealth",
+          "firstTileId": 972,
+          "label": "jade / stealth",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bronze / sustain ability",
+          "firstTileId": 973,
+          "label": "bronze / sustain ability",
+          "researched": true
+        },
+        {
+          "researchKey": "object:agate / levitation",
+          "firstTileId": 974,
+          "label": "agate / levitation",
+          "researched": true
+        },
+        {
+          "researchKey": "object:topaz / hunger",
+          "firstTileId": 975,
+          "label": "topaz / hunger",
+          "researched": true
+        },
+        {
+          "researchKey": "object:sapphire / aggravate monster",
+          "firstTileId": 976,
+          "label": "sapphire / aggravate monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ruby / conflict",
+          "firstTileId": 977,
+          "label": "ruby / conflict",
+          "researched": true
+        },
+        {
+          "researchKey": "object:diamond / warning",
+          "firstTileId": 978,
+          "label": "diamond / warning",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pearl / poison resistance",
+          "firstTileId": 979,
+          "label": "pearl / poison resistance",
+          "researched": true
+        },
+        {
+          "researchKey": "object:iron / fire resistance",
+          "firstTileId": 980,
+          "label": "iron / fire resistance",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-017",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:brass / cold resistance",
+          "firstTileId": 981,
+          "label": "brass / cold resistance",
+          "researched": true
+        },
+        {
+          "researchKey": "object:copper / shock resistance",
+          "firstTileId": 982,
+          "label": "copper / shock resistance",
+          "researched": true
+        },
+        {
+          "researchKey": "object:twisted / free action",
+          "firstTileId": 983,
+          "label": "twisted / free action",
+          "researched": true
+        },
+        {
+          "researchKey": "object:steel / slow digestion",
+          "firstTileId": 984,
+          "label": "steel / slow digestion",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver / teleportation",
+          "firstTileId": 985,
+          "label": "silver / teleportation",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gold / teleport control",
+          "firstTileId": 986,
+          "label": "gold / teleport control",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ivory / polymorph",
+          "firstTileId": 987,
+          "label": "ivory / polymorph",
+          "researched": true
+        },
+        {
+          "researchKey": "object:emerald / polymorph control",
+          "firstTileId": 988,
+          "label": "emerald / polymorph control",
+          "researched": true
+        },
+        {
+          "researchKey": "object:wire / invisibility",
+          "firstTileId": 989,
+          "label": "wire / invisibility",
+          "researched": true
+        },
+        {
+          "researchKey": "object:engagement / see invisible",
+          "firstTileId": 990,
+          "label": "engagement / see invisible",
+          "researched": true
+        },
+        {
+          "researchKey": "object:shiny / protection from shape changers",
+          "firstTileId": 991,
+          "label": "shiny / protection from shape changers",
+          "researched": true
+        },
+        {
+          "researchKey": "object:circular / amulet of ESP",
+          "firstTileId": 992,
+          "label": "circular / amulet of ESP",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-018",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:spherical / amulet of life saving",
+          "firstTileId": 993,
+          "label": "spherical / amulet of life saving",
+          "researched": true
+        },
+        {
+          "researchKey": "object:oval / amulet of strangulation",
+          "firstTileId": 994,
+          "label": "oval / amulet of strangulation",
+          "researched": true
+        },
+        {
+          "researchKey": "object:triangular / amulet of restful sleep",
+          "firstTileId": 995,
+          "label": "triangular / amulet of restful sleep",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pyramidal / amulet versus poison",
+          "firstTileId": 996,
+          "label": "pyramidal / amulet versus poison",
+          "researched": true
+        },
+        {
+          "researchKey": "object:square / amulet of change",
+          "firstTileId": 997,
+          "label": "square / amulet of change",
+          "researched": true
+        },
+        {
+          "researchKey": "object:concave / amulet of unchanging",
+          "firstTileId": 998,
+          "label": "concave / amulet of unchanging",
+          "researched": true
+        },
+        {
+          "researchKey": "object:hexagonal / amulet of reflection",
+          "firstTileId": 999,
+          "label": "hexagonal / amulet of reflection",
+          "researched": true
+        },
+        {
+          "researchKey": "object:octagonal / amulet of magical breathing",
+          "firstTileId": 1000,
+          "label": "octagonal / amulet of magical breathing",
+          "researched": true
+        },
+        {
+          "researchKey": "object:perforated / amulet of guarding",
+          "firstTileId": 1001,
+          "label": "perforated / amulet of guarding",
+          "researched": true
+        },
+        {
+          "researchKey": "object:cubical / amulet of flying",
+          "firstTileId": 1002,
+          "label": "cubical / amulet of flying",
+          "researched": true
+        },
+        {
+          "researchKey": "object:Amulet of Yendor / cheap plastic imitation of the Amulet of Yendor",
+          "firstTileId": 1003,
+          "label": "Amulet of Yendor / cheap plastic imitation of the Amulet of Yendor",
+          "researched": true
+        },
+        {
+          "researchKey": "object:Amulet of Yendor / Amulet of Yendor",
+          "firstTileId": 1004,
+          "label": "Amulet of Yendor / Amulet of Yendor",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-019",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:large box",
+          "firstTileId": 1005,
+          "label": "large box",
+          "researched": true
+        },
+        {
+          "researchKey": "object:chest",
+          "firstTileId": 1006,
+          "label": "chest",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ice box",
+          "firstTileId": 1007,
+          "label": "ice box",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bag / sack",
+          "firstTileId": 1008,
+          "label": "bag / sack",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bag / oilskin sack",
+          "firstTileId": 1009,
+          "label": "bag / oilskin sack",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bag / bag of holding",
+          "firstTileId": 1010,
+          "label": "bag / bag of holding",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bag / bag of tricks",
+          "firstTileId": 1011,
+          "label": "bag / bag of tricks",
+          "researched": true
+        },
+        {
+          "researchKey": "object:key / skeleton key",
+          "firstTileId": 1012,
+          "label": "key / skeleton key",
+          "researched": true
+        },
+        {
+          "researchKey": "object:lock pick",
+          "firstTileId": 1013,
+          "label": "lock pick",
+          "researched": true
+        },
+        {
+          "researchKey": "object:credit card",
+          "firstTileId": 1014,
+          "label": "credit card",
+          "researched": true
+        },
+        {
+          "researchKey": "object:candle / tallow candle",
+          "firstTileId": 1015,
+          "label": "candle / tallow candle",
+          "researched": true
+        },
+        {
+          "researchKey": "object:candle / wax candle",
+          "firstTileId": 1016,
+          "label": "candle / wax candle",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-020",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:brass lantern",
+          "firstTileId": 1017,
+          "label": "brass lantern",
+          "researched": true
+        },
+        {
+          "researchKey": "object:lamp / oil lamp",
+          "firstTileId": 1018,
+          "label": "lamp / oil lamp",
+          "researched": true
+        },
+        {
+          "researchKey": "object:lamp / magic lamp",
+          "firstTileId": 1019,
+          "label": "lamp / magic lamp",
+          "researched": true
+        },
+        {
+          "researchKey": "object:expensive camera",
+          "firstTileId": 1020,
+          "label": "expensive camera",
+          "researched": true
+        },
+        {
+          "researchKey": "object:looking glass / mirror",
+          "firstTileId": 1021,
+          "label": "looking glass / mirror",
+          "researched": true
+        },
+        {
+          "researchKey": "object:glass orb / crystal ball",
+          "firstTileId": 1022,
+          "label": "glass orb / crystal ball",
+          "researched": true
+        },
+        {
+          "researchKey": "object:lenses",
+          "firstTileId": 1023,
+          "label": "lenses",
+          "researched": true
+        },
+        {
+          "researchKey": "object:blindfold",
+          "firstTileId": 1024,
+          "label": "blindfold",
+          "researched": true
+        },
+        {
+          "researchKey": "object:towel",
+          "firstTileId": 1025,
+          "label": "towel",
+          "researched": true
+        },
+        {
+          "researchKey": "object:saddle",
+          "firstTileId": 1026,
+          "label": "saddle",
+          "researched": true
+        },
+        {
+          "researchKey": "object:leash",
+          "firstTileId": 1027,
+          "label": "leash",
+          "researched": true
+        },
+        {
+          "researchKey": "object:stethoscope",
+          "firstTileId": 1028,
+          "label": "stethoscope",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-021",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:tinning kit",
+          "firstTileId": 1029,
+          "label": "tinning kit",
+          "researched": true
+        },
+        {
+          "researchKey": "object:tin opener",
+          "firstTileId": 1030,
+          "label": "tin opener",
+          "researched": true
+        },
+        {
+          "researchKey": "object:can of grease",
+          "firstTileId": 1031,
+          "label": "can of grease",
+          "researched": true
+        },
+        {
+          "researchKey": "object:figurine",
+          "firstTileId": 1032,
+          "label": "figurine",
+          "researched": true
+        },
+        {
+          "researchKey": "object:magic marker",
+          "firstTileId": 1033,
+          "label": "magic marker",
+          "researched": true
+        },
+        {
+          "researchKey": "object:land mine",
+          "firstTileId": 1034,
+          "label": "land mine",
+          "researched": true
+        },
+        {
+          "researchKey": "object:beartrap",
+          "firstTileId": 1035,
+          "label": "beartrap",
+          "researched": true
+        },
+        {
+          "researchKey": "object:whistle / tin whistle",
+          "firstTileId": 1036,
+          "label": "whistle / tin whistle",
+          "researched": true
+        },
+        {
+          "researchKey": "object:whistle / magic whistle",
+          "firstTileId": 1037,
+          "label": "whistle / magic whistle",
+          "researched": true
+        },
+        {
+          "researchKey": "object:flute / wooden flute",
+          "firstTileId": 1038,
+          "label": "flute / wooden flute",
+          "researched": true
+        },
+        {
+          "researchKey": "object:flute / magic flute",
+          "firstTileId": 1039,
+          "label": "flute / magic flute",
+          "researched": true
+        },
+        {
+          "researchKey": "object:horn / tooled horn",
+          "firstTileId": 1040,
+          "label": "horn / tooled horn",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-022",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:horn / frost horn",
+          "firstTileId": 1041,
+          "label": "horn / frost horn",
+          "researched": true
+        },
+        {
+          "researchKey": "object:horn / fire horn",
+          "firstTileId": 1042,
+          "label": "horn / fire horn",
+          "researched": true
+        },
+        {
+          "researchKey": "object:horn / horn of plenty",
+          "firstTileId": 1043,
+          "label": "horn / horn of plenty",
+          "researched": true
+        },
+        {
+          "researchKey": "object:harp / wooden harp",
+          "firstTileId": 1044,
+          "label": "harp / wooden harp",
+          "researched": true
+        },
+        {
+          "researchKey": "object:harp / magic harp",
+          "firstTileId": 1045,
+          "label": "harp / magic harp",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bell",
+          "firstTileId": 1046,
+          "label": "bell",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bugle",
+          "firstTileId": 1047,
+          "label": "bugle",
+          "researched": true
+        },
+        {
+          "researchKey": "object:drum / leather drum",
+          "firstTileId": 1048,
+          "label": "drum / leather drum",
+          "researched": true
+        },
+        {
+          "researchKey": "object:drum / drum of earthquake",
+          "firstTileId": 1049,
+          "label": "drum / drum of earthquake",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pick-axe",
+          "firstTileId": 1050,
+          "label": "pick-axe",
+          "researched": true
+        },
+        {
+          "researchKey": "object:grappling hook",
+          "firstTileId": 1051,
+          "label": "grappling hook",
+          "researched": true
+        },
+        {
+          "researchKey": "object:unicorn horn",
+          "firstTileId": 1052,
+          "label": "unicorn horn",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-023",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:candelabrum / Candelabrum of Invocation",
+          "firstTileId": 1053,
+          "label": "candelabrum / Candelabrum of Invocation",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver bell / Bell of Opening",
+          "firstTileId": 1054,
+          "label": "silver bell / Bell of Opening",
+          "researched": true
+        },
+        {
+          "researchKey": "object:tripe ration",
+          "firstTileId": 1055,
+          "label": "tripe ration",
+          "researched": true
+        },
+        {
+          "researchKey": "object:corpse",
+          "firstTileId": 1056,
+          "label": "corpse",
+          "researched": true
+        },
+        {
+          "researchKey": "object:egg",
+          "firstTileId": 1057,
+          "label": "egg",
+          "researched": true
+        },
+        {
+          "researchKey": "object:meatball",
+          "firstTileId": 1058,
+          "label": "meatball",
+          "researched": true
+        },
+        {
+          "researchKey": "object:meat stick",
+          "firstTileId": 1059,
+          "label": "meat stick",
+          "researched": true
+        },
+        {
+          "researchKey": "object:enormous meatball",
+          "firstTileId": 1060,
+          "label": "enormous meatball",
+          "researched": true
+        },
+        {
+          "researchKey": "object:meat ring",
+          "firstTileId": 1061,
+          "label": "meat ring",
+          "researched": true
+        },
+        {
+          "researchKey": "object:glob of gray ooze",
+          "firstTileId": 1062,
+          "label": "glob of gray ooze",
+          "researched": true
+        },
+        {
+          "researchKey": "object:glob of brown pudding",
+          "firstTileId": 1063,
+          "label": "glob of brown pudding",
+          "researched": true
+        },
+        {
+          "researchKey": "object:glob of green slime",
+          "firstTileId": 1064,
+          "label": "glob of green slime",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-024",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:glob of black pudding",
+          "firstTileId": 1065,
+          "label": "glob of black pudding",
+          "researched": true
+        },
+        {
+          "researchKey": "object:kelp frond",
+          "firstTileId": 1066,
+          "label": "kelp frond",
+          "researched": true
+        },
+        {
+          "researchKey": "object:eucalyptus leaf",
+          "firstTileId": 1067,
+          "label": "eucalyptus leaf",
+          "researched": true
+        },
+        {
+          "researchKey": "object:apple",
+          "firstTileId": 1068,
+          "label": "apple",
+          "researched": true
+        },
+        {
+          "researchKey": "object:orange",
+          "firstTileId": 1069,
+          "label": "orange",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pear",
+          "firstTileId": 1070,
+          "label": "pear",
+          "researched": true
+        },
+        {
+          "researchKey": "object:melon",
+          "firstTileId": 1071,
+          "label": "melon",
+          "researched": true
+        },
+        {
+          "researchKey": "object:banana",
+          "firstTileId": 1072,
+          "label": "banana",
+          "researched": true
+        },
+        {
+          "researchKey": "object:carrot",
+          "firstTileId": 1073,
+          "label": "carrot",
+          "researched": true
+        },
+        {
+          "researchKey": "object:sprig of wolfsbane",
+          "firstTileId": 1074,
+          "label": "sprig of wolfsbane",
+          "researched": true
+        },
+        {
+          "researchKey": "object:clove of garlic",
+          "firstTileId": 1075,
+          "label": "clove of garlic",
+          "researched": true
+        },
+        {
+          "researchKey": "object:slime mold",
+          "firstTileId": 1076,
+          "label": "slime mold",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-025",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:lump of royal jelly",
+          "firstTileId": 1077,
+          "label": "lump of royal jelly",
+          "researched": true
+        },
+        {
+          "researchKey": "object:cream pie",
+          "firstTileId": 1078,
+          "label": "cream pie",
+          "researched": true
+        },
+        {
+          "researchKey": "object:candy bar",
+          "firstTileId": 1079,
+          "label": "candy bar",
+          "researched": true
+        },
+        {
+          "researchKey": "object:fortune cookie",
+          "firstTileId": 1080,
+          "label": "fortune cookie",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pancake",
+          "firstTileId": 1081,
+          "label": "pancake",
+          "researched": true
+        },
+        {
+          "researchKey": "object:lembas wafer",
+          "firstTileId": 1082,
+          "label": "lembas wafer",
+          "researched": true
+        },
+        {
+          "researchKey": "object:cram ration",
+          "firstTileId": 1083,
+          "label": "cram ration",
+          "researched": true
+        },
+        {
+          "researchKey": "object:food ration",
+          "firstTileId": 1084,
+          "label": "food ration",
+          "researched": true
+        },
+        {
+          "researchKey": "object:K-ration",
+          "firstTileId": 1085,
+          "label": "K-ration",
+          "researched": true
+        },
+        {
+          "researchKey": "object:C-ration",
+          "firstTileId": 1086,
+          "label": "C-ration",
+          "researched": true
+        },
+        {
+          "researchKey": "object:tin",
+          "firstTileId": 1087,
+          "label": "tin",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ruby / gain ability",
+          "firstTileId": 1088,
+          "label": "ruby / gain ability",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-026",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:pink / restore ability",
+          "firstTileId": 1089,
+          "label": "pink / restore ability",
+          "researched": true
+        },
+        {
+          "researchKey": "object:orange / confusion",
+          "firstTileId": 1090,
+          "label": "orange / confusion",
+          "researched": true
+        },
+        {
+          "researchKey": "object:yellow / blindness",
+          "firstTileId": 1091,
+          "label": "yellow / blindness",
+          "researched": true
+        },
+        {
+          "researchKey": "object:emerald / paralysis",
+          "firstTileId": 1092,
+          "label": "emerald / paralysis",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dark green / speed",
+          "firstTileId": 1093,
+          "label": "dark green / speed",
+          "researched": true
+        },
+        {
+          "researchKey": "object:cyan / levitation",
+          "firstTileId": 1094,
+          "label": "cyan / levitation",
+          "researched": true
+        },
+        {
+          "researchKey": "object:sky blue / hallucination",
+          "firstTileId": 1095,
+          "label": "sky blue / hallucination",
+          "researched": true
+        },
+        {
+          "researchKey": "object:brilliant blue / invisibility",
+          "firstTileId": 1096,
+          "label": "brilliant blue / invisibility",
+          "researched": true
+        },
+        {
+          "researchKey": "object:magenta / see invisible",
+          "firstTileId": 1097,
+          "label": "magenta / see invisible",
+          "researched": true
+        },
+        {
+          "researchKey": "object:purple-red / healing",
+          "firstTileId": 1098,
+          "label": "purple-red / healing",
+          "researched": true
+        },
+        {
+          "researchKey": "object:puce / extra healing",
+          "firstTileId": 1099,
+          "label": "puce / extra healing",
+          "researched": true
+        },
+        {
+          "researchKey": "object:milky / gain level",
+          "firstTileId": 1100,
+          "label": "milky / gain level",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-027",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:swirly / enlightenment",
+          "firstTileId": 1101,
+          "label": "swirly / enlightenment",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bubbly / monster detection",
+          "firstTileId": 1102,
+          "label": "bubbly / monster detection",
+          "researched": true
+        },
+        {
+          "researchKey": "object:smoky / object detection",
+          "firstTileId": 1103,
+          "label": "smoky / object detection",
+          "researched": true
+        },
+        {
+          "researchKey": "object:cloudy / gain energy",
+          "firstTileId": 1104,
+          "label": "cloudy / gain energy",
+          "researched": true
+        },
+        {
+          "researchKey": "object:effervescent / sleeping",
+          "firstTileId": 1105,
+          "label": "effervescent / sleeping",
+          "researched": true
+        },
+        {
+          "researchKey": "object:black / full healing",
+          "firstTileId": 1106,
+          "label": "black / full healing",
+          "researched": true
+        },
+        {
+          "researchKey": "object:golden / polymorph",
+          "firstTileId": 1107,
+          "label": "golden / polymorph",
+          "researched": true
+        },
+        {
+          "researchKey": "object:brown / booze",
+          "firstTileId": 1108,
+          "label": "brown / booze",
+          "researched": true
+        },
+        {
+          "researchKey": "object:fizzy / sickness",
+          "firstTileId": 1109,
+          "label": "fizzy / sickness",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dark / fruit juice",
+          "firstTileId": 1110,
+          "label": "dark / fruit juice",
+          "researched": true
+        },
+        {
+          "researchKey": "object:white / acid",
+          "firstTileId": 1111,
+          "label": "white / acid",
+          "researched": true
+        },
+        {
+          "researchKey": "object:murky / oil",
+          "firstTileId": 1112,
+          "label": "murky / oil",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-028",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:clear / water",
+          "firstTileId": 1113,
+          "label": "clear / water",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ZELGO MER / enchant armor",
+          "firstTileId": 1114,
+          "label": "ZELGO MER / enchant armor",
+          "researched": true
+        },
+        {
+          "researchKey": "object:JUYED AWK YACC / destroy armor",
+          "firstTileId": 1115,
+          "label": "JUYED AWK YACC / destroy armor",
+          "researched": true
+        },
+        {
+          "researchKey": "object:NR 9 / confuse monster",
+          "firstTileId": 1116,
+          "label": "NR 9 / confuse monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:XIXAXA XOXAXA XUXAXA / scare monster",
+          "firstTileId": 1117,
+          "label": "XIXAXA XOXAXA XUXAXA / scare monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:PRATYAVAYAH / remove curse",
+          "firstTileId": 1118,
+          "label": "PRATYAVAYAH / remove curse",
+          "researched": true
+        },
+        {
+          "researchKey": "object:DAIYEN FOOELS / enchant weapon",
+          "firstTileId": 1119,
+          "label": "DAIYEN FOOELS / enchant weapon",
+          "researched": true
+        },
+        {
+          "researchKey": "object:LEP GEX VEN ZEA / create monster",
+          "firstTileId": 1120,
+          "label": "LEP GEX VEN ZEA / create monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:PRIRUTSENIE / taming",
+          "firstTileId": 1121,
+          "label": "PRIRUTSENIE / taming",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ELBIB YLOH / genocide",
+          "firstTileId": 1122,
+          "label": "ELBIB YLOH / genocide",
+          "researched": true
+        },
+        {
+          "researchKey": "object:VERR YED HORRE / light",
+          "firstTileId": 1123,
+          "label": "VERR YED HORRE / light",
+          "researched": true
+        },
+        {
+          "researchKey": "object:VENZAR BORGAVVE / teleportation",
+          "firstTileId": 1124,
+          "label": "VENZAR BORGAVVE / teleportation",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-029",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:THARR / gold detection",
+          "firstTileId": 1125,
+          "label": "THARR / gold detection",
+          "researched": true
+        },
+        {
+          "researchKey": "object:YUM YUM / food detection",
+          "firstTileId": 1126,
+          "label": "YUM YUM / food detection",
+          "researched": true
+        },
+        {
+          "researchKey": "object:KERNOD WEL / identify",
+          "firstTileId": 1127,
+          "label": "KERNOD WEL / identify",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ELAM EBOW / magic mapping",
+          "firstTileId": 1128,
+          "label": "ELAM EBOW / magic mapping",
+          "researched": true
+        },
+        {
+          "researchKey": "object:DUAM XNAHT / amnesia",
+          "firstTileId": 1129,
+          "label": "DUAM XNAHT / amnesia",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ANDOVA BEGARIN / fire",
+          "firstTileId": 1130,
+          "label": "ANDOVA BEGARIN / fire",
+          "researched": true
+        },
+        {
+          "researchKey": "object:KIRJE / earth",
+          "firstTileId": 1131,
+          "label": "KIRJE / earth",
+          "researched": true
+        },
+        {
+          "researchKey": "object:VE FORBRYDERNE / punishment",
+          "firstTileId": 1132,
+          "label": "VE FORBRYDERNE / punishment",
+          "researched": true
+        },
+        {
+          "researchKey": "object:HACKEM MUCHE / charging",
+          "firstTileId": 1133,
+          "label": "HACKEM MUCHE / charging",
+          "researched": true
+        },
+        {
+          "researchKey": "object:VELOX NEB / stinking cloud",
+          "firstTileId": 1134,
+          "label": "VELOX NEB / stinking cloud",
+          "researched": true
+        },
+        {
+          "researchKey": "object:FOOBIE BLETCH",
+          "firstTileId": 1135,
+          "label": "FOOBIE BLETCH",
+          "researched": true
+        },
+        {
+          "researchKey": "object:TEMOV",
+          "firstTileId": 1136,
+          "label": "TEMOV",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-030",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:GARVEN DEH",
+          "firstTileId": 1137,
+          "label": "GARVEN DEH",
+          "researched": true
+        },
+        {
+          "researchKey": "object:READ ME",
+          "firstTileId": 1138,
+          "label": "READ ME",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ETAOIN SHRDLU",
+          "firstTileId": 1139,
+          "label": "ETAOIN SHRDLU",
+          "researched": true
+        },
+        {
+          "researchKey": "object:LOREM IPSUM",
+          "firstTileId": 1140,
+          "label": "LOREM IPSUM",
+          "researched": true
+        },
+        {
+          "researchKey": "object:FNORD",
+          "firstTileId": 1141,
+          "label": "FNORD",
+          "researched": true
+        },
+        {
+          "researchKey": "object:KO BATE",
+          "firstTileId": 1142,
+          "label": "KO BATE",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ABRA KA DABRA",
+          "firstTileId": 1143,
+          "label": "ABRA KA DABRA",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ASHPD SODALG",
+          "firstTileId": 1144,
+          "label": "ASHPD SODALG",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ZLORFIK",
+          "firstTileId": 1145,
+          "label": "ZLORFIK",
+          "researched": true
+        },
+        {
+          "researchKey": "object:GNIK SISI VLE",
+          "firstTileId": 1146,
+          "label": "GNIK SISI VLE",
+          "researched": true
+        },
+        {
+          "researchKey": "object:HAPAX LEGOMENON",
+          "firstTileId": 1147,
+          "label": "HAPAX LEGOMENON",
+          "researched": true
+        },
+        {
+          "researchKey": "object:EIRIS SAZUN IDISI",
+          "firstTileId": 1148,
+          "label": "EIRIS SAZUN IDISI",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-031",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:PHOL ENDE WODAN",
+          "firstTileId": 1149,
+          "label": "PHOL ENDE WODAN",
+          "researched": true
+        },
+        {
+          "researchKey": "object:GHOTI",
+          "firstTileId": 1150,
+          "label": "GHOTI",
+          "researched": true
+        },
+        {
+          "researchKey": "object:MAPIRO MAHAMA DIROMAT",
+          "firstTileId": 1151,
+          "label": "MAPIRO MAHAMA DIROMAT",
+          "researched": true
+        },
+        {
+          "researchKey": "object:VAS CORP BET MANI",
+          "firstTileId": 1152,
+          "label": "VAS CORP BET MANI",
+          "researched": true
+        },
+        {
+          "researchKey": "object:XOR OTA",
+          "firstTileId": 1153,
+          "label": "XOR OTA",
+          "researched": true
+        },
+        {
+          "researchKey": "object:STRC PRST SKRZ KRK",
+          "firstTileId": 1154,
+          "label": "STRC PRST SKRZ KRK",
+          "researched": true
+        },
+        {
+          "researchKey": "object:stamped / mail",
+          "firstTileId": 1155,
+          "label": "stamped / mail",
+          "researched": true
+        },
+        {
+          "researchKey": "object:unlabeled / blank paper",
+          "firstTileId": 1156,
+          "label": "unlabeled / blank paper",
+          "researched": true
+        },
+        {
+          "researchKey": "object:parchment / dig",
+          "firstTileId": 1157,
+          "label": "parchment / dig",
+          "researched": true
+        },
+        {
+          "researchKey": "object:vellum / magic missile",
+          "firstTileId": 1158,
+          "label": "vellum / magic missile",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ragged / fireball",
+          "firstTileId": 1159,
+          "label": "ragged / fireball",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dog eared / cone of cold",
+          "firstTileId": 1160,
+          "label": "dog eared / cone of cold",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-032",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:mottled / sleep",
+          "firstTileId": 1161,
+          "label": "mottled / sleep",
+          "researched": true
+        },
+        {
+          "researchKey": "object:stained / finger of death",
+          "firstTileId": 1162,
+          "label": "stained / finger of death",
+          "researched": true
+        },
+        {
+          "researchKey": "object:cloth / light",
+          "firstTileId": 1163,
+          "label": "cloth / light",
+          "researched": true
+        },
+        {
+          "researchKey": "object:leathery / detect monsters",
+          "firstTileId": 1164,
+          "label": "leathery / detect monsters",
+          "researched": true
+        },
+        {
+          "researchKey": "object:white / healing",
+          "firstTileId": 1165,
+          "label": "white / healing",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pink / knock",
+          "firstTileId": 1166,
+          "label": "pink / knock",
+          "researched": true
+        },
+        {
+          "researchKey": "object:red / force bolt",
+          "firstTileId": 1167,
+          "label": "red / force bolt",
+          "researched": true
+        },
+        {
+          "researchKey": "object:orange / confuse monster",
+          "firstTileId": 1168,
+          "label": "orange / confuse monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:yellow / cure blindness",
+          "firstTileId": 1169,
+          "label": "yellow / cure blindness",
+          "researched": true
+        },
+        {
+          "researchKey": "object:velvet / drain life",
+          "firstTileId": 1170,
+          "label": "velvet / drain life",
+          "researched": true
+        },
+        {
+          "researchKey": "object:light green / slow monster",
+          "firstTileId": 1171,
+          "label": "light green / slow monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dark green / wizard lock",
+          "firstTileId": 1172,
+          "label": "dark green / wizard lock",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-033",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:turquoise / create monster",
+          "firstTileId": 1173,
+          "label": "turquoise / create monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:cyan / detect food",
+          "firstTileId": 1174,
+          "label": "cyan / detect food",
+          "researched": true
+        },
+        {
+          "researchKey": "object:light blue / cause fear",
+          "firstTileId": 1175,
+          "label": "light blue / cause fear",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dark blue / clairvoyance",
+          "firstTileId": 1176,
+          "label": "dark blue / clairvoyance",
+          "researched": true
+        },
+        {
+          "researchKey": "object:indigo / cure sickness",
+          "firstTileId": 1177,
+          "label": "indigo / cure sickness",
+          "researched": true
+        },
+        {
+          "researchKey": "object:magenta / charm monster",
+          "firstTileId": 1178,
+          "label": "magenta / charm monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:purple / haste self",
+          "firstTileId": 1179,
+          "label": "purple / haste self",
+          "researched": true
+        },
+        {
+          "researchKey": "object:violet / detect unseen",
+          "firstTileId": 1180,
+          "label": "violet / detect unseen",
+          "researched": true
+        },
+        {
+          "researchKey": "object:tan / levitation",
+          "firstTileId": 1181,
+          "label": "tan / levitation",
+          "researched": true
+        },
+        {
+          "researchKey": "object:plaid / extra healing",
+          "firstTileId": 1182,
+          "label": "plaid / extra healing",
+          "researched": true
+        },
+        {
+          "researchKey": "object:light brown / restore ability",
+          "firstTileId": 1183,
+          "label": "light brown / restore ability",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dark brown / invisibility",
+          "firstTileId": 1184,
+          "label": "dark brown / invisibility",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-034",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:gray / detect treasure",
+          "firstTileId": 1185,
+          "label": "gray / detect treasure",
+          "researched": true
+        },
+        {
+          "researchKey": "object:wrinkled / remove curse",
+          "firstTileId": 1186,
+          "label": "wrinkled / remove curse",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dusty / magic mapping",
+          "firstTileId": 1187,
+          "label": "dusty / magic mapping",
+          "researched": true
+        },
+        {
+          "researchKey": "object:bronze / identify",
+          "firstTileId": 1188,
+          "label": "bronze / identify",
+          "researched": true
+        },
+        {
+          "researchKey": "object:copper / turn undead",
+          "firstTileId": 1189,
+          "label": "copper / turn undead",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver / polymorph",
+          "firstTileId": 1190,
+          "label": "silver / polymorph",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gold / teleport away",
+          "firstTileId": 1191,
+          "label": "gold / teleport away",
+          "researched": true
+        },
+        {
+          "researchKey": "object:glittering / create familiar",
+          "firstTileId": 1192,
+          "label": "glittering / create familiar",
+          "researched": true
+        },
+        {
+          "researchKey": "object:shining / cancellation",
+          "firstTileId": 1193,
+          "label": "shining / cancellation",
+          "researched": true
+        },
+        {
+          "researchKey": "object:dull / protection",
+          "firstTileId": 1194,
+          "label": "dull / protection",
+          "researched": true
+        },
+        {
+          "researchKey": "object:thin / jumping",
+          "firstTileId": 1195,
+          "label": "thin / jumping",
+          "researched": true
+        },
+        {
+          "researchKey": "object:thick / stone to flesh",
+          "firstTileId": 1196,
+          "label": "thick / stone to flesh",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-035",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:checkered / chain lightning",
+          "firstTileId": 1197,
+          "label": "checkered / chain lightning",
+          "researched": true
+        },
+        {
+          "researchKey": "object:plain / blank paper",
+          "firstTileId": 1198,
+          "label": "plain / blank paper",
+          "researched": true
+        },
+        {
+          "researchKey": "object:paperback / novel",
+          "firstTileId": 1199,
+          "label": "paperback / novel",
+          "researched": true
+        },
+        {
+          "researchKey": "object:papyrus / Book of the Dead",
+          "firstTileId": 1200,
+          "label": "papyrus / Book of the Dead",
+          "researched": true
+        },
+        {
+          "researchKey": "object:glass / light",
+          "firstTileId": 1201,
+          "label": "glass / light",
+          "researched": true
+        },
+        {
+          "researchKey": "object:balsa / secret door detection",
+          "firstTileId": 1202,
+          "label": "balsa / secret door detection",
+          "researched": true
+        },
+        {
+          "researchKey": "object:crystal / enlightenment",
+          "firstTileId": 1203,
+          "label": "crystal / enlightenment",
+          "researched": true
+        },
+        {
+          "researchKey": "object:maple / create monster",
+          "firstTileId": 1204,
+          "label": "maple / create monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:pine / wishing",
+          "firstTileId": 1205,
+          "label": "pine / wishing",
+          "researched": true
+        },
+        {
+          "researchKey": "object:redwood / stasis",
+          "firstTileId": 1206,
+          "label": "redwood / stasis",
+          "researched": true
+        },
+        {
+          "researchKey": "object:oak / nothing",
+          "firstTileId": 1207,
+          "label": "oak / nothing",
+          "researched": true
+        },
+        {
+          "researchKey": "object:ebony / striking",
+          "firstTileId": 1208,
+          "label": "ebony / striking",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-036",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:marble / make invisible",
+          "firstTileId": 1209,
+          "label": "marble / make invisible",
+          "researched": true
+        },
+        {
+          "researchKey": "object:tin / slow monster",
+          "firstTileId": 1210,
+          "label": "tin / slow monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:brass / speed monster",
+          "firstTileId": 1211,
+          "label": "brass / speed monster",
+          "researched": true
+        },
+        {
+          "researchKey": "object:copper / undead turning",
+          "firstTileId": 1212,
+          "label": "copper / undead turning",
+          "researched": true
+        },
+        {
+          "researchKey": "object:silver / polymorph [wand]",
+          "firstTileId": 1213,
+          "label": "silver / polymorph",
+          "researched": true
+        },
+        {
+          "researchKey": "object:platinum / cancellation",
+          "firstTileId": 1214,
+          "label": "platinum / cancellation",
+          "researched": true
+        },
+        {
+          "researchKey": "object:iridium / teleportation",
+          "firstTileId": 1215,
+          "label": "iridium / teleportation",
+          "researched": true
+        },
+        {
+          "researchKey": "object:zinc / opening",
+          "firstTileId": 1216,
+          "label": "zinc / opening",
+          "researched": true
+        },
+        {
+          "researchKey": "object:aluminum / locking",
+          "firstTileId": 1217,
+          "label": "aluminum / locking",
+          "researched": true
+        },
+        {
+          "researchKey": "object:uranium / probing",
+          "firstTileId": 1218,
+          "label": "uranium / probing",
+          "researched": true
+        },
+        {
+          "researchKey": "object:iron / digging",
+          "firstTileId": 1219,
+          "label": "iron / digging",
+          "researched": true
+        },
+        {
+          "researchKey": "object:steel / magic missile",
+          "firstTileId": 1220,
+          "label": "steel / magic missile",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-037",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:hexagonal / fire",
+          "firstTileId": 1221,
+          "label": "hexagonal / fire",
+          "researched": true
+        },
+        {
+          "researchKey": "object:short / cold",
+          "firstTileId": 1222,
+          "label": "short / cold",
+          "researched": true
+        },
+        {
+          "researchKey": "object:runed / sleep",
+          "firstTileId": 1223,
+          "label": "runed / sleep",
+          "researched": true
+        },
+        {
+          "researchKey": "object:long / death",
+          "firstTileId": 1224,
+          "label": "long / death",
+          "researched": true
+        },
+        {
+          "researchKey": "object:curved / lightning",
+          "firstTileId": 1225,
+          "label": "curved / lightning",
+          "researched": true
+        },
+        {
+          "researchKey": "object:forked",
+          "firstTileId": 1226,
+          "label": "forked",
+          "researched": true
+        },
+        {
+          "researchKey": "object:spiked",
+          "firstTileId": 1227,
+          "label": "spiked",
+          "researched": true
+        },
+        {
+          "researchKey": "object:jeweled",
+          "firstTileId": 1228,
+          "label": "jeweled",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gold piece",
+          "firstTileId": 1229,
+          "label": "gold piece",
+          "researched": true
+        },
+        {
+          "researchKey": "object:white / dilithium crystal",
+          "firstTileId": 1230,
+          "label": "white / dilithium crystal",
+          "researched": true
+        },
+        {
+          "researchKey": "object:white / diamond",
+          "firstTileId": 1231,
+          "label": "white / diamond",
+          "researched": true
+        },
+        {
+          "researchKey": "object:red / ruby",
+          "firstTileId": 1232,
+          "label": "red / ruby",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-038",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:orange / jacinth",
+          "firstTileId": 1233,
+          "label": "orange / jacinth",
+          "researched": true
+        },
+        {
+          "researchKey": "object:blue / sapphire",
+          "firstTileId": 1234,
+          "label": "blue / sapphire",
+          "researched": true
+        },
+        {
+          "researchKey": "object:black / black opal",
+          "firstTileId": 1235,
+          "label": "black / black opal",
+          "researched": true
+        },
+        {
+          "researchKey": "object:green / emerald",
+          "firstTileId": 1236,
+          "label": "green / emerald",
+          "researched": true
+        },
+        {
+          "researchKey": "object:green / turquoise",
+          "firstTileId": 1237,
+          "label": "green / turquoise",
+          "researched": true
+        },
+        {
+          "researchKey": "object:yellow / citrine",
+          "firstTileId": 1238,
+          "label": "yellow / citrine",
+          "researched": true
+        },
+        {
+          "researchKey": "object:green / aquamarine",
+          "firstTileId": 1239,
+          "label": "green / aquamarine",
+          "researched": true
+        },
+        {
+          "researchKey": "object:yellowish brown / amber",
+          "firstTileId": 1240,
+          "label": "yellowish brown / amber",
+          "researched": true
+        },
+        {
+          "researchKey": "object:yellowish brown / topaz",
+          "firstTileId": 1241,
+          "label": "yellowish brown / topaz",
+          "researched": true
+        },
+        {
+          "researchKey": "object:black / jet",
+          "firstTileId": 1242,
+          "label": "black / jet",
+          "researched": true
+        },
+        {
+          "researchKey": "object:white / opal",
+          "firstTileId": 1243,
+          "label": "white / opal",
+          "researched": true
+        },
+        {
+          "researchKey": "object:yellow / chrysoberyl",
+          "firstTileId": 1244,
+          "label": "yellow / chrysoberyl",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-039",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:red / garnet",
+          "firstTileId": 1245,
+          "label": "red / garnet",
+          "researched": true
+        },
+        {
+          "researchKey": "object:violet / amethyst",
+          "firstTileId": 1246,
+          "label": "violet / amethyst",
+          "researched": true
+        },
+        {
+          "researchKey": "object:red / jasper",
+          "firstTileId": 1247,
+          "label": "red / jasper",
+          "researched": true
+        },
+        {
+          "researchKey": "object:violet / fluorite",
+          "firstTileId": 1248,
+          "label": "violet / fluorite",
+          "researched": true
+        },
+        {
+          "researchKey": "object:black / obsidian",
+          "firstTileId": 1249,
+          "label": "black / obsidian",
+          "researched": true
+        },
+        {
+          "researchKey": "object:orange / agate",
+          "firstTileId": 1250,
+          "label": "orange / agate",
+          "researched": true
+        },
+        {
+          "researchKey": "object:green / jade",
+          "firstTileId": 1251,
+          "label": "green / jade",
+          "researched": true
+        },
+        {
+          "researchKey": "object:white / worthless piece of white glass",
+          "firstTileId": 1252,
+          "label": "white / worthless piece of white glass",
+          "researched": true
+        },
+        {
+          "researchKey": "object:blue / worthless piece of blue glass",
+          "firstTileId": 1253,
+          "label": "blue / worthless piece of blue glass",
+          "researched": true
+        },
+        {
+          "researchKey": "object:red / worthless piece of red glass",
+          "firstTileId": 1254,
+          "label": "red / worthless piece of red glass",
+          "researched": true
+        },
+        {
+          "researchKey": "object:yellowish brown / worthless piece of yellowish brown glass",
+          "firstTileId": 1255,
+          "label": "yellowish brown / worthless piece of yellowish brown glass",
+          "researched": true
+        },
+        {
+          "researchKey": "object:orange / worthless piece of orange glass",
+          "firstTileId": 1256,
+          "label": "orange / worthless piece of orange glass",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-040",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:yellow / worthless piece of yellow glass",
+          "firstTileId": 1257,
+          "label": "yellow / worthless piece of yellow glass",
+          "researched": true
+        },
+        {
+          "researchKey": "object:black / worthless piece of black glass",
+          "firstTileId": 1258,
+          "label": "black / worthless piece of black glass",
+          "researched": true
+        },
+        {
+          "researchKey": "object:green / worthless piece of green glass",
+          "firstTileId": 1259,
+          "label": "green / worthless piece of green glass",
+          "researched": true
+        },
+        {
+          "researchKey": "object:violet / worthless piece of violet glass",
+          "firstTileId": 1260,
+          "label": "violet / worthless piece of violet glass",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gray / luckstone",
+          "firstTileId": 1261,
+          "label": "gray / luckstone",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gray / loadstone",
+          "firstTileId": 1262,
+          "label": "gray / loadstone",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gray / touchstone",
+          "firstTileId": 1263,
+          "label": "gray / touchstone",
+          "researched": true
+        },
+        {
+          "researchKey": "object:gray / flint",
+          "firstTileId": 1264,
+          "label": "gray / flint",
+          "researched": true
+        },
+        {
+          "researchKey": "object:rock",
+          "firstTileId": 1265,
+          "label": "rock",
+          "researched": true
+        },
+        {
+          "researchKey": "object:boulder",
+          "firstTileId": 1266,
+          "label": "boulder",
+          "researched": true
+        },
+        {
+          "researchKey": "object:statue",
+          "firstTileId": 1267,
+          "label": "statue",
+          "researched": true
+        },
+        {
+          "researchKey": "object:heavy iron ball",
+          "firstTileId": 1268,
+          "label": "heavy iron ball",
+          "researched": true
+        }
+      ]
+    },
+    {
+      "id": "O-041",
+      "category": "object",
+      "subjects": [
+        {
+          "researchKey": "object:iron chain",
+          "firstTileId": 1269,
+          "label": "iron chain",
+          "researched": true
+        },
+        {
+          "researchKey": "object:splash of venom / splash of blinding venom",
+          "firstTileId": 1270,
+          "label": "splash of venom / splash of blinding venom",
+          "researched": true
+        },
+        {
+          "researchKey": "object:splash of venom / splash of acid venom",
+          "firstTileId": 1271,
+          "label": "splash of venom / splash of acid venom",
+          "researched": true
+        }
+      ]
+    }
+  ]
+}

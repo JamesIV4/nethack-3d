@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:ape": {
+      "wikiTitle": "Ape",
+      "visualDescription": "A rusty-red ape stands with both long arms raised, broad chest, small head, and dark feet.",
+      "wikiDescription": "The wiki describes the ape as a strong omnivorous primate with two claws and a bite.",
+      "modelBrief": "Make a muscular tailless ape with wide raised arms and warm red-brown fur, larger and heavier than the monkey. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ape",
+          "url": "https://nethackwiki.com/wiki/Ape"
+        }
+      ]
+    },
+    "monster:owlbear": {
+      "wikiTitle": "Owlbear",
+      "visualDescription": "A large brown beast has owl-like facial tufts, a pale belly, thick arms, and grasping claws.",
+      "wikiDescription": "The wiki describes the owlbear as a large carnivorous creature that seizes prey with its claws.",
+      "modelBrief": "Combine bear mass and forelimbs with a distinct owl face and ear tufts, preserving the cream belly patch. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Owlbear",
+          "url": "https://nethackwiki.com/wiki/Owlbear"
+        }
+      ]
+    },
+    "monster:yeti": {
+      "wikiTitle": "Yeti",
+      "visualDescription": "A pale gray-white shaggy humanoid has broad arms, black face, red eyes, and large feet.",
+      "wikiDescription": "The wiki identifies the yeti as a strong carnivorous apelike creature with claws and a bite.",
+      "modelBrief": "Sculpt a bulky white-furred ape with dark face mask, red eye accents, and short heavy legs. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Yeti",
+          "url": "https://nethackwiki.com/wiki/Yeti"
+        }
+      ]
+    },
+    "monster:carnivorous ape": {
+      "wikiTitle": "Carnivorous ape",
+      "visualDescription": "A tall dark ape raises powerful blue-gray arms around a black face with bright red eyes.",
+      "wikiDescription": "The wiki describes the carnivorous ape as a fiercer obligate-carnivore relative of the ape.",
+      "modelBrief": "Use the ape skeleton with slate-dark fur, oversized shoulders, and intense red eyes; keep hands open and claw-ready. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Carnivorous ape",
+          "url": "https://nethackwiki.com/wiki/Carnivorous_ape"
+        }
+      ]
+    },
+    "monster:sasquatch": {
+      "wikiTitle": "Sasquatch",
+      "visualDescription": "A reddish-brown shaggy sasquatch has long arms, wide legs, red eyes, and a dark open mouth.",
+      "wikiDescription": "The wiki identifies sasquatch as the most difficult of its apelike class, able to see invisible.",
+      "modelBrief": "Build a large upright hairy ape with a broad shoulder line, warm brown fur, and red eyes. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Sasquatch",
+          "url": "https://nethackwiki.com/wiki/Sasquatch"
+        }
+      ]
+    },
+    "monster:kobold zombie": {
+      "wikiTitle": "Kobold zombie",
+      "visualDescription": "A small greenish kobold zombie has a long snout, hunched back, torn body, and reaching hands.",
+      "wikiDescription": "The wiki calls the kobold zombie the weakest zombie, an undead version of the small kobold.",
+      "modelBrief": "Make a short decayed kobold with protruding muzzle and stiff clawing arms, using olive skin and dark rotten patches. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kobold zombie",
+          "url": "https://nethackwiki.com/wiki/Kobold_zombie"
+        }
+      ]
+    },
+    "monster:gnome zombie": {
+      "wikiTitle": "Gnome zombie",
+      "visualDescription": "A short gnome zombie wears a floppy gray cap and dark blue clothes, with yellow eyes and raised hands.",
+      "wikiDescription": "The wiki describes a zombified gnome that claws and can follow the hero between levels.",
+      "modelBrief": "Keep short gnome proportions and recognizable cap, with dull skin, vacant eyes, and torn blue garments. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gnome zombie",
+          "url": "https://nethackwiki.com/wiki/Gnome_zombie"
+        }
+      ]
+    },
+    "monster:orc zombie": {
+      "wikiTitle": "Orc zombie",
+      "visualDescription": "A thin orc zombie has a pale green square face, yellow eye, red-brown clothes, and long reaching arms.",
+      "wikiDescription": "The wiki identifies an undead orc that appears in groups and attacks with a claw.",
+      "modelBrief": "Make a lanky rotting orc with angular snout and sparse reddish clothing, retaining the long-armed silhouette. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orc zombie",
+          "url": "https://nethackwiki.com/wiki/Orc_zombie"
+        }
+      ]
+    },
+    "monster:dwarf zombie": {
+      "wikiTitle": "Dwarf zombie",
+      "visualDescription": "A broad dwarf zombie has a beardlike pale face, pointed head shapes, maroon clothes, and stout feet.",
+      "wikiDescription": "The wiki describes a zombified dwarf with a claw attack.",
+      "modelBrief": "Preserve a stocky dwarf body and pronounced face or beard under torn red-brown clothing and undead coloring. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dwarf zombie",
+          "url": "https://nethackwiki.com/wiki/Dwarf_zombie"
+        }
+      ]
+    },
+    "monster:elf zombie": {
+      "wikiTitle": "Elf zombie",
+      "visualDescription": "A slim elf zombie wears a brown cap, ochre shirt, and dark leggings; its long arms reach sideways.",
+      "wikiDescription": "The wiki describes an undead elf with a claw attack and the ability to follow the hero across levels.",
+      "modelBrief": "Use elongated elven limbs and a simple tan tunic, adding sallow skin and ragged edges. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Elf zombie",
+          "url": "https://nethackwiki.com/wiki/Elf_zombie"
+        }
+      ]
+    },
+    "monster:human zombie": {
+      "wikiTitle": "Human zombie",
+      "visualDescription": "A narrow human zombie has a pale head, yellow eyes, long hanging arms, and torn tan clothing.",
+      "wikiDescription": "The wiki identifies a human corpse reanimated as a clawing undead humanoid.",
+      "modelBrief": "Build a gaunt stiff human with exposed pale face and torn beige shirt, keeping the upright stagger. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Human zombie",
+          "url": "https://nethackwiki.com/wiki/Human_zombie"
+        }
+      ]
+    },
+    "monster:ettin zombie": {
+      "wikiTitle": "Ettin zombie",
+      "visualDescription": "An enormous ettin zombie has two pale heads, thick green-brown arms, wide belly, and dark loincloth.",
+      "wikiDescription": "The wiki identifies a zombified two-headed ettin and one of the strongest ordinary zombies.",
+      "modelBrief": "Make a giant rotting two-headed body with thick asymmetric arms, dull olive hide, and heavy stance. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ettin zombie",
+          "url": "https://nethackwiki.com/wiki/Ettin_zombie"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

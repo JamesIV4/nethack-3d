@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:crude dagger / orcish dagger": {
+      "wikiTitle": "Orcish dagger",
+      "visualDescription": "PixelHack shows a short rough dark gray blade attached to a reddish-brown grip. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the orcish dagger as an orcish dagger usable in melee or thrown. Its visible name in this tile is crude dagger; the atlas association alone does not make the appearance a second weapon.",
+      "modelBrief": "Build a crude dagger with uneven dark steel blade and plain brown hilt. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: orcish dagger",
+          "url": "https://nethackwiki.com/wiki/orcish_dagger"
+        }
+      ]
+    },
+    "object:silver dagger": {
+      "wikiTitle": "Silver dagger",
+      "visualDescription": "PixelHack shows a bright white-silver dagger with cool gray guard and narrow point. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the silver dagger as a dagger made of silver.",
+      "modelBrief": "Build a compact all-silver dagger with a bright blade and small guard. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: silver dagger",
+          "url": "https://nethackwiki.com/wiki/silver_dagger"
+        }
+      ]
+    },
+    "object:athame": {
+      "wikiTitle": "Athame",
+      "visualDescription": "PixelHack shows a short gold-brown ritual blade with a tiny red accent at the hilt. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the athame as a non-stackable dagger-class weapon.",
+      "modelBrief": "Build a narrow ceremonial athame in warm brass tones with the tiny red hilt accent. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: athame",
+          "url": "https://nethackwiki.com/wiki/athame"
+        }
+      ]
+    },
+    "object:scalpel": {
+      "wikiTitle": "Scalpel",
+      "visualDescription": "PixelHack shows a thin pale steel scalpel with a dark narrow handle. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the scalpel as a small knife-class medical blade.",
+      "modelBrief": "Build a very slim scalpel with a short bright edge and dark straight grip. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: scalpel",
+          "url": "https://nethackwiki.com/wiki/scalpel"
+        }
+      ]
+    },
+    "object:knife": {
+      "wikiTitle": "Knife",
+      "visualDescription": "PixelHack shows a bright pale knife blade joined to a warm ochre handle. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the knife as a short one-handed knife.",
+      "modelBrief": "Build a plain utility knife with compact steel blade and ochre-brown grip. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: knife",
+          "url": "https://nethackwiki.com/wiki/knife"
+        }
+      ]
+    },
+    "object:stiletto": {
+      "wikiTitle": "Stiletto",
+      "visualDescription": "PixelHack shows a narrow pale pointed blade above a short dark red-brown handle. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the stiletto as a slim knife-class stiletto.",
+      "modelBrief": "Build a slender piercing blade with a tiny dark grip and minimal guard. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: stiletto",
+          "url": "https://nethackwiki.com/wiki/stiletto"
+        }
+      ]
+    },
+    "object:worm tooth": {
+      "wikiTitle": "Worm tooth",
+      "visualDescription": "PixelHack shows a hooked ivory tooth with a red mark at one end. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the worm tooth as a giant-worm tooth that can serve as a knife-class weapon.",
+      "modelBrief": "Build a single natural curved tooth, cream-colored with the small red base accent. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: worm tooth",
+          "url": "https://nethackwiki.com/wiki/worm_tooth"
+        }
+      ]
+    },
+    "object:crysknife": {
+      "wikiTitle": "Crysknife",
+      "visualDescription": "PixelHack shows a bright curved ivory blade rising from a dark brown handle. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the crysknife as a knife made by transforming a worm tooth.",
+      "modelBrief": "Build a polished curved tooth-blade on a plain dark hilt, visibly related to the worm tooth. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: crysknife",
+          "url": "https://nethackwiki.com/wiki/crysknife"
+        }
+      ]
+    },
+    "object:axe": {
+      "wikiTitle": "Axe",
+      "visualDescription": "PixelHack shows a brown diagonal haft topped by one dark steel cutting head. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the axe as a one-handed chopping axe.",
+      "modelBrief": "Build a simple single-bit axe with brown wood haft and compact slate head. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: axe",
+          "url": "https://nethackwiki.com/wiki/axe"
+        }
+      ]
+    },
+    "object:double-headed axe / battle-axe": {
+      "wikiTitle": "Battle-axe",
+      "visualDescription": "PixelHack shows a brown haft carrying two opposing broad dark blue-gray axe blades. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the battle-axe as a two-handed double-headed axe. Its visible name in this tile is double-headed axe; the atlas association alone does not make the appearance a second weapon.",
+      "modelBrief": "Build a balanced double-bit battle-axe with a heavy wide head and long wood haft. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: battle-axe",
+          "url": "https://nethackwiki.com/wiki/battle-axe"
+        }
+      ]
+    },
+    "object:short sword": {
+      "wikiTitle": "Short sword",
+      "visualDescription": "PixelHack shows a pale straight short blade with blue-gray edge, dark guard, and brown grip. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the short sword as a one-handed short sword.",
+      "modelBrief": "Build a compact straight sword with broad bright blade, small crossguard, and brown grip. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: short sword",
+          "url": "https://nethackwiki.com/wiki/short_sword"
+        }
+      ]
+    },
+    "object:runed short sword / elven short sword": {
+      "wikiTitle": "Elven short sword",
+      "visualDescription": "PixelHack shows a pale short blade with darker spine and warm gold-toned hilt. The blue-gray patterned floor is background, not part of the object.",
+      "wikiDescription": "The NetHack Wiki identifies the elven short sword as a one-handed elven short sword. Its visible name in this tile is runed short sword; the atlas association alone does not make the appearance a second weapon.",
+      "modelBrief": "Build a refined straight short sword with light blade and gold-brown guard. Preserve the major silhouette and palette at 32-pixel viewing size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: elven short sword",
+          "url": "https://nethackwiki.com/wiki/elven_short_sword"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

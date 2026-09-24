@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:yellow / worthless piece of yellow glass": {
+      "wikiTitle": "Worthless piece of glass",
+      "visualDescription": "PixelHack shows a squat irregular faceted yellow stone, shaded in bright honey yellow with cream top and amber side. Tiles 1238, 1244, 1257 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The wiki describes worthless colored glass as a gem-class imitation made of glass. This yellow glass piece shares its visible gem color and sprite with other items, so appearance alone does not prove value.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in bright honey yellow with cream top and amber side. Reuse this visible color model for tile IDs 1238, 1244, 1257, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Worthless piece of glass",
+          "url": "https://nethackwiki.com/wiki/Worthless_piece_of_glass"
+        }
+      ]
+    },
+    "object:black / worthless piece of black glass": {
+      "wikiTitle": "Worthless piece of glass",
+      "visualDescription": "PixelHack shows a squat irregular faceted black stone, shaded in near-black navy with dark violet and slate facets. Tiles 1235, 1242, 1249, 1258 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The wiki describes worthless colored glass as a gem-class imitation made of glass. This black glass piece shares its visible gem color and sprite with other items, so appearance alone does not prove value.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in near-black navy with dark violet and slate facets. Reuse this visible color model for tile IDs 1235, 1242, 1249, 1258, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Worthless piece of glass",
+          "url": "https://nethackwiki.com/wiki/Worthless_piece_of_glass"
+        }
+      ]
+    },
+    "object:green / worthless piece of green glass": {
+      "wikiTitle": "Worthless piece of glass",
+      "visualDescription": "PixelHack shows a squat irregular faceted green stone, shaded in forest green with olive sides and a pale lime central flash. Tiles 1236, 1237, 1239, 1251, 1259 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The wiki describes worthless colored glass as a gem-class imitation made of glass. This green glass piece shares its visible gem color and sprite with other items, so appearance alone does not prove value.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in forest green with olive sides and a pale lime central flash. Reuse this visible color model for tile IDs 1236, 1237, 1239, 1251, 1259, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Worthless piece of glass",
+          "url": "https://nethackwiki.com/wiki/Worthless_piece_of_glass"
+        }
+      ]
+    },
+    "object:violet / worthless piece of violet glass": {
+      "wikiTitle": "Worthless piece of glass",
+      "visualDescription": "PixelHack shows a squat irregular faceted violet stone, shaded in violet and magenta with blue side facets and orange-pink center. Tiles 1246, 1248, 1260 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The wiki describes worthless colored glass as a gem-class imitation made of glass. This violet glass piece shares its visible gem color and sprite with other items, so appearance alone does not prove value.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in violet and magenta with blue side facets and orange-pink center. Reuse this visible color model for tile IDs 1246, 1248, 1260, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Worthless piece of glass",
+          "url": "https://nethackwiki.com/wiki/Worthless_piece_of_glass"
+        }
+      ]
+    },
+    "object:gray / luckstone": {
+      "wikiTitle": "Luckstone",
+      "visualDescription": "PixelHack shows a squat gray-beige rounded stone with angular tan facets, a dark lower rim, and one pale highlight. Tiles 1261-1264 are pixel-identical. The teal floor pattern is background.",
+      "wikiDescription": "The wiki identifies the luckstone as a stone that can affect carried Luck. All four gray-stone identities have the same visible PixelHack artwork, so the model should not reveal the function.",
+      "modelBrief": "Build one small rounded gray-beige stone with a few broad facets and a dark underside. Reuse the exact visible model for luckstone, loadstone, touchstone, and flint.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Luckstone",
+          "url": "https://nethackwiki.com/wiki/Luckstone"
+        }
+      ]
+    },
+    "object:gray / loadstone": {
+      "wikiTitle": "Loadstone",
+      "visualDescription": "PixelHack shows a squat gray-beige rounded stone with angular tan facets, a dark lower rim, and one pale highlight. Tiles 1261-1264 are pixel-identical. The teal floor pattern is background.",
+      "wikiDescription": "The wiki identifies the loadstone as a stone that is a heavy stone that can burden its carrier. All four gray-stone identities have the same visible PixelHack artwork, so the model should not reveal the function.",
+      "modelBrief": "Build one small rounded gray-beige stone with a few broad facets and a dark underside. Reuse the exact visible model for luckstone, loadstone, touchstone, and flint.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Loadstone",
+          "url": "https://nethackwiki.com/wiki/Loadstone"
+        }
+      ]
+    },
+    "object:gray / touchstone": {
+      "wikiTitle": "Touchstone",
+      "visualDescription": "PixelHack shows a squat gray-beige rounded stone with angular tan facets, a dark lower rim, and one pale highlight. Tiles 1261-1264 are pixel-identical. The teal floor pattern is background.",
+      "wikiDescription": "The wiki identifies the touchstone as a stone that is used to test or identify gems. All four gray-stone identities have the same visible PixelHack artwork, so the model should not reveal the function.",
+      "modelBrief": "Build one small rounded gray-beige stone with a few broad facets and a dark underside. Reuse the exact visible model for luckstone, loadstone, touchstone, and flint.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Touchstone",
+          "url": "https://nethackwiki.com/wiki/Touchstone"
+        }
+      ]
+    },
+    "object:gray / flint": {
+      "wikiTitle": "Flint",
+      "visualDescription": "PixelHack shows a squat gray-beige rounded stone with angular tan facets, a dark lower rim, and one pale highlight. Tiles 1261-1264 are pixel-identical. The teal floor pattern is background.",
+      "wikiDescription": "The wiki identifies the flint as a stone that is an ordinary stone usable as ammunition. All four gray-stone identities have the same visible PixelHack artwork, so the model should not reveal the function.",
+      "modelBrief": "Build one small rounded gray-beige stone with a few broad facets and a dark underside. Reuse the exact visible model for luckstone, loadstone, touchstone, and flint.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Flint",
+          "url": "https://nethackwiki.com/wiki/Flint"
+        }
+      ]
+    },
+    "object:rock": {
+      "wikiTitle": "Rock",
+      "visualDescription": "PixelHack shows a low cluster of two or three reddish-brown uneven stones with small ochre highlights and a black foot. The teal pattern is background.",
+      "wikiDescription": "The wiki describes a rock as a small stackable stone that can be thrown. This tile depicts a low cluster, but the item count is not determined by the art.",
+      "modelBrief": "Build a few irregular brown stone chunks sharing one low silhouette, with dark undersides. Keep the silhouette legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Rock",
+          "url": "https://nethackwiki.com/wiki/Rock"
+        }
+      ]
+    },
+    "object:boulder": {
+      "wikiTitle": "Boulder",
+      "visualDescription": "PixelHack shows a huge near-round rust-brown stone with orange speckling and a broad nearly black base. The teal pattern is background.",
+      "wikiDescription": "The wiki identifies a boulder as a huge stone object that occupies a dungeon square. PixelHack gives it a bulky rounded, warm-brown treatment.",
+      "modelBrief": "Build one massive roughly spherical boulder with uneven rocky facets, orange flecks, and broad dark base. Keep the silhouette legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Boulder",
+          "url": "https://nethackwiki.com/wiki/Boulder"
+        }
+      ]
+    },
+    "object:statue": {
+      "wikiTitle": "Statue",
+      "visualDescription": "PixelHack shows an upright pale gray stone figure with an indistinct head, raised side form, and rough pedestal. The teal pattern is background.",
+      "wikiDescription": "The wiki notes that a statue represents a monster and may use a grayscale monster tile. This generic object tile shows a small humanoid stone figure but does not dictate every monster-specific statue shape.",
+      "modelBrief": "Build a rough pale stone humanoid figure on a low block base for this fallback tile; use each monster's own silhouette when building its separate statue tile. Keep the silhouette legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Statue",
+          "url": "https://nethackwiki.com/wiki/Statue"
+        }
+      ]
+    },
+    "object:heavy iron ball": {
+      "wikiTitle": "Heavy iron ball",
+      "visualDescription": "PixelHack shows a nearly black blue-gray sphere with a dim slate center highlight and no visible chain. The teal pattern is background.",
+      "wikiDescription": "A heavy iron ball is an iron item commonly associated with punishment. The chain is a separate object tile, and no link is visible here.",
+      "modelBrief": "Build a plain dark iron sphere with small cool-gray highlight and substantial round mass; leave the chain separate. Keep the silhouette legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Heavy iron ball",
+          "url": "https://nethackwiki.com/wiki/Heavy_iron_ball"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

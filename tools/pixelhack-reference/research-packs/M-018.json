@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:red naga": {
+      "wikiTitle": "Red naga",
+      "visualDescription": "A long-necked naga raises a brown face above a massive red coil with a bright peach belly patch.",
+      "wikiDescription": "The wiki describes an adult red naga that bites and breathes fire.",
+      "modelBrief": "Build a serpentine body with raised neck, broad crimson loop, pale inner scales, and a narrow face; reserve flame for breath animation. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Red naga",
+          "url": "https://nethackwiki.com/wiki/Red_naga"
+        }
+      ]
+    },
+    "monster:black naga": {
+      "wikiTitle": "Black naga",
+      "visualDescription": "A raised naga has a dark blue-black coiled body, pale gray inner scales, and the same brown face.",
+      "wikiDescription": "The wiki identifies a black naga that bites and spits acidic venom.",
+      "modelBrief": "Reuse the adult naga anatomy with charcoal-blue coils and a pale inner band; keep acidic effects separate from the body. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Black naga",
+          "url": "https://nethackwiki.com/wiki/Black_naga"
+        }
+      ]
+    },
+    "monster:golden naga": {
+      "wikiTitle": "Golden naga",
+      "visualDescription": "An adult naga has a golden head accent, red-orange coil, and bright yellow belly patch.",
+      "wikiDescription": "The wiki distinguishes the golden naga by its ability to cast monster spells as well as bite.",
+      "modelBrief": "Use the adult coiled serpent form with warm gold head and belly highlights, allowing the raised neck to support spell gestures through motion. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Golden naga",
+          "url": "https://nethackwiki.com/wiki/Golden_naga"
+        }
+      ]
+    },
+    "monster:guardian naga": {
+      "wikiTitle": "Guardian naga",
+      "visualDescription": "A brown-faced naga has a dark coil, vivid green patch, and lime-green highlight near the head.",
+      "wikiDescription": "The wiki calls the guardian naga the strongest naga, with paralyzing bite, poison spit, and a holding attack.",
+      "modelBrief": "Make a thick protective-looking serpent with dark scales and bright green markings; retain the tile's looped pose. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Guardian naga",
+          "url": "https://nethackwiki.com/wiki/Guardian_naga"
+        }
+      ]
+    },
+    "monster:ogre": {
+      "wikiTitle": "Ogre",
+      "visualDescription": "A broad orange-brown ogre has a large bare belly, heavy arms, dark shorts, and a small head.",
+      "wikiDescription": "The wiki describes an ogre as a large, strong, carnivorous humanoid able to use weapons.",
+      "modelBrief": "Sculpt a bulky barrel-bodied humanoid with long arms, wide jaw, and simple dark waist garment. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ogre",
+          "url": "https://nethackwiki.com/wiki/Ogre"
+        }
+      ]
+    },
+    "monster:ogre leader": {
+      "wikiTitle": "Ogre lord",
+      "visualDescription": "A larger ogre wears a dark blue front garment over its brown torso, with massive arms and legs.",
+      "wikiDescription": "The linked wiki page calls this higher rank an ogre lord; the source catalog uses the newer label ogre leader.",
+      "modelBrief": "Reuse ogre proportions with broader shoulders and a dark blue chest garment, making rank visible through size and clothing. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ogre lord",
+          "url": "https://nethackwiki.com/wiki/Ogre_lord"
+        }
+      ]
+    },
+    "monster:ogre tyrant": {
+      "wikiTitle": "Ogre king",
+      "visualDescription": "The broadest ogre has a dark top or crown, pale shoulder patches, blue chest garment, and heavy limbs.",
+      "wikiDescription": "The linked wiki page calls this top rank an ogre king; the source catalog uses the newer label ogre tyrant.",
+      "modelBrief": "Give the ogre leader model a more imposing headpiece and pale shoulder accents while preserving its squat build. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ogre king",
+          "url": "https://nethackwiki.com/wiki/Ogre_king"
+        }
+      ]
+    },
+    "monster:gray ooze": {
+      "wikiTitle": "Gray ooze",
+      "visualDescription": "A low charcoal-gray ooze stretches into a peaked wave with pale white slick along its upper surface.",
+      "wikiDescription": "The wiki describes gray ooze as an acidic amorphous creature whose bite can rust metal.",
+      "modelBrief": "Create a low shapeless gray mass with an advancing raised lobe and glossy pale streak, without fixed eyes or limbs. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gray ooze",
+          "url": "https://nethackwiki.com/wiki/Gray_ooze"
+        }
+      ]
+    },
+    "monster:brown pudding": {
+      "wikiTitle": "Brown pudding",
+      "visualDescription": "A brown pudding forms a flattened round mound with amber patches and dark mottled edges.",
+      "wikiDescription": "The wiki describes a blind amorphous pudding that can divide after certain blows.",
+      "modelBrief": "Build a thick soft dome with irregular amber inclusions; animate surface deformation rather than adding a face. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Brown pudding",
+          "url": "https://nethackwiki.com/wiki/Brown_pudding"
+        }
+      ]
+    },
+    "monster:green slime": {
+      "wikiTitle": "Green slime",
+      "visualDescription": "A vivid green slime rises in irregular gooey spires from a pooled base with lime highlights.",
+      "wikiDescription": "The wiki describes green slime as a pudding-like creature whose touch progressively slimes its victim.",
+      "modelBrief": "Sculpt a viscous green mound with several lifted lobes and yellow-green inner glow, keeping the base spread out. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Green slime",
+          "url": "https://nethackwiki.com/wiki/Green_slime"
+        }
+      ]
+    },
+    "monster:black pudding": {
+      "wikiTitle": "Black pudding",
+      "visualDescription": "A black pudding is a glossy dark dome with a single white sheen and a wide black ground-contact base.",
+      "wikiDescription": "The wiki describes a mindless, eyeless acidic pudding that can divide when struck by certain metal attacks.",
+      "modelBrief": "Model a broad tar-like mound with one large reflective patch and subtle blue-black texture; leave it faceless. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Black pudding",
+          "url": "https://nethackwiki.com/wiki/Black_pudding"
+        }
+      ]
+    },
+    "monster:quantum mechanic": {
+      "wikiTitle": "Quantum mechanic",
+      "visualDescription": "A humanlike mechanic in blue-violet clothing holds a purple tool or device beside a small red case.",
+      "wikiDescription": "The wiki identifies a quantum mechanic as a humanoid monster whose touch can change a target's speed.",
+      "modelBrief": "Make a slim technician with dark blue coat, purple handheld device, and red box; compare the pair's small accessory color changes. Check both atlas slots for small pixel differences.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Quantum mechanic",
+          "url": "https://nethackwiki.com/wiki/Quantum_mechanic"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "430": {
+      "variantNote": "Male-labeled atlas slot; art differs from the adjacent female-labeled slot. Compare both before deciding whether geometry must differ."
+    },
+    "431": {
+      "variantNote": "Female-labeled atlas slot; art differs from the adjacent male-labeled slot. Compare both before deciding whether geometry must differ."
+    }
+  }
+}

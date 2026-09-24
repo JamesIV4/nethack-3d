@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:coin / generic coin": {
+      "wikiTitle": "Zorkmid",
+      "visualDescription": "A single large pale dollar sign with thick dark pixel edges fills the cell. It is a currency symbol rather than a coin with a visible face.",
+      "wikiDescription": "The wiki identifies the gold piece as NetHack's coinage, valued in zorkmids. This generic class tile gives no stamped design or pile size.",
+      "modelBrief": "Use a shallow cream-colored dollar-sign marker with a heavy dark edge for the generic slot. Reserve round coins or piles for an appearance-specific tile.",
+      "sources": [{ "label": "NetHack Wiki: zorkmid", "url": "https://nethackwiki.com/wiki/Zorkmid" }]
+    },
+    "object:gem / generic gem": {
+      "wikiTitle": "Gem",
+      "visualDescription": "A large cream asterisk has uneven pointed arms and a dark blue-gray outline. There is no cut-stone shape or color in the tile.",
+      "wikiDescription": "NetHack gems include several kinds of small stones, some valuable and some not. This is the class marker, not an identified jewel.",
+      "modelBrief": "Make a flat multi-pointed asterisk token with an open readable silhouette and cream face. Do not assign a gemstone cut, hue, or value to this generic marker.",
+      "sources": [{ "label": "NetHack Wiki: gem", "url": "https://nethackwiki.com/wiki/Gem" }]
+    },
+    "object:large rock / generic large rock": {
+      "wikiTitle": "Boulder",
+      "visualDescription": "A short, pale curved stroke resembling a backtick or small rock-class mark sits near the middle. It is not a rendered boulder.",
+      "wikiDescription": "The wiki describes boulders as heavy rock objects that occupy dungeon squares. This tile is the generic large-rock class sign, not evidence for a particular stone surface.",
+      "modelBrief": "Give the small hooked mark shallow depth as a class icon. Avoid building a full boulder from this abstract glyph alone; the actual boulder tile supplies that model reference.",
+      "sources": [{ "label": "NetHack Wiki: boulder", "url": "https://nethackwiki.com/wiki/Boulder" }]
+    },
+    "object:iron ball / generic iron ball": {
+      "wikiTitle": "Heavy iron ball",
+      "visualDescription": "A pale zero-like oval with a dark blue-gray interior and thick outline sits at center. It reads as a class symbol rather than a shaded sphere.",
+      "wikiDescription": "The heavy iron ball is NetHack's iron-ball object type and is made of iron. The generic glyph gives only a circular cue, not a physical size or chain attachment.",
+      "modelBrief": "If this class placeholder needs a 3D form, use a low-relief oval ring with a dark inset. Keep the full iron ball model for its object tile and do not attach an invented chain here.",
+      "sources": [{ "label": "NetHack Wiki: heavy iron ball", "url": "https://nethackwiki.com/wiki/Heavy_iron_ball" }]
+    },
+    "object:iron chain / generic iron chain": {
+      "wikiTitle": "Iron chain",
+      "visualDescription": "A short, thick cream horizontal bar with a dark blue-gray lower edge crosses part of the cell. No separate links are drawn.",
+      "wikiDescription": "An iron chain is a NetHack item associated with attaching a heavy iron ball. This class glyph supplies no link count or construction detail.",
+      "modelBrief": "Use one shallow horizontal bar for the fallback class glyph; avoid interpreting it as a measured chain segment. A later physical chain model can use actual links while keeping this tile distinct.",
+      "sources": [{ "label": "NetHack Wiki: iron chain", "url": "https://nethackwiki.com/wiki/Iron_chain" }]
+    },
+    "object:venom / generic venom": {
+      "wikiTitle": "Venom",
+      "visualDescription": "One pale square-ish dot with a dark lower-right pixel shadow floats at center. It shows no splash, bottle, or creature.",
+      "wikiDescription": "Venom is a NetHack object class for poisonous or acidic projectiles produced by monsters. This generic point is not a particular venom type.",
+      "modelBrief": "Keep a tiny raised dot for the placeholder icon. Do not infer a color, container, or blob anatomy from this abstract tile.",
+      "sources": [{ "label": "NetHack Wiki: venom", "url": "https://nethackwiki.com/wiki/Venom" }]
+    },
+    "object:arrow": {
+      "wikiTitle": "Arrow",
+      "visualDescription": "A long brown wooden shaft runs diagonally from lower left to upper right, ending in a small pale arrowhead; a dark rear point suggests fletching.",
+      "wikiDescription": "An arrow is stackable ammunition fired from a bow. The wiki distinguishes ordinary arrows from elven, orcish, silver, and ya varieties that follow it in the atlas.",
+      "modelBrief": "Make a slender straight brown shaft, small pale metal point, and minimal dark fletching. Match the diagonal reference silhouette without embedding the patterned floor.",
+      "sources": [{ "label": "NetHack Wiki: arrow", "url": "https://nethackwiki.com/wiki/Arrow" }]
+    },
+    "object:runed arrow / elven arrow": {
+      "wikiTitle": "Elven arrow",
+      "visualDescription": "A brown diagonal shaft carries a vivid pale-green arrowhead and a dark lower-left tail. The tile's runed quality is conveyed by color more than legible markings.",
+      "wikiDescription": "The wiki identifies an elven arrow as wooden bow ammunition that appears as a runed arrow when unidentified. The appearance label names the visible tile; no readable rune is evident in the sprite.",
+      "modelBrief": "Keep the ordinary arrow proportions but add the distinct green-tinted point and restrained elven finish. Do not invent large symbols on this tiny design.",
+      "sources": [{ "label": "NetHack Wiki: elven arrow", "url": "https://nethackwiki.com/wiki/Elven_arrow" }]
+    },
+    "object:crude arrow / orcish arrow": {
+      "wikiTitle": "Orcish arrow",
+      "visualDescription": "A rough, dark brown shaft leans diagonally; the far upper-right end is broad and blunt-looking, while the near end is a small pale tip. It is much darker than the ordinary arrow.",
+      "wikiDescription": "An orcish arrow is projectile ammunition for an orcish bow and appears as a crude arrow. Its crude label supports rough construction, while the dark palette is from PixelHack.",
+      "modelBrief": "Use a slim but uneven wooden shaft with dark coarse fletching and a small light point. Keep it visibly rougher and browner than the standard arrow.",
+      "sources": [{ "label": "NetHack Wiki: orcish arrow", "url": "https://nethackwiki.com/wiki/Orcish_arrow" }]
+    },
+    "object:silver arrow": {
+      "wikiTitle": "Silver arrow",
+      "visualDescription": "A cool gray-blue diagonal shaft with a light ivory tip and dark tail mirrors the ordinary arrow's length. Its metal-colored body is the main distinction.",
+      "wikiDescription": "The wiki identifies the silver arrow as a projectile made of silver. Its material matters in NetHack; the sprite uses pale gray to distinguish it from wooden arrows.",
+      "modelBrief": "Use the regular arrow silhouette, replacing the warm shaft with silver-gray metal and a bright pale point. Keep the narrow proportions legible at tile scale.",
+      "sources": [{ "label": "NetHack Wiki: silver arrow", "url": "https://nethackwiki.com/wiki/Silver_arrow" }]
+    },
+    "object:bamboo arrow / ya": {
+      "wikiTitle": "Ya",
+      "visualDescription": "A short ochre-brown diagonal shaft has a pale point and darker lower-left tail. The warm bamboo color separates it from the gray silver arrow.",
+      "wikiDescription": "A ya is an arrow designed for the yumi and appears as a bamboo arrow when unidentified. The wiki specifies a metal head and bamboo shaft.",
+      "modelBrief": "Model a light bamboo shaft with a compact metal point and dark fletching. Keep the sprite's warm ochre tone and shorter, sturdy appearance.",
+      "sources": [{ "label": "NetHack Wiki: ya", "url": "https://nethackwiki.com/wiki/Ya" }]
+    },
+    "object:crossbow bolt": {
+      "wikiTitle": "Crossbow bolt",
+      "visualDescription": "A compact dark-brown diagonal dart has a blunt-looking rear and small dark head, noticeably shorter and thicker than the arrows above it.",
+      "wikiDescription": "Crossbow bolts are stackable projectiles made to be fired by a crossbow. The wiki treats them as ammunition distinct from bow arrows.",
+      "modelBrief": "Build a short stout wooden bolt with understated dark fletching and point. Compare its length against arrow tile 807 so it reads as crossbow ammunition.",
+      "sources": [{ "label": "NetHack Wiki: crossbow bolt", "url": "https://nethackwiki.com/wiki/Crossbow_bolt" }]
+    }
+  },
+  "tiles": {}
+}

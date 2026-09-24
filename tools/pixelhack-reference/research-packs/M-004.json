@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:jaguar": {
+      "wikiTitle": "Jaguar",
+      "visualDescription": "A golden spotted big cat prowls left, showing a heavy head, pale jaws, dark rosette-like markings, thick paws, and an upward curved tail.",
+      "wikiDescription": "NetHack Wiki describes the jaguar as a large quadrupedal carnivorous feline that attacks with claws and a bite.",
+      "modelBrief": "Build a muscular golden cat with a broad muzzle, strong paws, dark irregular spots, and a hooked tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Jaguar",
+          "url": "https://nethackwiki.com/wiki/Jaguar"
+        }
+      ]
+    },
+    "monster:lynx": {
+      "wikiTitle": "Lynx",
+      "visualDescription": "A blue-gray cat has long pointed ear tufts, pale eyes and muzzle, mottled dark fur, and a relatively short tail.",
+      "wikiDescription": "NetHack Wiki identifies the lynx as a large quadrupedal feline with claw and bite attacks.",
+      "modelBrief": "Model a compact wildcat with prominent ear tufts, short tail, gray coat, and dark spot pattern; keep its face distinct from the jaguar.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lynx",
+          "url": "https://nethackwiki.com/wiki/Lynx"
+        }
+      ]
+    },
+    "monster:panther": {
+      "wikiTitle": "Panther",
+      "visualDescription": "A nearly black feline stalks low with dark plum shadows, bright green eyes, heavy shoulders, and a raised thick tail.",
+      "wikiDescription": "NetHack Wiki describes a large carnivorous quadrupedal cat with claw and bite attacks.",
+      "modelBrief": "Make a sleek dark big cat with broad shoulders, green eyes, and raised tail; use subtle plum highlights to reveal its shape.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Panther",
+          "url": "https://nethackwiki.com/wiki/Panther"
+        }
+      ]
+    },
+    "monster:large cat": {
+      "wikiTitle": "Large cat",
+      "visualDescription": "A light gray-white domestic cat stands side-on with pointed ears, long legs, and a thick tail lowered behind it.",
+      "wikiDescription": "NetHack Wiki identifies the large cat as a strong domestic feline and final growth stage of the kitten line.",
+      "modelBrief": "Enlarge the housecat into a longer-legged standing cat with pale fur and pointed ears; retain domestic proportions rather than big-cat bulk.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Large cat",
+          "url": "https://nethackwiki.com/wiki/Large_cat"
+        }
+      ]
+    },
+    "monster:tiger": {
+      "wikiTitle": "Tiger",
+      "visualDescription": "An orange cat with dark stripes, broad face, pale chest, big paws, and lifted ringed tail fills the tile.",
+      "wikiDescription": "NetHack Wiki describes the tiger as a large quadrupedal feline and the strongest of its monster class.",
+      "modelBrief": "Model a powerful tiger with orange and cream fur, dark transverse stripes, broad skull, and heavy paws; match the tile's tail arc.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Tiger",
+          "url": "https://nethackwiki.com/wiki/Tiger"
+        }
+      ]
+    },
+    "monster:displacer beast": {
+      "wikiTitle": "Displacer beast",
+      "visualDescription": "A dark purple-black catlike beast crouches with a broad head, glowing green eyes, and two large arching feelers rising from its back.",
+      "wikiDescription": "NetHack Wiki identifies a large feline monster with a displacement ability; the PixelHack sprite supplies the feeler anatomy and dark palette.",
+      "modelBrief": "Build a heavy dark feline with four legs and paired long back feelers, pale green eyes, and plum highlights; pose the feelers to frame the head.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Displacer beast",
+          "url": "https://nethackwiki.com/wiki/Displacer_beast"
+        }
+      ]
+    },
+    "monster:gremlin": {
+      "wikiTitle": "Gremlin",
+      "visualDescription": "A small olive-green humanoid has huge sideways ears, a pink open mouth, spindly limbs, clawed hands, and an irregular crouch.",
+      "wikiDescription": "NetHack Wiki describes a small humanoid that can swim and splits into clones when it contacts water.",
+      "modelBrief": "Sculpt a wiry green goblinlike body with oversized ears, thin claws, and pink inner mouth; keep the low mischievous stance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gremlin",
+          "url": "https://nethackwiki.com/wiki/Gremlin"
+        }
+      ]
+    },
+    "monster:gargoyle": {
+      "wikiTitle": "Gargoyle",
+      "visualDescription": "A squat stone-gray humanoid crouches with thick arms, clawed feet, a horned head, and dark cracks; paired sprites vary subtly in pose.",
+      "wikiDescription": "NetHack Wiki describes a strong, thick-skinned humanoid with two claw attacks and a bite.",
+      "modelBrief": "Build a heavy gray stone figure with broad shoulders, horns, claws, and chiseled crack accents; compare tiles 86 and 87 for pose differences.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gargoyle",
+          "url": "https://nethackwiki.com/wiki/Gargoyle"
+        }
+      ]
+    },
+    "monster:winged gargoyle": {
+      "wikiTitle": "Winged gargoyle",
+      "visualDescription": "A gray stone humanoid crouches beneath two tall dark wings, with a horned face, muscular arms, and clawed feet; paired tiles differ slightly.",
+      "wikiDescription": "NetHack Wiki identifies a stronger flying gargoyle with thick skin, claws, and a bite.",
+      "modelBrief": "Extend the gargoyle body with two large batlike stone wings, preserving its broad crouch and gray palette; check both tiles 88 and 89.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Winged gargoyle",
+          "url": "https://nethackwiki.com/wiki/Winged_gargoyle"
+        }
+      ]
+    },
+    "monster:hobbit": {
+      "wikiTitle": "Hobbit",
+      "visualDescription": "A short humanlike figure wears a green shirt, brown vest and trousers, with dark hair, reddish bare-looking feet, and a small weapon.",
+      "wikiDescription": "NetHack Wiki describes the hobbit as a small humanoid, also called a halfling, that can carry weapons.",
+      "modelBrief": "Model a short round-faced adventurer with green upper clothing, brown lower garments, broad feet, and a modest held weapon.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Hobbit",
+          "url": "https://nethackwiki.com/wiki/Hobbit"
+        }
+      ]
+    },
+    "monster:dwarf": {
+      "wikiTitle": "Dwarf (monster)",
+      "visualDescription": "A compact bearded humanoid has a blue-gray horned helmet, long pale beard, red-orange clothing, and a curved weapon.",
+      "wikiDescription": "NetHack Wiki identifies the dwarf monster as a small weapon-using humanoid and basic form among dwarven monsters.",
+      "modelBrief": "Build a stocky dwarf with large helmet, long light beard, red tunic, and visible curved blade; prioritize the head silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dwarf (monster)",
+          "url": "https://nethackwiki.com/wiki/Dwarf_(monster)"
+        }
+      ]
+    },
+    "monster:bugbear": {
+      "wikiTitle": "Bugbear",
+      "visualDescription": "A hulking olive-brown humanoid has a shaggy rounded head, long hanging arms, brown legs, and a large blue-gray club or mace.",
+      "wikiDescription": "NetHack Wiki describes a strong humanoid that seeks and uses weapons.",
+      "modelBrief": "Sculpt a broad hairy bugbear with oversized shoulders and arms, a low head, and one heavy blue-gray weapon.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Bugbear",
+          "url": "https://nethackwiki.com/wiki/Bugbear"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "86": {
+      "variantNote": "PixelHack differs subtly from the paired tile 87; inspect both crops before finalizing pose and details."
+    },
+    "87": {
+      "variantNote": "PixelHack differs subtly from the paired tile 86; inspect both crops before finalizing pose and details."
+    },
+    "88": {
+      "variantNote": "PixelHack differs subtly from the paired tile 89; inspect both crops before finalizing pose and details."
+    },
+    "89": {
+      "variantNote": "PixelHack differs subtly from the paired tile 88; inspect both crops before finalizing pose and details."
+    }
+  }
+}

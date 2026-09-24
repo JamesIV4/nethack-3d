@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:marble / make invisible": {
+      "wikiTitle": "Wand of make invisible",
+      "visualDescription": "PixelHack shows a pale ivory-gray rod mottled by cool green-gray along its lower side lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of make invisible as a zap-usable wand. The marble descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a marble-looking straight wand with ivory and green-gray mottling. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of make invisible",
+          "url": "https://nethackwiki.com/wiki/Wand_of_make_invisible"
+        }
+      ]
+    },
+    "object:tin / slow monster": {
+      "wikiTitle": "Wand of slow monster",
+      "visualDescription": "PixelHack shows a muted taupe-gray rod with dark metal edge lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of slow monster as a zap-usable wand. The tin descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a dull tin-colored metal wand. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of slow monster",
+          "url": "https://nethackwiki.com/wiki/Wand_of_slow_monster"
+        }
+      ]
+    },
+    "object:brass / speed monster": {
+      "wikiTitle": "Wand of speed monster",
+      "visualDescription": "PixelHack shows a rich brass-gold rod with brown lower shading lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of speed monster as a zap-usable wand. The brass descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a warm brass-colored metal wand. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of speed monster",
+          "url": "https://nethackwiki.com/wiki/Wand_of_speed_monster"
+        }
+      ]
+    },
+    "object:copper / undead turning": {
+      "wikiTitle": "Wand of undead turning",
+      "visualDescription": "PixelHack shows a pinkish copper-orange rod with bright upper highlight lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of undead turning as a zap-usable wand. The copper descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a copper-colored metal wand with warm pink highlight. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of undead turning",
+          "url": "https://nethackwiki.com/wiki/Wand_of_undead_turning"
+        }
+      ]
+    },
+    "object:silver / polymorph [wand]": {
+      "wikiTitle": "Wand of polymorph",
+      "visualDescription": "PixelHack shows a bright silver-white rod with gray stepped edge and tiny peach glint near its base lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of polymorph as a zap-usable wand. The silver descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a plain silver-colored wand with bright top edge and dark underside. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of polymorph",
+          "url": "https://nethackwiki.com/wiki/Wand_of_polymorph"
+        }
+      ]
+    },
+    "object:platinum / cancellation": {
+      "wikiTitle": "Wand of cancellation",
+      "visualDescription": "PixelHack shows a pale gray-silver rod with darker brown-gray lower edge lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of cancellation as a zap-usable wand. The platinum descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a platinum-colored metal rod with restrained pale finish. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of cancellation",
+          "url": "https://nethackwiki.com/wiki/Wand_of_cancellation"
+        }
+      ]
+    },
+    "object:iridium / teleportation": {
+      "wikiTitle": "Wand of teleportation",
+      "visualDescription": "PixelHack shows a silvery-tan rod with alternating pale and dark diagonal facets lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of teleportation as a zap-usable wand. The iridium descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build an iridium-colored wand with subtle banded highlights. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of teleportation",
+          "url": "https://nethackwiki.com/wiki/Wand_of_teleportation"
+        }
+      ]
+    },
+    "object:zinc / opening": {
+      "wikiTitle": "Wand of opening",
+      "visualDescription": "PixelHack shows a cool gray rod with pale square-stepped reflection near the center lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of opening as a zap-usable wand. The zinc descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a zinc-gray metal wand with angular pixel-like glints. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of opening",
+          "url": "https://nethackwiki.com/wiki/Wand_of_opening"
+        }
+      ]
+    },
+    "object:aluminum / locking": {
+      "wikiTitle": "Wand of locking",
+      "visualDescription": "PixelHack shows a blue-gray rod with dark navy lower edge and pale upper tip lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of locking as a zap-usable wand. The aluminum descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build an aluminum-colored metal wand with cool blue cast. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of locking",
+          "url": "https://nethackwiki.com/wiki/Wand_of_locking"
+        }
+      ]
+    },
+    "object:uranium / probing": {
+      "wikiTitle": "Wand of probing",
+      "visualDescription": "PixelHack shows a gray metal rod with a thin yellow-green illuminated segment lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of probing as a zap-usable wand. The uranium descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a uranium-colored rod with one small yellow-green stripe. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of probing",
+          "url": "https://nethackwiki.com/wiki/Wand_of_probing"
+        }
+      ]
+    },
+    "object:iron / digging": {
+      "wikiTitle": "Wand of digging",
+      "visualDescription": "PixelHack shows a long gray iron-colored rod with warm rust-brown lower section lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of digging as a zap-usable wand. The iron descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build an iron-gray wand with subtle reddish lower patina. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of digging",
+          "url": "https://nethackwiki.com/wiki/Wand_of_digging"
+        }
+      ]
+    },
+    "object:steel / magic missile": {
+      "wikiTitle": "Wand of magic missile",
+      "visualDescription": "PixelHack shows a pale steel-blue rod with dark blue-gray lower edge lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of magic missile as a zap-usable wand. The steel descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a polished steel-colored rod with cool highlights. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of magic missile",
+          "url": "https://nethackwiki.com/wiki/Wand_of_magic_missile"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

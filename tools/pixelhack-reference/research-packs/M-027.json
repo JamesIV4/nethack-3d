@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:Baalzebub": {
+      "wikiTitle": "Baalzebub",
+      "visualDescription": "A large brown insectlike demon has huge pale wings, red compound-looking eyes, a long snout, and clawed legs.",
+      "wikiDescription": "NetHack Wiki identifies Baalzebub as a demon prince encountered in Gehennom.",
+      "modelBrief": "Sculpt a flylike demon prince with broad veined wings, red eyes, brown chitin, and clawed limbs; keep its insect head prominent.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baalzebub",
+          "url": "https://nethackwiki.com/wiki/Baalzebub"
+        }
+      ]
+    },
+    "monster:Asmodeus": {
+      "wikiTitle": "Asmodeus",
+      "visualDescription": "A red horned ruler in dark crimson robes raises one hand with a violet flame or orb, above a broad lower garment.",
+      "wikiDescription": "NetHack Wiki describes Asmodeus as a powerful humanoid demon prince with a lair in Gehennom.",
+      "modelBrief": "Build a regal devil with dark red skin, curled horns, heavy maroon robe, and raised purple magic in one hand.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Asmodeus",
+          "url": "https://nethackwiki.com/wiki/Asmodeus"
+        }
+      ]
+    },
+    "monster:Demogorgon": {
+      "wikiTitle": "Demogorgon",
+      "visualDescription": "A massive blue-gray demon has two dark heads, long curling tentacles, broad shoulders, and a deep mouthlike central darkness.",
+      "wikiDescription": "NetHack Wiki identifies Demogorgon as a unique demon prince among the most dangerous monsters in the game.",
+      "modelBrief": "Sculpt a towering two-headed, tentacle-armed demon with blue-gray hide and a wide intimidating stance; preserve the tangled silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Demogorgon",
+          "url": "https://nethackwiki.com/wiki/Demogorgon"
+        }
+      ]
+    },
+    "monster:Death": {
+      "wikiTitle": "Death (monster)",
+      "visualDescription": "A hooded black-robed figure floats with a pale skull face, dark blue robe fold, and long gray scythe.",
+      "wikiDescription": "NetHack Wiki identifies Death as one of the Riders, with lethal touch attacks.",
+      "modelBrief": "Model a skeletal reaper in black-blue hood and long draping robe, holding a curved scythe; leave the face stark and pale.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Death (monster)",
+          "url": "https://nethackwiki.com/wiki/Death_(monster)"
+        }
+      ]
+    },
+    "monster:Pestilence": {
+      "wikiTitle": "Pestilence",
+      "visualDescription": "A green-faced hooded figure is wrapped in deep green robes, surrounded by drifting yellow-brown particles.",
+      "wikiDescription": "NetHack Wiki describes Pestilence as a Rider whose touch causes sickness.",
+      "modelBrief": "Build a hovering plague figure with green cowl, sickly face, dark robe, and sparse motes orbiting the body.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Pestilence",
+          "url": "https://nethackwiki.com/wiki/Pestilence"
+        }
+      ]
+    },
+    "monster:Famine": {
+      "wikiTitle": "Famine",
+      "visualDescription": "A gaunt yellow skull and bony hand emerge from a black-brown cloak, with deep empty eye sockets.",
+      "wikiDescription": "NetHack Wiki identifies Famine as a Rider whose touch drains nutrition.",
+      "modelBrief": "Sculpt a skeletal starved figure under ragged dark cloth, emphasizing hollow cheeks, long fingers, and exposed skull.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Famine",
+          "url": "https://nethackwiki.com/wiki/Famine"
+        }
+      ]
+    },
+    "monster:mail daemon": {
+      "wikiTitle": "Mail daemon",
+      "visualDescription": "A small red-brown horned demon has a long curling tail, pointed ears, bright yellow eyes, and a pale clawed hand extended in front. No mail item is visible in the tile.",
+      "wikiDescription": "NetHack Wiki describes the mail daemon as a special messenger monster with no attacks.",
+      "modelBrief": "Build a compact red courier demon with horns, yellow eyes, pale claws, and a high curling tail. Keep its outstretched hand empty unless a separate mail-delivery animation needs a prop.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Mail daemon",
+          "url": "https://nethackwiki.com/wiki/Mail_daemon"
+        }
+      ]
+    },
+    "monster:djinni": {
+      "wikiTitle": "Djinni",
+      "visualDescription": "A blue-purple humanoid floats above a dark shadow, with a tapering vapor-like lower body and arms spread wide.",
+      "wikiDescription": "NetHack Wiki identifies djinn as flying non-major-demon monsters that may emerge from magic sources.",
+      "modelBrief": "Model a broad-shouldered purple-blue spirit whose legs dissolve into a swirling lower wisp; keep arms and head clearly humanlike.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Djinni",
+          "url": "https://nethackwiki.com/wiki/Djinni"
+        }
+      ]
+    },
+    "monster:jellyfish": {
+      "wikiTitle": "Jellyfish",
+      "visualDescription": "A rust-red floating or swimming bell has a bright pale center and many dark dangling tentacles beneath it.",
+      "wikiDescription": "NetHack Wiki describes a headless sea monster with tentacles rather than defined limbs.",
+      "modelBrief": "Build a rounded translucent red bell with luminous center and many trailing tentacles; pose it suspended in water.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Jellyfish",
+          "url": "https://nethackwiki.com/wiki/Jellyfish"
+        }
+      ]
+    },
+    "monster:piranha": {
+      "wikiTitle": "Piranha",
+      "visualDescription": "A small olive-brown fish has a blunt toothed mouth, dark eye, thick tail fin, and short dorsal fin.",
+      "wikiDescription": "NetHack Wiki identifies the piranha as a small carnivorous sea monster with a bite attack.",
+      "modelBrief": "Sculpt a compact predatory fish with a large jaw, triangular fins, olive-gray scales, and a broad tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Piranha",
+          "url": "https://nethackwiki.com/wiki/Piranha"
+        }
+      ]
+    },
+    "monster:shark": {
+      "wikiTitle": "Shark",
+      "visualDescription": "A slate-gray shark rises through blue water with an enormous open pink mouth, white teeth, pointed nose, and tall dorsal fin.",
+      "wikiDescription": "NetHack Wiki describes sharks as thick-skinned carnivorous sea monsters with strong bites.",
+      "modelBrief": "Model a streamlined gray shark with tall dorsal fin, pale belly, and wide tooth-lined maw; match the upward breaching pose.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Shark",
+          "url": "https://nethackwiki.com/wiki/Shark"
+        }
+      ]
+    },
+    "monster:giant eel": {
+      "wikiTitle": "Giant eel",
+      "visualDescription": "A thick brown eel curves up from blue water, with a long neck, red upper ridge, toothy yellow snout, and spotted body.",
+      "wikiDescription": "NetHack Wiki identifies the giant eel as a water-hiding carnivorous sea monster.",
+      "modelBrief": "Build a long flexible eel with mottled brown scales, red dorsal line, and broad toothed head; allow the body to bend above water.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Giant eel",
+          "url": "https://nethackwiki.com/wiki/Giant_eel"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

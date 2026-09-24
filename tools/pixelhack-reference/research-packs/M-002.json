@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:jackal": {
+      "wikiTitle": "Jackal",
+      "visualDescription": "The tile shows a lean tan canine in profile, with upright ears, a cream muzzle and chest, dark paws, and a narrow raised tail.",
+      "wikiDescription": "NetHack Wiki identifies the jackal as a small carnivorous canine with a bite attack and links it to the werejackal's animal form.",
+      "modelBrief": "Model a slim four-legged jackal with pointed ears and muzzle, cream ventral fur, and a narrow tail; check its side silhouette against tile 24.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Jackal",
+          "url": "https://nethackwiki.com/wiki/Jackal"
+        }
+      ]
+    },
+    "monster:fox": {
+      "wikiTitle": "Fox",
+      "visualDescription": "A small golden-orange fox faces left with a pale chest, dark ears and paws, and a full tail curling down behind it.",
+      "wikiDescription": "NetHack Wiki describes a small carnivorous canine that attacks by biting.",
+      "modelBrief": "Build a small fox with a tapered muzzle, dark pointed ears and feet, and a broad orange tail; keep the pale chest readable from the tile view.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Fox",
+          "url": "https://nethackwiki.com/wiki/Fox"
+        }
+      ]
+    },
+    "monster:coyote": {
+      "wikiTitle": "Coyote",
+      "visualDescription": "A long-legged olive-gray canine stands in profile with large ears, a pale lower jaw and underside, and a straight dark-tipped tail.",
+      "wikiDescription": "NetHack Wiki identifies a small carnivorous canine with a bite attack.",
+      "modelBrief": "Use a lean coyote body, long legs, pointed ears, and a narrow tail; separate olive-gray back from pale underside.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Coyote",
+          "url": "https://nethackwiki.com/wiki/Coyote"
+        }
+      ]
+    },
+    "monster:werejackal": {
+      "wikiTitle": "Werejackal",
+      "visualDescription": "Tiles 30 and 31 show the same rearing tawny jackal form with a dark mane, open muzzle, raised forelegs, and curled tail. Tiles 536 and 537 instead show a mostly bare warm-brown humanoid with a narrow brown canine tail; the human-form heads differ slightly.",
+      "wikiDescription": "NetHack Wiki describes a human werecreature that changes between human and jackal forms. The human form can use a weapon, while the animal form bites and can summon nearby jackals or other canines.",
+      "modelBrief": "Make two visibly distinct forms: the upright jackal sprite's elongated head, ruff, forelegs, and tail, plus the lean human-form body with a narrow canine tail. Reuse the animal art for tiles 30 and 31, and preserve the small human-form head differences in tiles 536 and 537.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Werejackal",
+          "url": "https://nethackwiki.com/wiki/Werejackal"
+        }
+      ]
+    },
+    "monster:little dog": {
+      "wikiTitle": "Little dog",
+      "visualDescription": "The small pup is tan and square-bodied, with a darker face, two short ears, stubby legs, and a tiny raised tail.",
+      "wikiDescription": "NetHack Wiki describes a small domestic canine that can be tamed and grows into a dog.",
+      "modelBrief": "Make a compact puppy with an oversized head, short legs and tail, and warm tan coat; compare its scale with the dog and large dog sprites.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Little dog",
+          "url": "https://nethackwiki.com/wiki/Little_dog"
+        }
+      ]
+    },
+    "monster:dingo": {
+      "wikiTitle": "Dingo",
+      "visualDescription": "A lanky ochre wild dog stands in profile with tall pointed ears, a light throat, dark nose, and bushy downturned tail.",
+      "wikiDescription": "NetHack Wiki describes the dingo as a medium-sized wild canine similar to the domestic dog.",
+      "modelBrief": "Model a lean, long-legged dingo with large upright ears, ochre back, cream chest, and a bushy tail; keep it distinct from the smaller domestic dog.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dingo",
+          "url": "https://nethackwiki.com/wiki/Dingo"
+        }
+      ]
+    },
+    "monster:dog": {
+      "wikiTitle": "Dog",
+      "visualDescription": "A mid-sized golden-brown dog stands left-facing, with a lifted head, pale muzzle and underside, and a fluffy tail.",
+      "wikiDescription": "NetHack Wiki calls the dog a medium-sized domestic carnivorous canine that can be tamed and may grow into a large dog.",
+      "modelBrief": "Build the middle stage of the dog family with longer legs and torso than the pup, a golden coat, and lifted fluffy tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dog",
+          "url": "https://nethackwiki.com/wiki/Dog"
+        }
+      ]
+    },
+    "monster:large dog": {
+      "wikiTitle": "Large dog",
+      "visualDescription": "A sturdy tall brown dog faces left, with a deep chest, darker back, white muzzle, and thick low tail.",
+      "wikiDescription": "NetHack Wiki identifies the large dog as the strong final domestic dog growth stage.",
+      "modelBrief": "Broaden the dog's chest and limbs and deepen the brown coat; keep the long muzzle and substantial tail visible in profile.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Large dog",
+          "url": "https://nethackwiki.com/wiki/Large_dog"
+        }
+      ]
+    },
+    "monster:wolf": {
+      "wikiTitle": "Wolf",
+      "visualDescription": "A blue-gray wolf stands alert with sharp ears, a white muzzle and chest, long legs, and a low thick tail.",
+      "wikiDescription": "NetHack Wiki describes a medium-sized carnivorous canine and notes the default tileset uses tail length to distinguish sexes.",
+      "modelBrief": "Shape a rangy wolf with pointed ears, white face and bib, blue-gray fur, and a full low tail; PixelHack's two slots share the same art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wolf",
+          "url": "https://nethackwiki.com/wiki/Wolf"
+        }
+      ]
+    },
+    "monster:werewolf": {
+      "wikiTitle": "Werewolf",
+      "visualDescription": "Tiles 42 and 43 show the same upright dark slate wolf creature with yellow eyes, white-toothed muzzle, long forelegs, and trailing tail. Tiles 538 and 539 show a warm-brown humanoid with a dark blue-gray wolf tail and slightly different heads.",
+      "wikiDescription": "NetHack Wiki describes a human werecreature that shifts between human and wolf forms and is the strongest werecreature. It uses weapons in human form and a bite in wolf form.",
+      "modelBrief": "Build both the hunched dark wolf form with long forelegs and the lean human-form figure with a blue-gray wolf tail. Share the animal form across tiles 42 and 43, while retaining the small head differences between human-form tiles 538 and 539.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Werewolf",
+          "url": "https://nethackwiki.com/wiki/Werewolf"
+        }
+      ]
+    },
+    "monster:winter wolf cub": {
+      "wikiTitle": "Winter wolf cub",
+      "visualDescription": "A low, small blue-gray wolf pup has a white face and chest, pointed ears, short legs, and a dark blue tail.",
+      "wikiDescription": "NetHack Wiki identifies it as the juvenile form of the cold-aligned winter wolf.",
+      "modelBrief": "Build a compact cold-weather wolf cub with thick blue-gray fur and white face, chest, and lower legs; retain a short youthful muzzle.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Winter wolf cub",
+          "url": "https://nethackwiki.com/wiki/Winter_wolf_cub"
+        }
+      ]
+    },
+    "monster:warg": {
+      "wikiTitle": "Warg",
+      "visualDescription": "A heavy, dark olive-brown wolf-like beast has raised back fur, a broad muzzle, thick legs, yellow eye, and dark nose.",
+      "wikiDescription": "NetHack Wiki describes a warg as a larger, darker wolf-like carnivorous canine with a bite attack.",
+      "modelBrief": "Make a stocky, oversized wolf relative with a shaggy raised ridge, broad head, massive paws, and dark olive-brown coat.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Warg",
+          "url": "https://nethackwiki.com/wiki/Warg"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "30": {
+      "variantNote": "Jackal-form source slot; art is pixel-identical to tile 31. The distinct human-form sprite begins at tile 536."
+    },
+    "31": {
+      "variantNote": "Jackal-form source slot; art is pixel-identical to tile 30. The distinct human-form sprite begins at tile 536."
+    },
+    "42": {
+      "variantNote": "Wolf-form source slot; art is pixel-identical to tile 43. The distinct human-form sprite begins at tile 538."
+    },
+    "43": {
+      "variantNote": "Wolf-form source slot; art is pixel-identical to tile 42. The distinct human-form sprite begins at tile 538."
+    },
+    "536": {
+      "variantNote": "Human-form werejackal: warm-brown humanoid with brown canine tail. Head and face pixels differ from tile 537."
+    },
+    "537": {
+      "variantNote": "Human-form werejackal: warm-brown humanoid with brown canine tail. Head and face pixels differ from tile 536."
+    },
+    "538": {
+      "variantNote": "Human-form werewolf: warm-brown humanoid with dark blue-gray wolf tail. Head and face pixels differ from tile 539."
+    },
+    "539": {
+      "variantNote": "Human-form werewolf: warm-brown humanoid with dark blue-gray wolf tail. Head and face pixels differ from tile 538."
+    }
+  }
+}

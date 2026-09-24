@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PixelHack model reference</title>
+  <link rel="stylesheet" href="/tools/pixelhack-reference/style.css">
+</head>
+<body>
+  <header>
+    <h1>PixelHack model reference</h1>
+    <p>NetHack 5.0 source names, original pixels, research notes, and model render comparison.</p>
+  </header>
+  <main>
+    <section class="toolbar" aria-label="Find a tile">
+      <label>Search name or tile ID <input id="search" type="search" placeholder="giant ant, ruby potion, 1515"></label>
+      <label>Group <select id="category"><option value="">All</option></select></label>
+      <label>Research <select id="research-filter"><option value="">All</option><option value="ready">Brief ready</option><option value="todo">Needs brief</option></select></label>
+      <span id="count"></span>
+    </section>
+    <div class="layout">
+      <section class="results" aria-label="Tile results">
+        <div id="grid" class="grid"></div>
+        <nav class="pagination"><button id="previous-page">Previous</button><span id="page"></span><button id="next-page">Next</button></nav>
+      </section>
+      <section class="detail" aria-label="Selected tile">
+        <div class="detail-heading"><button id="previous-tile" title="Previous tile">←</button><h2 id="tile-title"></h2><button id="next-tile" title="Next tile">→</button></div>
+        <p id="tile-meta"></p>
+        <div class="previews">
+          <figure><canvas id="raw-tile" width="320" height="320"></canvas><figcaption>Original PixelHack tile</figcaption></figure>
+          <figure><canvas id="isolated-light" width="320" height="320"></canvas><figcaption>Masked tile on light background</figcaption></figure>
+          <figure><canvas id="isolated-dark" width="320" height="320"></canvas><figcaption>Masked tile on dark background</figcaption></figure>
+          <figure class="model-preview"><div id="model-drop"><img id="model-image" alt="Model render for comparison"><span id="model-placeholder">Choose or drop a Blender render</span></div><figcaption>Model render</figcaption></figure>
+        </div>
+        <p class="preview-note">Light and dark backgrounds are display aids. Some tile-specific scenery survives the mask; use the original tile and research brief to separate subject from backdrop.</p>
+        <div class="render-controls"><label>Open render image <input id="render-file" type="file" accept="image/png,image/jpeg,image/webp"></label><span>Drop an image onto the model panel for a quick comparison.</span></div>
+        <div class="notes"><h3>Modeling brief <span id="brief-status"></span></h3><p id="visual-note"></p><p id="wiki-note"></p><p id="model-brief"></p><p id="variant-note"></p><p><a id="wiki-link" target="_blank" rel="noopener noreferrer">Search NetHack Wiki</a> <span id="source-links"></span></p><button id="copy-brief">Copy tile brief</button></div>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="/tools/pixelhack-reference/main.js"></script>
+</body>
+</html>

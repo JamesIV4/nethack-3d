@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:iron chain": {
+      "wikiTitle": "Iron chain",
+      "visualDescription": "PixelHack shows a thick nearly black chain forming an open bent loop, with several large squared links. The teal pattern is background.",
+      "wikiDescription": "An iron chain is a separate NetHack object that can connect to a heavy iron ball. The tile shows only linked chain, not the ball.",
+      "modelBrief": "Build a short freely curved chain of large dark iron links, leaving open gaps between the loops. Keep the silhouette legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Iron chain",
+          "url": "https://nethackwiki.com/wiki/Iron_chain"
+        }
+      ]
+    },
+    "object:splash of venom / splash of blinding venom": {
+      "wikiTitle": "Venom",
+      "visualDescription": "PixelHack shows a suspended cluster of magenta and pink liquid droplets, with one large center splash and several smaller beads. The teal pattern is background.",
+      "wikiDescription": "The wiki describes blinding venom as a liquid projectile that splashes over a target's face. Both venom types have a generic splash appearance, while the visible pink palette comes from PixelHack.",
+      "modelBrief": "Build a frozen splash of pink-magenta fluid with one broad central lobe and separated small droplets; avoid a bottle or solid stone. Keep the silhouette legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Venom",
+          "url": "https://nethackwiki.com/wiki/Venom"
+        }
+      ]
+    },
+    "object:splash of venom / splash of acid venom": {
+      "wikiTitle": "Venom",
+      "visualDescription": "PixelHack shows a suspended cluster of olive-yellow liquid droplets, with a pale central splash and several smaller beads. The teal pattern is background.",
+      "wikiDescription": "The wiki describes acid venom as a liquid projectile that deals acid damage. It shares a generic splash appearance with blinding venom; this tile uses a distinct yellow-green palette.",
+      "modelBrief": "Build a frozen splash of yellow-olive acidic fluid with a broad central lobe and separate droplets; match the pink venom silhouette without merging palettes. Keep the silhouette legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Venom",
+          "url": "https://nethackwiki.com/wiki/Venom"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

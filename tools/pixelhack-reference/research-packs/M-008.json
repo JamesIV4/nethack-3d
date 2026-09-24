@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:mumak": {
+      "wikiTitle": "Mumak",
+      "visualDescription": "A massive blue-gray elephantlike beast faces left with a raised trunk, broad ears, two long ivory tusks, and thick feet.",
+      "wikiDescription": "NetHack Wiki describes the mumak as a strong, thick-skinned herbivorous elephantlike quadruped.",
+      "modelBrief": "Build a bulky elephant body with long trunk, curving ivory tusks, large ears, and columnar legs; preserve the blue-gray palette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Mumak",
+          "url": "https://nethackwiki.com/wiki/Mumak"
+        }
+      ]
+    },
+    "monster:leocrotta": {
+      "wikiTitle": "Leocrotta",
+      "visualDescription": "A red-brown beast has a dark wolfish head, long legs, a golden striped torso, and a thin dark tail.",
+      "wikiDescription": "NetHack Wiki identifies the leocrotta as a fast omnivorous quadruped with claw and bite attacks.",
+      "modelBrief": "Model a long-legged hybrid-looking beast with dark narrow head, russet limbs, golden banded back, and slender tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Leocrotta",
+          "url": "https://nethackwiki.com/wiki/Leocrotta"
+        }
+      ]
+    },
+    "monster:wumpus": {
+      "wikiTitle": "Wumpus",
+      "visualDescription": "A large brown animal hunches on four stout legs, with a broad drooping head, pale muzzle, and sloping back.",
+      "wikiDescription": "NetHack Wiki describes the wumpus as a strong omnivorous quadruped that can cling to ceilings and bites.",
+      "modelBrief": "Sculpt a heavy brown beast with wide muzzle, sloped shoulders, short thick legs, and a dense smooth coat.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wumpus",
+          "url": "https://nethackwiki.com/wiki/Wumpus"
+        }
+      ]
+    },
+    "monster:titanothere": {
+      "wikiTitle": "Titanothere",
+      "visualDescription": "A pale blue-gray rhinolike creature has a short horned nose, thick neck, barrel body, and massive dark feet.",
+      "wikiDescription": "NetHack Wiki describes the titanothere as a thick-skinned herbivorous rhinolike quadruped.",
+      "modelBrief": "Make a stocky prehistoric rhino with blunt paired nose projection, deep barrel torso, blue-gray hide, and massive legs.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Titanothere",
+          "url": "https://nethackwiki.com/wiki/Titanothere"
+        }
+      ]
+    },
+    "monster:baluchitherium": {
+      "wikiTitle": "Baluchitherium",
+      "visualDescription": "A tall blue-gray prehistoric beast has a small long-faced head, high shoulders, long neck, and heavy legs.",
+      "wikiDescription": "NetHack Wiki identifies the baluchitherium as a large thick-skinned herbivorous quadruped.",
+      "modelBrief": "Build a very tall rhinolike mammal with an elongated neck and legs, small head, smooth blue-gray hide, and huge feet.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baluchitherium",
+          "url": "https://nethackwiki.com/wiki/Baluchitherium"
+        }
+      ]
+    },
+    "monster:mastodon": {
+      "wikiTitle": "Mastodon",
+      "visualDescription": "A brown woolly elephant fills the tile with a large head, shaggy back, long trunk, and two sweeping white tusks.",
+      "wikiDescription": "NetHack Wiki describes the mastodon as a huge thick-skinned herbivorous quadruped with headbutt attacks.",
+      "modelBrief": "Model a woolly mastodon with domed shaggy shoulders, thick trunk, long curved tusks, and a heavy four-legged stance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Mastodon",
+          "url": "https://nethackwiki.com/wiki/Mastodon"
+        }
+      ]
+    },
+    "monster:sewer rat": {
+      "wikiTitle": "Sewer rat",
+      "visualDescription": "A tiny blue-gray rat crouches low with small pink ears, pointed nose, thin pink tail, and little dark feet.",
+      "wikiDescription": "NetHack Wiki describes the sewer rat as a tiny carnivorous rodent with a bite attack.",
+      "modelBrief": "Build a low small rat with blue-gray fur, pink ears and tail, pointed muzzle, and narrow paws.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Sewer rat",
+          "url": "https://nethackwiki.com/wiki/Sewer_rat"
+        }
+      ]
+    },
+    "monster:giant rat": {
+      "wikiTitle": "Giant rat",
+      "visualDescription": "A much larger blue-gray rat has bright pink ears, red eyes, thick paws, hunched back, and a long pink tail.",
+      "wikiDescription": "NetHack Wiki identifies the giant rat as a heavier and stronger relative of the sewer rat.",
+      "modelBrief": "Scale up the rat with a fuller torso, pronounced ears and paws, red eyes, and long naked tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Giant rat",
+          "url": "https://nethackwiki.com/wiki/Giant_rat"
+        }
+      ]
+    },
+    "monster:rabid rat": {
+      "wikiTitle": "Rabid rat",
+      "visualDescription": "A large blue-gray rat crouches aggressively with raised back fur, red eyes, bared pale teeth, and a pink tail.",
+      "wikiDescription": "NetHack Wiki describes the rabid rat as a dangerous rodent whose bite is poisonous and drains constitution.",
+      "modelBrief": "Modify the giant rat with spiky fur, lowered attack pose, exposed incisors, and red eyes; keep the same base anatomy.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Rabid rat",
+          "url": "https://nethackwiki.com/wiki/Rabid_rat"
+        }
+      ]
+    },
+    "monster:wererat": {
+      "wikiTitle": "Wererat",
+      "visualDescription": "Tiles 186 and 187 show the same upright gray rat form with a pointed muzzle, long forelegs, pink paws and tail, and red eyes. Tiles 534 and 535 show a mostly bare warm-brown humanoid with a long pink rat tail and slightly different heads.",
+      "wikiDescription": "NetHack Wiki identifies the wererat as a human werecreature that shifts between human and rat forms. The human form can use weapons, while the rat form bites.",
+      "modelBrief": "Build two forms: a hunched gray rat creature with pink paws and tail, and a lean warm-brown human-form figure retaining a pink rat tail. Reuse the animal art for tiles 186 and 187, but retain the small head differences in human-form tiles 534 and 535.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wererat",
+          "url": "https://nethackwiki.com/wiki/Wererat"
+        }
+      ]
+    },
+    "monster:rock mole": {
+      "wikiTitle": "Rock mole",
+      "visualDescription": "A squat dark brown burrower has a broad flattened snout, large front digging claws, small eyes, and rocky ridges on its back.",
+      "wikiDescription": "NetHack Wiki describes the rock mole as a tunneling metallivorous rodent that can collect gold and gems.",
+      "modelBrief": "Sculpt a low burrowing body with oversized foreclaws, flattened muzzle, brown rocky coat, and short rear legs.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Rock mole",
+          "url": "https://nethackwiki.com/wiki/Rock_mole"
+        }
+      ]
+    },
+    "monster:woodchuck": {
+      "wikiTitle": "Woodchuck",
+      "visualDescription": "A rounded tawny-brown rodent sits upright with a small face, front paws held close, and a thick flat-looking tail on the ground.",
+      "wikiDescription": "NetHack Wiki describes the woodchuck as a small herbivorous burrowing animal similar to the rock mole in game behavior.",
+      "modelBrief": "Model a plump upright groundhog with warm brown fur, short paws, rounded ears, and grounded tail; keep it distinct from the low mole.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Woodchuck",
+          "url": "https://nethackwiki.com/wiki/Woodchuck"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "186": {
+      "variantNote": "Rat-form source slot; art is pixel-identical to tile 187. The distinct human-form sprite begins at tile 534."
+    },
+    "187": {
+      "variantNote": "Rat-form source slot; art is pixel-identical to tile 186. The distinct human-form sprite begins at tile 534."
+    },
+    "534": {
+      "variantNote": "Human-form wererat: warm-brown humanoid with long pink rat tail. Head and face pixels differ from tile 535."
+    },
+    "535": {
+      "variantNote": "Human-form wererat: warm-brown humanoid with long pink rat tail. Head and face pixels differ from tile 534."
+    }
+  }
+}

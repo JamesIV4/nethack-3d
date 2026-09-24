@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:THARR / gold detection": {
+      "wikiTitle": "Scroll of gold detection",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"THARR\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of gold detection, which detects gold. Its association with the inscription THARR is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of gold detection",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_gold_detection"
+        }
+      ]
+    },
+    "object:YUM YUM / food detection": {
+      "wikiTitle": "Scroll of food detection",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"YUM YUM\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of food detection, which detects food. Its association with the inscription YUM YUM is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of food detection",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_food_detection"
+        }
+      ]
+    },
+    "object:KERNOD WEL / identify": {
+      "wikiTitle": "Scroll of identify",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"KERNOD WEL\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of identify, which identifies items. Its association with the inscription KERNOD WEL is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of identify",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_identify"
+        }
+      ]
+    },
+    "object:ELAM EBOW / magic mapping": {
+      "wikiTitle": "Scroll of magic mapping",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"ELAM EBOW\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of magic mapping, which reveals a map of the level. Its association with the inscription ELAM EBOW is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of magic mapping",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_magic_mapping"
+        }
+      ]
+    },
+    "object:DUAM XNAHT / amnesia": {
+      "wikiTitle": "Scroll of amnesia",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"DUAM XNAHT\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of amnesia, which causes amnesia. Its association with the inscription DUAM XNAHT is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of amnesia",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_amnesia"
+        }
+      ]
+    },
+    "object:ANDOVA BEGARIN / fire": {
+      "wikiTitle": "Scroll of fire",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"ANDOVA BEGARIN\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of fire, which produces fire. Its association with the inscription ANDOVA BEGARIN is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of fire",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_fire"
+        }
+      ]
+    },
+    "object:KIRJE / earth": {
+      "wikiTitle": "Scroll of earth",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"KIRJE\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of earth, which brings down boulders. Its association with the inscription KIRJE is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of earth",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_earth"
+        }
+      ]
+    },
+    "object:VE FORBRYDERNE / punishment": {
+      "wikiTitle": "Scroll of punishment",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"VE FORBRYDERNE\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of punishment, which inflicts ball-and-chain punishment. Its association with the inscription VE FORBRYDERNE is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of punishment",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_punishment"
+        }
+      ]
+    },
+    "object:HACKEM MUCHE / charging": {
+      "wikiTitle": "Scroll of charging",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"HACKEM MUCHE\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of charging, which recharges applicable items. Its association with the inscription HACKEM MUCHE is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of charging",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_charging"
+        }
+      ]
+    },
+    "object:VELOX NEB / stinking cloud": {
+      "wikiTitle": "Scroll of stinking cloud",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"VELOX NEB\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki documents the scroll of stinking cloud, which creates a stinking cloud. Its association with the inscription VELOX NEB is a source-order appearance, not a fixed visible identity after randomized appearances shuffle.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scroll of stinking cloud",
+          "url": "https://nethackwiki.com/wiki/Scroll_of_stinking_cloud"
+        }
+      ]
+    },
+    "object:FOOBIE BLETCH": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"FOOBIE BLETCH\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. FOOBIE BLETCH is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:TEMOV": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"TEMOV\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. TEMOV is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

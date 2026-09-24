@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:slippery cloak / oilskin cloak": {
+      "wikiTitle": "Oilskin cloak",
+      "visualDescription": "A taupe slippery cloak hangs from a narrow collar, with rounded sleeves and a dark central opening.",
+      "wikiDescription": "The wiki identifies oilskin cloak as a cloth outer garment that repels water and appears as a slippery cloak.",
+      "modelBrief": "Model a draped beige-taupe waterproof cloak with subtle sheen, keeping its center open.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Oilskin cloak",
+          "url": "https://nethackwiki.com/wiki/Oilskin_cloak"
+        }
+      ]
+    },
+    "object:robe": {
+      "wikiTitle": "Robe",
+      "visualDescription": "A vivid blue robe has a rounded hood, wide sleeves, and a pointed open front.",
+      "wikiDescription": "The wiki identifies the robe as a magical cloth cloak that can be worn over body armor.",
+      "modelBrief": "Build a long blue hooded robe with broad bell sleeves and deep dark folds.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Robe",
+          "url": "https://nethackwiki.com/wiki/Robe"
+        }
+      ]
+    },
+    "object:apron / alchemy smock": {
+      "wikiTitle": "Alchemy smock",
+      "visualDescription": "A plain tan apron has broad shoulders, dark neck opening, and a long rectangular lower panel.",
+      "wikiDescription": "The wiki says the alchemy smock is a protective cloth cloak that appears as an apron when unidentified.",
+      "modelBrief": "Make a simple long pale-tan apron or smock with a neck strap and flat front, without laboratory symbols.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Alchemy smock",
+          "url": "https://nethackwiki.com/wiki/Alchemy_smock"
+        }
+      ]
+    },
+    "object:leather cloak": {
+      "wikiTitle": "Leather cloak",
+      "visualDescription": "A dark brown leather cloak has a narrow upper collar, flowing shoulder panels, and open middle.",
+      "wikiDescription": "The wiki identifies a leather cloak as a leather outer garment.",
+      "modelBrief": "Build a thick russet leather cape with a collar, broad drape, and dark central gap.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Leather cloak",
+          "url": "https://nethackwiki.com/wiki/Leather_cloak"
+        }
+      ]
+    },
+    "object:tattered cape / cloak of protection": {
+      "wikiTitle": "Cloak of protection",
+      "visualDescription": "A ragged tan cape has a short collar, torn lower points, and dark brown inner shadow.",
+      "wikiDescription": "The wiki identifies the cloak of protection as a magical cloth cloak; its default unidentified appearance is a tattered cape. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Model a worn sand-colored cape with irregular frayed hem, not a visible force-field effect. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cloak of protection",
+          "url": "https://nethackwiki.com/wiki/Cloak_of_protection"
+        }
+      ]
+    },
+    "object:opera cloak / cloak of invisibility": {
+      "wikiTitle": "Cloak of invisibility",
+      "visualDescription": "A black and wine-red opera cloak has a high rounded collar and deep red inner lining.",
+      "wikiDescription": "The wiki identifies the cloak of invisibility as magical cloth; opera cloak is its default unidentified description. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Build a theatrical black cape with burgundy lining and tall collar, without making the garment itself disappear. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cloak of invisibility",
+          "url": "https://nethackwiki.com/wiki/Cloak_of_invisibility"
+        }
+      ]
+    },
+    "object:ornamental cope / cloak of magic resistance": {
+      "wikiTitle": "Cloak of magic resistance",
+      "visualDescription": "A purple ceremonial cope has a stiff high collar, gold horizontal trim, and a dark center opening.",
+      "wikiDescription": "The wiki identifies the cloak of magic resistance as a magical cloth cloak defaulting to an ornamental cope. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Model a formal violet cope with gold neck band and broad symmetric drapes; keep magical protection invisible. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cloak of magic resistance",
+          "url": "https://nethackwiki.com/wiki/Cloak_of_magic_resistance"
+        }
+      ]
+    },
+    "object:piece of cloth / cloak of displacement": {
+      "wikiTitle": "Cloak of displacement",
+      "visualDescription": "A crumpled blue-gray cloth piece has jagged folded edges and teal patches, without a fitted collar.",
+      "wikiDescription": "The wiki identifies the cloak of displacement as a magical cloak whose default unidentified appearance is a piece of cloth. This magical item can have another unidentified appearance when appearances are shuffled.",
+      "modelBrief": "Make an irregular folded cloth bundle in blue and teal; do not add a second displaced silhouette to the physical asset. Keep the item identity separate from this appearance asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cloak of displacement",
+          "url": "https://nethackwiki.com/wiki/Cloak_of_displacement"
+        }
+      ]
+    },
+    "object:wooden shield / small shield": {
+      "wikiTitle": "Small shield",
+      "visualDescription": "A small brown wooden shield has a flat upper edge, tapered bottom, and narrow vertical plank highlights.",
+      "wikiDescription": "The wiki identifies the small shield as a wooden shield that appears simply as a wooden shield when unidentified.",
+      "modelBrief": "Build a compact tapered wooden shield with vertical grain and dark edge, matching the shared appearance of nearby wooden-shield tiles.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Small shield",
+          "url": "https://nethackwiki.com/wiki/Small_shield"
+        }
+      ]
+    },
+    "object:wooden shield / shield of drain resistance": {
+      "wikiTitle": "Shield of drain resistance",
+      "visualDescription": "The tile repeats the same small brown tapered wooden shield with vertical plank highlights.",
+      "wikiDescription": "The wiki identifies the shield of drain resistance as wooden armor that appears as a wooden shield when unidentified.",
+      "modelBrief": "Reuse the plain wooden shield mesh and palette; attach drain resistance only as item data.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Shield of drain resistance",
+          "url": "https://nethackwiki.com/wiki/Shield_of_drain_resistance"
+        }
+      ]
+    },
+    "object:wooden shield / shield of shock resistance": {
+      "wikiTitle": "Shield of shock resistance",
+      "visualDescription": "The tile again shows the same small brown wooden shield with a flat top and tapered lower point.",
+      "wikiDescription": "The wiki identifies the shield of shock resistance as wooden armor that appears as a wooden shield when unidentified.",
+      "modelBrief": "Reuse the same compact wooden shield appearance; do not add lightning art to the model.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Shield of shock resistance",
+          "url": "https://nethackwiki.com/wiki/Shield_of_shock_resistance"
+        }
+      ]
+    },
+    "object:blue and green shield / elven shield": {
+      "wikiTitle": "Elven shield",
+      "visualDescription": "A pointed shield has a dark blue rim, saturated green face, and a pale green horizontal stripe near its top.",
+      "wikiDescription": "The wiki says the elven shield is wooden and appears as a blue and green shield when unidentified.",
+      "modelBrief": "Make a slender pointed elven shield with blue border, green face, and single bright horizontal accent.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Elven shield",
+          "url": "https://nethackwiki.com/wiki/Elven_shield"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:Wizard of Yendor": {
+      "wikiTitle": "Wizard of Yendor",
+      "visualDescription": "A bearded sorcerer in dark red robes and a pointed magenta cap holds a staff topped by green light.",
+      "wikiDescription": "NetHack Wiki identifies the Wizard of Yendor as the unique sorcerer who guards the Book of the Dead and pursues the hero.",
+      "modelBrief": "Build a gaunt robed wizard with long dark beard, red-magenta hood, staff, and small green magical glow.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wizard of Yendor",
+          "url": "https://nethackwiki.com/wiki/Wizard_of_Yendor"
+        }
+      ]
+    },
+    "monster:Croesus": {
+      "wikiTitle": "Croesus",
+      "visualDescription": "A richly dressed human wears a red cloak over gold and purple garments, with a small crown or cap and broad belt.",
+      "wikiDescription": "NetHack Wiki describes Croesus as the wealthy owner of Fort Ludios and the dungeon vaults.",
+      "modelBrief": "Sculpt a prosperous ruler in layered red cape, gold trim, and purple tunic; emphasize fabric volume and wealth rather than combat armor.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Croesus",
+          "url": "https://nethackwiki.com/wiki/Croesus"
+        }
+      ]
+    },
+    "monster:Charon": {
+      "wikiTitle": "Charon",
+      "visualDescription": "A skeletal or shadow-faced boatman wears a long dark brown robe and hood, leaning on a wooden staff.",
+      "wikiDescription": "NetHack Wiki notes Charon is an unimplemented peaceful human associated with ferrying across the mythic river.",
+      "modelBrief": "Build the tile's hooded ferryman with mostly hidden face, ragged brown robes, and a long pole; keep the unused status documented.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Charon",
+          "url": "https://nethackwiki.com/wiki/Charon"
+        }
+      ]
+    },
+    "monster:ghost": {
+      "wikiTitle": "Ghost",
+      "visualDescription": "A pale blue translucent humanoid floats with a dark face, trailing wisps, and bright cyan edge light.",
+      "wikiDescription": "NetHack Wiki describes ghosts as undead, noncorporeal humanoids that fly and phase through walls.",
+      "modelBrief": "Model a hovering translucent human shape with fading lower wisps, hollow dark face, and cool cyan rim.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ghost",
+          "url": "https://nethackwiki.com/wiki/Ghost"
+        }
+      ]
+    },
+    "monster:shade": {
+      "wikiTitle": "Shade",
+      "visualDescription": "An almost black humanoid silhouette rises from a powdery gray base, with long arms and a faint dark head.",
+      "wikiDescription": "NetHack Wiki describes shades as undead phasing ghosts that can paralyze and slow targets.",
+      "modelBrief": "Build a sparse dark spectral silhouette with diffuse dissolving lower body and little surface detail; keep it distinct from the luminous ghost.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Shade",
+          "url": "https://nethackwiki.com/wiki/Shade"
+        }
+      ]
+    },
+    "monster:water demon": {
+      "wikiTitle": "Water demon",
+      "visualDescription": "A blue-violet aquatic humanoid has an elongated head, thin limbs, finlike extensions, and a tail or watery lower body.",
+      "wikiDescription": "NetHack Wiki identifies the water demon as a major humanoid demon that can swim and use weapons.",
+      "modelBrief": "Sculpt a lean amphibious demon with blue-purple skin, narrow head, webbed or finlike limbs, and dark watery shading.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Water demon",
+          "url": "https://nethackwiki.com/wiki/Water_demon"
+        }
+      ]
+    },
+    "monster:amorous demon": {
+      "wikiTitle": "Foocubus",
+      "visualDescription": "One slot shows a pale humanoid framed by large dark wings; the paired slot shows a darker flying humanoid with gray wings and a long tail.",
+      "wikiDescription": "NetHack Wiki groups incubi and succubi as foocubi; amorous demon is the gender-neutral monster name in current source.",
+      "modelBrief": "Build two closely related winged humanoid demon variants for tiles 594 and 595, retaining their distinct silhouettes, skin tones, wing shapes, and tail treatment.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Foocubus",
+          "url": "https://nethackwiki.com/wiki/Foocubus"
+        }
+      ]
+    },
+    "monster:horned devil": {
+      "wikiTitle": "Horned devil",
+      "visualDescription": "A brown horned humanoid demon stands with enormous pale bat wings, clawed feet, and a long thin tail.",
+      "wikiDescription": "NetHack Wiki describes a thick-skinned horned devil with weapon, claw, bite, and tail attacks.",
+      "modelBrief": "Build an upright brown devil with long horns, huge tan wing membranes, claws, and tapering tail; make wings the dominant shape.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Horned devil",
+          "url": "https://nethackwiki.com/wiki/Horned_devil"
+        }
+      ]
+    },
+    "monster:erinys": {
+      "wikiTitle": "Erinys",
+      "visualDescription": "A red-haired female demon stands upright in dark purple clothing, carrying a curved gold weapon or staff.",
+      "wikiDescription": "NetHack Wiki identifies erinyes as three female humanoid major demons with poisonous weapon attacks.",
+      "modelBrief": "Model a stern humanoid woman with red hair, dark dress or armor, and a hooked gold weapon; avoid adding wings absent from the tile.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Erinys",
+          "url": "https://nethackwiki.com/wiki/Erinys"
+        }
+      ]
+    },
+    "monster:barbed devil": {
+      "wikiTitle": "Barbed devil",
+      "visualDescription": "A yellow-brown crouched demon is covered in long backward spikes, with narrow limbs and an elongated spiny head.",
+      "wikiDescription": "NetHack Wiki describes a thick-skinned lawful major demon with barbed anatomy and multiple attacks.",
+      "modelBrief": "Sculpt a low muscular body bristling with sharp ochre spines from head, back, arms, and tail; preserve the tangled thorn silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Barbed devil",
+          "url": "https://nethackwiki.com/wiki/Barbed_devil"
+        }
+      ]
+    },
+    "monster:marilith": {
+      "wikiTitle": "Marilith",
+      "visualDescription": "A red-brown female demon rises from a coiled serpent tail, with several arms fanned outward holding curved blades.",
+      "wikiDescription": "NetHack Wiki describes mariliths as major demons with six rapid attacks using weapons and claws.",
+      "modelBrief": "Build a humanoid upper body with multiple blade-bearing arms over a thick coiled snake lower body; count and pose the arms for a readable fan.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Marilith",
+          "url": "https://nethackwiki.com/wiki/Marilith"
+        }
+      ]
+    },
+    "monster:vrock": {
+      "wikiTitle": "Vrock",
+      "visualDescription": "A magenta-red birdlike demon has a long hooked beak, broad ragged wings, clawed limbs, and a tapering tail.",
+      "wikiDescription": "NetHack Wiki identifies the vrock as a major demon with multiple claws and a bite.",
+      "modelBrief": "Sculpt a predatory vulturelike demon with red feathered wings, beak, talons, and narrow body; keep the raised-wing silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Vrock",
+          "url": "https://nethackwiki.com/wiki/Vrock"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "594": {
+      "variantNote": "The two slots show substantially different winged humanoid demon designs; preserve separate body and wing silhouettes. This is the first source slot."
+    },
+    "595": {
+      "variantNote": "The two slots show substantially different winged humanoid demon designs; preserve separate body and wing silhouettes. This is the second source slot."
+    }
+  }
+}

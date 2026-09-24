@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:crystal helmet / helm of brilliance": {
+      "wikiTitle": "Helm of brilliance",
+      "visualDescription": "PixelHack shows a faceted silver-white crystal dome with pastel peach and yellow facets and a dark open base. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the helm of brilliance as a magical glass helm that may appear as a crystal helmet. Helmet appearances can be randomized, so this tile is a reference for crystal helmet, not a fixed identification of the underlying magic.",
+      "modelBrief": "Build a faceted translucent-looking helmet with pale crystalline panels, dark rim, and restrained warm inner glints. Keep the crown, rim, and face opening legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: helm of brilliance",
+          "url": "https://nethackwiki.com/wiki/helm_of_brilliance"
+        }
+      ]
+    },
+    "object:plumed helmet / helmet": {
+      "wikiTitle": "Helmet",
+      "visualDescription": "PixelHack shows a dark brown iron helmet with a small bright red plume on a thin golden stalk. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the helmet as an iron helmet that may appear with a plume. Helmet appearances can be randomized, so this tile is a reference for plumed helmet, not a fixed identification of the underlying magic.",
+      "modelBrief": "Build a rounded metal helmet with a dark face opening and one short red upright plume. Keep the crown, rim, and face opening legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: helmet",
+          "url": "https://nethackwiki.com/wiki/helmet"
+        }
+      ]
+    },
+    "object:etched helmet / helm of caution": {
+      "wikiTitle": "Helm of caution",
+      "visualDescription": "PixelHack shows an olive-gray rounded helmet with a pale etched circular pattern on its crown. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the helm of caution as a magical iron helm that may appear etched. Helmet appearances can be randomized, so this tile is a reference for etched helmet, not a fixed identification of the underlying magic.",
+      "modelBrief": "Build a stout helmet with shallow pale etched crown markings and no extra crest. Keep the crown, rim, and face opening legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: helm of caution",
+          "url": "https://nethackwiki.com/wiki/helm_of_caution"
+        }
+      ]
+    },
+    "object:crested helmet / helm of opposite alignment": {
+      "wikiTitle": "Helm of opposite alignment",
+      "visualDescription": "PixelHack shows a gray steel helmet with a pale rounded crown and protruding front guard. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the helm of opposite alignment as a magical iron helm that may appear crested. Helmet appearances can be randomized, so this tile is a reference for crested helmet, not a fixed identification of the underlying magic.",
+      "modelBrief": "Build a steel helmet with a strong raised crown crest and dark face opening. Keep the crown, rim, and face opening legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: helm of opposite alignment",
+          "url": "https://nethackwiki.com/wiki/helm_of_opposite_alignment"
+        }
+      ]
+    },
+    "object:visored helmet / helm of telepathy": {
+      "wikiTitle": "Helm of telepathy",
+      "visualDescription": "PixelHack shows a dark gray helmet with a pale crown patch and broad angular visor over the face. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the helm of telepathy as a magical iron helm that may appear visored. Helmet appearances can be randomized, so this tile is a reference for visored helmet, not a fixed identification of the underlying magic.",
+      "modelBrief": "Build a closed-front metal helm with broad horizontal visor and dark recessed face. Keep the crown, rim, and face opening legible at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: helm of telepathy",
+          "url": "https://nethackwiki.com/wiki/helm_of_telepathy"
+        }
+      ]
+    },
+    "object:gray dragon scale mail": {
+      "wikiTitle": "Gray dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in muted olive-gray with beige highlights. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki classifies gray dragon scale mail as dragon-hide body armor linked to the corresponding dragon color. The article does not determine the cut or pixel palette of this sprite.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use muted olive-gray with beige highlights. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: gray dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/gray_dragon_scale_mail"
+        }
+      ]
+    },
+    "object:gold dragon scale mail": {
+      "wikiTitle": "Gold dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in warm gold and bright yellow. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki classifies gold dragon scale mail as dragon-hide body armor linked to the corresponding dragon color. The article does not determine the cut or pixel palette of this sprite.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use warm gold and bright yellow. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: gold dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/gold_dragon_scale_mail"
+        }
+      ]
+    },
+    "object:silver dragon scale mail": {
+      "wikiTitle": "Silver dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in cool silver-gray with ivory highlights. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki classifies silver dragon scale mail as dragon-hide body armor linked to the corresponding dragon color. The article does not determine the cut or pixel palette of this sprite.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use cool silver-gray with ivory highlights. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: silver dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/silver_dragon_scale_mail"
+        }
+      ]
+    },
+    "object:shimmering dragon scale mail": {
+      "wikiTitle": "Shimmering dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in slate gray with bright cyan and gold glints. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki documents shimmering dragon scale mail as a deferred feature in earlier vanilla NetHack and an item in variants. This checked-in NetHack 5 atlas includes a dedicated tile; the wiki context establishes the dragon-armor identity, while the model follows the local artwork.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use slate gray with bright cyan and gold glints. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: shimmering dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/shimmering_dragon_scale_mail"
+        }
+      ]
+    },
+    "object:red dragon scale mail": {
+      "wikiTitle": "Red dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in deep crimson and scarlet. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki classifies red dragon scale mail as dragon-hide body armor linked to the corresponding dragon color. The article does not determine the cut or pixel palette of this sprite.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use deep crimson and scarlet. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: red dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/red_dragon_scale_mail"
+        }
+      ]
+    },
+    "object:white dragon scale mail": {
+      "wikiTitle": "White dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in ivory-white with warm beige shadows. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki classifies white dragon scale mail as dragon-hide body armor linked to the corresponding dragon color. The article does not determine the cut or pixel palette of this sprite.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use ivory-white with warm beige shadows. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: white dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/white_dragon_scale_mail"
+        }
+      ]
+    },
+    "object:orange dragon scale mail": {
+      "wikiTitle": "Orange dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in red-orange and copper. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki classifies orange dragon scale mail as dragon-hide body armor linked to the corresponding dragon color. The article does not determine the cut or pixel palette of this sprite.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use red-orange and copper. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: orange dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/orange_dragon_scale_mail"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

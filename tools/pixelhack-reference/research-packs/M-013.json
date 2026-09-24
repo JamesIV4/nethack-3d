@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:baby green dragon": {
+      "wikiTitle": "Baby green dragon",
+      "visualDescription": "A compact dragon crouches with a dark blue head, green back and flank, small raised wing, and curled tail.",
+      "wikiDescription": "The wiki identifies a juvenile green dragon associated with poison; it bites but has not yet gained the adult breath attack.",
+      "modelBrief": "Sculpt a young four-legged dragon with a short neck, small folded wing, and curled tail; keep the blue-black head and vivid green body. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby green dragon",
+          "url": "https://nethackwiki.com/wiki/Baby_green_dragon"
+        }
+      ]
+    },
+    "monster:baby yellow dragon": {
+      "wikiTitle": "Baby yellow dragon",
+      "visualDescription": "This small crouched dragon has an orange head and neck, bright yellow wing and body, and a dark curled tail base.",
+      "wikiDescription": "The wiki identifies a juvenile yellow dragon associated with acid; its young form attacks by biting.",
+      "modelBrief": "Reuse the juvenile dragon proportions with a broad yellow wing, orange face, and dark belly and tail base. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby yellow dragon",
+          "url": "https://nethackwiki.com/wiki/Baby_yellow_dragon"
+        }
+      ]
+    },
+    "monster:gray dragon": {
+      "wikiTitle": "Gray dragon",
+      "visualDescription": "A tall rearing dragon has a near-black torso, gray-blue wings, long neck, and coiled tail.",
+      "wikiDescription": "The wiki describes an adult dragon of magic whose breath is magic missiles and whose body has a bite and two claws.",
+      "modelBrief": "Build the shared adult rearing dragon with broad angular wings and a curled tail, then apply muted gray-blue wings against a very dark body. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gray dragon",
+          "url": "https://nethackwiki.com/wiki/Gray_dragon"
+        }
+      ]
+    },
+    "monster:gold dragon": {
+      "wikiTitle": "Gold dragon",
+      "visualDescription": "A rearing dragon shows bronze-brown limbs and tail, a bright golden wing, and pale cream face highlights.",
+      "wikiDescription": "The wiki describes a NetHack 5 adult gold dragon associated with light and fire breath.",
+      "modelBrief": "Keep the adult dragon silhouette, with warm ivory-gold wing and face highlights over a bronze body. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gold dragon",
+          "url": "https://nethackwiki.com/wiki/Gold_dragon"
+        }
+      ]
+    },
+    "monster:silver dragon": {
+      "wikiTitle": "Silver dragon",
+      "visualDescription": "A dark-bodied rearing dragon has pale silver wing surfaces, white rim highlights, and a curled tail.",
+      "wikiDescription": "The wiki describes an adult silver dragon whose cold breath and reflective scales distinguish it from other dragons.",
+      "modelBrief": "Use the common adult dragon shape with cool metallic wing membranes and crisp white glints while retaining the dark torso. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Silver dragon",
+          "url": "https://nethackwiki.com/wiki/Silver_dragon"
+        }
+      ]
+    },
+    "monster:shimmering dragon": {
+      "wikiTitle": "Shimmering dragon (monster)",
+      "visualDescription": "A dark rearing dragon carries bright cyan-blue wings, pale cyan edging, and a curled tail.",
+      "wikiDescription": "The wiki documents the shimmering dragon as a deferred NetHack monster intended to have displacement and a magic missile breath.",
+      "modelBrief": "Model the normal adult dragon anatomy with blue-white iridescent wings and restrained shifting highlights; do not invent a second body offset as solid anatomy. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Shimmering dragon (monster)",
+          "url": "https://nethackwiki.com/wiki/Shimmering_dragon_%28monster%29"
+        }
+      ]
+    },
+    "monster:red dragon": {
+      "wikiTitle": "Red dragon",
+      "visualDescription": "A rearing dragon combines a dark crimson body, saturated pink-red wings, and a bright red curled tail.",
+      "wikiDescription": "The wiki identifies an adult fire dragon with fire breath, a bite, and claws.",
+      "modelBrief": "Give the adult dragon broad scarlet wing membranes and a hot red tail while preserving the black-red central silhouette. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Red dragon",
+          "url": "https://nethackwiki.com/wiki/Red_dragon"
+        }
+      ]
+    },
+    "monster:white dragon": {
+      "wikiTitle": "White dragon",
+      "visualDescription": "A near-black rearing dragon has pale peach-white wings, light gray edging, and a dark coiled tail.",
+      "wikiDescription": "The wiki describes an adult dragon associated with cold that breathes freezing air.",
+      "modelBrief": "Use the standard adult frame with frosty white wing surfaces and cool dark limbs; avoid turning the warm sprite highlights into open flame. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: White dragon",
+          "url": "https://nethackwiki.com/wiki/White_dragon"
+        }
+      ]
+    },
+    "monster:orange dragon": {
+      "wikiTitle": "Orange dragon",
+      "visualDescription": "A red-brown rearing dragon bears an orange-yellow wing, bright orange tail, and dark chest.",
+      "wikiDescription": "The wiki identifies an adult orange dragon whose breath puts targets to sleep.",
+      "modelBrief": "Preserve the adult wing and curled tail forms, using orange and amber membranes over a dark reddish body without adding fire effects. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orange dragon",
+          "url": "https://nethackwiki.com/wiki/Orange_dragon"
+        }
+      ]
+    },
+    "monster:black dragon": {
+      "wikiTitle": "Black dragon",
+      "visualDescription": "A heavy near-black dragon rears with charcoal wing panels, dark claws, and a thick curled tail.",
+      "wikiDescription": "The wiki describes an adult black dragon whose breath disintegrates targets.",
+      "modelBrief": "Use the same dragon anatomy with layered charcoal and muted purple-black surfaces; keep highlights subtle so the wing edge remains legible. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Black dragon",
+          "url": "https://nethackwiki.com/wiki/Black_dragon"
+        }
+      ]
+    },
+    "monster:blue dragon": {
+      "wikiTitle": "Blue dragon",
+      "visualDescription": "This rearing dragon has cobalt-blue wings and tail over a dark indigo body, with pale cyan on the wing.",
+      "wikiDescription": "The wiki associates adult blue dragons with lightning breath.",
+      "modelBrief": "Build the adult silhouette in saturated indigo and electric blue, keeping the cyan areas as wing highlights rather than constant lightning bolts. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Blue dragon",
+          "url": "https://nethackwiki.com/wiki/Blue_dragon"
+        }
+      ]
+    },
+    "monster:green dragon": {
+      "wikiTitle": "Green dragon",
+      "visualDescription": "A dark rearing dragon has mint-green wings, emerald tail markings, and a near-black neck and chest.",
+      "wikiDescription": "The wiki identifies the adult green dragon with poison breath and poison resistance.",
+      "modelBrief": "Use the adult dragon form, mint wing membranes, emerald scales, and a dark central mass; make the tail curl match the tile. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Green dragon",
+          "url": "https://nethackwiki.com/wiki/Green_dragon"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:yellow light": {
+      "wikiTitle": "Yellow light",
+      "visualDescription": "A small bright white-yellow star radiates orange rays above a dotted yellow glow on the floor.",
+      "wikiDescription": "NetHack Wiki describes an amorphous flying light that illuminates nearby squares and can explode.",
+      "modelBrief": "Build a suspended luminous starburst with a white core, yellow rim, orange rays, and projected warm floor glow; give it no body.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Yellow light",
+          "url": "https://nethackwiki.com/wiki/Yellow_light"
+        }
+      ]
+    },
+    "monster:black light": {
+      "wikiTitle": "Black light",
+      "visualDescription": "A dark purple star-shaped point hovers above a violet-speckled shadow, with no visible body or face.",
+      "wikiDescription": "NetHack Wiki identifies the black light as an amorphous flying light that can pass under doors.",
+      "modelBrief": "Make a small four-point violet-black glow with sparse purple particles beneath it; keep the light entity abstract.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Black light",
+          "url": "https://nethackwiki.com/wiki/Black_light"
+        }
+      ]
+    },
+    "monster:zruty": {
+      "wikiTitle": "Zruty",
+      "visualDescription": "A hulking brown hairy biped leans forward with long arms, heavy claws, a wide red mouth, and small pale teeth.",
+      "wikiDescription": "NetHack Wiki describes the zruty as a large strong carnivorous humanoid animal with claws and a bite.",
+      "modelBrief": "Sculpt a heavy ape-like monster with hunched back, shaggy brown fur, dangling arms, claws, and a toothy red maw.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Zruty",
+          "url": "https://nethackwiki.com/wiki/Zruty"
+        }
+      ]
+    },
+    "monster:couatl": {
+      "wikiTitle": "Couatl",
+      "visualDescription": "A teal serpentine creature coils in the air with red-magenta winglike plumes, a small angular head, and long curling tail.",
+      "wikiDescription": "NetHack Wiki describes a flying serpentine angelic being with bites and a constricting hold.",
+      "modelBrief": "Model a feathered teal serpent with long coiled body, bright magenta-red wings or plumes, and a pointed head; preserve its airborne knotlike silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Couatl",
+          "url": "https://nethackwiki.com/wiki/Couatl"
+        }
+      ]
+    },
+    "monster:Aleax": {
+      "wikiTitle": "Aleax",
+      "visualDescription": "A tan humanoid hovers upright within cyan-blue angular light, with a dark head and orange robe or body.",
+      "wikiDescription": "NetHack Wiki identifies the Aleax as a humanoid angelic being with weapon and kick attacks.",
+      "modelBrief": "Build a slim floating humanoid with warm tan-orange clothing and dark head, framed by sharp cyan aura shapes; do not add unsupported wings.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Aleax",
+          "url": "https://nethackwiki.com/wiki/Aleax"
+        }
+      ]
+    },
+    "monster:Angel": {
+      "wikiTitle": "Angel",
+      "visualDescription": "A pale winged humanoid hovers with broad white-gray feathered wings, warm face, long white robe, and a blue-gray sword.",
+      "wikiDescription": "NetHack Wiki describes Angels as strong flying humanoid beings that can wield weapons and cast magic.",
+      "modelBrief": "Sculpt a robed winged figure with spread pale feathered wings, warm skin, and a long blue-gray sword; retain the hovering pose.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Angel",
+          "url": "https://nethackwiki.com/wiki/Angel"
+        }
+      ]
+    },
+    "monster:ki-rin": {
+      "wikiTitle": "Ki-rin",
+      "visualDescription": "A richly colored horned quadruped floats with a dark red-brown body, teal and gold decorations, long neck, and curling tail.",
+      "wikiDescription": "NetHack Wiki identifies the ki-rin as a flying quadrupedal angelic being that uses kicks, a headbutt, and magic.",
+      "modelBrief": "Build an ornate deer-horse-like quadruped with horned head, flowing tail, and teal-gold accents over burgundy body; pose it aloft.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ki-rin",
+          "url": "https://nethackwiki.com/wiki/Ki-rin"
+        }
+      ]
+    },
+    "monster:Archon": {
+      "wikiTitle": "Archon",
+      "visualDescription": "A tall golden humanoid hovers with huge tawny wings, bright head and torso, red lower garments, and a commanding upright pose.",
+      "wikiDescription": "NetHack Wiki describes Archons as large powerful flying angelic lords that use weapons, gaze, and spells.",
+      "modelBrief": "Make a broad-winged golden armored figure with tall stature, warm red lower cloth, and strong symmetric wing silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Archon",
+          "url": "https://nethackwiki.com/wiki/Archon"
+        }
+      ]
+    },
+    "monster:bat": {
+      "wikiTitle": "Bat",
+      "visualDescription": "A small brown bat flies toward the viewer with pointed ears, dark red body, and narrow purple-gray wings spread sideways.",
+      "wikiDescription": "NetHack Wiki describes a carnivorous flying bat that flits irregularly through the dungeon.",
+      "modelBrief": "Build a compact bat with membranous spread wings, tiny ears, and reddish-brown body; keep it suspended over its ground shadow.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Bat",
+          "url": "https://nethackwiki.com/wiki/Bat"
+        }
+      ]
+    },
+    "monster:giant bat": {
+      "wikiTitle": "Giant bat",
+      "visualDescription": "A much larger dark brown bat flies frontally with a broad body, pale claws, large ears, and wide gray-brown wing membranes.",
+      "wikiDescription": "NetHack Wiki identifies the giant bat as a larger and stronger flying bat.",
+      "modelBrief": "Scale up the bat with thicker torso, broader wings, pronounced ears, and visible pale claws.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Giant bat",
+          "url": "https://nethackwiki.com/wiki/Giant_bat"
+        }
+      ]
+    },
+    "monster:raven": {
+      "wikiTitle": "Raven",
+      "visualDescription": "A black bird flies with wings raised in a high V, a long beak, red eye, and trailing legs.",
+      "wikiDescription": "NetHack Wiki describes a flying carnivorous bird whose claw attack can blind.",
+      "modelBrief": "Model a glossy black raven with large raised feathered wings, pointed beak, and narrow trailing legs; keep the red eye small.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Raven",
+          "url": "https://nethackwiki.com/wiki/Raven"
+        }
+      ]
+    },
+    "monster:vampire bat": {
+      "wikiTitle": "Vampire bat",
+      "visualDescription": "A dark plum bat flies toward the viewer with enormous curved wings, orange ears and face, sharp pale fangs, and red drops beneath it.",
+      "wikiDescription": "NetHack Wiki identifies the vampire bat as the strongest bat and a regenerating flying animal.",
+      "modelBrief": "Sculpt a large dark bat with curled wing edges, orange face and ears, visible fangs, and restrained red drops under its mouth.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Vampire bat",
+          "url": "https://nethackwiki.com/wiki/Vampire_bat"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

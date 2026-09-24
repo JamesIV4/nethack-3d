@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:hexagonal / fire": {
+      "wikiTitle": "Wand of fire",
+      "visualDescription": "PixelHack shows a warm ochre rod with dark brown lower shadow and angled upper tip lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of fire as a zap-usable wand. The hexagonal descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a slim six-sided wand with muted warm ochre faces. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of fire",
+          "url": "https://nethackwiki.com/wiki/Wand_of_fire"
+        }
+      ]
+    },
+    "object:short / cold": {
+      "wikiTitle": "Wand of cold",
+      "visualDescription": "PixelHack shows a shorter ochre-brown rod with thick blunt dark lower end lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of cold as a zap-usable wand. The short descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a visibly shorter plain brown wand. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of cold",
+          "url": "https://nethackwiki.com/wiki/Wand_of_cold"
+        }
+      ]
+    },
+    "object:runed / sleep": {
+      "wikiTitle": "Wand of sleep",
+      "visualDescription": "PixelHack shows a brown rod with irregular darker markings and pale upper point lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of sleep as a zap-usable wand. The runed descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a plain slender wand with restrained dark runic marks. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of sleep",
+          "url": "https://nethackwiki.com/wiki/Wand_of_sleep"
+        }
+      ]
+    },
+    "object:long / death": {
+      "wikiTitle": "Wand of death",
+      "visualDescription": "PixelHack shows an extra-long pale tan-brown rod with dark lower end lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of death as a zap-usable wand. The long descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a long straight brown wand extending nearly across the cell. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of death",
+          "url": "https://nethackwiki.com/wiki/Wand_of_death"
+        }
+      ]
+    },
+    "object:curved / lightning": {
+      "wikiTitle": "Wand of lightning",
+      "visualDescription": "PixelHack shows a dark brown rod with a noticeable bend or elbow near its lower end lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The NetHack Wiki documents the wand of lightning as a zap-usable wand. The curved descriptor is a possible unidentified appearance; wand appearances shuffle, so the shown rod cannot reveal its effect.",
+      "modelBrief": "Build a one-piece bent wand with clear curved lower silhouette. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand of lightning",
+          "url": "https://nethackwiki.com/wiki/Wand_of_lightning"
+        }
+      ]
+    },
+    "object:forked": {
+      "wikiTitle": "Wand",
+      "visualDescription": "PixelHack shows a dark reddish-brown rod ending in a small side fork and flat red tip lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The wiki explains that wand appearances can be randomized independently of their effects. forked is a spare visible descriptor in this atlas, with no fixed identified wand assigned here.",
+      "modelBrief": "Build a narrow wooden wand with a tiny two-prong tip. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand",
+          "url": "https://nethackwiki.com/wiki/Wand"
+        }
+      ]
+    },
+    "object:spiked": {
+      "wikiTitle": "Wand",
+      "visualDescription": "PixelHack shows a light gray rod with one short spike jutting from its middle lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The wiki explains that wand appearances can be randomized independently of their effects. spiked is a spare visible descriptor in this atlas, with no fixed identified wand assigned here.",
+      "modelBrief": "Build a pale metal wand with a small visible side spike. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand",
+          "url": "https://nethackwiki.com/wiki/Wand"
+        }
+      ]
+    },
+    "object:jeweled": {
+      "wikiTitle": "Wand",
+      "visualDescription": "PixelHack shows a warm brown rod with a red jeweled band near its lower end lying diagonally from lower left to upper right. The teal pattern is the floor, not wand decoration.",
+      "wikiDescription": "The wiki explains that wand appearances can be randomized independently of their effects. jeweled is a spare visible descriptor in this atlas, with no fixed identified wand assigned here.",
+      "modelBrief": "Build a wood-toned wand with one compact red gem set into the shaft. Keep its thin 32-pixel silhouette and do not add a visual effect that would imply the source-associated wand identity.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wand",
+          "url": "https://nethackwiki.com/wiki/Wand"
+        }
+      ]
+    },
+    "object:gold piece": {
+      "wikiTitle": "Zorkmid",
+      "visualDescription": "PixelHack shows a small low mound of overlapping ochre-gold coin-like forms with bright yellow glints and a dark base. The teal floor pattern is background.",
+      "wikiDescription": "The wiki identifies gold pieces as NetHack currency, valued in zorkmids. PixelHack depicts this one gold-piece item with a small pile-like icon, not a specified number of coins.",
+      "modelBrief": "Build a compact gold-colored cluster of overlapping round coin-like discs, keeping the bright upper glints and low silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Zorkmid",
+          "url": "https://nethackwiki.com/wiki/Zorkmid"
+        }
+      ]
+    },
+    "object:white / dilithium crystal": {
+      "wikiTitle": "Dilithium crystal",
+      "visualDescription": "PixelHack shows a squat irregular faceted white stone, shaded in ivory-white with taupe facets and a bright cream tip. Tiles 1230, 1231, 1243, 1252 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies dilithium crystal as a named gem. Its white appearance in this atlas shares identical artwork with tile IDs 1230, 1231, 1243, 1252; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in ivory-white with taupe facets and a bright cream tip. Reuse this visible color model for tile IDs 1230, 1231, 1243, 1252, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dilithium crystal",
+          "url": "https://nethackwiki.com/wiki/Dilithium_crystal"
+        }
+      ]
+    },
+    "object:white / diamond": {
+      "wikiTitle": "Diamond",
+      "visualDescription": "PixelHack shows a squat irregular faceted white stone, shaded in ivory-white with taupe facets and a bright cream tip. Tiles 1230, 1231, 1243, 1252 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies diamond as a named gem. Its white appearance in this atlas shares identical artwork with tile IDs 1230, 1231, 1243, 1252; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in ivory-white with taupe facets and a bright cream tip. Reuse this visible color model for tile IDs 1230, 1231, 1243, 1252, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Diamond",
+          "url": "https://nethackwiki.com/wiki/Diamond"
+        }
+      ]
+    },
+    "object:red / ruby": {
+      "wikiTitle": "Ruby",
+      "visualDescription": "PixelHack shows a squat irregular faceted red stone, shaded in ruby red with magenta sides and a warm orange-pink central glint. Tiles 1232, 1245, 1247, 1254 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies ruby as a named gem. Its red appearance in this atlas shares identical artwork with tile IDs 1232, 1245, 1247, 1254; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in ruby red with magenta sides and a warm orange-pink central glint. Reuse this visible color model for tile IDs 1232, 1245, 1247, 1254, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ruby",
+          "url": "https://nethackwiki.com/wiki/Ruby"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

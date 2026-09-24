@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:glass golem": {
+      "wikiTitle": "Glass golem",
+      "visualDescription": "A spindly humanoid is assembled from green-transparent glass shards with pale cyan highlights and pink-tipped joints.",
+      "wikiDescription": "The wiki describes a glass-built golem with claw attacks and acid resistance.",
+      "modelBrief": "Construct a faceted translucent glass body with angular limbs, green edges, cyan core, and a few magenta reflections. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Glass golem",
+          "url": "https://nethackwiki.com/wiki/Glass_golem"
+        }
+      ]
+    },
+    "monster:iron golem": {
+      "wikiTitle": "Iron golem",
+      "visualDescription": "A tall iron humanoid has olive-gray metal plates, a white-gray chest, branching arms, and dark heavy legs.",
+      "wikiDescription": "The wiki identifies the iron golem as the strongest golem, able to wield weapons and breathe poison gas.",
+      "modelBrief": "Build a plated iron automaton with thick joints and a bright central chest; leave hands capable of grasping a weapon. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Iron golem",
+          "url": "https://nethackwiki.com/wiki/Iron_golem"
+        }
+      ]
+    },
+    "monster:human": {
+      "wikiTitle": "Human (monster)",
+      "visualDescription": "The tile shows a mostly bare pink-tan human figure with short brown hair, slim arms, and a plain stance.",
+      "wikiDescription": "The wiki treats the generic human monster as the base human form used for hero and undead corpse identities.",
+      "modelBrief": "Model a neutral unarmored human with natural proportions and warm skin tones; compare the male and female atlas poses before choosing separate bodies. Check both atlas slots for small pixel differences.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Human (monster)",
+          "url": "https://nethackwiki.com/wiki/Human_%28monster%29"
+        }
+      ]
+    },
+    "monster:elf": {
+      "wikiTitle": "Elf (monster)",
+      "visualDescription": "An elf with pale face and blond-brown hair wears a moss-green tunic, dark trousers, and a gray blade at one side.",
+      "wikiDescription": "The wiki describes the generic elf monster as the base elven form and corpse identity.",
+      "modelBrief": "Build a slim pointed-ear humanoid with green tunic, tan hair, and a simple sheathed or held gray weapon. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Elf (monster)",
+          "url": "https://nethackwiki.com/wiki/Elf_%28monster%29"
+        }
+      ]
+    },
+    "monster:Woodland-elf": {
+      "wikiTitle": "Woodland-elf",
+      "visualDescription": "A slender Woodland-elf wears a tan shirt and brown trousers, with one arm holding a narrow dark blade.",
+      "wikiDescription": "The wiki identifies the Woodland-elf as the least powerful of the normally generated elven warriors, still able to use weapons.",
+      "modelBrief": "Use light forest clothing and slim elven anatomy, with a small straight sword and pointed ears. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Woodland-elf",
+          "url": "https://nethackwiki.com/wiki/Woodland-elf"
+        }
+      ]
+    },
+    "monster:Green-elf": {
+      "wikiTitle": "Green-elf",
+      "visualDescription": "A Green-elf wears olive-green armor or tunic and brown trousers, and holds a curved bow-like weapon.",
+      "wikiDescription": "The wiki describes Green-elves as slightly stronger than Woodland-elves and capable of wielding weapons.",
+      "modelBrief": "Model a lean forest fighter in olive clothing with a readable bow and long narrow ears. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Green-elf",
+          "url": "https://nethackwiki.com/wiki/Green-elf"
+        }
+      ]
+    },
+    "monster:Grey-elf": {
+      "wikiTitle": "Grey-elf",
+      "visualDescription": "A Grey-elf wears gray-blue upper clothing, dark pants, a pale cap, and carries a straight sword and red shield.",
+      "wikiDescription": "The wiki identifies Grey-elves as a stronger ordinary elven type with weapon use and sleep resistance.",
+      "modelBrief": "Keep the slim elf frame, gray-blue outfit, small red shield, and upright sword for a clear rank distinction. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Grey-elf",
+          "url": "https://nethackwiki.com/wiki/Grey-elf"
+        }
+      ]
+    },
+    "monster:elf-noble": {
+      "wikiTitle": "Elf-lord",
+      "visualDescription": "An elf-noble wears a blue-gray cap, brown armor, red trousers, a red shield, and a raised sword.",
+      "wikiDescription": "The linked wiki article uses the older name elf-lord for this high-ranking elf with two weapon attacks.",
+      "modelBrief": "Build an elven officer with a brown cuirass, red shield, bright red legs, and raised blade; keep the cap and lean face. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Elf-lord",
+          "url": "https://nethackwiki.com/wiki/Elf-lord"
+        }
+      ]
+    },
+    "monster:elven monarch": {
+      "wikiTitle": "Elvenking",
+      "visualDescription": "The elven monarch has a gold crown, pale blue shoulder drape, green armor, red cape panels, and upright sword.",
+      "wikiDescription": "The linked wiki page uses the older name Elvenking for the strongest elf ruler.",
+      "modelBrief": "Model a crowned elven ruler with layered green and blue clothing, red cloak, and long vertical sword; preserve the broad regal silhouette. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Elvenking",
+          "url": "https://nethackwiki.com/wiki/Elvenking"
+        }
+      ]
+    },
+    "monster:doppelganger": {
+      "wikiTitle": "Doppelganger",
+      "visualDescription": "A simple blue-gray humanoid has a pale pink face, smooth head, long limbs, and almost featureless clothing.",
+      "wikiDescription": "The wiki identifies the doppelganger as a shape-changing humanoid that imitates other monsters.",
+      "modelBrief": "Use a deliberately plain, smooth blue-gray base form with minimal features; reserve copied appearances for transformation states. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Doppelganger",
+          "url": "https://nethackwiki.com/wiki/Doppelganger"
+        }
+      ]
+    },
+    "monster:shopkeeper": {
+      "wikiTitle": "Shopkeeper",
+      "visualDescription": "A brown-clothed shopkeeper wears a dark hat and apronlike front panel, with one hand raised in greeting or warning.",
+      "wikiDescription": "The wiki describes shopkeepers as human merchants who manage shop goods and transactions.",
+      "modelBrief": "Build a compact merchant with brown hat, russet coat, darker apron panel, and approachable raised hand. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Shopkeeper",
+          "url": "https://nethackwiki.com/wiki/Shopkeeper"
+        }
+      ]
+    },
+    "monster:guard": {
+      "wikiTitle": "Guard",
+      "visualDescription": "A guard wears a dark cap and gray chest armor, holds a long pale halberd or polearm, and has brown boots.",
+      "wikiDescription": "The wiki identifies guards as lawful human mercenaries who patrol vaults.",
+      "modelBrief": "Model a sturdy armored human with dark helmet, gray breastplate, and long pale-bladed polearm, keeping the weapon taller than the figure. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Guard",
+          "url": "https://nethackwiki.com/wiki/Guard"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "532": {
+      "variantNote": "Male-labeled atlas slot; art differs from the adjacent female-labeled slot. Compare both before deciding whether geometry must differ."
+    },
+    "533": {
+      "variantNote": "Female-labeled atlas slot; art differs from the adjacent male-labeled slot. Compare both before deciding whether geometry must differ."
+    }
+  }
+}

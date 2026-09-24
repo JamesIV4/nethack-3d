@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:hilted polearm / ranseur": {
+      "wikiTitle": "Ranseur",
+      "visualDescription": "PixelHack shows a long brown pole capped by a narrow blue-gray point and two short side prongs. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the ranseur as a two-handed iron ranseur polearm. It uses the appearance name hilted polearm here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a slender metal spike with symmetrical side hilt or prongs on a long wooden pole. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: ranseur",
+          "url": "https://nethackwiki.com/wiki/ranseur"
+        }
+      ]
+    },
+    "object:forked polearm / spetum": {
+      "wikiTitle": "Spetum",
+      "visualDescription": "PixelHack shows a long brown haft supporting a forked blue-gray head. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the spetum as a two-handed iron spetum polearm. It uses the appearance name forked polearm here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a central spike with two spreading fork tines, keeping clear gaps between points. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: spetum",
+          "url": "https://nethackwiki.com/wiki/spetum"
+        }
+      ]
+    },
+    "object:single-edged polearm / glaive": {
+      "wikiTitle": "Glaive",
+      "visualDescription": "PixelHack shows a brown shaft ending in one long angled steel cutting edge. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the glaive as a two-handed iron glaive polearm. It uses the appearance name single-edged polearm here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a single long knife-like metal blade mounted along a wooden pole. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: glaive",
+          "url": "https://nethackwiki.com/wiki/glaive"
+        }
+      ]
+    },
+    "object:angled poleaxe / halberd": {
+      "wikiTitle": "Halberd",
+      "visualDescription": "PixelHack shows a brown shaft with an angular dark steel axe blade, rear hook, and upper spike. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the halberd as a two-handed iron halberd polearm. It uses the appearance name angled poleaxe here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a halberd head combining a narrow top spike, lateral axe blade, and opposite hook. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: halberd",
+          "url": "https://nethackwiki.com/wiki/halberd"
+        }
+      ]
+    },
+    "object:long poleaxe / bardiche": {
+      "wikiTitle": "Bardiche",
+      "visualDescription": "PixelHack shows a brown pole bearing a large dark blue-gray curved axe blade. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the bardiche as a two-handed iron bardiche polearm. It uses the appearance name long poleaxe here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build an oversized long curved chopping blade mounted high along a wooden shaft. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: bardiche",
+          "url": "https://nethackwiki.com/wiki/bardiche"
+        }
+      ]
+    },
+    "object:pole cleaver / voulge": {
+      "wikiTitle": "Voulge",
+      "visualDescription": "PixelHack shows a brown shaft topped by a broad rectangular dark cleaver edge. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the voulge as a two-handed iron voulge polearm. It uses the appearance name pole cleaver here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a broad heavy cleaver blade fixed to a long wood pole. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: voulge",
+          "url": "https://nethackwiki.com/wiki/voulge"
+        }
+      ]
+    },
+    "object:pole sickle / fauchard": {
+      "wikiTitle": "Fauchard",
+      "visualDescription": "PixelHack shows a brown pole ending in a slim hooked blue-gray sickle. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the fauchard as a two-handed iron fauchard polearm. It uses the appearance name pole sickle here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a narrow curved sickle blade at the end of a long wooden shaft. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: fauchard",
+          "url": "https://nethackwiki.com/wiki/fauchard"
+        }
+      ]
+    },
+    "object:pruning hook / guisarme": {
+      "wikiTitle": "Guisarme",
+      "visualDescription": "PixelHack shows a brown shaft capped with a wide dark backward-curving hook. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the guisarme as a two-handed iron guisarme polearm. It uses the appearance name pruning hook here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a strong pruning-hook metal head on a long wooden pole. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: guisarme",
+          "url": "https://nethackwiki.com/wiki/guisarme"
+        }
+      ]
+    },
+    "object:hooked polearm / bill-guisarme": {
+      "wikiTitle": "Bill-guisarme",
+      "visualDescription": "PixelHack shows a brown pole with a dark hooked blade and a small opposing projection. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the bill-guisarme as a two-handed iron bill-guisarme polearm. It uses the appearance name hooked polearm here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a bill-shaped cutting hook with visible side spike on a long shaft. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: bill-guisarme",
+          "url": "https://nethackwiki.com/wiki/bill-guisarme"
+        }
+      ]
+    },
+    "object:pronged polearm / lucern hammer": {
+      "wikiTitle": "Lucern hammer",
+      "visualDescription": "PixelHack shows a brown haft carrying a compact dark pronged hammer head. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the lucern hammer as a two-handed iron lucern hammer polearm. It uses the appearance name pronged polearm here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a pronged striking head and short top spike on a long pole. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: lucern hammer",
+          "url": "https://nethackwiki.com/wiki/lucern_hammer"
+        }
+      ]
+    },
+    "object:beaked polearm / bec de corbin": {
+      "wikiTitle": "Bec de corbin",
+      "visualDescription": "PixelHack shows a short brown shaft beneath a broad dark double-sided beaked head. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the bec de corbin as a two-handed iron bec de corbin polearm. It uses the appearance name beaked polearm here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a hammer face opposed by a curved beak, with upper point and wooden shaft. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: bec de corbin",
+          "url": "https://nethackwiki.com/wiki/bec_de_corbin"
+        }
+      ]
+    },
+    "object:broad pick / dwarvish mattock": {
+      "wikiTitle": "Dwarvish mattock",
+      "visualDescription": "PixelHack shows a compact brown handle under an oversized dark gray double-ended pick. The blue-gray floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies the dwarvish mattock as a two-handed iron dwarvish mattock. It uses the appearance name broad pick here; model the shown form rather than treating the two names as separate items.",
+      "modelBrief": "Build a broad double-pointed mattock head with a strong central socket and stout wooden handle. Keep the silhouette and limited palette clear at 32-pixel size.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: dwarvish mattock",
+          "url": "https://nethackwiki.com/wiki/dwarvish_mattock"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

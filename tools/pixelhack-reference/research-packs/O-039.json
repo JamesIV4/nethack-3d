@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:red / garnet": {
+      "wikiTitle": "Garnet",
+      "visualDescription": "PixelHack shows a squat irregular faceted red stone, shaded in ruby red with magenta sides and a warm orange-pink central glint. Tiles 1232, 1245, 1247, 1254 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies garnet as a named gem. Its red appearance in this atlas shares identical artwork with tile IDs 1232, 1245, 1247, 1254; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in ruby red with magenta sides and a warm orange-pink central glint. Reuse this visible color model for tile IDs 1232, 1245, 1247, 1254, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Garnet",
+          "url": "https://nethackwiki.com/wiki/Garnet"
+        }
+      ]
+    },
+    "object:violet / amethyst": {
+      "wikiTitle": "Amethyst",
+      "visualDescription": "PixelHack shows a squat irregular faceted violet stone, shaded in violet and magenta with blue side facets and orange-pink center. Tiles 1246, 1248, 1260 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies amethyst as a named gem. Its violet appearance in this atlas shares identical artwork with tile IDs 1246, 1248, 1260; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in violet and magenta with blue side facets and orange-pink center. Reuse this visible color model for tile IDs 1246, 1248, 1260, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Amethyst",
+          "url": "https://nethackwiki.com/wiki/Amethyst"
+        }
+      ]
+    },
+    "object:red / jasper": {
+      "wikiTitle": "Jasper",
+      "visualDescription": "PixelHack shows a squat irregular faceted red stone, shaded in ruby red with magenta sides and a warm orange-pink central glint. Tiles 1232, 1245, 1247, 1254 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies jasper as a named gem. Its red appearance in this atlas shares identical artwork with tile IDs 1232, 1245, 1247, 1254; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in ruby red with magenta sides and a warm orange-pink central glint. Reuse this visible color model for tile IDs 1232, 1245, 1247, 1254, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Jasper",
+          "url": "https://nethackwiki.com/wiki/Jasper"
+        }
+      ]
+    },
+    "object:violet / fluorite": {
+      "wikiTitle": "Fluorite",
+      "visualDescription": "PixelHack shows a squat irregular faceted violet stone, shaded in violet and magenta with blue side facets and orange-pink center. Tiles 1246, 1248, 1260 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies fluorite as a named gem. Its violet appearance in this atlas shares identical artwork with tile IDs 1246, 1248, 1260; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in violet and magenta with blue side facets and orange-pink center. Reuse this visible color model for tile IDs 1246, 1248, 1260, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Fluorite",
+          "url": "https://nethackwiki.com/wiki/Fluorite"
+        }
+      ]
+    },
+    "object:black / obsidian": {
+      "wikiTitle": "Obsidian",
+      "visualDescription": "PixelHack shows a squat irregular faceted black stone, shaded in near-black navy with dark violet and slate facets. Tiles 1235, 1242, 1249, 1258 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies obsidian as a named gem. Its black appearance in this atlas shares identical artwork with tile IDs 1235, 1242, 1249, 1258; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in near-black navy with dark violet and slate facets. Reuse this visible color model for tile IDs 1235, 1242, 1249, 1258, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Obsidian",
+          "url": "https://nethackwiki.com/wiki/Obsidian"
+        }
+      ]
+    },
+    "object:orange / agate": {
+      "wikiTitle": "Agate",
+      "visualDescription": "PixelHack shows a squat irregular faceted orange stone, shaded in burnt orange with brown facets and a checker of gold highlights. Tiles 1233, 1250, 1256 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies agate as a named gem. Its orange appearance in this atlas shares identical artwork with tile IDs 1233, 1250, 1256; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in burnt orange with brown facets and a checker of gold highlights. Reuse this visible color model for tile IDs 1233, 1250, 1256, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Agate",
+          "url": "https://nethackwiki.com/wiki/Agate"
+        }
+      ]
+    },
+    "object:green / jade": {
+      "wikiTitle": "Jade",
+      "visualDescription": "PixelHack shows a squat irregular faceted green stone, shaded in forest green with olive sides and a pale lime central flash. Tiles 1236, 1237, 1239, 1251, 1259 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The NetHack Wiki identifies jade as a named gem. Its green appearance in this atlas shares identical artwork with tile IDs 1236, 1237, 1239, 1251, 1259; the pixels alone do not establish which gem or glass item it is.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in forest green with olive sides and a pale lime central flash. Reuse this visible color model for tile IDs 1236, 1237, 1239, 1251, 1259, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Jade",
+          "url": "https://nethackwiki.com/wiki/Jade"
+        }
+      ]
+    },
+    "object:white / worthless piece of white glass": {
+      "wikiTitle": "Worthless piece of glass",
+      "visualDescription": "PixelHack shows a squat irregular faceted white stone, shaded in ivory-white with taupe facets and a bright cream tip. Tiles 1230, 1231, 1243, 1252 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The wiki describes worthless colored glass as a gem-class imitation made of glass. This white glass piece shares its visible gem color and sprite with other items, so appearance alone does not prove value.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in ivory-white with taupe facets and a bright cream tip. Reuse this visible color model for tile IDs 1230, 1231, 1243, 1252, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Worthless piece of glass",
+          "url": "https://nethackwiki.com/wiki/Worthless_piece_of_glass"
+        }
+      ]
+    },
+    "object:blue / worthless piece of blue glass": {
+      "wikiTitle": "Worthless piece of glass",
+      "visualDescription": "PixelHack shows a squat irregular faceted blue stone, shaded in saturated blue with cyan facets and a pale upper glint. Tiles 1234, 1253 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The wiki describes worthless colored glass as a gem-class imitation made of glass. This blue glass piece shares its visible gem color and sprite with other items, so appearance alone does not prove value.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in saturated blue with cyan facets and a pale upper glint. Reuse this visible color model for tile IDs 1234, 1253, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Worthless piece of glass",
+          "url": "https://nethackwiki.com/wiki/Worthless_piece_of_glass"
+        }
+      ]
+    },
+    "object:red / worthless piece of red glass": {
+      "wikiTitle": "Worthless piece of glass",
+      "visualDescription": "PixelHack shows a squat irregular faceted red stone, shaded in ruby red with magenta sides and a warm orange-pink central glint. Tiles 1232, 1245, 1247, 1254 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The wiki describes worthless colored glass as a gem-class imitation made of glass. This red glass piece shares its visible gem color and sprite with other items, so appearance alone does not prove value.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in ruby red with magenta sides and a warm orange-pink central glint. Reuse this visible color model for tile IDs 1232, 1245, 1247, 1254, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Worthless piece of glass",
+          "url": "https://nethackwiki.com/wiki/Worthless_piece_of_glass"
+        }
+      ]
+    },
+    "object:yellowish brown / worthless piece of yellowish brown glass": {
+      "wikiTitle": "Worthless piece of glass",
+      "visualDescription": "PixelHack shows a squat irregular faceted yellowish brown stone, shaded in amber-brown with orange-gold central highlight. Tiles 1240, 1241, 1255 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The wiki describes worthless colored glass as a gem-class imitation made of glass. This yellowish brown glass piece shares its visible gem color and sprite with other items, so appearance alone does not prove value.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in amber-brown with orange-gold central highlight. Reuse this visible color model for tile IDs 1240, 1241, 1255, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Worthless piece of glass",
+          "url": "https://nethackwiki.com/wiki/Worthless_piece_of_glass"
+        }
+      ]
+    },
+    "object:orange / worthless piece of orange glass": {
+      "wikiTitle": "Worthless piece of glass",
+      "visualDescription": "PixelHack shows a squat irregular faceted orange stone, shaded in burnt orange with brown facets and a checker of gold highlights. Tiles 1233, 1250, 1256 use pixel-identical gem art. The teal floor pattern is background.",
+      "wikiDescription": "The wiki describes worthless colored glass as a gem-class imitation made of glass. This orange glass piece shares its visible gem color and sprite with other items, so appearance alone does not prove value.",
+      "modelBrief": "Build one small uneven crystal-like gem with a few large facets in burnt orange with brown facets and a checker of gold highlights. Reuse this visible color model for tile IDs 1233, 1250, 1256, keeping item identity and value in metadata.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Worthless piece of glass",
+          "url": "https://nethackwiki.com/wiki/Worthless_piece_of_glass"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

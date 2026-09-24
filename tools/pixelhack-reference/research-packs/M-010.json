@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:fog cloud": {
+      "wikiTitle": "Fog cloud",
+      "visualDescription": "A low white and pale-cyan puff with blue outline hovers above a dark ground shadow, with no face or limbs.",
+      "wikiDescription": "NetHack Wiki describes the fog cloud as an amorphous vortex that can pass under doors.",
+      "modelBrief": "Build a soft irregular white fog mass with blue edge shadows and a low floating gap; keep it faceless.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Fog cloud",
+          "url": "https://nethackwiki.com/wiki/Fog_cloud"
+        }
+      ]
+    },
+    "monster:dust vortex": {
+      "wikiTitle": "Dust vortex",
+      "visualDescription": "A rounded brown dust spiral has a darker center, ochre outer ring, and a narrow taper toward the floor.",
+      "wikiDescription": "NetHack Wiki identifies a dust vortex that engulfs and blinds targets.",
+      "modelBrief": "Shape a vertical brown whorl with stacked turning dust bands and a broad rotating top; use no fixed limbs.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dust vortex",
+          "url": "https://nethackwiki.com/wiki/Dust_vortex"
+        }
+      ]
+    },
+    "monster:ice vortex": {
+      "wikiTitle": "Ice vortex",
+      "visualDescription": "A bright cyan-blue spiral has white icy bands around a dark blue center and a pointed lower tip.",
+      "wikiDescription": "NetHack Wiki describes a cold-aligned vortex that engulfs and damages with cold.",
+      "modelBrief": "Build a rotating ice funnel with luminous cyan and white bands over deeper blue core, tapering toward the ground.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ice vortex",
+          "url": "https://nethackwiki.com/wiki/Ice_vortex"
+        }
+      ]
+    },
+    "monster:energy vortex": {
+      "wikiTitle": "Energy vortex",
+      "visualDescription": "A deep purple spiral contains bright pink-violet arcs, a dark inner gap, and a narrow lower cone.",
+      "wikiDescription": "NetHack Wiki identifies an electricity-aligned vortex with a shocking engulfing attack.",
+      "modelBrief": "Model a purple energy funnel with magenta electric arcs and a hollow spinning center; preserve the tapered silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Energy vortex",
+          "url": "https://nethackwiki.com/wiki/Energy_vortex"
+        }
+      ]
+    },
+    "monster:steam vortex": {
+      "wikiTitle": "Steam vortex",
+      "visualDescription": "A gray-white ring of billowing vapor surrounds a dark center, with layered puffs and a small lower taper.",
+      "wikiDescription": "NetHack Wiki describes the steam vortex as a fire-affinity vortex that engulfs targets.",
+      "modelBrief": "Build a pale steam funnel with soft gray ringed clouds, a hollow core, and rising vapor curls.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Steam vortex",
+          "url": "https://nethackwiki.com/wiki/Steam_vortex"
+        }
+      ]
+    },
+    "monster:fire vortex": {
+      "wikiTitle": "Fire vortex",
+      "visualDescription": "A bright red-orange spinning mass has a hot yellow curling band and a tapering lower tip.",
+      "wikiDescription": "NetHack Wiki identifies the fire vortex as the strongest vortex, with a fiery engulfing attack.",
+      "modelBrief": "Create a spinning flame funnel with red outer shell, orange middle, yellow-hot arc, and narrow base.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Fire vortex",
+          "url": "https://nethackwiki.com/wiki/Fire_vortex"
+        }
+      ]
+    },
+    "monster:baby long worm": {
+      "wikiTitle": "Baby long worm",
+      "visualDescription": "A short golden segmented worm rests on the floor, lifting a red circular mouth from its front.",
+      "wikiDescription": "NetHack Wiki identifies the baby long worm as the juvenile stage of the multi-segment long worm, with a bite attack.",
+      "modelBrief": "Build a short flexible yellow-brown segmented body with raised head and round red mouth; leave it limbless.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby long worm",
+          "url": "https://nethackwiki.com/wiki/Baby_long_worm"
+        }
+      ]
+    },
+    "monster:baby purple worm": {
+      "wikiTitle": "Baby purple worm",
+      "visualDescription": "A compact purple segmented worm lies low with a red circular mouth at one lifted end.",
+      "wikiDescription": "NetHack Wiki describes a juvenile purple worm as a carnivorous slithering worm with a bite attack.",
+      "modelBrief": "Model a short thick purple worm with a curled body and tooth-lined red mouth; make it smaller than the adult.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby purple worm",
+          "url": "https://nethackwiki.com/wiki/Baby_purple_worm"
+        }
+      ]
+    },
+    "monster:long worm": {
+      "wikiTitle": "Long worm",
+      "visualDescription": "A huge orange-brown worm is seen almost head-on, its circular red mouth surrounding rows of dark teeth.",
+      "wikiDescription": "NetHack Wiki notes that the long worm's head and body can occupy several map squares at once.",
+      "modelBrief": "Build a long segmented worm body with a prominent round tooth-lined maw; design the body to extend across multiple tile positions.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Long worm",
+          "url": "https://nethackwiki.com/wiki/Long_worm"
+        }
+      ]
+    },
+    "monster:purple worm": {
+      "wikiTitle": "Purple worm",
+      "visualDescription": "A thick violet worm coils beneath a large red-pink circular mouth with white teeth and dark throat.",
+      "wikiDescription": "NetHack Wiki identifies the purple worm as a giant limbless carnivore with bite and engulfing attacks.",
+      "modelBrief": "Sculpt a massive coiled purple tube with an oversized round toothed maw and dark throat; emphasize engulfing scale.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Purple worm",
+          "url": "https://nethackwiki.com/wiki/Purple_worm"
+        }
+      ]
+    },
+    "monster:grid bug": {
+      "wikiTitle": "Grid bug",
+      "visualDescription": "A small teal-green insect has a faceted bright back, dark body, red thin legs, and short feelers.",
+      "wikiDescription": "NetHack Wiki describes the grid bug as an insectlike monster that cannot move or attack diagonally.",
+      "modelBrief": "Build a compact angular bug with bright turquoise carapace, dark underside, and thin red legs; keep its small scale.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Grid bug",
+          "url": "https://nethackwiki.com/wiki/Grid_bug"
+        }
+      ]
+    },
+    "monster:xan": {
+      "wikiTitle": "Xan",
+      "visualDescription": "A flying insectlike beast has pale gray wings swept upward, teal face, dark red-brown body, and several long legs.",
+      "wikiDescription": "NetHack Wiki describes the xan as a flying mythical insect whose sting wounds the target's legs.",
+      "modelBrief": "Model a lean airborne insect with long pointed wings, teal head, reddish segmented body, thin legs, and a clear stinger.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Xan",
+          "url": "https://nethackwiki.com/wiki/Xan"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:electric eel": {
+      "wikiTitle": "Electric eel",
+      "visualDescription": "A long dark olive eel loops through blue water, showing a pale underbelly, yellow eye, and narrow finlike tail.",
+      "wikiDescription": "NetHack Wiki describes an oviparous electric eel whose bite can shock and whose body can wrap around a target.",
+      "modelBrief": "Model an elongated coiling eel with olive back, pale belly, yellow eye, and narrow tail. The bright blue pixels are surrounding water; reserve electricity for an attack effect rather than permanent body edging.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Electric eel",
+          "url": "https://nethackwiki.com/wiki/Electric_eel"
+        }
+      ]
+    },
+    "monster:kraken": {
+      "wikiTitle": "Kraken",
+      "visualDescription": "A huge olive-brown sea beast rises from water with a blunt face, red eyes, and several thick curling arms.",
+      "wikiDescription": "NetHack Wiki identifies the kraken as the strongest sea monster, with claw, holding, and bite attacks.",
+      "modelBrief": "Sculpt a massive tentacled aquatic body with thick arms, olive hide, red eyes, and wet highlights; emphasize grasping reach.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Kraken",
+          "url": "https://nethackwiki.com/wiki/Kraken"
+        }
+      ]
+    },
+    "monster:newt": {
+      "wikiTitle": "Newt",
+      "visualDescription": "A tiny dark blue-gray amphibian lies low with a narrow head, short legs, and tapering tail.",
+      "wikiDescription": "NetHack Wiki describes the newt as a small amphibious lizard common early in the dungeon.",
+      "modelBrief": "Build a low smooth-skinned newt with short splayed legs, long tail, and dark slate coloring.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Newt",
+          "url": "https://nethackwiki.com/wiki/Newt"
+        }
+      ]
+    },
+    "monster:gecko": {
+      "wikiTitle": "Gecko",
+      "visualDescription": "A small golden-yellow lizard crouches with broad head, short limbs, long upward tail, and pale belly.",
+      "wikiDescription": "NetHack Wiki identifies the gecko as a small carnivorous lizard.",
+      "modelBrief": "Model a compact yellow gecko with wide head, toe pads, light belly, and curled tail; retain its low pose.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Gecko",
+          "url": "https://nethackwiki.com/wiki/Gecko"
+        }
+      ]
+    },
+    "monster:iguana": {
+      "wikiTitle": "Iguana",
+      "visualDescription": "A dark teal lizard has a ridged back, blunt snout, thick legs, and long curling tail.",
+      "wikiDescription": "NetHack Wiki describes the iguana as a small lizard often found in early dungeon floors.",
+      "modelBrief": "Sculpt a stocky teal iguana with a small dorsal crest, scaly body, robust feet, and long tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Iguana",
+          "url": "https://nethackwiki.com/wiki/Iguana"
+        }
+      ]
+    },
+    "monster:baby crocodile": {
+      "wikiTitle": "Baby crocodile",
+      "visualDescription": "A little dark gray crocodilian has a long snout, short legs, bright eye, and thin tail.",
+      "wikiDescription": "NetHack Wiki identifies the baby crocodile as the juvenile amphibious crocodile with a bite attack.",
+      "modelBrief": "Make a small low crocodile with narrow snout, short limbs, armored dark scales, and sweeping tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Baby crocodile",
+          "url": "https://nethackwiki.com/wiki/Baby_crocodile"
+        }
+      ]
+    },
+    "monster:lizard": {
+      "wikiTitle": "Lizard",
+      "visualDescription": "A dark plum-brown small lizard curls into a compact shape with pointed nose, four tiny feet, and long tail.",
+      "wikiDescription": "NetHack Wiki describes the lizard as a tiny carnivorous member of its monster class, notable for stoning resistance.",
+      "modelBrief": "Build a little ground-hugging lizard with smooth dark scales and long curling tail; avoid oversized dragon features.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lizard",
+          "url": "https://nethackwiki.com/wiki/Lizard"
+        }
+      ]
+    },
+    "monster:chameleon": {
+      "wikiTitle": "Chameleon",
+      "visualDescription": "A bright turquoise reptile has a high back, dark body, large eye, and tight spiral tail.",
+      "wikiDescription": "NetHack Wiki identifies the chameleon as a lizard shapeshifter that regularly changes form.",
+      "modelBrief": "Model the shown turquoise base form with bulbous eye, arched body, grasping feet, and tightly curled tail; leave room for color-shift animation.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Chameleon",
+          "url": "https://nethackwiki.com/wiki/Chameleon"
+        }
+      ]
+    },
+    "monster:crocodile": {
+      "wikiTitle": "Crocodile",
+      "visualDescription": "A large blue-gray crocodilian bends in a C shape with heavy jaws, armored ridged back, thick limbs, and long tail.",
+      "wikiDescription": "NetHack Wiki describes the crocodile as a strong amphibious carnivore with bite and claw attacks.",
+      "modelBrief": "Sculpt a long low crocodile with powerful toothed jaws, raised back scutes, thick feet, and long turning tail.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Crocodile",
+          "url": "https://nethackwiki.com/wiki/Crocodile"
+        }
+      ]
+    },
+    "monster:salamander": {
+      "wikiTitle": "Salamander",
+      "visualDescription": "A red fiery reptilian humanoid rises from a coiled lower body, with long snout, arm, and orange-yellow flame accents.",
+      "wikiDescription": "NetHack Wiki identifies salamanders as fiery humanoid reptiles that attack with weapons and fire.",
+      "modelBrief": "Build a red serpentine humanoid with upright torso, reptile head, coiled tail, and restrained orange fire along the crest.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Salamander",
+          "url": "https://nethackwiki.com/wiki/Salamander"
+        }
+      ]
+    },
+    "monster:long worm tail": {
+      "wikiTitle": "Long worm",
+      "visualDescription": "The tile is a large orange-brown rounded worm-body segment with a textured yellow top and darker lower edge; no head is visible.",
+      "wikiDescription": "NetHack Wiki explains that a long worm's body extends across multiple map squares behind its head.",
+      "modelBrief": "Treat this as a repeatable body or tail segment, not a standalone creature; match the rounded orange scale pattern to the long-worm head asset.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Long worm",
+          "url": "https://nethackwiki.com/wiki/Long_worm"
+        }
+      ]
+    },
+    "monster:archeologist": {
+      "wikiTitle": "Archeologist",
+      "visualDescription": "A tan-clothed explorer wears a brown brimmed hat and carries a black whip; paired sprites differ in face and hair detail.",
+      "wikiDescription": "NetHack Wiki identifies the Archeologist as a playable role and notes a corresponding player monster.",
+      "modelBrief": "Build a practical explorer with brimmed hat, brown vest, tan trousers, boots, and coiled whip; support both visible head variants.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Archeologist",
+          "url": "https://nethackwiki.com/wiki/Archeologist"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "676": {
+      "variantNote": "The paired archeologists differ in face and hair details; keep both versions available. This is the first source slot."
+    },
+    "677": {
+      "variantNote": "The paired archeologists differ in face and hair details; keep both versions available. This is the second source slot."
+    }
+  }
+}

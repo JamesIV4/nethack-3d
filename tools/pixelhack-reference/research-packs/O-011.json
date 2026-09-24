@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:blue dragon scales": {
+      "wikiTitle": "Blue dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in saturated blue and violet, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki treats blue dragon scales as dragon-hide armor shed by the matching dragon and related to blue dragon scale mail. The loose-scaled form here comes from the PixelHack tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in saturated blue and violet, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: blue dragon scales",
+          "url": "https://nethackwiki.com/wiki/blue_dragon_scales"
+        }
+      ]
+    },
+    "object:green dragon scales": {
+      "wikiTitle": "Green dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in forest green and lime, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki treats green dragon scales as dragon-hide armor shed by the matching dragon and related to green dragon scale mail. The loose-scaled form here comes from the PixelHack tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in forest green and lime, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: green dragon scales",
+          "url": "https://nethackwiki.com/wiki/green_dragon_scales"
+        }
+      ]
+    },
+    "object:yellow dragon scales": {
+      "wikiTitle": "Yellow dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in golden yellow and cream, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki treats yellow dragon scales as dragon-hide armor shed by the matching dragon and related to yellow dragon scale mail. The loose-scaled form here comes from the PixelHack tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in golden yellow and cream, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: yellow dragon scales",
+          "url": "https://nethackwiki.com/wiki/yellow_dragon_scales"
+        }
+      ]
+    },
+    "object:plate mail": {
+      "wikiTitle": "Plate mail",
+      "visualDescription": "PixelHack shows a bulky olive-gray full torso cuirass with rounded shoulder plates, dark neck, and two pale vertical belly strips. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the plate mail as a heavy suit of iron plate armor. The fitted shape and precise colors are taken from PixelHack.",
+      "modelBrief": "Build a thick full plate cuirass with broad pauldrons and segmented front plates in muted olive gray. Keep the armor wearable and clearly separated from the patterned backdrop.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: plate mail",
+          "url": "https://nethackwiki.com/wiki/plate_mail"
+        }
+      ]
+    },
+    "object:crystal plate mail": {
+      "wikiTitle": "Crystal plate mail",
+      "visualDescription": "PixelHack shows a blue-gray faceted full cuirass with high pointed shoulders and a bright pale center. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the crystal plate mail as a full suit of glass crystal armor. The fitted shape and precise colors are taken from PixelHack.",
+      "modelBrief": "Build a faceted crystal plate cuirass with angular shoulders, cool blue-gray facets, and pale front glints. Keep the armor wearable and clearly separated from the patterned backdrop.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: crystal plate mail",
+          "url": "https://nethackwiki.com/wiki/crystal_plate_mail"
+        }
+      ]
+    },
+    "object:bronze plate mail": {
+      "wikiTitle": "Bronze plate mail",
+      "visualDescription": "PixelHack shows a solid brown-bronze full cuirass with rounded shoulders and dark recessed joints. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the bronze plate mail as a suit of plate armor made of copper. The fitted shape and precise colors are taken from PixelHack.",
+      "modelBrief": "Build a heavy bronze-colored plate cuirass with rounded pauldron plates and dark joint gaps. Keep the armor wearable and clearly separated from the patterned backdrop.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: bronze plate mail",
+          "url": "https://nethackwiki.com/wiki/bronze_plate_mail"
+        }
+      ]
+    },
+    "object:splint mail": {
+      "wikiTitle": "Splint mail",
+      "visualDescription": "PixelHack shows a tan upper torso covered by vertical pale strips, with dark blue-gray lower pieces. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the splint mail as an iron body armor assembled from splints. The fitted shape and precise colors are taken from PixelHack.",
+      "modelBrief": "Build a layered suit with narrow vertical metal splints across the chest and separate dark lower armor. Keep the armor wearable and clearly separated from the patterned backdrop.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: splint mail",
+          "url": "https://nethackwiki.com/wiki/splint_mail"
+        }
+      ]
+    },
+    "object:banded mail": {
+      "wikiTitle": "Banded mail",
+      "visualDescription": "PixelHack shows a tan-gray torso with pale vertical bands, broad shoulder pieces, and hanging lower plates. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the banded mail as an iron body armor made with bands. The fitted shape and precise colors are taken from PixelHack.",
+      "modelBrief": "Build a banded metal cuirass with repeated pale strips, broad shoulders, and hanging hip sections. Keep the armor wearable and clearly separated from the patterned backdrop.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: banded mail",
+          "url": "https://nethackwiki.com/wiki/banded_mail"
+        }
+      ]
+    },
+    "object:dwarvish mithril-coat": {
+      "wikiTitle": "Dwarvish mithril-coat",
+      "visualDescription": "PixelHack shows a dark gray fine-mesh shirt with broad short sleeves and small gold collar. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the dwarvish mithril-coat as a dwarvish coat made of mithril. The fitted shape and precise colors are taken from PixelHack.",
+      "modelBrief": "Build a knee-length mithril mail coat with dense small gray rings, short sleeves, and a gold neck trim. Keep the armor wearable and clearly separated from the patterned backdrop.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: dwarvish mithril-coat",
+          "url": "https://nethackwiki.com/wiki/dwarvish_mithril-coat"
+        }
+      ]
+    },
+    "object:elven mithril-coat": {
+      "wikiTitle": "Elven mithril-coat",
+      "visualDescription": "PixelHack shows a pale silver fine-mesh shirt with short sleeves and a gold collar. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the elven mithril-coat as an elven coat made of mithril. The fitted shape and precise colors are taken from PixelHack.",
+      "modelBrief": "Build a bright silver mithril mail coat with close-set fine links, short sleeves, and gold neck trim. Keep the armor wearable and clearly separated from the patterned backdrop.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: elven mithril-coat",
+          "url": "https://nethackwiki.com/wiki/elven_mithril-coat"
+        }
+      ]
+    },
+    "object:chain mail": {
+      "wikiTitle": "Chain mail",
+      "visualDescription": "PixelHack shows a tan-gray chain-linked shirt with short sleeves and plain brown collar. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the chain mail as an iron mail shirt. The fitted shape and precise colors are taken from PixelHack.",
+      "modelBrief": "Build a flexible chain-mail shirt with visible repeated ring texture and plain brown opening. Keep the armor wearable and clearly separated from the patterned backdrop.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: chain mail",
+          "url": "https://nethackwiki.com/wiki/chain_mail"
+        }
+      ]
+    },
+    "object:crude chain mail / orcish chain mail": {
+      "wikiTitle": "Orcish chain mail",
+      "visualDescription": "PixelHack shows a dark rust-brown chain-linked shirt with short sleeves. The teal pattern behind it is background.",
+      "wikiDescription": "The NetHack Wiki identifies the orcish chain mail as an orcish iron mail shirt shown as crude chain mail. The fitted shape and precise colors are taken from PixelHack. The crude-chain appearance is the visible cue, while the identified orcish item is its source association.",
+      "modelBrief": "Build a coarse rusty chain-mail shirt with large dark links and minimal trim. Keep the armor wearable and clearly separated from the patterned backdrop.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: orcish chain mail",
+          "url": "https://nethackwiki.com/wiki/orcish_chain_mail"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

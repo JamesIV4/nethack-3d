@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:tinning kit": {
+      "wikiTitle": "Tinning kit",
+      "visualDescription": "Three blue-gray cylindrical tins with pale lids overlap as a compact kit.",
+      "wikiDescription": "The wiki identifies the tinning kit as an iron chargeable tool for preserving corpses in tins.",
+      "modelBrief": "Build a small cluster of gray metal canisters with bright rims, keeping the kit portable.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Tinning kit",
+          "url": "https://nethackwiki.com/wiki/Tinning_kit"
+        }
+      ]
+    },
+    "object:tin opener": {
+      "wikiTitle": "Tin opener",
+      "visualDescription": "A brown wooden handle supports a short gray metal opener with a bent cutting tip.",
+      "wikiDescription": "The wiki identifies the tin opener as an iron tool that opens food tins quickly.",
+      "modelBrief": "Model a simple hand tool with warm wood grip and hooked steel cutting head.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Tin opener",
+          "url": "https://nethackwiki.com/wiki/Tin_opener"
+        }
+      ]
+    },
+    "object:can of grease": {
+      "wikiTitle": "Can of grease",
+      "visualDescription": "A small upright grease can has an olive lid, tan label, dark gray sides, and pale vertical mark.",
+      "wikiDescription": "The wiki identifies the can of grease as a chargeable tool used to grease equipment.",
+      "modelBrief": "Build a squat metal cylinder with brown cap and plain cream label; keep grease inside the container.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Can of grease",
+          "url": "https://nethackwiki.com/wiki/Can_of_grease"
+        }
+      ]
+    },
+    "object:figurine": {
+      "wikiTitle": "Figurine",
+      "visualDescription": "A tiny rust-orange humanoid figurine stands on a flat brown pedestal with arms spread.",
+      "wikiDescription": "The wiki describes figurines as magic miniature statues of monsters that can become living monsters.",
+      "modelBrief": "Make this crop's simple small humanoid statuette on a base; allow the depicted monster form to vary elsewhere.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Figurine",
+          "url": "https://nethackwiki.com/wiki/Figurine"
+        }
+      ]
+    },
+    "object:magic marker": {
+      "wikiTitle": "Magic marker",
+      "visualDescription": "A slim diagonal marker shows bands of cyan, yellow, orange, and red, ending in a dark nib.",
+      "wikiDescription": "The wiki identifies the magic marker as a charged tool for writing magical scrolls and spellbooks.",
+      "modelBrief": "Build a narrow pen with brightly segmented barrel and dark writing tip, preserving its diagonal visual read.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Magic marker",
+          "url": "https://nethackwiki.com/wiki/Magic_marker"
+        }
+      ]
+    },
+    "object:land mine": {
+      "wikiTitle": "Land mine",
+      "visualDescription": "A low brass-brown land mine is a flattened circular disc with raised central pressure plate.",
+      "wikiDescription": "The wiki identifies a land mine as a portable explosive trap that can be set on the ground.",
+      "modelBrief": "Make a squat round metal mine with dark sides and a pale central trigger, without an active explosion.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Land mine",
+          "url": "https://nethackwiki.com/wiki/Land_mine"
+        }
+      ]
+    },
+    "object:beartrap": {
+      "wikiTitle": "Beartrap",
+      "visualDescription": "A gray steel beartrap has open serrated jaws and a vertical spring or lever on one side.",
+      "wikiDescription": "The wiki identifies the beartrap as an iron tool commonly seen as a primed ground trap.",
+      "modelBrief": "Model an open hinged jaw trap with heavy teeth, base plate, and side mechanism.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Beartrap",
+          "url": "https://nethackwiki.com/wiki/Beartrap"
+        }
+      ]
+    },
+    "object:whistle / tin whistle": {
+      "wikiTitle": "Tin whistle",
+      "visualDescription": "A small pale silver whistle lies horizontally with a dark mouthpiece and open end.",
+      "wikiDescription": "The wiki identifies the tin whistle as a non-magical metal instrument that makes a loud sound.",
+      "modelBrief": "Make a short smooth gray whistle with mouth slot and hollow end, using the shared whistle shape.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Tin whistle",
+          "url": "https://nethackwiki.com/wiki/Tin_whistle"
+        }
+      ]
+    },
+    "object:whistle / magic whistle": {
+      "wikiTitle": "Magic whistle",
+      "visualDescription": "The same short silver whistle has a pale body and dark mouth opening.",
+      "wikiDescription": "The wiki identifies the magic whistle as a metal instrument that summons a pet to the user's location.",
+      "modelBrief": "Reuse the plain gray whistle form; keep the teleporting or summoning effect separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Magic whistle",
+          "url": "https://nethackwiki.com/wiki/Magic_whistle"
+        }
+      ]
+    },
+    "object:flute / wooden flute": {
+      "wikiTitle": "Wooden flute",
+      "visualDescription": "A long narrow wooden flute lies diagonally, brown with dark finger-hole marks.",
+      "wikiDescription": "The wiki identifies the wooden flute as a non-magical tonal instrument made of wood.",
+      "modelBrief": "Model a slim reddish wooden tube with open tip and evenly spaced finger holes.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wooden flute",
+          "url": "https://nethackwiki.com/wiki/Wooden_flute"
+        }
+      ]
+    },
+    "object:flute / magic flute": {
+      "wikiTitle": "Magic flute",
+      "visualDescription": "The tile repeats the long brown flute with a tapered tip and small dark finger holes.",
+      "wikiDescription": "The wiki identifies the magic flute as a magical wooden instrument that can put nearby monsters to sleep.",
+      "modelBrief": "Reuse the visible wooden flute design; magical sleep belongs to the instrument's effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Magic flute",
+          "url": "https://nethackwiki.com/wiki/Magic_flute"
+        }
+      ]
+    },
+    "object:horn / tooled horn": {
+      "wikiTitle": "Tooled horn",
+      "visualDescription": "A curved cream horn has a wide dark mouth, brown tip, and small dotted tooling marks along the side.",
+      "wikiDescription": "The wiki identifies the tooled horn as a non-magical bone instrument appearing simply as a horn.",
+      "modelBrief": "Make a short curved ivory-bone horn with carved dots and dark hollow bell.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Tooled horn",
+          "url": "https://nethackwiki.com/wiki/Tooled_horn"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

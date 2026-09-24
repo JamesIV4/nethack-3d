@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:GARVEN DEH": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"GARVEN DEH\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. GARVEN DEH is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:READ ME": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"READ ME\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. READ ME is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:ETAOIN SHRDLU": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"ETAOIN SHRDLU\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. ETAOIN SHRDLU is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:LOREM IPSUM": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"LOREM IPSUM\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. LOREM IPSUM is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:FNORD": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"FNORD\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. FNORD is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:KO BATE": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"KO BATE\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. KO BATE is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:ABRA KA DABRA": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"ABRA KA DABRA\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. ABRA KA DABRA is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:ASHPD SODALG": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"ASHPD SODALG\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. ASHPD SODALG is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:ZLORFIK": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"ZLORFIK\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. ZLORFIK is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:GNIK SISI VLE": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"GNIK SISI VLE\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. GNIK SISI VLE is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:HAPAX LEGOMENON": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"HAPAX LEGOMENON\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. HAPAX LEGOMENON is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    },
+    "object:EIRIS SAZUN IDISI": {
+      "wikiTitle": "Randomized appearance",
+      "visualDescription": "PixelHack shows a tan curled parchment scroll with dark brown rolled ends and small illegible square-like marks. Its pixels match every scroll tile from 1114 through 1154; \"EIRIS SAZUN IDISI\" is a catalog appearance label, not visible lettering. The teal floor pattern is background.",
+      "wikiDescription": "The wiki lists randomized scroll labels, including spare words with no fixed identified scroll. EIRIS SAZUN IDISI is an appearance string; this tile alone gives no spell effect or distinguishable printed text.",
+      "modelBrief": "Build one shallow curled parchment scroll with tan sheet, dark rolled edges, and a few tiny blocky marks. Reuse exactly the same visible mesh and materials for tile IDs 1114-1154; keep each scroll's randomized inscription or effect in metadata, not new art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Randomized appearance",
+          "url": "https://nethackwiki.com/wiki/Randomized_appearance"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

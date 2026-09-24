@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:goblin": {
+      "wikiTitle": "Goblin",
+      "visualDescription": "A small green-faced humanoid has a gray helmet, red mouth, ragged brown clothing, and a small dark weapon.",
+      "wikiDescription": "NetHack Wiki identifies the goblin as a small basic orc-type humanoid that uses weapons.",
+      "modelBrief": "Build a short green goblin with oversized helmet, thin limbs, ragged brown clothing, and a compact weapon.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Goblin",
+          "url": "https://nethackwiki.com/wiki/Goblin"
+        }
+      ]
+    },
+    "monster:hobgoblin": {
+      "wikiTitle": "Hobgoblin",
+      "visualDescription": "A taller red-brown humanoid has a square gray helmet, dark face, raised weapon, and long legs.",
+      "wikiDescription": "NetHack Wiki describes the hobgoblin as a strong orc-type monster tougher than a goblin.",
+      "modelBrief": "Enlarge the goblin silhouette into a leaner, taller soldier with red-brown skin, gray helm, and clearly raised weapon.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Hobgoblin",
+          "url": "https://nethackwiki.com/wiki/Hobgoblin"
+        }
+      ]
+    },
+    "monster:orc": {
+      "wikiTitle": "Orc (monster)",
+      "visualDescription": "A green-gray armored humanoid shows a long jaw, dark helmet, broad shoulder, and a curved gray blade.",
+      "wikiDescription": "NetHack Wiki identifies the orc monster as the base orc counterpart for playable orcs.",
+      "modelBrief": "Build a lean armored orc with green face, dark metal helm, brown clothing, and curved blade; preserve its forward stride.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orc (monster)",
+          "url": "https://nethackwiki.com/wiki/Orc_(monster)"
+        }
+      ]
+    },
+    "monster:hill orc": {
+      "wikiTitle": "Hill orc",
+      "visualDescription": "A tall olive-skinned soldier wears a gray helmet and blue-gray upper armor, with a brown lower garment and raised blade.",
+      "wikiDescription": "NetHack Wiki describes a strong orc that seeks gold, gems, and other equipment.",
+      "modelBrief": "Use an armored orc body with olive skin, gray helm, blue-gray shoulder armor, and one lifted sword.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Hill orc",
+          "url": "https://nethackwiki.com/wiki/Hill_orc"
+        }
+      ]
+    },
+    "monster:Mordor orc": {
+      "wikiTitle": "Mordor orc",
+      "visualDescription": "A dark olive warrior has a gray-blue helmet, brown clothing, long limbs, and a curved dark weapon.",
+      "wikiDescription": "NetHack Wiki identifies the Mordor orc as a slightly stronger but slower orc form.",
+      "modelBrief": "Make a darker, heavier armored orc with helmet, long crooked blade, and brown lower clothing; separate it from the hill orc by tone and posture.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Mordor orc",
+          "url": "https://nethackwiki.com/wiki/Mordor_orc"
+        }
+      ]
+    },
+    "monster:Uruk-hai": {
+      "wikiTitle": "Uruk-hai",
+      "visualDescription": "A dark red-brown orc wears a gray helmet and broad blue-gray shield while holding a curved blade.",
+      "wikiDescription": "NetHack Wiki describes Uruk-hai as strong orcs, faster than Mordor orcs.",
+      "modelBrief": "Build a robust shield-bearing orc with gray helm, dark reddish body, and curved sword; make the shield prominent.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Uruk-hai",
+          "url": "https://nethackwiki.com/wiki/Uruk-hai"
+        }
+      ]
+    },
+    "monster:orc shaman": {
+      "wikiTitle": "Orc shaman",
+      "visualDescription": "A pale olive orc in earth-toned robes raises a staff topped with a gray ornament, with bright eyes and a small headpiece.",
+      "wikiDescription": "NetHack Wiki describes the orc shaman as an orc that casts monster spells.",
+      "modelBrief": "Model a lean robe-clad orc holding a tall ritual staff, pale olive skin, and distinct headpiece; keep the magical role readable.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orc shaman",
+          "url": "https://nethackwiki.com/wiki/Orc_shaman"
+        }
+      ]
+    },
+    "monster:orc-captain": {
+      "wikiTitle": "Orc-captain",
+      "visualDescription": "A broad dark armored orc has a blue-gray face or mask, a round shield, layered armor, and a raised forked blade.",
+      "wikiDescription": "NetHack Wiki identifies the orc-captain as the strongest orc type with two weapon attacks.",
+      "modelBrief": "Make a heavily armored commander with dark cloak, round shield, imposing helmet or mask, and large weapon.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orc-captain",
+          "url": "https://nethackwiki.com/wiki/Orc-captain"
+        }
+      ]
+    },
+    "monster:rock piercer": {
+      "wikiTitle": "Piercer",
+      "visualDescription": "A brown horizontal stalactite-like shell points forward above a pink fleshy mouth and dark rear body.",
+      "wikiDescription": "NetHack Wiki groups rock piercers with ceiling-hiding carnivorous piercers that drop onto passersby; their shell resembles a stalactite.",
+      "modelBrief": "Shape an earthy stone cone or pointed shell around a fleshy pink mouth; allow a ceiling-clinging pose and keep the mouth exposed.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Piercer",
+          "url": "https://nethackwiki.com/wiki/Piercer"
+        }
+      ]
+    },
+    "monster:iron piercer": {
+      "wikiTitle": "Piercer",
+      "visualDescription": "A steel-gray pointed shell projects ahead of a dark body, with a pink fleshy opening at the rear.",
+      "wikiDescription": "NetHack Wiki identifies the iron piercer as one of three ceiling-hiding piercers with a biting body and stalactite-like shell.",
+      "modelBrief": "Reuse the piercer body plan with a hard gray metallic tapered shell, dark underside, and visible pink mouth.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Piercer",
+          "url": "https://nethackwiki.com/wiki/Piercer"
+        }
+      ]
+    },
+    "monster:glass piercer": {
+      "wikiTitle": "Piercer",
+      "visualDescription": "A white-cyan crystalline pointed shell has blue facets, red accents, and a pink mouth beneath it.",
+      "wikiDescription": "NetHack Wiki identifies the glass piercer as a ceiling-hiding member of the piercer group.",
+      "modelBrief": "Build a clear angular glasslike cone over the fleshy piercer mouth, using icy blue facets and a few red details from the tile.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Piercer",
+          "url": "https://nethackwiki.com/wiki/Piercer"
+        }
+      ]
+    },
+    "monster:rothe": {
+      "wikiTitle": "Rothe",
+      "visualDescription": "A shaggy red-brown quadruped has a broad bull-like head, green eyes, thick legs, and a raised ridged back.",
+      "wikiDescription": "NetHack Wiki describes the rothe as a large omnivorous quadruped with claw and bite attacks.",
+      "modelBrief": "Sculpt a bulky, low beast with heavy forequarters, rough rust-brown fur ridges, broad muzzle, and strong paws.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Rothe",
+          "url": "https://nethackwiki.com/wiki/Rothe"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

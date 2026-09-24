@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:barbarian": {
+      "wikiTitle": "Barbarian",
+      "visualDescription": "A bare-armed muscular fighter in brown trousers raises a heavy gray axe, with warm skin and a dark belt; paired heads differ.",
+      "wikiDescription": "NetHack Wiki identifies the Barbarian as a playable combat role with a corresponding player monster.",
+      "modelBrief": "Model a broad-shouldered warrior with exposed arms, leather belt and boots, and oversized single axe; preserve both head variants.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Barbarian",
+          "url": "https://nethackwiki.com/wiki/Barbarian"
+        }
+      ]
+    },
+    "monster:cave dweller": {
+      "wikiTitle": "Cave Dweller",
+      "visualDescription": "A rough-clothed human raises a wooden club, wearing an ochre hide tunic and short dark skirt; the paired figures differ in head and build.",
+      "wikiDescription": "NetHack Wiki identifies the Cave Dweller as the role whose male and female names are Caveman and Cavewoman, with a corresponding player monster.",
+      "modelBrief": "Build a primitive adventurer in animal-hide clothing carrying a large club; use paired head and body details for the two slots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cave Dweller",
+          "url": "https://nethackwiki.com/wiki/Cave_Dweller"
+        }
+      ]
+    },
+    "monster:healer": {
+      "wikiTitle": "Healer",
+      "visualDescription": "A hooded figure in pale gray robes has a dark face opening, blue-red belt accent, satchel, and raised hands.",
+      "wikiDescription": "NetHack Wiki identifies the Healer as a playable role with a corresponding player monster.",
+      "modelBrief": "Model a traveling healer with light hood and robe, visible pouch or medical satchel, and open hands; keep the blue-red waist accent.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Healer",
+          "url": "https://nethackwiki.com/wiki/Healer"
+        }
+      ]
+    },
+    "monster:knight": {
+      "wikiTitle": "Knight",
+      "visualDescription": "A helmeted armored fighter stands with a long gray sword and small dark blue shield, wearing brown trousers.",
+      "wikiDescription": "NetHack Wiki identifies the Knight as a human playable role with a corresponding player monster.",
+      "modelBrief": "Build a compact mail-clad knight with steel helmet, upright sword, blue shield, and sturdy boots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Knight",
+          "url": "https://nethackwiki.com/wiki/Knight"
+        }
+      ]
+    },
+    "monster:monk": {
+      "wikiTitle": "Monk",
+      "visualDescription": "A human martial artist in loose rust-orange robes adopts a wide fighting stance with both fists raised; paired heads differ.",
+      "wikiDescription": "NetHack Wiki identifies the Monk as a playable role with a corresponding player monster.",
+      "modelBrief": "Sculpt an unarmed fighter in orange wrap robe, sash, and wide stance; support both face and hair variants.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Monk",
+          "url": "https://nethackwiki.com/wiki/Monk"
+        }
+      ]
+    },
+    "monster:cleric": {
+      "wikiTitle": "Cleric",
+      "visualDescription": "A robed human in light gray-white vestments carries a dark staff or mace and a brown pouch; paired heads and garments differ.",
+      "wikiDescription": "NetHack Wiki identifies the Cleric as a playable religious role with a corresponding player monster, distinct from temple aligned clerics.",
+      "modelBrief": "Build a traveling cleric with pale robe, belt pouch, dark hand weapon, and the paired face or robe variants.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cleric",
+          "url": "https://nethackwiki.com/wiki/Cleric"
+        }
+      ]
+    },
+    "monster:ranger": {
+      "wikiTitle": "Ranger",
+      "visualDescription": "A green-hooded adventurer wears brown and green field clothes, standing with arms raised and a dark weapon at each side.",
+      "wikiDescription": "NetHack Wiki identifies the Ranger as a playable role with a corresponding player monster.",
+      "modelBrief": "Model a nimble hooded ranger with green cowl, brown leather layers, boots, and practical hand weapons; keep the face mostly shaded.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ranger",
+          "url": "https://nethackwiki.com/wiki/Ranger"
+        }
+      ]
+    },
+    "monster:rogue": {
+      "wikiTitle": "Rogue",
+      "visualDescription": "A dark-haired human in gray and brown light armor stands with a curved short blade, side pouch, and dark boots; paired heads differ.",
+      "wikiDescription": "NetHack Wiki identifies the Rogue as a playable role with a corresponding player monster.",
+      "modelBrief": "Build a lean thief with dark vest, gray shoulder armor, belt pouch, and short blade; preserve the two head variants.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Rogue",
+          "url": "https://nethackwiki.com/wiki/Rogue"
+        }
+      ]
+    },
+    "monster:samurai": {
+      "wikiTitle": "Samurai",
+      "visualDescription": "A dark-haired warrior wears a flowing indigo-purple upper cloak over brown lower robes and carries a curved sword; paired faces differ subtly.",
+      "wikiDescription": "NetHack Wiki identifies the Samurai as a human playable role with a corresponding player monster.",
+      "modelBrief": "Sculpt layered robe and armor, a purple mantle, black hair, and curved sword; keep both facial variants available.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Samurai",
+          "url": "https://nethackwiki.com/wiki/Samurai"
+        }
+      ]
+    },
+    "monster:tourist": {
+      "wikiTitle": "Tourist",
+      "visualDescription": "A casually dressed human wears a bright red patterned shirt, tan shorts, white shoes, and carries a black camera; paired faces differ.",
+      "wikiDescription": "NetHack Wiki identifies the Tourist as a playable role with a corresponding player monster.",
+      "modelBrief": "Model a lightly equipped traveler with red print shirt, shorts, sneakers, and a camera held forward; preserve paired face details.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Tourist",
+          "url": "https://nethackwiki.com/wiki/Tourist"
+        }
+      ]
+    },
+    "monster:valkyrie": {
+      "wikiTitle": "Valkyrie",
+      "visualDescription": "An armored female warrior carries a long gray sword and round red shield, with pale tunic, brown boots, and long hair; paired hair differs.",
+      "wikiDescription": "NetHack Wiki identifies Valkyrie as a playable warrior role with a corresponding player monster; Valkyrie heroes always start female.",
+      "modelBrief": "Build a female armored fighter with white-gray breastplate, round red shield, sword, boots, and both hair variants.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Valkyrie",
+          "url": "https://nethackwiki.com/wiki/Valkyrie"
+        }
+      ]
+    },
+    "monster:wizard": {
+      "wikiTitle": "Wizard",
+      "visualDescription": "A hooded violet-blue spellcaster raises a staff beside bright cyan magical energy, with dark face and layered robes.",
+      "wikiDescription": "NetHack Wiki identifies the Wizard as a playable magic role with a corresponding player monster.",
+      "modelBrief": "Model a slender robed caster with blue-purple hood, red-brown staff, dark face shadow, and cyan spell effect.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Wizard",
+          "url": "https://nethackwiki.com/wiki/Wizard"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "678": {
+      "variantNote": "The paired barbarians differ in head, hair and torso details; make a small character variant. This is the first source slot."
+    },
+    "679": {
+      "variantNote": "The paired barbarians differ in head, hair and torso details; make a small character variant. This is the second source slot."
+    },
+    "680": {
+      "variantNote": "The paired cave dwellers differ in face and body detail; compare both. This is the first source slot."
+    },
+    "681": {
+      "variantNote": "The paired cave dwellers differ in face and body detail; compare both. This is the second source slot."
+    },
+    "686": {
+      "variantNote": "The paired monks differ in face and hair; keep both looks available. This is the first source slot."
+    },
+    "687": {
+      "variantNote": "The paired monks differ in face and hair; keep both looks available. This is the second source slot."
+    },
+    "688": {
+      "variantNote": "The paired clerics differ in face and robe details; inspect both. This is the first source slot."
+    },
+    "689": {
+      "variantNote": "The paired clerics differ in face and robe details; inspect both. This is the second source slot."
+    },
+    "692": {
+      "variantNote": "The paired rogues differ in facial and hair details; preserve both looks. This is the first source slot."
+    },
+    "693": {
+      "variantNote": "The paired rogues differ in facial and hair details; preserve both looks. This is the second source slot."
+    },
+    "694": {
+      "variantNote": "The paired samurai differ subtly in face and hair; inspect both. This is the first source slot."
+    },
+    "695": {
+      "variantNote": "The paired samurai differ subtly in face and hair; inspect both. This is the second source slot."
+    },
+    "696": {
+      "variantNote": "The paired tourists differ in facial hair and clothing pixels; preserve both looks. This is the first source slot."
+    },
+    "697": {
+      "variantNote": "The paired tourists differ in facial hair and clothing pixels; preserve both looks. This is the second source slot."
+    },
+    "698": {
+      "variantNote": "Male-labeled atlas slot, but Valkyrie heroes start female in NetHack. Preserve this tile's shorter-haired face look without treating it as a male Valkyrie; tile 699 has a different hairstyle."
+    },
+    "699": {
+      "variantNote": "Female-labeled atlas slot for a Valkyrie. Preserve this tile's longer-haired face look; tile 698 is a distinct atlas look, not evidence of a male Valkyrie."
+    }
+  }
+}

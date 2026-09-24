@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:Lord Carnarvon": {
+      "wikiTitle": "Lord Carnarvon",
+      "visualDescription": "A tall gray-suited explorer wears a pale brimmed hat, red neckerchief, and dark boots, holding a rectangular case.",
+      "wikiDescription": "NetHack Wiki identifies Lord Carnarvon as the Archeologist quest leader.",
+      "modelBrief": "Build an older expedition patron in gray coat and hat, red scarf, boots, and hand case; keep his upright formal stance.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lord Carnarvon",
+          "url": "https://nethackwiki.com/wiki/Lord_Carnarvon"
+        }
+      ]
+    },
+    "monster:Pelias": {
+      "wikiTitle": "Pelias",
+      "visualDescription": "A broad-shouldered fighter with long dark hair carries a large gray axe, brown armor, and blue-gray trousers.",
+      "wikiDescription": "NetHack Wiki identifies Pelias as the Barbarian quest leader with strong weapon attacks.",
+      "modelBrief": "Sculpt an imposing barbarian elder with long hair, rugged brown armor, oversized axe, and heavy boots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Pelias",
+          "url": "https://nethackwiki.com/wiki/Pelias"
+        }
+      ]
+    },
+    "monster:Shaman Karnov": {
+      "wikiTitle": "Shaman Karnov",
+      "visualDescription": "A bearded elder in pale wide-brimmed headgear and rust-red robe holds a crooked staff, with exposed tan arms.",
+      "wikiDescription": "NetHack Wiki identifies Shaman Karnov as the Cave Dweller quest leader.",
+      "modelBrief": "Build a stocky tribal shaman with pale cap, broad beard, reddish garment, and branched wooden staff.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Shaman Karnov",
+          "url": "https://nethackwiki.com/wiki/Shaman_Karnov"
+        }
+      ]
+    },
+    "monster:Earendil": {
+      "wikiTitle": "Earendil",
+      "visualDescription": "A golden-haired elf in blue-gray armor stands with an orange shield, dark cloak, and thin sword.",
+      "wikiDescription": "NetHack Wiki records Earendil as the former male Elf quest leader in older NetHack versions.",
+      "modelBrief": "Model a tall golden-haired elven leader with blue armor, warm round shield, slender sword, and dark cloak; label as legacy quest art.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Earendil",
+          "url": "https://nethackwiki.com/wiki/Earendil"
+        }
+      ]
+    },
+    "monster:Elwing": {
+      "wikiTitle": "Elf quest",
+      "visualDescription": "A dark-haired woman wears a pale gray robe and darker apronlike panel, standing calmly with hands near her sides.",
+      "wikiDescription": "NetHack Wiki's Elf quest page identifies Elwing as the former female Elf quest leader.",
+      "modelBrief": "Build a restrained elven noblewoman with dark shoulder-length hair, pale layered dress, and dark waist panel; keep her distinct from Earendil.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Elf quest",
+          "url": "https://nethackwiki.com/wiki/Elf_quest"
+        }
+      ]
+    },
+    "monster:Hippocrates": {
+      "wikiTitle": "Hippocrates",
+      "visualDescription": "A blond bearded man in long indigo-blue robes stands with one hand lifted and pale underlayers visible.",
+      "wikiDescription": "NetHack Wiki identifies Hippocrates as the Healer quest leader, who uses clerical spells.",
+      "modelBrief": "Sculpt a learned healer with blond beard, blue robe, pale inner garment, and an open teaching gesture.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Hippocrates",
+          "url": "https://nethackwiki.com/wiki/Hippocrates"
+        }
+      ]
+    },
+    "monster:King Arthur": {
+      "wikiTitle": "King Arthur",
+      "visualDescription": "A crowned bearded king wears gold armor and a deep red cape, raising a long silver sword beside a dark shield.",
+      "wikiDescription": "NetHack Wiki identifies King Arthur as the Knight quest leader with two strong weapon attacks.",
+      "modelBrief": "Build a regal armored king with gold crown, red mantle, long sword, and shield; keep the broad authoritative silhouette.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: King Arthur",
+          "url": "https://nethackwiki.com/wiki/King_Arthur"
+        }
+      ]
+    },
+    "monster:Grand Master": {
+      "wikiTitle": "Grand Master",
+      "visualDescription": "An elderly bald man in brown-orange robes stands with arms crossed or held inside sleeves, with a long beard.",
+      "wikiDescription": "NetHack Wiki identifies the Grand Master as the Monk quest leader.",
+      "modelBrief": "Model an aged martial arts master with wrapped brown robe, long white beard, calm posture, and no prominent weapon.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Grand Master",
+          "url": "https://nethackwiki.com/wiki/Grand_Master"
+        }
+      ]
+    },
+    "monster:Arch Priest": {
+      "wikiTitle": "Arch Priest",
+      "visualDescription": "A pale-haired cleric wears ornate magenta and gold vestments and holds a gold-topped staff.",
+      "wikiDescription": "NetHack Wiki identifies the Arch Priest as the Priest or Cleric quest leader, similar in abilities to a high cleric.",
+      "modelBrief": "Sculpt a senior cleric in bright gold-trimmed purple robe, white stole, tall headdress, and ceremonial staff.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Arch Priest",
+          "url": "https://nethackwiki.com/wiki/Arch_Priest"
+        }
+      ]
+    },
+    "monster:Orion": {
+      "wikiTitle": "Orion",
+      "visualDescription": "A red-hooded huntsman in rust clothing carries a tall curved bow and dark belt, standing with a broad stance.",
+      "wikiDescription": "NetHack Wiki identifies Orion as the Ranger quest leader and a powerful human combatant.",
+      "modelBrief": "Build a seasoned archer with red hood, ochre leather layers, large bow, boots, and broad shoulders.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orion",
+          "url": "https://nethackwiki.com/wiki/Orion"
+        }
+      ]
+    },
+    "monster:Master of Thieves": {
+      "wikiTitle": "Master of Thieves",
+      "visualDescription": "A dark-haired man in simple brown tunic and trousers holds a short blade, one arm bent in a guarded pose.",
+      "wikiDescription": "NetHack Wiki identifies the Master of Thieves as the Rogue quest leader.",
+      "modelBrief": "Model a wary human thief leader with dark hair, brown sleeveless clothes, a short blade, and practical boots.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Master of Thieves",
+          "url": "https://nethackwiki.com/wiki/Master_of_Thieves"
+        }
+      ]
+    },
+    "monster:Lord Sato": {
+      "wikiTitle": "Lord Sato",
+      "visualDescription": "A gray-haired elder in long tan robes holds a dark sheathed or drawn sword, with a dark sash and calm stance.",
+      "wikiDescription": "NetHack Wiki identifies Lord Sato as the Samurai quest leader with two weapon attacks.",
+      "modelBrief": "Sculpt an older samurai lord with pale hair, layered tan robes, dark sash, and long sword; emphasize composure over motion.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Lord Sato",
+          "url": "https://nethackwiki.com/wiki/Lord_Sato"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

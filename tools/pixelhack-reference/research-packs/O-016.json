@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:black onyx / protection": {
+      "wikiTitle": "Ring of protection",
+      "visualDescription": "A small dark gray ring has a nearly black onyx band, pale edge, and dark opening.",
+      "wikiDescription": "The wiki says a ring of protection improves armor class while worn. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a compact black stone or dark-metal hoop with subtle gray edge highlights. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of protection",
+          "url": "https://nethackwiki.com/wiki/Ring_of_protection"
+        }
+      ]
+    },
+    "object:moonstone / regeneration": {
+      "wikiTitle": "Ring of regeneration",
+      "visualDescription": "A gray-brown ring has a tiny bright white-blue moonstone hanging at its lower edge.",
+      "wikiDescription": "The wiki says a ring of regeneration speeds the wearer's healing. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a muted ring with one pale blue-white stone, retaining the small teardrop accent. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of regeneration",
+          "url": "https://nethackwiki.com/wiki/Ring_of_regeneration"
+        }
+      ]
+    },
+    "object:tiger eye / searching": {
+      "wikiTitle": "Ring of searching",
+      "visualDescription": "A dark gray ring carries a little orange-brown tiger-eye stone beneath its opening.",
+      "wikiDescription": "The wiki says a ring of searching helps reveal hidden features nearby. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a narrow charcoal band with a warm striped amber stone; do not add a permanent search beam. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of searching",
+          "url": "https://nethackwiki.com/wiki/Ring_of_searching"
+        }
+      ]
+    },
+    "object:jade / stealth": {
+      "wikiTitle": "Ring of stealth",
+      "visualDescription": "A saturated emerald-green ring has a smooth thick band and pale teal rim highlight.",
+      "wikiDescription": "The wiki says a ring of stealth makes the wearer less likely to wake nearby monsters. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Sculpt a plain green jade hoop with a polished but modest shine. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of stealth",
+          "url": "https://nethackwiki.com/wiki/Ring_of_stealth"
+        }
+      ]
+    },
+    "object:bronze / sustain ability": {
+      "wikiTitle": "Ring of sustain ability",
+      "visualDescription": "A warm bronze ring has a thick golden-brown band and dark open center.",
+      "wikiDescription": "The wiki says a ring of sustain ability helps preserve the wearer's attributes. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a simple substantial bronze hoop with no gemstone or symbolic engraving. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of sustain ability",
+          "url": "https://nethackwiki.com/wiki/Ring_of_sustain_ability"
+        }
+      ]
+    },
+    "object:agate / levitation": {
+      "wikiTitle": "Ring of levitation",
+      "visualDescription": "A tawny agate ring has a small pale cream-and-brown mottled stone below the opening.",
+      "wikiDescription": "The wiki says a ring of levitation causes its wearer to float. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a golden-brown band with a low cream agate cabochon; keep the physical ring grounded. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of levitation",
+          "url": "https://nethackwiki.com/wiki/Ring_of_levitation"
+        }
+      ]
+    },
+    "object:topaz / hunger": {
+      "wikiTitle": "Ring of hunger",
+      "visualDescription": "A yellow-brown ring holds a slim orange topaz drop below the open center.",
+      "wikiDescription": "The wiki says a ring of hunger increases the wearer's food consumption. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Use a warm yellow band and small orange hanging stone, with no visible hunger icon. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of hunger",
+          "url": "https://nethackwiki.com/wiki/Ring_of_hunger"
+        }
+      ]
+    },
+    "object:sapphire / aggravate monster": {
+      "wikiTitle": "Ring of aggravate monster",
+      "visualDescription": "A gray ring holds a bright blue sapphire pendant-like stone beneath the opening.",
+      "wikiDescription": "The wiki says a ring of aggravate monster attracts or alerts monsters. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Make a charcoal band and saturated blue gem, separating the curse-like effect from the artwork. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of aggravate monster",
+          "url": "https://nethackwiki.com/wiki/Ring_of_aggravate_monster"
+        }
+      ]
+    },
+    "object:ruby / conflict": {
+      "wikiTitle": "Ring of conflict",
+      "visualDescription": "A gold-brown ring bears a prominent red ruby below its dark center.",
+      "wikiDescription": "The wiki says a ring of conflict incites nearby monsters to fight one another. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a warm metal hoop with one large ruby-red drop; avoid depicting combat on the jewelry. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of conflict",
+          "url": "https://nethackwiki.com/wiki/Ring_of_conflict"
+        }
+      ]
+    },
+    "object:diamond / warning": {
+      "wikiTitle": "Ring of warning",
+      "visualDescription": "A dark gray ring carries a pale white faceted diamond in a narrow lower setting.",
+      "wikiDescription": "The wiki says a ring of warning alerts its wearer to dangerous nearby monsters. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Use a dark band and crisp white diamond with angular facets, no printed warning symbol. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of warning",
+          "url": "https://nethackwiki.com/wiki/Ring_of_warning"
+        }
+      ]
+    },
+    "object:pearl / poison resistance": {
+      "wikiTitle": "Ring of poison resistance",
+      "visualDescription": "A muted gold ring holds a round cream pearl below its opening.",
+      "wikiDescription": "The wiki says a ring of poison resistance protects the wearer from poison. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Model a small smooth gold hoop with one pale pearl, leaving poison effects to game logic. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of poison resistance",
+          "url": "https://nethackwiki.com/wiki/Ring_of_poison_resistance"
+        }
+      ]
+    },
+    "object:iron / fire resistance": {
+      "wikiTitle": "Ring of fire resistance",
+      "visualDescription": "A plain rusty-brown iron ring has a thick edge, dark open center, and no jewel.",
+      "wikiDescription": "The wiki says a ring of fire resistance protects its wearer from fire damage. Its unidentified appearance is randomized; the catalog links this appearance to that effect by default.",
+      "modelBrief": "Build a simple iron hoop with warm oxidized highlights; do not make it permanently aflame. Model the visible appearance, with effect identity kept separate.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring of fire resistance",
+          "url": "https://nethackwiki.com/wiki/Ring_of_fire_resistance"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

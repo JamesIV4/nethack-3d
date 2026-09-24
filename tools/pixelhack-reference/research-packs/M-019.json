@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "monster:genetic engineer": {
+      "wikiTitle": "Genetic engineer",
+      "visualDescription": "A humanlike scientist wears a white lab coat over dark trousers and holds a purple-yellow instrument.",
+      "wikiDescription": "The wiki identifies the genetic engineer as a humanoid quantum-mechanic relative whose touch can alter a victim's form.",
+      "modelBrief": "Build a slim lab-coated figure with dark tie or shirt and a small violet instrument; inspect the sex-paired color changes before sharing materials. Check both atlas slots for small pixel differences.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Genetic engineer",
+          "url": "https://nethackwiki.com/wiki/Genetic_engineer"
+        }
+      ]
+    },
+    "monster:rust monster": {
+      "wikiTitle": "Rust monster",
+      "visualDescription": "A brown low-slung beast has a rounded shell-like back, a blunt head, many stout feet, and long curved feelers.",
+      "wikiDescription": "The wiki describes the rust monster as a metal-eating creature that rusts equipment with its antennae.",
+      "modelBrief": "Model a squat armored quadruped or multi-legged beast with conspicuous flexible antennae and a rust-brown shell. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Rust monster",
+          "url": "https://nethackwiki.com/wiki/Rust_monster"
+        }
+      ]
+    },
+    "monster:disenchanter": {
+      "wikiTitle": "Disenchanter",
+      "visualDescription": "A blue-purple low beast has a broad back, four short legs, and two long orange-tipped antennae.",
+      "wikiDescription": "The wiki identifies the disenchanter as an animal whose touch drains enchantment from equipment.",
+      "modelBrief": "Make a sturdy violet quadruped with long probing feelers and orange tips; preserve the tile's rounded back. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Disenchanter",
+          "url": "https://nethackwiki.com/wiki/Disenchanter"
+        }
+      ]
+    },
+    "monster:garter snake": {
+      "wikiTitle": "Garter snake",
+      "visualDescription": "An olive snake curls into a small loop with a pale yellow belly and raised narrow head.",
+      "wikiDescription": "The wiki describes the garter snake as a small non-poisonous snake that swims and hides beneath objects.",
+      "modelBrief": "Sculpt a small slender coil with olive upper scales and cream underside, keeping the head close to the body. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Garter snake",
+          "url": "https://nethackwiki.com/wiki/Garter_snake"
+        }
+      ]
+    },
+    "monster:snake": {
+      "wikiTitle": "Snake",
+      "visualDescription": "A thick orange-brown snake lies in a compact coil with a broad head and pale lower jaw.",
+      "wikiDescription": "The wiki describes the generic snake as a swimming, egg-laying carnivore that can hide under items.",
+      "modelBrief": "Make a medium snake with a low heavy coil, rusty-brown scales, and a defined head without a hood. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Snake",
+          "url": "https://nethackwiki.com/wiki/Snake"
+        }
+      ]
+    },
+    "monster:water moccasin": {
+      "wikiTitle": "Water moccasin",
+      "visualDescription": "A blue-gray snake winds into a loose S shape with pale underside and a small red mouth.",
+      "wikiDescription": "The wiki describes a water moccasin as a swimming snake similar to the standard snake.",
+      "modelBrief": "Model a smooth dark blue-gray serpent with a loose ground-level coil and contrasting pale belly. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Water moccasin",
+          "url": "https://nethackwiki.com/wiki/Water_moccasin"
+        }
+      ]
+    },
+    "monster:python": {
+      "wikiTitle": "Python",
+      "visualDescription": "A bulky olive python wraps into overlapping coils with a thick neck and dark mottling.",
+      "wikiDescription": "The wiki identifies the python as a non-poisonous constrictor that can grab and crush prey.",
+      "modelBrief": "Give this serpent much greater girth than the other snakes, with overlapping olive loops and a powerful head. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Python",
+          "url": "https://nethackwiki.com/wiki/Python"
+        }
+      ]
+    },
+    "monster:pit viper": {
+      "wikiTitle": "Pit viper",
+      "visualDescription": "A blue-green pit viper forms a wide S coil with upright angular head and dark transverse markings.",
+      "wikiDescription": "The wiki describes the pit viper as a venomous snake with two poisonous bites and heat-sensing infravision.",
+      "modelBrief": "Build a coiled viper with triangular head, dense blue-green scales, and dark bands; keep it separate from the cobra's hood. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Pit viper",
+          "url": "https://nethackwiki.com/wiki/Pit_viper"
+        }
+      ]
+    },
+    "monster:cobra": {
+      "wikiTitle": "Cobra",
+      "visualDescription": "A brown cobra raises its upper body vertically, spreading a broad hood above a flat ground coil.",
+      "wikiDescription": "The wiki describes a venomous cobra able to spit blinding venom.",
+      "modelBrief": "Make a tall hooded serpent with brown-gold scales and a stable coiled base, leaving the mouth suitable for a venom effect. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Cobra",
+          "url": "https://nethackwiki.com/wiki/Cobra"
+        }
+      ]
+    },
+    "monster:troll": {
+      "wikiTitle": "Troll",
+      "visualDescription": "A long-armed troll has gray skin, black ragged hair, green highlights, protruding tusks, and a dark loincloth.",
+      "wikiDescription": "The wiki describes trolls as clawing, biting humanoids that regenerate and may rise again from their corpses.",
+      "modelBrief": "Build a lean hunchbacked troll with very long arms, hooked fingers, dark hair, and green-gray skin. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Troll",
+          "url": "https://nethackwiki.com/wiki/Troll"
+        }
+      ]
+    },
+    "monster:ice troll": {
+      "wikiTitle": "Ice troll",
+      "visualDescription": "A similarly long-armed troll has cold blue skin, cyan streaks, dark hair, and a red waist wrap.",
+      "wikiDescription": "The wiki identifies the ice troll as a tougher cold-resistant troll that can regenerate.",
+      "modelBrief": "Reuse the troll anatomy with ice-blue skin and pale cyan planes, preserving the hunched claws and dark hair. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ice troll",
+          "url": "https://nethackwiki.com/wiki/Ice_troll"
+        }
+      ]
+    },
+    "monster:rock troll": {
+      "wikiTitle": "Rock troll",
+      "visualDescription": "A hunched troll has reddish-brown skin, a dark mane, long arms, tusks, and a red lower garment.",
+      "wikiDescription": "The wiki describes the rock troll as a physically tougher member of the regenerative troll family.",
+      "modelBrief": "Give the troll body rock-brown and crimson surfaces, with heavy hands and a broad chest. The paired atlas slots can share this design.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Rock troll",
+          "url": "https://nethackwiki.com/wiki/Rock_troll"
+        }
+      ]
+    }
+  },
+  "tiles": {
+    "432": {
+      "variantNote": "Male-labeled atlas slot; art differs from the adjacent female-labeled slot. Compare both before deciding whether geometry must differ."
+    },
+    "433": {
+      "variantNote": "Female-labeled atlas slot; art differs from the adjacent male-labeled slot. Compare both before deciding whether geometry must differ."
+    }
+  }
+}

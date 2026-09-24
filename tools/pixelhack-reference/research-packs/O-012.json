@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:scale mail": {
+      "wikiTitle": "Scale mail",
+      "visualDescription": "A gray-olive torso armor has short sleeves, pale vertical scale rows on its front, a red belt, and split lower panels.",
+      "wikiDescription": "The wiki identifies scale mail as iron body armor built from overlapping scales.",
+      "modelBrief": "Make a wearable gray-olive scale cuirass with short shoulder plates and a red waist belt; keep the front rows legible.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Scale mail",
+          "url": "https://nethackwiki.com/wiki/Scale_mail"
+        }
+      ]
+    },
+    "object:studded leather armor": {
+      "wikiTitle": "Studded leather armor",
+      "visualDescription": "A dark red-brown leather suit has studded chest bands, pointed shoulders, and a short split skirt.",
+      "wikiDescription": "The wiki identifies studded leather armor as a leather body suit reinforced with studs.",
+      "modelBrief": "Build dark russet leather armor with small pale studs across the torso, broad shoulders, and skirt flaps.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Studded leather armor",
+          "url": "https://nethackwiki.com/wiki/Studded_leather_armor"
+        }
+      ]
+    },
+    "object:ring mail": {
+      "wikiTitle": "Ring mail",
+      "visualDescription": "A brown tunic has round pale metal rings down the torso and skirt, with olive sleeves and hem.",
+      "wikiDescription": "The wiki identifies ring mail as iron body armor with metal rings attached to a backing.",
+      "modelBrief": "Make a waist-length ring-mail tunic with visible circular ring rows and olive-brown cloth beneath.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Ring mail",
+          "url": "https://nethackwiki.com/wiki/Ring_mail"
+        }
+      ]
+    },
+    "object:crude ring mail / orcish ring mail": {
+      "wikiTitle": "Orcish ring mail",
+      "visualDescription": "A crude rust-brown tunic has dark ring rows, broad sleeves, and a split skirt.",
+      "wikiDescription": "The wiki says orcish ring mail is iron armor whose unidentified appearance is crude ring mail.",
+      "modelBrief": "Create a rough asymmetric ring-mail garment with dark rings over reddish leather or cloth; preserve the coarse look.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orcish ring mail",
+          "url": "https://nethackwiki.com/wiki/Orcish_ring_mail"
+        }
+      ]
+    },
+    "object:leather armor": {
+      "wikiTitle": "Leather armor",
+      "visualDescription": "A reddish-brown leather cuirass has wide shoulder flaps, dark waist bands, and a short lower skirt.",
+      "wikiDescription": "The wiki identifies leather armor as a leather body garment offering modest protection.",
+      "modelBrief": "Build a fitted leather torso piece with layered shoulder and waist panels in warm brown.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Leather armor",
+          "url": "https://nethackwiki.com/wiki/Leather_armor"
+        }
+      ]
+    },
+    "object:leather jacket": {
+      "wikiTitle": "Leather jacket",
+      "visualDescription": "A long brown jacket hangs open at the center, with sleeves and dark red seams near the hem.",
+      "wikiDescription": "The wiki describes the leather jacket as leather body armor rather than a cloak.",
+      "modelBrief": "Model a wearable knee-length leather jacket with defined sleeves, collar, and open front.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Leather jacket",
+          "url": "https://nethackwiki.com/wiki/Leather_jacket"
+        }
+      ]
+    },
+    "object:Hawaiian shirt": {
+      "wikiTitle": "Hawaiian shirt",
+      "visualDescription": "A short-sleeved red shirt has bold yellow-orange flowerlike patches and a loose straight hem.",
+      "wikiDescription": "The wiki identifies the Hawaiian shirt as a cloth shirt, mechanically close to the T-shirt.",
+      "modelBrief": "Make a loose bright red short-sleeved shirt with simplified yellow tropical motifs, without adding armor plates.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Hawaiian shirt",
+          "url": "https://nethackwiki.com/wiki/Hawaiian_shirt"
+        }
+      ]
+    },
+    "object:T-shirt": {
+      "wikiTitle": "T-shirt",
+      "visualDescription": "A cream T-shirt has dark brown sleeves and a central brown-red face or figure print.",
+      "wikiDescription": "The wiki identifies the T-shirt as a cloth shirt with a printed slogan or design.",
+      "modelBrief": "Build a plain wearable short-sleeved cream shirt with dark sleeves and a small pixel-style chest print.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: T-shirt",
+          "url": "https://nethackwiki.com/wiki/T-shirt"
+        }
+      ]
+    },
+    "object:mummy wrapping": {
+      "wikiTitle": "Mummy wrapping",
+      "visualDescription": "A pale beige strip of mummy wrapping lies in a tangled, looped heap with dark gaps.",
+      "wikiDescription": "The wiki identifies mummy wrapping as a cloth cloak often left by mummies and useful as an outer covering.",
+      "modelBrief": "Model a loose bundled strip of dirty linen with several curled folds, rather than a fully wrapped person.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Mummy wrapping",
+          "url": "https://nethackwiki.com/wiki/Mummy_wrapping"
+        }
+      ]
+    },
+    "object:faded pall / elven cloak": {
+      "wikiTitle": "Elven cloak",
+      "visualDescription": "A deep green pall hangs in a rounded triangular shape with a dark center and muted gold upper edge.",
+      "wikiDescription": "The wiki says the elven cloak is a cloth cloak appearing as a faded pall when unidentified.",
+      "modelBrief": "Make a softly draped green cloak with faint olive trim and a deep central opening.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Elven cloak",
+          "url": "https://nethackwiki.com/wiki/Elven_cloak"
+        }
+      ]
+    },
+    "object:coarse mantelet / orcish cloak": {
+      "wikiTitle": "Orcish cloak",
+      "visualDescription": "A gray-blue coarse cloak has broad rounded shoulders, dark central gap, and uneven lower hem.",
+      "wikiDescription": "The wiki says the orcish cloak appears as a coarse mantelet when unidentified.",
+      "modelBrief": "Build a thick rough shoulder cloak in blue-gray cloth, with ragged edges and an open front.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Orcish cloak",
+          "url": "https://nethackwiki.com/wiki/Orcish_cloak"
+        }
+      ]
+    },
+    "object:hooded cloak / dwarvish cloak": {
+      "wikiTitle": "Dwarvish cloak",
+      "visualDescription": "A golden-brown hooded cloak has a rounded hood, dark face opening, and two long draped sides.",
+      "wikiDescription": "The wiki says the dwarvish cloak appears as a hooded cloak when unidentified.",
+      "modelBrief": "Make a compact ochre cloak with deep hood and heavy front drapes; keep the face opening empty.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dwarvish cloak",
+          "url": "https://nethackwiki.com/wiki/Dwarvish_cloak"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}

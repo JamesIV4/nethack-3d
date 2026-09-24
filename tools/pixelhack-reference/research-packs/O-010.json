@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "subjects": {
+    "object:black dragon scale mail": {
+      "wikiTitle": "Black dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in near-black charcoal with muted gray facets. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki classifies black dragon scale mail as dragon-hide body armor linked to the corresponding dragon color. The article does not determine the cut or pixel palette of this sprite.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use near-black charcoal with muted gray facets. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: black dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/black_dragon_scale_mail"
+        }
+      ]
+    },
+    "object:blue dragon scale mail": {
+      "wikiTitle": "Blue dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in royal blue and violet. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki classifies blue dragon scale mail as dragon-hide body armor linked to the corresponding dragon color. The article does not determine the cut or pixel palette of this sprite.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use royal blue and violet. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: blue dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/blue_dragon_scale_mail"
+        }
+      ]
+    },
+    "object:green dragon scale mail": {
+      "wikiTitle": "Green dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in deep green with lime highlights. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki classifies green dragon scale mail as dragon-hide body armor linked to the corresponding dragon color. The article does not determine the cut or pixel palette of this sprite.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use deep green with lime highlights. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: green dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/green_dragon_scale_mail"
+        }
+      ]
+    },
+    "object:yellow dragon scale mail": {
+      "wikiTitle": "Yellow dragon scale mail",
+      "visualDescription": "PixelHack shows a front-facing dragon-hide armor torso with broad shoulder scales, a tapered waist, and layered central plates in golden yellow and pale cream. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki classifies yellow dragon scale mail as dragon-hide body armor linked to the corresponding dragon color. The article does not determine the cut or pixel palette of this sprite.",
+      "modelBrief": "Build a compact scaled cuirass with broad raised shoulders and central rows of layered plates; use golden yellow and pale cream. Reuse the common dragon-mail shape across color variants, preserving this tile's distinct highlights.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: yellow dragon scale mail",
+          "url": "https://nethackwiki.com/wiki/yellow_dragon_scale_mail"
+        }
+      ]
+    },
+    "object:gray dragon scales": {
+      "wikiTitle": "Gray dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in olive gray and beige, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki treats gray dragon scales as dragon-hide armor shed by the matching dragon and related to gray dragon scale mail. The loose-scaled form here comes from the PixelHack tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in olive gray and beige, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: gray dragon scales",
+          "url": "https://nethackwiki.com/wiki/gray_dragon_scales"
+        }
+      ]
+    },
+    "object:gold dragon scales": {
+      "wikiTitle": "Gold dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in warm gold and amber, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki treats gold dragon scales as dragon-hide armor shed by the matching dragon and related to gold dragon scale mail. The loose-scaled form here comes from the PixelHack tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in warm gold and amber, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: gold dragon scales",
+          "url": "https://nethackwiki.com/wiki/gold_dragon_scales"
+        }
+      ]
+    },
+    "object:silver dragon scales": {
+      "wikiTitle": "Silver dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in pale silver and blue-gray, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki treats silver dragon scales as dragon-hide armor shed by the matching dragon and related to silver dragon scale mail. The loose-scaled form here comes from the PixelHack tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in pale silver and blue-gray, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: silver dragon scales",
+          "url": "https://nethackwiki.com/wiki/silver_dragon_scales"
+        }
+      ]
+    },
+    "object:shimmering dragon scales": {
+      "wikiTitle": "Dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in slate blue-gray with bright cyan and gold flecks, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki describes dragon scales as a dragon-hide armor family, while its shimmering-scales entry points to deferred or variant material. This NetHack 5 atlas nevertheless has a separate shimmering-scale tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in slate blue-gray with bright cyan and gold flecks, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: Dragon scales",
+          "url": "https://nethackwiki.com/wiki/Dragon_scales"
+        }
+      ]
+    },
+    "object:red dragon scales": {
+      "wikiTitle": "Red dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in deep red and scarlet, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki treats red dragon scales as dragon-hide armor shed by the matching dragon and related to red dragon scale mail. The loose-scaled form here comes from the PixelHack tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in deep red and scarlet, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: red dragon scales",
+          "url": "https://nethackwiki.com/wiki/red_dragon_scales"
+        }
+      ]
+    },
+    "object:white dragon scales": {
+      "wikiTitle": "White dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in ivory and pale beige, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki treats white dragon scales as dragon-hide armor shed by the matching dragon and related to white dragon scale mail. The loose-scaled form here comes from the PixelHack tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in ivory and pale beige, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: white dragon scales",
+          "url": "https://nethackwiki.com/wiki/white_dragon_scales"
+        }
+      ]
+    },
+    "object:orange dragon scales": {
+      "wikiTitle": "Orange dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in coral orange and brick red, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki treats orange dragon scales as dragon-hide armor shed by the matching dragon and related to orange dragon scale mail. The loose-scaled form here comes from the PixelHack tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in coral orange and brick red, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: orange dragon scales",
+          "url": "https://nethackwiki.com/wiki/orange_dragon_scales"
+        }
+      ]
+    },
+    "object:black dragon scales": {
+      "wikiTitle": "Black dragon scales",
+      "visualDescription": "PixelHack shows a low irregular heap of overlapping pointed dragon scales in black and charcoal, without sleeves or a fitted chest shape. The teal pattern behind it is background.",
+      "wikiDescription": "The wiki treats black dragon scales as dragon-hide armor shed by the matching dragon and related to black dragon scale mail. The loose-scaled form here comes from the PixelHack tile.",
+      "modelBrief": "Build a small loose cluster of overlapping thick pointed scales in black and charcoal, with no torso frame. Keep it visibly separate from the fitted scale-mail cuirass of the same color.",
+      "sources": [
+        {
+          "label": "NetHack Wiki: black dragon scales",
+          "url": "https://nethackwiki.com/wiki/black_dragon_scales"
+        }
+      ]
+    }
+  },
+  "tiles": {}
+}
