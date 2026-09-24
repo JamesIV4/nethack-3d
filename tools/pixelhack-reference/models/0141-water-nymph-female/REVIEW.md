@@ -1,5 +1,8 @@
 ﻿# Water nymph, female - tile 141
 
+For the full reusable workflow, failure diagnoses and authoring commands, see
+[Humanoid modeling and animation](../../HUMANOID-MODELING.md).
+
 An icy-blue humanoid with an anatomical face, inset eyes, a continuous sea-silk
 dress, sea-glass clasp, and separate layered hair locks. The arms rest low and
 asymmetrically, with one hand beside the hip and the other lower and closer to
@@ -45,10 +48,17 @@ back out to the side. Both feet brace throughout. Explicit knee
 poles prevent leg flipping. Motion is baked at 60 Hz; gameplay integration was
 not performed.
 
-The export contains 15,342 triangles, 23 bones, one mesh and one material. The
+The export contains 15,726 triangles, 23 bones, one mesh and one material. The
 16,000-triangle budget accommodates the full body and layered scalp/back hair.
 The 1.04-tile footprint accommodates the lowered arms at roughly two units tall.
 The blend file retains individually editable parts and three editable actions.
+
+Both eyes have socket-fitted upper/lower lids with a `Blink` morph. Their closed
+surfaces follow the curved eyeballs and anchor at the socket rims so profile
+views are covered too. Blink remains outside the body clips; both reference
+viewers schedule it independently per instance, including in Rest. The saved
+blend exposes the shape key for authoring, while random playback belongs to the
+shared viewer controller.
 
 Validation covers connected body/dress/cap topology, normalized weights, loop
 seams, leg connections, planted attack feet, early grab motion, finger closure

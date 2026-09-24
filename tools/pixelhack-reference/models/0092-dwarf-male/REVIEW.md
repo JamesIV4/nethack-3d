@@ -1,5 +1,12 @@
 # Tile 92: dwarf, male
 
+**Rejected by the user. Do not use this model as a reference for anything.**
+This includes appearance, anatomy, construction, rigging and animation. The
+technical checks recorded below do not establish acceptable model quality.
+
+Use the nymph's [documented modeling lessons](../../HUMANOID-MODELING.md) instead.
+The remaining notes describe the existing artifact, not an approved example.
+
 The 32-pixel source shows a stocky red-clad dwarf beneath a wide blue-gray
 horned helmet, with a long pale beard, a curved steel pick, and a bright red
 rounded form interpreted here as a shield. The pick's sharp end points forward
@@ -11,7 +18,7 @@ confirms the dwarf's humanoid build and that pick-axes and roundshields are
 possible equipment. Tile 93 has identical source pixels but is reserved for a
 separate female humanoid model.
 
-## Visual review
+## Historical visual observations (not acceptance)
 
 - The horned helmet, pale beard, red clothing, raised pick, and red shield remain
   identifiable in the three-quarter 32, 64, and 128-pixel previews.
@@ -28,8 +35,11 @@ separate female humanoid model.
 - Attack starts on the first moving frame, chops down with the forward-facing
   pick, reaches impact at 0.133 seconds, keeps both boots planted, and returns
   exactly to the Idle start pose.
-- Export validation passed: 5,342 triangles, 15 bones, one material, normalized
+- Export validation passed: 5,726 triangles, 15 bones, one material, normalized
   skin weights, finite geometry, loop seams, foot contact, joint attachment,
   gait direction, pick orientation, and pick impact reach. See `validation.json`.
+- Socket-fitted lids provide an unkeyed `Blink` morph. Both reference viewers
+  schedule blinking independently of Idle, Walk and Attack; export checks cover
+  the open default, eyelid deformation and independence from clip transitions.
 - The exported GLB was inspected in the standalone viewer. Gameplay integration
   was not performed.

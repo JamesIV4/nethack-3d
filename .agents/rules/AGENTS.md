@@ -90,6 +90,8 @@ Start here before making changes.
 ## PixelHack 3D Asset Work
 
 - For PixelHack modeling tasks, read [the asset agent guide](../../tools/pixelhack-reference/AGENT-GUIDE.md) before creating geometry. Follow its requirements for pose, smooth shading, animation, reusable Python workflows, and validation suited to the asset.
+- For humanoids, also read [the humanoid modeling lessons](../../tools/pixelhack-reference/HUMANOID-MODELING.md) before creating or revising geometry. They cover the nymph's anatomical cage, complete body, connected clothing, layered hair, hand rig, natural motion, independent blinking, and failed approaches to avoid.
+- The existing dwarf model is explicitly rejected by the user. Do not use it as a reference for appearance, anatomy, modeling, rigging, animation, or quality; use the nymph's documented lessons instead.
 - Creature assets require Idle, Walk, and Attack. Attacks need immediate strong movement, an explicit bite/sting/weapon action, direction suited to the target, and short recovery.
 - Consult [the implementation reference](../../tools/pixelhack-reference/MODELING.md) only for details needed by the current asset.
 

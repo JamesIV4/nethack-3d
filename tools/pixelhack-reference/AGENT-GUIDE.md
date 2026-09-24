@@ -3,6 +3,10 @@
 Complete one requested asset, including your own visual corrections and export
 checks. Follow the [repo rules](../../.agents/rules/AGENTS.md). Read implementation
 details in [MODELING.md](MODELING.md) only when needed.
+For humanoids, read [HUMANOID-MODELING.md](HUMANOID-MODELING.md) before authoring.
+It records the reusable methods and visual failures from the nymph.
+The existing dwarf model is rejected and must not be used as a reference for
+any aspect of future model work, regardless of its technical validation results.
 
 ## Reference and appearance
 
@@ -43,10 +47,15 @@ details in [MODELING.md](MODELING.md) only when needed.
   [rig](../../scripts/tilesets/pixelhack_rig.py) helpers selectively. Set palettes
   locally. Prefer compact vertex colors and standard PBR materials; allocate
   geometry to silhouette and deformation. Keep source parts editable.
-- For visible humanoid skin, favor a continuous weighted surface across the
-  torso and limbs. Fuse editable source parts when useful, then repaint and
-  assign smooth weights on the new topology. Inspect elbows, knees, shoulders,
-  and hips in motion; a joined mesh alone does not guarantee good deformation.
+- For visible humanoid skin, prefer an anatomical cage with usable face and
+  joint loops. Keep the entire body under clothing; do not delete skin to hide
+  intersections. Fuse source parts when appropriate for a blockout, then repaint
+  and assign smooth weights. Inspect elbows, knees, shoulders and hips in motion;
+  a joined or manifold mesh alone does not guarantee good deformation.
+- Make a continuous garment connected through its bodice, waist and skirt;
+  joining overlapping panels is not equivalent. Fit clearance and limb weights
+  to prevent clipping. Keep hair as separate layered locks over a fitted scalp
+  underlay, with full crown/back coverage and scalp-tangent fringe profiles.
 - Check tooling defaults: palettes, anatomy, material count, grounded contact,
   clip duration, movement limits, and viewer captions must suit the asset.
   Static objects and flying or transparent subjects require appropriate
@@ -69,6 +78,14 @@ cleanly to Idle.
 - For humanoids, use one complete left/right gait cycle over that tile: the first
   step accompanies travel halfway to the next tile, and the second finishes at
   its center. Keep the planted foot moving backward relative to forward travel.
+- Use character-specific resting poses and articulation. For the nymph, low
+  asymmetric arms, delayed wrist movement, and a dart/close/pullback snatch were
+  preferred over raised mirrored arms or a generic torso/head warp. Inspect
+  actual finger closure and thumb opposition in close-up.
+- All humanoids must declare `humanoid: true`, provide the shared unkeyed `Blink`
+  morph, and use independent per-instance blink timing. Fit lids to the eye/socket
+  contour and curved eyeball surface. Inspect open, half-closed and closed states
+  from front, three-quarter and side; do not bake blinks into body clips.
 - During a grounded creature's Attack, keep an anatomy-appropriate support set
   in contact with the ground unless the attack is deliberately a full jump.
   For the soldier ant, the hind pair braces while the front and middle legs
@@ -100,6 +117,8 @@ Preview: `http://127.0.0.1:5175/tools/pixelhack-reference/model.html?tile=2`.
 Use the requested ID. The launcher generates assets, validates GLB, and makes
 `review.png`. For focused corrections, add `--views hero,side --resolution 512`;
 finish with a default run for four current views.
+For humanoids, include the back explicitly with
+`--views hero,side,front,top,back` and inspect hand/eyelid close-ups as well.
 
 - Inspect actual images: judge character identity and the quality of the 3D
   design first, then surfaces, palette, and defining features at 32/64/128

@@ -1,5 +1,9 @@
 # Human anatomy source
 
+For the complete workflow and the lessons from revising the nymph, read
+[Humanoid modeling and animation](../../../../tools/pixelhack-reference/HUMANOID-MODELING.md).
+This file records the anatomical source and its preparation.
+
 `stylized-female-cc0.json` is the local, reproducible control mesh used by the
 water nymph generator. It contains vertices and polygon indices only.
 

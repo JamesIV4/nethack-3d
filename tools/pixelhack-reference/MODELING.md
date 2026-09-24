@@ -2,6 +2,9 @@
 
 For a new asset assignment, start with [the agent guide](AGENT-GUIDE.md).
 This document is the implementation reference and ant baseline record.
+For humanoids, also read [Humanoid modeling and animation](HUMANOID-MODELING.md).
+That guide explains the nymph's successful techniques, rejected alternatives,
+hand/eyelid debugging, and current reusable ownership boundaries.
 
 The first asset is **giant ant**, source tiles **0 and 1**. Their source images
 are identical, so they share a mesh and rig. The model, its Python source, and
@@ -50,10 +53,20 @@ in a separate Blender file or transfer them to the source recipe first.
 | `scripts/tilesets/models/giant_ant.py` | Ant proportions, parts, skeleton bindings |
 | `scripts/tilesets/pixelhack_blender.py` | Palette, closed meshes, framing, lighting, GLB export |
 | `scripts/tilesets/pixelhack_rig.py` | Explicit skin weights, skeleton, procedural animation baking |
+| `scripts/tilesets/pixelhack_face.py` | Eye/socket contour fitting and independent Blink shape keys |
+| `blink-controller.mjs` | Per-instance randomized blink scheduling, independent of body clips |
 | `scripts/tilesets/pixelhack-model.py` | Registry lookup and Blender orchestration |
 | `scripts/tilesets/model-pixelhack.mjs` | One-command launcher, validation and comparison |
 | `scripts/tilesets/verify-pixelhack-model.mjs` | Actual exported skin/clip validation using Three.js |
 | `scripts/tilesets/review-pixelhack-model.py` | Exact tile pixels, four renders, 32/64/128-pixel checks |
+| `scripts/tilesets/review-pixelhack-motion.py` | Fixed-camera, time-based samples of exported clips |
+
+Humanoid entries declare `humanoid: true`; the generator requires a `Blink`
+shape key. Export preserves its target and open default value while excluding
+morph animation from the body clips. Both reference viewers apply the shared
+blink controller after body updates and dispose it with the model. See the
+[eye and export lessons](HUMANOID-MODELING.md#eyes-and-independent-random-blinking)
+before modifying normalization, joining, eyelids or playback ownership.
 
 Generated baseline files live in `models/0000-giant-ant/`:
 
