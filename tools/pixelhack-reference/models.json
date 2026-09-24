@@ -66,6 +66,7 @@
     },
     {
       "id": "dwarf-male",
+      "humanoid": true,
       "title": "Dwarf, male",
       "tileIds": [92],
       "directory": "tools/pixelhack-reference/models/0092-dwarf-male",
@@ -87,24 +88,25 @@
     },
     {
       "id": "water-nymph-female",
+      "humanoid": true,
       "title": "Water nymph, female",
       "tileIds": [141],
       "directory": "tools/pixelhack-reference/models/0141-water-nymph-female",
       "script": "scripts/tilesets/models/water_nymph_female.py",
       "triangleBudget": 16000,
-      "footprint": 0.84,
+      "footprint": 1.04,
       "reviewSmallView": "hero",
       "viewer": {
         "badge": "MODEL 005",
         "summary": "An icy water nymph with flowing blue hair, a fitted sea-silk dress, and a sea-glass clasp.",
         "visualHeading": "A calm water spirit ready to steal.",
         "visualDescription": "Swept blue hair covers the crown and back and frames an anatomical face. One continuous turquoise dress flows from the neckline into an asymmetric hem.",
-        "motionDescription": "Idle breathes gently over four seconds, with delayed hand and hair movement. Walk combines hip-shoulder counter-motion, grounded heel-to-toe steps, and a smooth swing over a half-second tile move. Attack leads with the torso, reaches in an arc, closes the fingers at impact, and settles back into the ready stance."
+        "motionDescription": "Idle keeps the arms low and asymmetric: one hand floats beside the hip while the other rests lower by the skirt. Each elbow leads its wrist with different timing over the breathing cycle. Walk adds hip-shoulder counter-motion and grounded heel-to-toe steps. Attack darts one hand forward, curls the fingers at impact, quickly snatches inward, then releases back into the relaxed pose."
       },
       "animations": {
         "Idle": { "loop": true, "maxDisplacement": 0.08 },
         "Walk": { "loop": true, "maxDisplacement": 0.62, "travelSpeedTilesPerSecond": 2, "strideCycles": 1 },
-        "Attack": { "loop": false, "hitTime": 0.11666666666666667, "maxDisplacement": 0.42 }
+        "Attack": { "loop": false, "hitTime": 0.11666666666666667, "maxDisplacement": 0.84 }
       }
     }
   ]

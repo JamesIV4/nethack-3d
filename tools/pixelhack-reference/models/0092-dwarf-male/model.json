@@ -8,8 +8,8 @@
   "sourceAtlasSha256": "4a9327f7164afd28962d9a713e581cf28ae6b85467bc6d31981a681b1267170d",
   "sourceScript": "scripts/tilesets/models/dwarf_male.py",
   "blenderVersion": "5.1.2",
-  "parts": 83,
-  "triangles": 5342,
+  "parts": 87,
+  "triangles": 5726,
   "materials": 1,
   "boundsBlender": {
     "min": [
@@ -28,8 +28,14 @@
     0.48117756843566895,
     0.9186985492706299
   ],
-  "glbBytes": 250024,
+  "glbBytes": 283688,
   "bones": 15,
+  "humanoid": true,
+  "proceduralAnimations": {
+    "blink": {
+      "morphTarget": "Blink"
+    }
+  },
   "animations": [
     "Attack",
     "Idle",

@@ -6,6 +6,7 @@ import bpy
 from mathutils import Matrix, Quaternion, Vector
 
 import pixelhack_blender as ph
+from pixelhack_face import blink_lids
 from pixelhack_rig import bind, create_rig, envelope, set_bone_segment, solve_knee
 
 
@@ -171,10 +172,13 @@ def build():
     part(rounded(ph.ellipsoid("Face | nose", (0, -.41, 1.70),
                               (.085, .13, .105), "skin", 1)), "Head")
     for sign, side in ((-1, "L"), (1, "R")):
-        part(rounded(ph.ellipsoid(f"Eye {side} | warm socket",
+        socket=part(rounded(ph.ellipsoid(f"Eye {side} | warm socket",
                      (sign * .15, -.392, 1.78), (.064, .021, .033), "skin", 1)), "Head")
-        part(rounded(ph.ellipsoid(f"Eye {side} | dark pupil",
+        pupil=part(rounded(ph.ellipsoid(f"Eye {side} | dark pupil",
                      (sign * .15, -.417, 1.78), (.018, .014, .018), "eye", 1)), "Head")
+        for lid in blink_lids(f'Eyelid {side}',(sign*.15,-.417,1.78),(.018,.014,.018),'skin',
+                              eye=pupil,socket=socket):
+            part(lid,'Head')
         part(ph.tube(f"Brow {side} | stern ridge", [
             (sign * .065, -.414, 1.818), (sign * .155, -.425, 1.827),
             (sign * .255, -.394, 1.84)], [.025, .03, .014], sides=8,

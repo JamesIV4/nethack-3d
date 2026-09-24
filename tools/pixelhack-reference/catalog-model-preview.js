@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { createBlinkController } from './blink-controller.mjs';
 
 const transitionSeconds = .12;
 
@@ -148,6 +149,8 @@ export class ModelPreview {
 
     this.steps = animationSequence(gltf.animations);
     this.mixer = new THREE.AnimationMixer(this.model);
+    this.blink = createBlinkController(this.model);
+    if (entry.humanoid && !this.blink.supported) throw new Error('Humanoid model is missing Blink eyelids');
     this.stepIndex = 0;
     if (this.steps.length) this.playStep();
     else {
@@ -189,7 +192,8 @@ export class ModelPreview {
 
   render(time) {
     if (this.disposed) return;
-    const delta = this.lastFrame ? Math.min((time - this.lastFrame) / 1000, .05) : 0;
+    const elapsed = this.lastFrame ? (time - this.lastFrame) / 1000 : 0;
+    const delta = Math.min(elapsed, .05);
     this.lastFrame = time;
     if (this.visible && !document.hidden) {
       if (this.steps.length) {
@@ -200,6 +204,7 @@ export class ModelPreview {
           this.playStep();
         }
       }
+      this.blink.update(elapsed);
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
     }
@@ -213,6 +218,7 @@ export class ModelPreview {
     this.resizeObserver?.disconnect();
     this.intersectionObserver?.disconnect();
     this.mixer?.stopAllAction();
+    this.blink?.dispose();
     this.controls?.dispose();
     if (this.model) disposeModel(this.model);
     this.renderer?.dispose();

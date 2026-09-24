@@ -1,7 +1,7 @@
 {
   "meshCount": 1,
   "materialCount": 1,
-  "triangles": 5342,
+  "triangles": 5726,
   "bones": 15,
   "allVerticesWeighted": true,
   "restMinimumY": -5.754008334439321e-8,
@@ -52,6 +52,11 @@
       "stanceFootSpeed": 1.674342046777368,
       "swingFootHeight": 0.08309396857484906
     }
+  },
+  "blink": {
+    "morphTarget": "Blink",
+    "eyelidVertices": 260,
+    "independentOfClips": true
   },
   "connectedJointsChecked": 4,
   "weaponVerticesChecked": 170,

@@ -15,7 +15,7 @@
     "pixelhack:reference:generate": "node scripts/tilesets/generate-pixelhack-reference.mjs",
     "pixelhack:reference:analyze": "py scripts/tilesets/analyze-pixelhack-art.py",
     "pixelhack:research:compile": "node scripts/tilesets/compile-pixelhack-research.mjs",
-    "pixelhack:reference:check": "node scripts/tilesets/generate-pixelhack-reference.mjs --check && node scripts/tilesets/compile-pixelhack-research.mjs --check && node --test scripts/tilesets/pixelhack-reference.test.mjs",
+    "pixelhack:reference:check": "node scripts/tilesets/generate-pixelhack-reference.mjs --check && node scripts/tilesets/compile-pixelhack-research.mjs --check && node --test scripts/tilesets/pixelhack-reference.test.mjs scripts/tilesets/blink-controller.test.mjs",
     "quest:stage": "node scripts/quest/stage-assets.mjs",
     "quest:sync": "npm run build:quest && npm run quest:stage",
     "quest:apk": "node scripts/quest/build-apk.mjs --legacy",

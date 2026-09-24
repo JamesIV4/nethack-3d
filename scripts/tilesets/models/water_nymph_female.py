@@ -13,12 +13,16 @@ from mathutils import Matrix, Quaternion, Vector
 from mathutils.bvhtree import BVHTree
 
 import pixelhack_blender as ph
+from pixelhack_face import blink_lids
 from pixelhack_rig import bind, create_rig, envelope, set_bone_segment, solve_knee
 
 PART_BONES = {}
 ARM_POINTS = {}
 LEG_POINTS = {}
 GRASP_POINTS = {}
+CURL_POINTS = {}
+THUMB_POINTS = {}
+THUMB_AXIS = Vector((1,0,0))
 
 
 def part(obj, bone):
@@ -43,7 +47,7 @@ def paint(obj, shade):
     return obj
 
 
-def curl(name, controls, radii, color, bone, sides=11):
+def curl(name, controls, radii, color, bone, sides=11, scalp=False):
     """A smooth capped lock of hair or water mark, tapered through its bend."""
     controls = [Vector(point) for point in controls]
     points = []
@@ -61,6 +65,26 @@ def curl(name, controls, radii, color, bone, sides=11):
     points.append(controls[-1])
     widths.append(radii[-1])
     flatness = .42 if name.startswith("Hair ") else 1
+    if scalp:
+        # Keep the wide axis tangent to the scalp. A world-aligned profile
+        # rotates that width upright on the crown and produces two tall fins.
+        vertices, faces = [], []
+        for i,(point,width) in enumerate(zip(points,widths)):
+            tangent = (points[min(i+1,len(points)-1)]-points[max(0,i-1)]).normalized()
+            outward = (point-Vector((0,-.015,1.46))).normalized()
+            lateral = tangent.cross(outward).normalized()
+            depth = tangent.cross(lateral).normalized()
+            for j in range(sides):
+                angle=math.tau*j/sides
+                vertices.append(point+width*math.cos(angle)*lateral+
+                                width*.25*math.sin(angle)*depth)
+        for row in range(len(points)-1):
+            for j in range(sides):
+                a=row*sides+j; b=row*sides+(j+1)%sides
+                faces.append((a,b,b+sides,a+sides))
+        faces.extend((tuple(range(sides-1,-1,-1)),
+                      tuple((len(points)-1)*sides+j for j in range(sides))))
+        return part(rounded(ph.mesh(name,vertices,faces,color)),bone)
     return part(ph.swept_ellipse(name, points, widths,
                 [max(.003, width * flatness) for width in widths],
                 sides=sides, color=color), bone)
@@ -95,10 +119,15 @@ def anatomy_weights(p):
         lower = 1 - smoothstep(1.00, 1.10, z)
         hand = 1 - smoothstep(.835, .885, z)
         grasp = 1 - smoothstep(.785, .815, z)
-        return {'Body': 1 - arm, f'Arm.{side}.upper': arm * (1 - lower),
+        result = {'Body': 1 - arm, f'Arm.{side}.upper': arm * (1 - lower),
                 f'Arm.{side}.lower': arm * lower * (1 - hand),
                 f'Hand.{side}': arm * lower * hand * (1 - grasp),
                 f'Grasp.{side}': arm * lower * hand * grasp}
+        if side == 'R':
+            distal = 1-smoothstep(.758,.785,z)
+            result['Curl.R'] = result['Grasp.R'] * distal
+            result['Grasp.R'] *= 1-distal
+        return result
     if z < .94:
         leg = 1 - smoothstep(.77, .94, z)
         lower = 1 - smoothstep(.435, .525, z)
@@ -116,10 +145,13 @@ def segment_map(start, end, target_start, target_end):
 
 
 def build():
+    global THUMB_AXIS
     PART_BONES.clear()
     ARM_POINTS.clear()
     LEG_POINTS.clear()
     GRASP_POINTS.clear()
+    CURL_POINTS.clear()
+    THUMB_POINTS.clear()
     ph.VIEWS['hero'] = (2.1, -5, 1.25)
     ph.VIEWS['front'] = (0, -5, .35)
     ph.PALETTE.clear()
@@ -141,20 +173,38 @@ def build():
         elbow = (sign * .255, -.005, 1.047)
         wrist = (sign * .333, -.022, .862)
         new_shoulder = (sign * .15, 0, 1.217)
+        # Low, unequal arm arcs keep the hands outside the silhouette without
+        # a horizontal presentation pose: one hand floats by the hip, the other
+        # hangs a little lower and closer to the skirt.
+        # R is positive mesh X (the character's left, viewer's right).
         if side == 'R':
-            new_elbow = (.265, -.018, 1.035)
-            direction = Vector((-.09, -.13, .13)).normalized()
+            new_elbow = (.235, -.018, 1.022)
+            direction = Vector((.14, -.07, -.09)).normalized()
         else:
-            new_elbow = (-.225, -.015, 1.016)
-            direction = Vector((-.02, -.025, -.20)).normalized()
+            new_elbow = (-.205, .005, 1.009)
+            direction = Vector((-.065, -.02, -.19)).normalized()
         new_wrist = Vector(new_elbow) + direction * (Vector(wrist) - Vector(elbow)).length
         ARM_POINTS[side] = (new_shoulder, new_elbow, new_wrist)
         transforms[f'Arm.{side}.upper'] = segment_map(shoulder, elbow, new_shoulder, new_elbow)
         lower = segment_map(elbow, wrist, new_elbow, new_wrist)
         transforms[f'Arm.{side}.lower'] = lower
-        transforms[f'Hand.{side}'] = transforms[f'Grasp.{side}'] = lower
-        GRASP_POINTS[side] = (lower @ Vector((sign * .346, -.032, .803)),
-                              lower @ Vector((sign * .350, -.037, .754)))
+        wrist_turn = (Matrix.Translation(new_wrist) @
+                      Quaternion((0,1,0),-.12 if side == 'R' else .24).to_matrix().to_4x4() @
+                      Matrix.Translation(-new_wrist) @ lower)
+        knuckles = wrist_turn @ Vector((sign * .346, -.032, .803))
+        fingers = (Matrix.Translation(knuckles) @
+                   Quaternion((0,1,0),.26 if side == 'R' else -.23).to_matrix().to_4x4() @
+                   Matrix.Translation(-knuckles) @ wrist_turn)
+        transforms[f'Hand.{side}'] = wrist_turn
+        transforms[f'Grasp.{side}'] = fingers
+        if side == 'R':
+            transforms['Curl.R'] = fingers
+            CURL_POINTS['R'] = fingers @ Vector((.348,-.035,.776))
+            transforms['Thumb.R'] = wrist_turn
+            THUMB_POINTS['R'] = (wrist_turn @ Vector((.329,-.048,.844)),
+                                  wrist_turn @ Vector((.318,-.079,.789)))
+            THUMB_AXIS = (wrist_turn.to_3x3() @ Vector((1,0,0))).normalized()
+        GRASP_POINTS[side] = (knuckles, fingers @ Vector((sign * .350, -.037, .754)))
         hip, knee, ankle = (sign * .083, .015, .84), (sign * .073, -.035, .475), (sign * .075, .008, .095)
         new_hip, new_knee, new_ankle = (sign * .083, .015, .822), (sign * .091, -.075, .468), (sign * .107, .008, .095)
         toe = (sign * .107, -.12, .035)
@@ -162,10 +212,35 @@ def build():
         transforms[f'Leg.{side}.upper'] = segment_map(hip, knee, new_hip, new_knee)
         transforms[f'Leg.{side}.lower'] = segment_map(knee, ankle, new_knee, new_ankle)
         transforms[f'Foot.{side}'] = Matrix.Translation(Vector(new_ankle) - Vector(ankle))
+    # Below this knuckle plane the thumb is a separate connected branch of the
+    # source cage. Follow topology so both sides of its surface receive the
+    # same joint, then blend two edge rings into the palm at the thumb root.
+    adjacency=[set() for _ in source['vertices']]
+    for face in source['faces']:
+        for a,b in zip(face,face[1:]+face[:1]):
+            adjacency[a].add(b); adjacency[b].add(a)
+    candidates={i for i,p in enumerate(source['vertices']) if p[0]>.29 and p[2]<.82}
+    seed=min(candidates,key=lambda i:source['vertices'][i][1])
+    branch={seed}; pending=[seed]
+    while pending:
+        fresh=(adjacency[pending.pop()] & candidates)-branch
+        branch.update(fresh); pending.extend(fresh)
+    thumb_weights={i:1 for i in branch}
+    frontier=branch
+    for amount in (.6,.2):
+        frontier={j for i in frontier for j in adjacency[i] if j not in thumb_weights}
+        thumb_weights.update({i:amount for i in frontier})
     weights = []
     for vertex in body.data.vertices:
         p = vertex.co.copy()
         w = {n: v for n, v in anatomy_weights(p).items() if v > .00001}
+        thumb=thumb_weights.get(vertex.index,0)
+        if thumb:
+            w['Thumb.R']=0
+            for name in ('Hand.R','Grasp.R','Curl.R'):
+                amount=w.get(name,0)*thumb
+                w['Thumb.R']+=amount
+                if name in w: w[name]-=amount
         total = sum(w.values())
         w = {n: v / total for n, v in w.items()}
         weights.append(w)
@@ -277,7 +352,10 @@ def build():
     # Small spherical eyes are seated inside the existing eyelid loops.
     for sign, side in ((-1, 'L'), (1, 'R')):
         eye = (sign * .04449, -.0804, 1.4436)
-        part(rounded(ph.ellipsoid(f'Eye {side} | inset sclera', eye, (.036,.036,.036), 'sclera', 2)), 'Head')
+        sclera=part(rounded(ph.ellipsoid(f'Eye {side} | inset sclera', eye, (.036,.036,.036), 'sclera', 2)), 'Head')
+        for lid in blink_lids(f'Eyelid {side}',eye,(.036,.036,.036),'skin',
+                              eye=sclera,socket=body,front_margin=.008):
+            part(lid,'Head')
         part(rounded(ph.ellipsoid(f'Eye {side} | teal iris', (eye[0], -.1152, eye[2]), (.015,.004,.018), 'iris', 2)), 'Head')
         part(rounded(ph.ellipsoid(f'Eye {side} | pupil', (eye[0], -.119, eye[2]), (.007,.002,.011), 'pupil', 1)), 'Head')
         part(rounded(ph.ellipsoid(f'Eye {side} | catchlight', (eye[0]-.004, -.121, eye[2]+.006), (.003,.001,.003), 'gem', 1)), 'Head')
@@ -288,6 +366,11 @@ def build():
     # See data/README.md for the guide-curve and profile references.
     columns, cap_rows = 32, 6
     center = Vector((0,-.015,1.46))
+    def scalp_extent(angle):
+        # Recede above the forehead; the swept fringe defines the visible edge
+        # instead of exposing a straight under-cap band across the brow.
+        front=max(0,-math.sin(angle))
+        return 1.55-.72*front**3-.05*max(0,math.sin(angle))
     def scalp_point(angle, theta):
         direction = Vector((math.sin(theta)*math.cos(angle),
                             math.sin(theta)*math.sin(angle), math.cos(theta)))
@@ -300,7 +383,7 @@ def build():
     for row in range(1,cap_rows+1):
         for col in range(columns):
             angle=math.tau*col/columns
-            extent=1.55-.5*max(0,-math.sin(angle))-.05*max(0,math.sin(angle))
+            extent=scalp_extent(angle)
             cap_vertices.append(scalp_point(angle,extent*row/cap_rows))
     for col in range(columns):
         cap_faces.append((0,1+col,1+(col+1)%columns))
@@ -337,7 +420,7 @@ def build():
             for col in range(across):
                 u = col / (across - 1)
                 angle = math.tau * index / 10 + (u - .5) * .76 + .08 * math.sin(t * math.pi)
-                extent = 1.55-.5*max(0,-math.sin(angle))-.05*max(0,math.sin(angle))
+                extent = scalp_extent(angle)
                 theta = .025 + (extent - .025) * t
                 p = scalp_point(angle,theta)
                 normal = (p-center).normalized()
@@ -387,13 +470,11 @@ def build():
             'hair_light' if index==1 else 'hair','Hair.R',8)
         PART_BONES[lock.name]=[hair_weights(v.co) for v in lock.data.vertices]
     for sign,side in ((-1,'L'),(1,'R')):
-        curl(f'Hair {side} | swept temple',[(sign*.008,-.06,1.615),(sign*.07,-.118,1.57),(sign*.112,-.079,1.49),(sign*.13,-.01,1.35)],[.014,.032,.029,.005],'hair_light','Head',10)
+        curl(f'Hair {side} | swept temple',[(sign*.012,-.054,1.605),(sign*.07,-.117,1.55),(sign*.112,-.079,1.49),(sign*.13,-.01,1.35)],[.008,.035,.029,.005],'hair_light','Head',10,scalp=True)
         wave=curl(f'Hair {side} | face framing wave',[(sign*.115,-.015,1.49),(sign*.143,-.012,1.34),(sign*.156,-.022,1.23),(sign*.21,.015,1.10),(sign*.26,.035,1.02)],[.030,.034,.030,.020,.002],'hair','Hair.'+side,10)
         PART_BONES[wave.name]=[hair_weights(v.co) for v in wave.data.vertices]
         glint=curl(f'Hair {side} | narrow reflected ribbon',[(sign*.045,-.122,1.575),(sign*.105,-.103,1.49),(sign*.141,-.04,1.34),(sign*.156,-.046,1.24)],[.002,.004,.003,.001],'hair_glint','Head',6)
         PART_BONES[glint.name]=[hair_weights(v.co) for v in glint.data.vertices]
-        shoulder,elbow,wrist=map(Vector,ARM_POINTS[side])
-        curl(f'Arm {side} | tidal bracelet',[wrist+Vector((-.026,-.015,.009)),wrist+Vector((0,-.031,.008)),wrist+Vector((.026,-.014,.009))],[.003,.004,.003],'cloth_glint',f'Arm.{side}.lower',6)
 
 
 def rig_model(objects, transform):
@@ -411,7 +492,10 @@ def rig_model(objects, transform):
         specs[f"Arm.{side}.lower"] = (elbow, hand, f"Arm.{side}.upper")
         grasp, tips = GRASP_POINTS[side]
         specs[f"Hand.{side}"] = (hand, grasp, f"Arm.{side}.lower")
-        specs[f"Grasp.{side}"] = (grasp, tips, f"Hand.{side}")
+        specs[f"Grasp.{side}"] = (grasp, CURL_POINTS.get(side,tips), f"Hand.{side}")
+        if side == 'R':
+            specs['Curl.R'] = (CURL_POINTS[side],tips,'Grasp.R')
+            specs['Thumb.R'] = (*THUMB_POINTS['R'],'Hand.R')
     for side, (hip, knee, ankle, toe) in LEG_POINTS.items():
         specs[f"Leg.{side}.upper"] = (hip, knee, "Body")
         specs[f"Leg.{side}.lower"] = (knee, ankle, f"Leg.{side}.upper")
@@ -464,12 +548,14 @@ def animate(rig, transform, foot_support):
                 bone.matrix_basis.identity()
             t = frame/(frames-1)
             phase = math.tau*t
-            strike = reach = settle = 0
+            strike = reach = settle = pluck = 0
             if name == 'Attack':
                 strike = envelope(t,[(0,0),(1/30,.27),(4/30,.80),(7/30,1),
-                                     (10/30,.98),(18/30,.34),(26/30,.015),(1,0)])
-                reach = envelope(t,[(0,0),(1/30,.32),(4/30,.85),(7/30,1),
-                                    (10/30,1),(17/30,.28),(25/30,.025),(1,0)])
+                                     (11/30,.60),(17/30,.20),(26/30,0),(1,0)])
+                reach = envelope(t,[(0,0),(1/30,.24),(3/30,.42),(5/30,.78),(7/30,1),
+                                    (15/30,1),(24/30,.18),(1,0)])
+                pluck = envelope(t,[(0,0),(7/30,0),(11/30,1),
+                                    (16/30,1),(23/30,.35),(1,0)])
                 settle = envelope(t,[(0,0),(5/30,.12),(10/30,1),(17/30,.35),(25/30,-.12),(1,0)])
             if name == 'Walk':
                 offset = Vector((.009*math.sin(phase),0,
@@ -524,24 +610,36 @@ def animate(rig, transform, foot_support):
                 turn('Hand.R',-.032*math.sin(phase-.60),0,0)
                 turn('Grasp.R',.022*math.sin(phase-.75),0,0)
             elif name == 'Idle':
-                turn('Arm.L.upper',.009*wave(phase,.3),0,0)
-                turn('Arm.L.lower',.014*wave(phase,.5),0,0)
-                turn('Arm.R.lower',.012*wave(phase,.45),0,0)
-                turn('Hand.R',.018*wave(phase,.65),0,0)
-                turn('Grasp.R',.018*wave(phase,.85),0,0)
+                # Different phases and arcs let the elbows lead each wrist in
+                # turn, rather than lifting both forearms as a mirrored pair.
+                turn('Arm.L.upper',.014*wave(phase,.2),.018*wave(phase,.1),0)
+                turn('Arm.L.lower',.012*wave(phase,.5),.028*wave(phase,.5),0)
+                turn('Hand.L',.012*wave(phase,.8),.045*wave(phase,1.0),0)
+                turn('Arm.R.upper',-.010*wave(phase,.9),-.018*wave(phase,.95),0)
+                turn('Arm.R.lower',.010*wave(phase,1.1),-.036*wave(phase,1.3),0)
+                turn('Hand.R',.012*wave(phase,.7),-.055*wave(phase,1.55),0)
+                turn('Grasp.R',0,.018*wave(phase,1.7),0)
+                turn('Curl.R',0,.012*wave(phase,1.85),0)
             else:
                 turn('Arm.L.upper',.065*strike,0,-.035*strike)
                 turn('Arm.L.lower',.04*settle,0,0)
-                turn('Hand.R',-.10*reach-.035*settle,0,0)
-                grasp = envelope(t,[(0,0),(2/30,-.25),(5/30,-.32),(7/30,.75),
-                                    (11/30,.75),(19/30,.18),(27/30,.01),(1,0)])
-                turn('Grasp.R',grasp,0,0)
+                turn('Hand.R',0,.12*reach-.20*pluck,0)
+                grasp = envelope(t,[(0,0),(2/30,-.12),(5/30,-.16),(7/30,1.10),
+                                    (17/30,1.10),(24/30,.25),(1,0)])
+                # Flex toward the palm; the opposite sign extends the fingers
+                # away from it. The distal joint completes the closed fist.
+                turn('Grasp.R',0,grasp,0)
+                turn('Curl.R',0,grasp*1.10,0)
+                thumb = rig.pose.bones['Thumb.R']
+                axis = thumb.bone.matrix_local.to_3x3().inverted() @ THUMB_AXIS
+                thumb.rotation_quaternion = Quaternion(axis,.75*max(0,grasp)/1.10)
                 shoulder0, elbow0, wrist0 = arms['R']
                 shoulder = spine_delta @ shoulder0
-                target = transform @ Vector((.19,-.282,1.29))
-                wrist = spine_delta @ wrist0.lerp(target,reach)
-                # The reaching hand follows an arc; torso and fingers have
-                # separate lead/follow timing instead of moving as one lever.
+                target = transform @ Vector((.21,-.315,1.205))
+                clutch = transform @ Vector((.14,-.16,1.15))
+                wrist = spine_delta @ wrist0.lerp(target,reach).lerp(clutch,pluck)
+                # Dart out, close on impact, then pull the closed hand inward
+                # before releasing it back into the open, sideways ready pose.
                 wrist += Vector((.012,0,.015))*scale*math.sin(math.pi*reach)
                 elbow = solve_knee(shoulder,wrist,spine_delta @ elbow0,
                                    (elbow0-shoulder0).length,(wrist0-elbow0).length)

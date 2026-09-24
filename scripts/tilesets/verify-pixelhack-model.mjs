@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { createBlinkController } from '../../tools/pixelhack-reference/blink-controller.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const directory = path.resolve(root, process.argv[2] ?? 'tools/pixelhack-reference/models/0000-giant-ant');
@@ -45,6 +46,39 @@ function points() {
   });
 }
 const rest = points();
+let blinkReport;
+if (metadata.humanoid) {
+  const blinkIndex = mesh.morphTargetDictionary?.Blink;
+  assert.ok(Number.isInteger(blinkIndex), 'Humanoid exports the shared Blink morph');
+  assert.equal(mesh.morphTargetInfluences[blinkIndex], 0, 'Humanoid loads with its eyes open');
+  for (const clip of gltf.animations) assert.ok(clip.tracks.every((track) => !track.name.includes('morphTargetInfluences')),
+    `${clip.name} does not own or reset procedural facial motion`);
+  mesh.morphTargetInfluences[blinkIndex] = 1;
+  const closed = points();
+  const changed = closed.filter((point, i) => point.distanceTo(rest[i]) > .00001).length;
+  assert.ok(changed >= 40 && changed < rest.length * .15, 'Blink moves the eyelids without deforming the body');
+  mesh.morphTargetInfluences[blinkIndex] = 0;
+  const blink = createBlinkController(model, { random: () => 0 });
+  const bodyMixer = new THREE.AnimationMixer(model);
+  for (const name of ['Idle', 'Walk', 'Attack']) {
+    bodyMixer.stopAllAction();
+    bodyMixer.clipAction(gltf.animations.find((clip) => clip.name === name)).play();
+    bodyMixer.update(.03);
+    // Repeated clip transitions must not reset the facial scheduler.
+    for (let frame = 0; frame < 45; frame += 1) blink.update(1 / 60);
+  }
+  assert.ok(mesh.morphTargetInfluences[blinkIndex] > .5, 'Blink continues across all body-clip transitions');
+  bodyMixer.timeScale = 0;
+  for (let frame = 0; frame < 20; frame += 1) {
+    bodyMixer.update(1 / 60);
+    blink.update(1 / 60);
+  }
+  assert.ok(mesh.morphTargetInfluences[blinkIndex] < .01, 'Blink reopens independently of paused body playback');
+  blink.dispose();
+  bodyMixer.stopAllAction();
+  mesh.skeleton.pose();
+  blinkReport = { morphTarget: 'Blink', eyelidVertices: changed, independentOfClips: true };
+}
 const boneName = (bone) => bone.userData.name ?? bone.name;
 const jointPattern = metadata.id === 'killer-bee' ? /^Leg\.[LR][1-3]\.lower$/
   : metadata.id === 'dwarf-male' || metadata.id === 'water-nymph-female'
@@ -64,7 +98,7 @@ assert.ok(Math.abs(restMinY - groundClearance) < .0001,
   `Rest pose has its registered ground clearance (${restMinY} vs ${groundClearance})`);
 const report = { meshCount: 1, materialCount: 1, triangles: mesh.geometry.index.count / 3,
   bones: mesh.skeleton.bones.length, allVerticesWeighted: true,
-  restMinimumY: restMinY, groundClearance, clips: {} };
+  restMinimumY: restMinY, groundClearance, clips: {}, ...(blinkReport ? { blink: blinkReport } : {}) };
 const poses = new Map();
 for (const clip of gltf.animations) {
   const mixer = new THREE.AnimationMixer(model);
@@ -432,11 +466,13 @@ if (metadata.id === 'water-nymph-female') {
   const spine = findBone('Spine');
   const arm = findBone('Arm.R.lower');
   const fingers = findBone('Grasp.R');
+  const fingertips = findBone('Curl.R');
+  const thumb = findBone('Thumb.R');
   const hair = ['Hair.L', 'Hair.R'].map(findBone);
   const skirt = findBone('Skirt.Front');
   const feet = ['Foot.L', 'Foot.R'].map(findBone);
-  assert.equal(mesh.skeleton.bones.length, 21, 'Nymph has separate pelvis and spine control');
-  assert.ok(body && spine && arm && fingers && hair.every(Boolean) && skirt && feet.every(Boolean),
+  assert.equal(mesh.skeleton.bones.length, 23, 'Nymph has torso control, two finger bends and thumb opposition');
+  assert.ok(body && spine && arm && fingers && fingertips && thumb && hair.every(Boolean) && skirt && feet.every(Boolean),
     'Hair, cloth, grabbing hand, and both feet have independent bones');
   const skinIndex = mesh.geometry.attributes.skinIndex;
   const ownedVertices = (bone) => {
@@ -446,7 +482,18 @@ if (metadata.id === 'water-nymph-female') {
     assert.ok(indices.length >= 12, `${boneName(bone)} owns visible geometry`);
     return indices;
   };
-  const fingerVertices = ownedVertices(fingers);
+  const fingerJoints = [fingers, fingertips].map((bone) => mesh.skeleton.bones.indexOf(bone));
+  const influence = (i, joint) => [0, 1, 2, 3].reduce((sum, channel) => sum +
+    (skinIndex.getComponent(i, channel) === joint ? weights.getComponent(i, channel) : 0), 0);
+  const fingerVertices = Array.from({ length: skinIndex.count }, (_, i) => i)
+    .filter((i) => fingerJoints.reduce((sum, joint) => sum + influence(i, joint), 0) > .99);
+  const distalVertices = fingerVertices.filter((i) => influence(i, fingerJoints[1]) > .9);
+  assert.ok(distalVertices.length >= 12, 'The fist check samples the distal finger surface');
+  assert.ok(fingerVertices.length >= 24, 'The two finger bends own the finger surface');
+  for (const joint of fingerJoints) {
+    assert.ok(fingerVertices.filter((i) => influence(i, joint) > .1).length >= 12,
+      'Each finger bend influences visible finger geometry');
+  }
   const footVertices = feet.map(ownedVertices);
   const bodyIndex = mesh.skeleton.bones.indexOf(spine);
   const armIndex = mesh.skeleton.bones.indexOf(findBone('Arm.R.upper'));
@@ -467,23 +514,43 @@ if (metadata.id === 'water-nymph-female') {
   const tipIndex = fingerVertices.reduce((front, i) => ready[i].z > ready[front].z ? i : front);
   const bodyOrigin = body.getWorldPosition(new THREE.Vector3());
   const armReady = arm.quaternion.clone();
+  const thumbReady = thumb.quaternion.clone();
   mixer.setTime(1 / 60);
   const early = points();
   const earlyFingerMotion = early[tipIndex].distanceTo(ready[tipIndex]);
   mixer.setTime(2 / 30);
-  model.updateMatrixWorld(true);
+  const openPose = points();
+  const openPalm = findBone('Hand.R').getWorldPosition(new THREE.Vector3());
+  const openFingerReach = distalVertices.reduce((sum, i) => sum + openPose[i].distanceTo(openPalm), 0)
+    / distalVertices.length;
   const openFingers = fingers.quaternion.clone();
   mixer.setTime(metadata.animationContract.Attack.hitTime);
   const impact = points();
   const bodyMotion = body.getWorldPosition(new THREE.Vector3()).sub(bodyOrigin);
   const armSwing = arm.quaternion.angleTo(armReady);
   const graspSnap = fingers.quaternion.angleTo(openFingers);
+  const thumbFold = thumb.quaternion.angleTo(thumbReady);
   const fingerMotion = impact[tipIndex].clone().sub(ready[tipIndex]);
+  const closedPalm = findBone('Hand.R').getWorldPosition(new THREE.Vector3());
+  const closedFingerReach = distalVertices.reduce((sum, i) => sum + impact[i].distanceTo(closedPalm), 0)
+    / distalVertices.length;
+  assert.ok(closedFingerReach < openFingerReach * .8,
+    'The distal fingers fold into a compact fist close to the palm');
   assert.ok(earlyFingerMotion > .05, 'Grab starts moving in the first attack frame');
   assert.ok(bodyMotion.z > .14 && fingerMotion.z > .17 && fingerMotion.y > .04,
     'Nymph reaches forward into the target');
   assert.ok(armSwing > .80 && graspSnap > .80,
     'Forearm reach and closing fingers are separate attack actions');
+  assert.ok(thumbFold > .5, 'The thumb folds across the curled fingers at contact');
+  const contactHand = findBone('Hand.R').getWorldPosition(new THREE.Vector3());
+  const contactGrip = fingers.quaternion.clone();
+  mixer.setTime(11 / 60);
+  model.updateMatrixWorld(true);
+  const pulledHand = findBone('Hand.R').getWorldPosition(new THREE.Vector3());
+  const snatchRetraction = contactHand.z - pulledHand.z;
+  assert.ok(snatchRetraction > .12, 'The snatch pulls the hand back promptly after contact');
+  assert.ok(fingers.quaternion.angleTo(contactGrip) < .1,
+    'The fingers stay closed while pulling the stolen item inward');
   let highestFoot = -Infinity;
   for (let step = 0; step <= 60; step += 1) {
     mixer.setTime(attackClip.duration * step / 60);
@@ -497,7 +564,8 @@ if (metadata.id === 'water-nymph-female') {
   }
   Object.assign(report.clips.Attack, { earlyFingerMotion,
     bodyMotionAtImpact: bodyMotion.toArray(), fingerMotionAtImpact: fingerMotion.toArray(),
-    armSwingRadians: armSwing, graspSnapRadians: graspSnap, highestFoot });
+    armSwingRadians: armSwing, graspSnapRadians: graspSnap, thumbFoldRadians: thumbFold,
+    snatchRetraction, openFingerReach, closedFingerReach, highestFoot });
   report.fingerVerticesChecked = fingerVertices.length;
   report.softShoulderVerticesChecked = softShoulderVertices;
   report.hairBonesChecked = hair.length;
@@ -533,6 +601,21 @@ if (metadata.id === 'water-nymph-female') {
   model.updateMatrixWorld(true);
   const findBone = (name) => mesh.skeleton.bones.find((bone) => boneName(bone) === name);
   const pelvis = findBone('Body'), chest = findBone('Spine');
+  const bodyOrigin = pelvis.getWorldPosition(new THREE.Vector3());
+  const readyHands = [];
+  for (const side of ['L', 'R']) {
+    const hand = findBone(`Hand.${side}`).getWorldPosition(new THREE.Vector3());
+    const shoulder = findBone(`Arm.${side}.upper`).getWorldPosition(new THREE.Vector3());
+    assert.ok(Math.abs(hand.x - bodyOrigin.x) > .23 && hand.y < shoulder.y - .30
+      && hand.y < bodyOrigin.y + .16,
+      'The ready hands stay outside the torso at relaxed hip height');
+    readyHands.push(hand);
+  }
+  assert.ok(Math.abs(readyHands[0].y - readyHands[1].y) > .07,
+    'The resting hands have visibly different heights');
+  assert.ok(Math.abs(Math.abs(readyHands[0].x - bodyOrigin.x)
+    - Math.abs(readyHands[1].x - bodyOrigin.x)) > .07,
+    'The resting arms have different lateral reaches');
   const feet = ['Foot.L', 'Foot.R'].map(findBone);
   const restPelvis = pelvis.getWorldQuaternion(new THREE.Quaternion());
   const restChest = chest.getWorldQuaternion(new THREE.Quaternion());

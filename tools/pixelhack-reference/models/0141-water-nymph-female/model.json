@@ -8,28 +8,34 @@
   "sourceAtlasSha256": "4a9327f7164afd28962d9a713e581cf28ae6b85467bc6d31981a681b1267170d",
   "sourceScript": "scripts/tilesets/models/water_nymph_female.py",
   "blenderVersion": "5.1.2",
-  "parts": 42,
-  "triangles": 15502,
+  "parts": 44,
+  "triangles": 15726,
   "materials": 1,
   "boundsBlender": {
     "min": [
-      -0.4200000464916229,
-      -0.29518401622772217,
-      -8.909923465694192e-09
+      -0.5199999213218689,
+      -0.2693021297454834,
+      2.232447471328669e-08
     ],
     "max": [
-      0.4200000762939453,
-      0.295183926820755,
-      1.998478651046753
+      0.5199999809265137,
+      0.2693021595478058,
+      2.049736738204956
     ]
   },
   "dimensionsBlender": [
-    0.8400001525878906,
-    0.5903679132461548,
-    1.998478651046753
+    1.0399999618530273,
+    0.5386042594909668,
+    2.049736738204956
   ],
-  "glbBytes": 662776,
-  "bones": 21,
+  "glbBytes": 719784,
+  "bones": 23,
+  "humanoid": true,
+  "proceduralAnimations": {
+    "blink": {
+      "morphTarget": "Blink"
+    }
+  },
   "animations": [
     "Attack",
     "Idle",
@@ -49,11 +55,11 @@
     "Attack": {
       "loop": false,
       "hitTime": 0.11666666666666667,
-      "maxDisplacement": 0.42
+      "maxDisplacement": 0.84
     }
   },
   "reviewSmallView": "hero",
-  "footprint": 0.84,
+  "footprint": 1.04,
   "groundClearance": 0,
   "views": [
     "hero",

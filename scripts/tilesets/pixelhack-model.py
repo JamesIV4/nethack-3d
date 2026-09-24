@@ -43,6 +43,8 @@ def main():
     spec.loader.exec_module(subject)
     subject.build()
     objects = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    if entry.get('humanoid') and not any(o.data.shape_keys and 'Blink' in o.data.shape_keys.key_blocks for o in objects):
+        raise ValueError('Humanoid models require an independent Blink shape key')
     footprint = entry.get("footprint", .92)
     ground_clearance = entry.get("groundClearance", 0)
     transform = ph.normalize(objects, footprint=footprint, ground_clearance=ground_clearance)
@@ -76,6 +78,8 @@ def main():
               "blenderVersion": bpy.app.version_string, **stats,
               "glbBytes": (out / "model.glb").stat().st_size,
               "bones": len(rig.data.bones) if rig else 0,
+              "humanoid": entry.get('humanoid',False),
+              "proceduralAnimations": {"blink": {"morphTarget": "Blink"}} if entry.get('humanoid') else {},
               "animations": [a.name for a in bpy.data.actions],
               "animationContract": entry.get("animations", {}),
               "reviewSmallView": entry.get("reviewSmallView", "side"),

@@ -251,8 +251,15 @@ def normalize(objects, footprint=.92, ground_clearance=0):
     offset = Vector(((low.x + high.x) / 2, (low.y + high.y) / 2, low.z))
     lift = Vector((0, 0, ground_clearance))
     for obj in objects:
-        for v in obj.data.vertices:
-            v.co = (obj.matrix_world @ v.co - offset) * scale + lift
+        if obj.data.shape_keys:
+            for key in obj.data.shape_keys.key_blocks:
+                for point in key.data:
+                    point.co = (obj.matrix_world @ point.co - offset) * scale + lift
+            for vertex,point in zip(obj.data.vertices,obj.data.shape_keys.key_blocks[0].data):
+                vertex.co=point.co
+        else:
+            for v in obj.data.vertices:
+                v.co = (obj.matrix_world @ v.co - offset) * scale + lift
         obj.matrix_world.identity()
     bpy.context.view_layer.update()
     return Matrix.Translation(lift) @ Matrix.Scale(scale, 4) @ Matrix.Translation(-offset)
@@ -339,22 +346,36 @@ def export_glb(objects, path, name, rig=None, tile_ids=None):
     """Join temporary copies into one vertex-colored primitive; keep authoring parts."""
     bpy.ops.object.select_all(action="DESELECT")
     copies = []
+    morph_names = sorted({key.name for obj in objects if obj.data.shape_keys
+                          for key in obj.data.shape_keys.key_blocks if key.name != 'Basis'})
     for obj in objects:
         copy = obj.copy()
         copy.data = obj.data.copy()
         bpy.context.collection.objects.link(copy)
+        if morph_names:
+            if not copy.data.shape_keys:
+                copy.shape_key_add(name='Basis')
+            for morph in morph_names:
+                if morph not in copy.data.shape_keys.key_blocks:
+                    copy.shape_key_add(name=morph)
         copy.select_set(True)
         copies.append(copy)
     bpy.context.view_layer.objects.active = copies[0]
     bpy.ops.object.join()
     joined = bpy.context.object
     joined.name = name
+    if joined.data.shape_keys:
+        for key in joined.data.shape_keys.key_blocks:
+            key.value = 0
+        joined.active_shape_key_index = 0
+        joined.show_only_shape_key = False
     joined["tile_ids"] = tile_ids or []
     if rig:
         rig.select_set(True)
     bpy.ops.export_scene.gltf(filepath=str(path.resolve()), export_format="GLB", use_selection=True,
                               export_yup=True, export_animations=bool(rig), export_animation_mode="ACTIONS",
                               export_force_sampling=True, export_cameras=False,
+                              export_morph=True, export_morph_animation=False,
                               export_lights=False, export_extras=True, export_texcoords=False,
                               export_normals=True, export_materials="EXPORT")
     bpy.data.objects.remove(joined, do_unlink=True)

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { createBlinkController } from './blink-controller.mjs';
 
 const $ = (id) => document.getElementById(id);
 async function json(url) {
@@ -182,6 +183,8 @@ async function main() {
   observer.observe(stage);
   for (const button of document.querySelectorAll('[data-view]')) button.addEventListener('click', () => setView(button.dataset.view));
   const mixer = new THREE.AnimationMixer(model);
+  const blink = createBlinkController(model);
+  if (entry.humanoid && !blink.supported) throw new Error('Humanoid model is missing Blink eyelids');
   for (const clip of gltf.animations) $('animation').add(new Option(clip.name, clip.name));
   function playClip() {
     mixer.stopAllAction();
@@ -233,8 +236,10 @@ async function main() {
   $('status').hidden = true;
   const clock = new THREE.Clock();
   renderer.setAnimationLoop(() => {
-    const delta = Math.min(clock.getDelta(), .05);
+    const elapsed = clock.getDelta();
+    const delta = Math.min(elapsed, .05);
     if (!paused && !document.hidden) mixer.update(delta);
+    if (!document.hidden) blink.update(elapsed);
     controls.update();
     renderer.render(scene, camera);
   });
@@ -243,6 +248,7 @@ async function main() {
     observer.disconnect();
     controls.dispose();
     mixer.stopAllAction();
+    blink.dispose();
     renderer.dispose();
   }, { once: true });
 }
