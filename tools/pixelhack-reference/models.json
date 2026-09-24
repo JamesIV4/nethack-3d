@@ -8,10 +8,40 @@
       "directory": "tools/pixelhack-reference/models/0000-giant-ant",
       "script": "scripts/tilesets/models/giant_ant.py",
       "triangleBudget": 6000,
+      "viewer": {
+        "badge": "BASELINE 001",
+        "summary": "Slate carapace. Scarlet eyes. Reared and ready to bite.",
+        "visualHeading": "Braced for an attack.",
+        "visualDescription": "A raised head, spread jaws, and lifted forelegs give the ant an aggressive silhouette. Smooth carapace, limbs, jaws, and antennae meet at distinct dark joints.",
+        "motionDescription": "Idle holds the threatening pose with tense forelegs, working jaws, and probing antennae. Walk lowers the front legs into an alternating tripod gait. Attack launches forward and upward toward a taller target, snaps the jaws, and lands back in idle."
+      },
       "animations": {
         "Idle": { "loop": true },
         "Walk": { "loop": true },
         "Attack": { "loop": false, "hitTime": 0.1, "maxDisplacement": 0.35 }
+      }
+    },
+    {
+      "id": "killer-bee",
+      "title": "Killer bee",
+      "tileIds": [2, 3],
+      "directory": "tools/pixelhack-reference/models/0002-killer-bee",
+      "script": "scripts/tilesets/models/killer_bee.py",
+      "triangleBudget": 6500,
+      "footprint": 0.76,
+      "groundClearance": 0.155,
+      "viewer": {
+        "badge": "MODEL 002",
+        "summary": "Golden body. Pale raised wings. Hovering and ready to sting.",
+        "visualHeading": "A bright, airborne silhouette.",
+        "visualDescription": "The compact copper face, striped brown abdomen, upright pale wings, dangling dark legs, and visible rear stinger follow the tile. The source shadow is excluded.",
+        "motionDescription": "Idle hovers with fluttering wings and dangling legs. Walk is in-place flight with faster wingbeats; the game controller supplies travel. Attack lunges forward, curls the abdomen beneath the body, thrusts the stinger at impact, and returns to idle.",
+        "heroView": [2, 3.1, 5]
+      },
+      "animations": {
+        "Idle": { "loop": true, "maxDisplacement": 0.16 },
+        "Walk": { "loop": true, "maxDisplacement": 0.19 },
+        "Attack": { "loop": false, "hitTime": 0.13333333333333333, "maxDisplacement": 0.96 }
       }
     }
   ]

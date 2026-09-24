@@ -1,9 +1,18 @@
 const $ = (id) => document.getElementById(id);
-const [catalog, research, artAnalysis] = await Promise.all([
+const [catalog, research, artAnalysis, modelRegistry] = await Promise.all([
   fetch('/tools/pixelhack-reference/catalog.json').then(checkResponse).then((response) => response.json()),
   fetch('/tools/pixelhack-reference/research.json').then(checkResponse).then((response) => response.json()),
   fetch('/tools/pixelhack-reference/art-analysis.json').then(checkResponse).then((response) => response.json()),
+  fetch('/tools/pixelhack-reference/models.json').then(checkResponse).then((response) => response.json()),
 ]);
+const modelsByTileId = new Map(modelRegistry.models.flatMap((model) =>
+  model.tileIds.map((tileId) => [tileId, model])));
+for (const model of modelRegistry.models) {
+  const link = document.createElement('a');
+  link.href = `/tools/pixelhack-reference/model.html?tile=${model.tileIds[0]}`;
+  link.textContent = `${model.title} · tiles ${model.tileIds.join(', ')} →`;
+  $('model-links').append(link);
+}
 const atlas = new Image();
 atlas.src = catalog.atlas;
 await atlas.decode();
@@ -27,6 +36,8 @@ let matches = catalog.tiles;
 let page = 0;
 let selectedId = Number(new URLSearchParams(location.hash.slice(1)).get('tile')) || 0;
 let renderUrl = null;
+let modelPreview = null;
+let previewRequest = 0;
 
 function checkResponse(response) {
   if (!response.ok) throw new Error(`Could not load ${response.url}: ${response.status}`);
@@ -90,19 +101,26 @@ function drawResults() {
   $('next-page').disabled = page >= pageCount - 1;
   const fragment = document.createDocumentFragment();
   for (const tile of matches.slice(page * pageSize, (page + 1) * pageSize)) {
-    const button = document.createElement('button');
-    button.className = `tile-card${tile.id === selectedId ? ' selected' : ''}`;
-    button.type = 'button';
-    button.setAttribute('aria-label', `Tile ${tile.id}: ${tile.label}`);
+    const model = modelsByTileId.get(tile.id);
+    const card = document.createElement('button');
+    card.className = `tile-card${tile.id === selectedId ? ' selected' : ''}${model ? ' has-model' : ''}`;
+    card.type = 'button';
+    card.setAttribute('aria-label', `Tile ${tile.id}: ${tile.label}`);
+    card.addEventListener('click', () => selectTile(tile.id));
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 64;
     drawTile(canvas, tile.id);
-    button.append(canvas);
+    card.append(canvas);
     const text = document.createElement('span');
     text.textContent = `${tile.id} ${tile.label}`;
-    button.append(text);
-    button.addEventListener('click', () => selectTile(tile.id));
-    fragment.append(button);
+    card.append(text);
+    if (model) {
+      const badge = document.createElement('span');
+      badge.className = 'model-badge';
+      badge.textContent = '3D model available';
+      card.append(badge);
+    }
+    fragment.append(card);
   }
   $('grid').replaceChildren(fragment);
 }
@@ -122,12 +140,40 @@ function addSourceLinks(sources) {
 }
 
 function clearRender() {
+  previewRequest += 1;
+  modelPreview?.dispose();
+  modelPreview = null;
+  $('model-animation-label').hidden = true;
   if (renderUrl) URL.revokeObjectURL(renderUrl);
   renderUrl = null;
   $('model-image').removeAttribute('src');
   $('model-image').style.display = 'none';
+  $('model-placeholder').textContent = 'Choose or drop a Blender render';
   $('model-placeholder').style.display = '';
   $('render-file').value = '';
+}
+
+async function showModelPreview(model) {
+  const request = ++previewRequest;
+  $('model-placeholder').textContent = 'Loading animated model…';
+  try {
+    const { ModelPreview } = await import('./catalog-model-preview.js');
+    if (request !== previewRequest) return;
+    const preview = new ModelPreview($('model-drop'), $('model-animation-label'));
+    modelPreview = preview;
+    await preview.load(model);
+    if (request !== previewRequest) preview.dispose();
+    else $('model-placeholder').style.display = 'none';
+  } catch (error) {
+    if (request !== previewRequest) return;
+    modelPreview?.dispose();
+    modelPreview = null;
+    console.error(`Could not animate ${model.title}:`, error);
+    $('model-interaction-hint').hidden = true;
+    $('model-image').src = `/${model.directory}/hero.png`;
+    $('model-image').style.display = 'block';
+    $('model-placeholder').style.display = 'none';
+  }
 }
 
 function selectTile(id) {
@@ -136,6 +182,13 @@ function selectTile(id) {
   selectedId = id;
   location.hash = `tile=${id}`;
   const tile = catalog.tiles[id];
+  const model = modelsByTileId.get(id);
+  $('model-link').hidden = !model;
+  $('model-interaction-hint').hidden = !model;
+  if (model) {
+    $('model-link').href = `/tools/pixelhack-reference/model.html?tile=${id}`;
+    if (!renderUrl && !modelPreview) void showModelPreview(model);
+  }
   const notes = notesFor(tile);
   $('tile-title').textContent = `${id}: ${tile.label}`;
   $('tile-meta').textContent = `${tile.category}${tile.objectClass ? ` / ${tile.objectClass}` : ''} · atlas row ${Math.floor(id / catalog.columns)}, column ${id % catalog.columns} · source ${tile.sourceFile}${tile.sourceIndex === null ? '' : ` #${tile.sourceIndex}`}${tile.baseTileId === undefined ? '' : ` · base monster tile ${tile.baseTileId}`}${tile.sourceAssociation ? ` · source association: ${tile.sourceAssociation}` : ''}${tile.appearanceMayShuffle ? ' · randomized appearance' : ''}`;
@@ -164,11 +217,20 @@ function selectTile(id) {
 function showRender(file) {
   if (!file?.type.startsWith('image/')) return;
   clearRender();
+  $('model-interaction-hint').hidden = true;
   renderUrl = URL.createObjectURL(file);
   $('model-image').src = renderUrl;
   $('model-image').style.display = 'block';
   $('model-placeholder').style.display = 'none';
 }
+
+window.addEventListener('pagehide', clearRender);
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted && !renderUrl) {
+    const model = modelsByTileId.get(selectedId);
+    if (model) void showModelPreview(model);
+  }
+});
 
 for (const category of [...new Set(catalog.tiles.map((tile) => tile.category))]) {
   const option = document.createElement('option');

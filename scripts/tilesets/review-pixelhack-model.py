@@ -58,8 +58,11 @@ def main():
         for index, size in enumerate([32, 64, 128]):
             small = source_render.resize((size, size), Image.Resampling.LANCZOS)
             panel(small, 604 + index * 212, 760, 180, f"{size} px · enlarged", pixel=True)
-    draw.text((28, 1033), "Smooth carapace, red eyes, spread jaws, lifted forelegs: an attack-ready pose based on the source tile.", font=font(17), fill="#e1e8e1")
-    draw.text((28, 1063), "Ground shadow is presentation only. Orientation: Blender -Y forward / Z up; GLB +Z forward / Y up.", font=font(15), fill="#9bb0a6")
+    note = ("Hovering body, pale raised wings, dark face and legs, visible rear stinger: the killer bee silhouette."
+            if stats["id"] == "killer-bee" else
+            "Smooth carapace, red eyes, spread jaws, lifted forelegs: an attack-ready pose based on the source tile.")
+    draw.text((28, 1033), note, font=font(17), fill="#e1e8e1")
+    draw.text((28, 1063), "Source shadow excluded. Blender: -Y forward / Z up; GLB: +Z forward / Y up.", font=font(15), fill="#9bb0a6")
     sheet.save(directory / "review.png")
     print(directory / "review.png")
 

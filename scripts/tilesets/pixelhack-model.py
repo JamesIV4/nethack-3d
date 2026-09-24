@@ -43,7 +43,9 @@ def main():
     spec.loader.exec_module(subject)
     subject.build()
     objects = [o for o in bpy.context.scene.objects if o.type == "MESH"]
-    transform = ph.normalize(objects)
+    footprint = entry.get("footprint", .92)
+    ground_clearance = entry.get("groundClearance", 0)
+    transform = ph.normalize(objects, footprint=footprint, ground_clearance=ground_clearance)
     rig = subject.rig_model(objects, transform) if hasattr(subject, "rig_model") else None
     stats = ph.inspect(objects)
     if stats["triangles"] > entry["triangleBudget"]:
@@ -75,6 +77,7 @@ def main():
               "bones": len(rig.data.bones) if rig else 0,
               "animations": [a.name for a in bpy.data.actions],
               "animationContract": entry.get("animations", {}),
+              "footprint": footprint, "groundClearance": ground_clearance,
               "views": views, "resolution": args.resolution,
               "directory": out.resolve().relative_to(ROOT).as_posix() if out.resolve().is_relative_to(ROOT) else str(out.resolve()),
               "palette": ph.PALETTE, "status": "baseline-candidate"}

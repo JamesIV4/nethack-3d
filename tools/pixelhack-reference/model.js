@@ -15,7 +15,17 @@ async function main() {
   const entry = registry.models.find((model) => model.tileIds.includes(tileId));
   if (!entry) throw new Error(`Tile ${tileId} has no model yet.`);
   const base = `/${entry.directory}`;
+  document.title = `${entry.title} · PixelHack 3D model`;
   $('title').textContent = entry.title;
+  const tileLabel = entry.tileIds.map((id) => String(id).padStart(4, '0')).join(' / ');
+  $('tile-label').textContent = `CREATURE STUDY · TILES ${tileLabel}`;
+  $('catalog-link').href = `/tools/pixelhack-reference/#tile=${tileId}`;
+  $('brief-link').href = `/tools/pixelhack-reference/#tile=${tileId}`;
+  $('model-badge').textContent = entry.viewer?.badge ?? '3D MODEL';
+  $('hero-summary').textContent = entry.viewer?.summary ?? 'A 3D interpretation of the selected PixelHack tile.';
+  $('visual-heading').textContent = entry.viewer?.visualHeading ?? 'Source-based creature study.';
+  $('visual-description').textContent = entry.viewer?.visualDescription ?? 'Compare the model with the source pixels and its research brief.';
+  $('motion-description').textContent = entry.viewer?.motionDescription ?? 'Use the animation menu to inspect the exported clips.';
   $('download-glb').href = `${base}/model.glb`;
   $('download-blend').href = `${base}/model.blend`;
   $('review-link').href = `${base}/review.png`;
@@ -136,7 +146,8 @@ async function main() {
   controls.target.copy(center);
   let currentView = 'hero';
   let projectedWidth = .9, projectedHeight = .6;
-  const views = { hero: [4, 3.1, 5], side: [5, 1.45, 0], front: [0, 1.9, 5], top: [0, 5, .001] };
+  const views = { hero: entry.viewer?.heroView ?? [4, 3.1, 5],
+    side: [5, 1.45, 0], front: [0, 1.9, 5], top: [0, 5, .001] };
   function resize() {
     const width = stage.clientWidth, height = stage.clientHeight;
     renderer.setSize(width, height, false);

@@ -13,7 +13,7 @@ assert.equal(bytes.readUInt32LE(0), 0x46546c67);
 assert.equal(bytes.readUInt32LE(4), 2);
 const document = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
 assert.equal(document.meshes.length, 1, 'One combined export mesh');
-assert.equal(document.meshes[0].primitives.length, 1, 'One material draw per ant');
+assert.equal(document.meshes[0].primitives.length, 1, 'One material draw per creature');
 assert.equal(document.skins.length, 1, 'One skeleton');
 assert.equal(document.images?.length ?? 0, 0, 'Palette requires no external textures');
 for (const name of ['Idle', 'Walk', 'Attack']) {
@@ -46,13 +46,18 @@ function points() {
 }
 const rest = points();
 const boneName = (bone) => bone.userData.name ?? bone.name;
-const connectedJoints = mesh.skeleton.bones.filter((bone) => /^Leg\.[LR][1-3]\.(lower|foot)$/.test(boneName(bone)))
+const jointPattern = metadata.id === 'killer-bee' ? /^Leg\.[LR][1-3]\.lower$/ : /^Leg\.[LR][1-3]\.(lower|foot)$/;
+const connectedJoints = mesh.skeleton.bones.filter((bone) => jointPattern.test(boneName(bone)))
   .map((bone) => ({ bone, restPosition: bone.position.clone() }));
 if (metadata.id === 'giant-ant') assert.equal(connectedJoints.length, 12, 'All ant knee/ankle connections are checked');
+if (metadata.id === 'killer-bee') assert.equal(connectedJoints.length, 6, 'All bee knee connections are checked');
 const restMinY = Math.min(...rest.map((p) => p.y));
-assert.ok(Math.abs(restMinY) < .0001, 'Rest pose stands on the ground');
+const groundClearance = metadata.groundClearance ?? 0;
+assert.ok(Math.abs(restMinY - groundClearance) < .0001,
+  `Rest pose has its registered ground clearance (${restMinY} vs ${groundClearance})`);
 const report = { meshCount: 1, materialCount: 1, triangles: mesh.geometry.index.count / 3,
-  bones: mesh.skeleton.bones.length, allVerticesWeighted: true, clips: {} };
+  bones: mesh.skeleton.bones.length, allVerticesWeighted: true,
+  restMinimumY: restMinY, groundClearance, clips: {} };
 const poses = new Map();
 for (const clip of gltf.animations) {
   const mixer = new THREE.AnimationMixer(model);
@@ -78,8 +83,12 @@ for (const clip of gltf.animations) {
   const contract = metadata.animationContract[clip.name];
   if (contract?.loop) assert.ok(seam < .0001, `${clip.name} has a continuous loop seam (${seam})`);
   assert.ok(maxDisplacement > .002, `${clip.name} visibly moves vertices`);
-  assert.ok(minY > -.008, `${clip.name} avoids penetrating the floor (${minY})`);
-  assert.ok(maxDisplacement < (contract?.maxDisplacement ?? .2), `${clip.name} stays within its allowed animation displacement`);
+  const floorLimit = metadata.id === 'killer-bee' && clip.name === 'Attack'
+    ? .015 : Math.max(-.008, groundClearance - .04);
+  assert.ok(minY > floorLimit,
+    `${clip.name} retains floor clearance (${minY})`);
+  assert.ok(maxDisplacement < (contract?.maxDisplacement ?? .2),
+    `${clip.name} stays within its allowed animation displacement (${maxDisplacement})`);
   report.clips[clip.name] = { duration: clip.duration, sampledFrames: samples.length,
     loop: contract?.loop ?? false, minimumY: minY, maximumDisplacement: maxDisplacement,
     ...(contract?.loop ? { loopSeamError: seam } : { endpointDifference: seam }) };
@@ -112,13 +121,61 @@ if (metadata.id === 'giant-ant') {
   const openJaws = jaws.map((bone) => bone.quaternion.clone());
   mixer.setTime(hitTime);
   model.updateMatrixWorld(true);
-  const impactMotion = body.getWorldPosition(new THREE.Vector3()).sub(origin);
+  const bodyAtImpact = body.getWorldPosition(new THREE.Vector3());
+  const impactMotion = bodyAtImpact.clone().sub(origin);
   const jawSnap = jaws.map((bone, i) => bone.quaternion.angleTo(openJaws[i]));
   assert.ok(earlyMotion > .05, 'Attack clearly starts in its first frame');
   assert.ok(impactMotion.y > .08 && impactMotion.z > .13, 'Attack lunges upward and forward toward a taller target');
   assert.ok(jawSnap.every((angle) => angle > .5), 'Both jaws snap visibly from open to closed');
   Object.assign(report.clips.Attack, { firstFrameBodyMotion: earlyMotion,
     bodyMotionAtImpact: impactMotion.toArray(), jawSnapRadians: jawSnap });
+  mixer.stopAllAction();
+}
+if (metadata.id === 'killer-bee') {
+  const findBone = (name) => mesh.skeleton.bones.find((bone) => boneName(bone) === name);
+  const body = findBone('Body');
+  const abdomen = findBone('Abdomen');
+  const stinger = findBone('Stinger');
+  const wings = ['Wing.L.fore', 'Wing.R.fore', 'Wing.L.hind', 'Wing.R.hind'].map(findBone);
+  assert.ok(body && abdomen && stinger && wings.every(Boolean), 'Bee sting and both pairs of wings are rigged');
+  const stingerIndex = mesh.skeleton.bones.indexOf(stinger);
+  const skinIndex = mesh.geometry.attributes.skinIndex;
+  const stingerVertices = Array.from({ length: skinIndex.count }, (_, i) => i)
+    .filter((i) => skinIndex.getX(i) === stingerIndex && weights.getX(i) > .99);
+  assert.ok(stingerVertices.length >= 20, 'Stinger geometry is bound to its own bone');
+  const tipVertex = stingerVertices.reduce((best, i) => rest[i].z < rest[best].z ? i : best);
+  const mixer = new THREE.AnimationMixer(model);
+  mixer.clipAction(gltf.animations.find((clip) => clip.name === 'Attack')).play();
+  mixer.setTime(0);
+  model.updateMatrixWorld(true);
+  const origin = body.getWorldPosition(new THREE.Vector3());
+  mixer.setTime(1 / 30);
+  model.updateMatrixWorld(true);
+  const earlyMotion = body.getWorldPosition(new THREE.Vector3()).distanceTo(origin);
+  mixer.setTime(2 / 30);
+  model.updateMatrixWorld(true);
+  const beforeSting = stinger.quaternion.clone();
+  mixer.setTime(hitTime);
+  model.updateMatrixWorld(true);
+  mesh.skeleton.update();
+  const bodyAtImpact = body.getWorldPosition(new THREE.Vector3());
+  const impactMotion = bodyAtImpact.clone().sub(origin);
+  const abdomenCurl = abdomen.quaternion.angleTo(new THREE.Quaternion());
+  const stingSnap = stinger.quaternion.angleTo(beforeSting);
+  const impactTip = mesh.getVertexPosition(tipVertex, new THREE.Vector3()).applyMatrix4(mesh.matrixWorld);
+  const tipMotion = impactTip.clone().sub(rest[tipVertex]);
+  assert.ok(earlyMotion > .07, 'Bee attack clearly starts in its first frame');
+  assert.ok(impactMotion.y > .04 && impactMotion.z > .13,
+    'Bee lunges upward and forward toward a taller target');
+  assert.ok(abdomenCurl > 1.8, 'Abdomen curls forward to present the stinger');
+  assert.ok(stingSnap > .3, 'Stinger thrusts distinctly at impact');
+  assert.ok(tipMotion.z > .4 && impactTip.y < bodyAtImpact.y - .12,
+    'Stinger tip reaches forward from beneath the bee at impact');
+  Object.assign(report.clips.Attack, { firstFrameBodyMotion: earlyMotion,
+    bodyMotionAtImpact: impactMotion.toArray(), abdomenCurlRadians: abdomenCurl,
+    stingerSnapRadians: stingSnap, stingerTipMotionAtImpact: tipMotion.toArray() });
+  report.stingerVerticesChecked = stingerVertices.length;
+  report.wingsChecked = wings.length;
   mixer.stopAllAction();
 }
 writeFileSync(path.join(directory, 'validation.json'), `${JSON.stringify(report, null, 2)}\n`);

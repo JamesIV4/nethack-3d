@@ -1,0 +1,53 @@
+{
+  "meshCount": 1,
+  "materialCount": 1,
+  "triangles": 4664,
+  "bones": 23,
+  "allVerticesWeighted": true,
+  "restMinimumY": 0.15500001052384924,
+  "groundClearance": 0.155,
+  "clips": {
+    "Attack": {
+      "duration": 0.5,
+      "sampledFrames": 61,
+      "loop": false,
+      "minimumY": 0.024852849366041374,
+      "maximumDisplacement": 0.8307332957011393,
+      "endpointDifference": 0,
+      "hitTime": 0.13333333333333333,
+      "matchesIdleEndpoints": true,
+      "firstFrameBodyMotion": 0.14458094508888597,
+      "bodyMotionAtImpact": [
+        0,
+        0.20369225021023057,
+        0.16616995258837894
+      ],
+      "abdomenCurlRadians": 2.5055375744827963,
+      "stingerSnapRadians": 0.4299993638484009,
+      "stingerTipMotionAtImpact": [
+        0,
+        0.11326096991062967,
+        0.822976237095714
+      ]
+    },
+    "Idle": {
+      "duration": 2,
+      "sampledFrames": 61,
+      "loop": true,
+      "minimumY": 0.12592596907187928,
+      "maximumDisplacement": 0.09785691228562697,
+      "loopSeamError": 0
+    },
+    "Walk": {
+      "duration": 1,
+      "sampledFrames": 61,
+      "loop": true,
+      "minimumY": 0.12059509434754244,
+      "maximumDisplacement": 0.11935853791554371,
+      "loopSeamError": 0
+    }
+  },
+  "connectedJointsChecked": 6,
+  "stingerVerticesChecked": 40,
+  "wingsChecked": 4
+}

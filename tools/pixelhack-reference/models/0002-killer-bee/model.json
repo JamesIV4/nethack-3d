@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "id": "killer-bee",
+  "title": "Killer bee",
+  "tileIds": [
+    2,
+    3
+  ],
+  "sourceAtlasSha256": "4a9327f7164afd28962d9a713e581cf28ae6b85467bc6d31981a681b1267170d",
+  "sourceScript": "scripts/tilesets/models/killer_bee.py",
+  "blenderVersion": "5.1.2",
+  "parts": 53,
+  "triangles": 4664,
+  "materials": 1,
+  "boundsBlender": {
+    "min": [
+      -0.27540260553359985,
+      -0.37999996542930603,
+      0.1550000011920929
+    ],
+    "max": [
+      0.27540260553359985,
+      0.3800000250339508,
+      0.5713673830032349
+    ]
+  },
+  "dimensionsBlender": [
+    0.5508052110671997,
+    0.7599999904632568,
+    0.41636738181114197
+  ],
+  "glbBytes": 244312,
+  "bones": 23,
+  "animations": [
+    "Attack",
+    "Idle",
+    "Walk"
+  ],
+  "animationContract": {
+    "Idle": {
+      "loop": true,
+      "maxDisplacement": 0.16
+    },
+    "Walk": {
+      "loop": true,
+      "maxDisplacement": 0.19
+    },
+    "Attack": {
+      "loop": false,
+      "hitTime": 0.13333333333333333,
+      "maxDisplacement": 0.96
+    }
+  },
+  "footprint": 0.76,
+  "groundClearance": 0.155,
+  "views": [
+    "hero",
+    "side",
+    "front",
+    "top"
+  ],
+  "resolution": 768,
+  "directory": "tools/pixelhack-reference/models/0002-killer-bee",
+  "palette": {
+    "ink": "211b10",
+    "joint": "302713",
+    "edge": "65451d",
+    "shell": "b47729",
+    "light": "edb748",
+    "glint": "fff8e7",
+    "head": "b66b28",
+    "face": "d9913b",
+    "face_light": "f9ce87",
+    "abdomen": "674316",
+    "abdomen_band": "bd802d",
+    "abdomen_dark": "352711",
+    "wing": "a9c3b6",
+    "wing_pale": "d8dec7",
+    "wing_vein": "61491f",
+    "eye": "11120e",
+    "stinger": "171710"
+  },
+  "status": "baseline-candidate"
+}

@@ -4,6 +4,7 @@ body { margin: 0; }
 header { padding: 18px 24px 12px; border-bottom: 1px solid #41605c; }
 h1 { margin: 0; font-size: 1.6rem; }
 header p { margin: 4px 0 0; color: #b6c9c2; }
+.model-links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; }
 main { padding: 16px 24px; }
 button, input, select { font: inherit; color: inherit; background: #253b3e; border: 1px solid #668681; border-radius: 4px; padding: 6px 9px; }
 button { cursor: pointer; }
@@ -16,8 +17,11 @@ a { color: #a7e5ce; }
 .layout { display: grid; grid-template-columns: minmax(280px, 34%) minmax(0, 1fr); gap: 18px; }
 .results, .detail { border: 1px solid #41605c; background: #203133; border-radius: 8px; padding: 14px; min-width: 0; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 6px; }
-.tile-card { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 112px; padding: 6px; text-align: center; font-size: .78rem; }
+.tile-card { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 112px; padding: 6px; text-align: center; font-size: .78rem; color: inherit; background: #253b3e; border: 1px solid #668681; border-radius: 4px; text-decoration: none; cursor: pointer; }
+.tile-card:hover, .tile-card:focus-visible { background: #3a5758; }
 .tile-card.selected { outline: 2px solid #e9d991; background: #405e5c; }
+.tile-card.has-model { border-color: #d9ba6f; }
+.tile-card .model-badge { color: #f1d692; font-size: .72rem; }
 .tile-card canvas { width: 64px; height: 64px; image-rendering: pixelated; }
 .tile-card span { overflow-wrap: anywhere; }
 .pagination { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; }
@@ -32,8 +36,13 @@ figure canvas { image-rendering: pixelated; }
 #isolated-dark { background: #1d282b; }
 #model-drop { display: grid; place-items: center; overflow: hidden; position: relative; text-align: center; padding: 10px; }
 #model-drop.dragging { outline: 3px solid #e9d991; }
+#model-drop canvas.model-canvas { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; image-rendering: auto; cursor: grab; touch-action: none; }
+#model-drop canvas.model-canvas:active { cursor: grabbing; }
 #model-image { display: none; max-width: 100%; max-height: 100%; object-fit: contain; }
 #model-placeholder { color: #a6bbb3; }
+#model-animation-label { position: absolute; left: 8px; bottom: 8px; padding: 3px 7px; border-radius: 4px; color: #edf5ed; background: #182426d9; font-size: .76rem; pointer-events: none; }
+#model-interaction-hint { display: block; margin-top: 3px; }
+#model-interaction-hint[hidden] { display: none; }
 figcaption { margin-top: 5px; color: #b6c9c2; font-size: .85rem; }
 .preview-note { color: #b6c9c2; font-size: .82rem; margin: 8px 0 0; }
 .render-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 16px 0; color: #b6c9c2; }

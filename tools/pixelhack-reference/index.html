@@ -10,7 +10,7 @@
   <header>
     <h1>PixelHack model reference</h1>
     <p>NetHack 5.0 source names, original pixels, research notes, and model render comparison.</p>
-    <p><a href="/tools/pixelhack-reference/model.html?tile=0">Open the animated giant ant baseline →</a></p>
+    <nav id="model-links" class="model-links" aria-label="Available 3D models"></nav>
   </header>
   <main>
     <section class="toolbar" aria-label="Find a tile">
@@ -31,7 +31,7 @@
           <figure><canvas id="raw-tile" width="320" height="320"></canvas><figcaption>Original PixelHack tile</figcaption></figure>
           <figure><canvas id="isolated-light" width="320" height="320"></canvas><figcaption>Masked tile on light background</figcaption></figure>
           <figure><canvas id="isolated-dark" width="320" height="320"></canvas><figcaption>Masked tile on dark background</figcaption></figure>
-          <figure class="model-preview"><div id="model-drop"><img id="model-image" alt="Model render for comparison"><span id="model-placeholder">Choose or drop a Blender render</span></div><figcaption>Model render</figcaption></figure>
+          <figure class="model-preview"><div id="model-drop"><img id="model-image" alt="Model render for comparison"><span id="model-placeholder">Choose or drop a Blender render</span><span id="model-animation-label" hidden></span></div><figcaption>Model render · <a id="model-link" hidden>Open 3D model →</a><span id="model-interaction-hint" hidden>Left drag: rotate · Right drag: pan · Scroll: zoom</span></figcaption></figure>
         </div>
         <p class="preview-note">Light and dark backgrounds are display aids. Some tile-specific scenery survives the mask; use the original tile and research brief to separate subject from backdrop.</p>
         <div class="render-controls"><label>Open render image <input id="render-file" type="file" accept="image/png,image/jpeg,image/webp"></label><span>Drop an image onto the model panel for a quick comparison.</span></div>

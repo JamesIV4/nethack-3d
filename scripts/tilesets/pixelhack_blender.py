@@ -158,16 +158,17 @@ def bounds(objects):
     return low, high
 
 
-def normalize(objects, footprint=.92):
+def normalize(objects, footprint=.92, ground_clearance=0):
     low, high = bounds(objects)
     scale = footprint / max(high.x - low.x, high.y - low.y)
     offset = Vector(((low.x + high.x) / 2, (low.y + high.y) / 2, low.z))
+    lift = Vector((0, 0, ground_clearance))
     for obj in objects:
         for v in obj.data.vertices:
-            v.co = (obj.matrix_world @ v.co - offset) * scale
+            v.co = (obj.matrix_world @ v.co - offset) * scale + lift
         obj.matrix_world.identity()
     bpy.context.view_layer.update()
-    return Matrix.Scale(scale, 4) @ Matrix.Translation(-offset)
+    return Matrix.Translation(lift) @ Matrix.Scale(scale, 4) @ Matrix.Translation(-offset)
 
 
 def setup_review(objects, resolution=768):
