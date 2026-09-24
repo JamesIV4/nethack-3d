@@ -4,8 +4,8 @@ This is a preparation workbench for building a 3D tileset from the checked-in
 `public/assets/5.0/PixelHack.png`. It does not change game rendering.
 
 **Future modeling agents:** start with [AGENT-GUIDE.md](AGENT-GUIDE.md) for the
-complete single-assignment workflow, settled art direction, and a copyable
-task prompt. [MODELING.md](MODELING.md) documents the implementation and baseline.
+essential workflow, art direction, and task prompt. Consult
+[MODELING.md](MODELING.md) for implementation details only as needed.
 
 ## Open the catalog
 

@@ -91,7 +91,7 @@ Start here before making changes.
 
 - For PixelHack modeling tasks, read [the asset agent guide](../../tools/pixelhack-reference/AGENT-GUIDE.md) before creating geometry. Follow its requirements for pose, smooth shading, animation, reusable Python workflows, and validation suited to the asset.
 - Creature assets require Idle, Walk, and Attack. Attacks need immediate strong movement, an explicit bite/sting/weapon action, direction suited to the target, and short recovery.
-- Use [the implementation reference](../../tools/pixelhack-reference/MODELING.md) for asset paths, scale/orientation, rig, and export details.
+- Consult [the implementation reference](../../tools/pixelhack-reference/MODELING.md) only for details needed by the current asset.
 
 ## NetHack Reference
 
