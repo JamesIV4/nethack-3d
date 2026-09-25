@@ -81,7 +81,7 @@ if (metadata.humanoid) {
 }
 const boneName = (bone) => bone.userData.name ?? bone.name;
 const jointPattern = metadata.id === 'killer-bee' ? /^Leg\.[LR][1-3]\.lower$/
-  : metadata.id === 'dwarf-male' || metadata.id === 'water-nymph-female'
+  : metadata.id === 'dwarf-male' || metadata.id === 'water-nymph-female' || metadata.id === 'hobbit-male'
     ? /^(Leg\.[LR]\.lower|Foot\.[LR])$/
     : /^Leg\.[LR][1-3]\.(lower|foot)$/;
 const connectedJoints = mesh.skeleton.bones.filter((bone) => jointPattern.test(boneName(bone)))
@@ -92,6 +92,8 @@ if (metadata.id === 'killer-bee') assert.equal(connectedJoints.length, 6, 'All b
 if (metadata.id === 'dwarf-male') assert.equal(connectedJoints.length, 4, 'Both dwarf knees and ankles are checked');
 if (metadata.id === 'water-nymph-female')
   assert.equal(connectedJoints.length, 4, 'Both nymph knees and ankles are checked');
+if (metadata.id === 'hobbit-male')
+  assert.equal(connectedJoints.length, 4, 'Both hobbit knees and ankles are checked');
 const restMinY = Math.min(...rest.map((p) => p.y));
 const groundClearance = metadata.groundClearance ?? 0;
 assert.ok(Math.abs(restMinY - groundClearance) < .0001,
@@ -362,6 +364,132 @@ if (metadata.id === 'soldier-ant') {
   Object.assign(report.clips.Walk, { travelSpeedTilesPerSecond: walkContract.travelSpeedTilesPerSecond,
     strideCycles: walkContract.strideCycles, stanceFootSpeed, swingFootHeight });
   walkMixer.stopAllAction();
+}
+if (metadata.id === 'hobbit-male') {
+  const findBone = (name) => mesh.skeleton.bones.find((bone) => boneName(bone) === name);
+  const body = findBone('Body'), head = findBone('Head');
+  const arm = findBone('Arm.L.upper'), forearm = findBone('Arm.L.lower');
+  const hand = findBone('Hand.L'), weapon = findBone('Weapon');
+  const fingers = findBone('Grasp.L'), curledTips = findBone('Curl.L'), thumb = findBone('Thumb.L');
+  const feet = ['Foot.L', 'Foot.R'].map(findBone);
+  assert.equal(mesh.skeleton.bones.length, 21, 'Hobbit retains his torso, gripping fingers, dagger and articulated legs');
+  assert.ok(body && head && arm && forearm && hand && weapon && fingers && curledTips && thumb && feet.every(Boolean),
+    'Dagger, two finger bends, thumb, striking arm, head and support feet have independent bones');
+  const skinIndex = mesh.geometry.attributes.skinIndex;
+  const ownedVertices = (bone) => {
+    const joint = mesh.skeleton.bones.indexOf(bone);
+    const indices = Array.from({ length: skinIndex.count }, (_, i) => i)
+      .filter((i) => skinIndex.getX(i) === joint && weights.getX(i) > .99);
+    assert.ok(indices.length >= 12, `${boneName(bone)} owns visible geometry`);
+    return indices;
+  };
+  const blade = ownedVertices(weapon);
+  const fingerSurface = ownedVertices(curledTips);
+  const thumbSurface = ownedVertices(thumb);
+  const soles = feet.map(ownedVertices);
+  const attackClip = gltf.animations.find((clip) => clip.name === 'Attack');
+  const mixer = new THREE.AnimationMixer(model);
+  mixer.clipAction(attackClip).play();
+  mixer.setTime(0);
+  const ready = points();
+  const tipIndex = blade.reduce((top, i) => ready[i].y > ready[top].y ? i : top);
+  const indexRoot = fingers.getWorldPosition(new THREE.Vector3());
+  const thumbRoot = thumb.getWorldPosition(new THREE.Vector3());
+  assert.ok(indexRoot.distanceTo(thumbRoot) > .02, 'Thumb and index roots define a real grip opening');
+  const gripWeb = indexRoot.clone().add(thumbRoot).multiplyScalar(.5);
+  const handleVertices = blade.filter((i) => Math.abs(ready[i].y - gripWeb.y) < .06);
+  assert.ok(handleVertices.length >= 12, 'Handle has geometry through the thumb-index web');
+  const nearestHandle = handleVertices.reduce((best, i) => ready[i].distanceTo(gripWeb) < ready[best].distanceTo(gripWeb) ? i : best);
+  const webToHandle = ready[nearestHandle].distanceTo(gripWeb);
+  assert.ok(webToHandle < .04, `Dagger hilt runs through the thumb-index web (${webToHandle}; web ${gripWeb.toArray()}, handle ${ready[nearestHandle].toArray()})`);
+  const readyBlade = ready[tipIndex].clone()
+    .sub(hand.getWorldPosition(new THREE.Vector3())).normalize();
+  assert.ok(readyBlade.y > .80,
+    `The complete dagger points upward from the ready hand (${readyBlade.y})`);
+  const bodyOrigin = body.getWorldPosition(new THREE.Vector3());
+  const armReady = arm.quaternion.clone();
+  const bladeReady = weapon.quaternion.clone();
+  const fingerReady = curledTips.quaternion.clone();
+  mixer.setTime(1 / 60);
+  const earlyTipMotion = points()[tipIndex].distanceTo(ready[tipIndex]);
+  mixer.setTime(metadata.animationContract.Attack.hitTime);
+  const impact = points();
+  const impactBlade = impact[tipIndex].clone()
+    .sub(hand.getWorldPosition(new THREE.Vector3())).normalize();
+  const bodyImpact = body.getWorldPosition(new THREE.Vector3()).sub(bodyOrigin);
+  const armSwing = arm.quaternion.angleTo(armReady);
+  const bladeSnap = weapon.quaternion.angleTo(bladeReady);
+  const gripTightening = curledTips.quaternion.angleTo(fingerReady);
+  const tipMotion = impact[tipIndex].clone().sub(ready[tipIndex]);
+  assert.ok(earlyTipMotion > .025, 'The dagger starts moving in the first attack frame');
+  assert.ok(bodyImpact.z > .07 && tipMotion.z > .12,
+    'Hobbit and dagger drive toward a target ahead of the body');
+  assert.ok(armSwing > .35 && bladeSnap > .30,
+    'The striking arm and dagger articulate separately at impact');
+  assert.ok(impactBlade.z > .60 && impactBlade.y < .40,
+    `Wrist and arm turn the upright blade forward at impact (${impactBlade.toArray()})`);
+  assert.ok(gripTightening > .13, 'Distal fingers tighten around the handle during the cut');
+  assert.ok(impact[tipIndex].y > .52,
+    'The dagger reaches above the hobbit waist rather than striking the floor');
+  let highestFoot = -Infinity;
+  for (let step = 0; step <= 60; step += 1) {
+    mixer.setTime(attackClip.duration * step / 60);
+    const sample = points();
+    for (const indices of soles) {
+      const height = Math.min(...indices.map((i) => sample[i].y));
+      highestFoot = Math.max(highestFoot, height);
+      assert.ok(height >= -.008 && height <= .012,
+        `Both bare feet brace through the cut (sample ${step}, height ${height})`);
+    }
+  }
+  Object.assign(report.clips.Attack, { earlyTipMotion, bodyMotionAtImpact: bodyImpact.toArray(),
+    armSwingRadians: armSwing, daggerSnapRadians: bladeSnap, gripTighteningRadians: gripTightening,
+    readyBladeDirection: readyBlade.toArray(), impactBladeDirection: impactBlade.toArray(),
+    webToHandle,
+    daggerTipMotionAtImpact: tipMotion.toArray(), highestFoot });
+  report.daggerVerticesChecked = blade.length;
+  report.grippingFingerVerticesChecked = fingerSurface.length;
+  report.grippingThumbVerticesChecked = thumbSurface.length;
+  report.groundedFeetChecked = soles.length;
+  mixer.stopAllAction();
+  mesh.skeleton.pose();
+  const walkClip = gltf.animations.find((clip) => clip.name === 'Walk');
+  const walkContract = metadata.animationContract.Walk;
+  assert.ok(Math.abs(walkClip.duration - .5) < .0001 && walkContract.travelSpeedTilesPerSecond === 2
+    && walkContract.strideCycles === 1, 'Hobbit walks one left-right cycle during a half-second tile move');
+  const walking = new THREE.AnimationMixer(model);
+  walking.clipAction(walkClip).play();
+  walking.setTime(0);
+  model.updateMatrixWorld(true);
+  const stanceStart = feet[0].getWorldPosition(new THREE.Vector3());
+  walking.setTime(.25);
+  model.updateMatrixWorld(true);
+  const stanceEnd = feet[0].getWorldPosition(new THREE.Vector3());
+  const stanceFootSpeed = (stanceStart.z - stanceEnd.z) / .25;
+  walking.setTime(.375);
+  const swing = points();
+  const swingFootHeight = Math.min(...soles[0].map((i) => swing[i].y));
+  assert.ok(stanceFootSpeed > 1.5 && stanceFootSpeed < 2.3,
+    `Hobbit stance foot sweeps back near two tiles per second (${stanceFootSpeed})`);
+  assert.ok(swingFootHeight > .06, `The lifted bare foot clears the floor (${swingFootHeight})`);
+  Object.assign(report.clips.Walk, { travelSpeedTilesPerSecond: 2, strideCycles: 1,
+    stanceFootSpeed, swingFootHeight });
+  walking.stopAllAction();
+  mesh.skeleton.pose();
+  const idle = new THREE.AnimationMixer(model);
+  idle.clipAction(gltf.animations.find((clip) => clip.name === 'Idle')).play();
+  idle.setTime(0);
+  model.updateMatrixWorld(true);
+  const readyHead = head.getWorldQuaternion(new THREE.Quaternion());
+  const readyDagger = points()[tipIndex];
+  idle.setTime(1.35);
+  const glanceDagger = points()[tipIndex];
+  const headTurn = head.getWorldQuaternion(new THREE.Quaternion()).angleTo(readyHead);
+  assert.ok(headTurn > .12 && glanceDagger.distanceTo(readyDagger) > .07,
+    'Idle has a visible curious glance and dagger-hand gesture');
+  Object.assign(report.clips.Idle, { headTurnRadians: headTurn,
+    daggerGestureDistance: glanceDagger.distanceTo(readyDagger) });
+  idle.stopAllAction();
 }
 if (metadata.id === 'dwarf-male') {
   const findBone = (name) => mesh.skeleton.bones.find((bone) => boneName(bone) === name);

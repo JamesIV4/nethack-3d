@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "id": "hobbit-male",
+  "title": "Hobbit, male",
+  "tileIds": [
+    90
+  ],
+  "sourceAtlasSha256": "4a9327f7164afd28962d9a713e581cf28ae6b85467bc6d31981a681b1267170d",
+  "sourceScript": "scripts/tilesets/models/hobbit_male.py",
+  "blenderVersion": "5.1.2",
+  "parts": 40,
+  "triangles": 17430,
+  "materials": 1,
+  "boundsBlender": {
+    "min": [
+      -0.44999992847442627,
+      -0.2845248878002167,
+      -1.27846249142749e-08
+    ],
+    "max": [
+      0.4499998986721039,
+      0.2845248579978943,
+      1.6860889196395874
+    ]
+  },
+  "dimensionsBlender": [
+    0.8999998569488525,
+    0.5690497159957886,
+    1.6860889196395874
+  ],
+  "glbBytes": 752940,
+  "bones": 21,
+  "humanoid": true,
+  "proceduralAnimations": {
+    "blink": {
+      "morphTarget": "Blink"
+    }
+  },
+  "animations": [
+    "Attack",
+    "Idle",
+    "Walk"
+  ],
+  "animationContract": {
+    "Idle": {
+      "loop": true,
+      "maxDisplacement": 0.24
+    },
+    "Walk": {
+      "loop": true,
+      "maxDisplacement": 0.65,
+      "travelSpeedTilesPerSecond": 2,
+      "strideCycles": 1
+    },
+    "Attack": {
+      "loop": false,
+      "hitTime": 0.18333333333333332,
+      "maxDisplacement": 0.88
+    }
+  },
+  "reviewSmallView": "hero",
+  "footprint": 0.9,
+  "groundClearance": 0,
+  "views": [
+    "hero",
+    "side",
+    "front",
+    "top",
+    "back"
+  ],
+  "resolution": 768,
+  "directory": "tools/pixelhack-reference/models/0090-hobbit-male",
+  "palette": {
+    "shell": "70472f",
+    "ink": "211a1b",
+    "skin": "b96e4d",
+    "skin_light": "eeac71",
+    "skin_shadow": "824630",
+    "lip": "99533b",
+    "sclera": "f2e9ce",
+    "iris": "615237",
+    "pupil": "241e1b",
+    "hair": "352420",
+    "hair_light": "5c3525",
+    "hat": "382821",
+    "hat_light": "714025",
+    "shirt": "668a24",
+    "shirt_light": "a3ac38",
+    "shirt_dark": "344a18",
+    "vest": "70422e",
+    "vest_light": "9e5a38",
+    "vest_dark": "3d261e",
+    "trousers": "7b4a35",
+    "trousers_light": "a36543",
+    "belt": "30251c",
+    "brass": "d7a748",
+    "blade": "aeb9b6",
+    "blade_light": "e5e4c8"
+  },
+  "status": "baseline-candidate"
+}

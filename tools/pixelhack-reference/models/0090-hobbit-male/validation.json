@@ -1,0 +1,79 @@
+{
+  "meshCount": 1,
+  "materialCount": 1,
+  "triangles": 17430,
+  "bones": 21,
+  "allVerticesWeighted": true,
+  "restMinimumY": 1.4262433079962486e-8,
+  "groundClearance": 0,
+  "clips": {
+    "Attack": {
+      "duration": 0.6000000238418579,
+      "sampledFrames": 61,
+      "loop": false,
+      "minimumY": -0.0024956573422666066,
+      "maximumDisplacement": 0.7838893365150069,
+      "endpointDifference": 0,
+      "hitTime": 0.18333333333333332,
+      "matchesIdleEndpoints": true,
+      "earlyTipMotion": 0.4572344032993062,
+      "bodyMotionAtImpact": [
+        -0.02601616413491656,
+        -0.06221258535998686,
+        0.1866376964752836
+      ],
+      "armSwingRadians": 0.6065365899197044,
+      "daggerSnapRadians": 0.3017637907631395,
+      "gripTighteningRadians": 0.20699931915746717,
+      "readyBladeDirection": [
+        -0.10732185567518389,
+        0.9664992092804662,
+        0.23315509377808732
+      ],
+      "impactBladeDirection": [
+        -0.04105691446579066,
+        0.06262133380349642,
+        0.9971925081583894
+      ],
+      "webToHandle": 0.020360360857718904,
+      "daggerTipMotionAtImpact": [
+        0.0600938645545217,
+        -0.32328599874993336,
+        0.7197270319077655
+      ],
+      "highestFoot": 4.524497346130168e-7
+    },
+    "Idle": {
+      "duration": 3,
+      "sampledFrames": 61,
+      "loop": true,
+      "minimumY": -2.666106834482097e-7,
+      "maximumDisplacement": 0.18973172783467393,
+      "loopSeamError": 0,
+      "headTurnRadians": 0.2646338784411689,
+      "daggerGestureDistance": 0.0753314927588614
+    },
+    "Walk": {
+      "duration": 0.5,
+      "sampledFrames": 61,
+      "loop": true,
+      "minimumY": -0.0006351684013159676,
+      "maximumDisplacement": 0.5935376330610159,
+      "loopSeamError": 0,
+      "travelSpeedTilesPerSecond": 2,
+      "strideCycles": 1,
+      "stanceFootSpeed": 2.010911194535214,
+      "swingFootHeight": 0.1360122848726261
+    }
+  },
+  "blink": {
+    "morphTarget": "Blink",
+    "eyelidVertices": 260,
+    "independentOfClips": true
+  },
+  "connectedJointsChecked": 4,
+  "daggerVerticesChecked": 168,
+  "grippingFingerVerticesChecked": 54,
+  "grippingThumbVerticesChecked": 17,
+  "groundedFeetChecked": 2
+}

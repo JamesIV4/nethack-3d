@@ -20,6 +20,16 @@ water nymph generator. It contains vertices and polygon indices only.
 The generator adapts proportions, poses and weights this mesh, adds its own
 costume, hair, eyes and vertex colors. Rebuilding needs no download or add-on.
 
+`stylized-male-cc0.json` is the local control mesh for tile 90, the male hobbit.
+It comes from the same CC0 v1.4.1 archive and SHA-256 above, object
+`GEO-body_male_stylized`. Blender 5.1.2's Decimate modifier in `UNSUBDIV` mode
+with two iterations produced 3,513 vertices, 4,138 polygons and 7,022
+triangles. Coordinates were rounded to seven decimal places. The male and
+female cages have matching polygon and vertex order; the hobbit recipe uses
+the female cage solely to locate anatomical weight regions while the male
+cage supplies every visible body vertex. Rebuilding tile 90 needs neither the
+source archive nor an add-on.
+
 Technique references:
 
 - [Blender Studio: primitive body and proportion workflow](https://studio.blender.org/training/stylized-character-workflow/5d7f7cf055ccaf1a4a78102d/)
