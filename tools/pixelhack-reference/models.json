@@ -101,12 +101,12 @@
         "summary": "A barefoot hobbit in a broad travel hat, green shirt and brown vest, carrying a small dagger.",
         "visualHeading": "A little traveler with a quick blade.",
         "visualDescription": "A wide brim and dark curls frame his round face. His green shirt, open brown vest, short breeches and broad bare feet preserve the sprite's silhouette and warm palette.",
-        "motionDescription": "Idle shifts his weight and glances aside with the dagger upright at his side. Walk has a brisk two-step bounce, twisting shoulders, swinging arms and rolling bare feet. Attack draws the hand back, steps in, then turns the wrist and arm to drive the blade forward before recoiling to guard."
+        "motionDescription": "Idle shifts his weight and glances aside with the dagger angled inward from a bent guard stance. Walk has a brisk two-step bounce, twisting shoulders, swinging arms and rolling bare feet. Attack draws the hand back, steps in, then turns the wrist and arm to drive the blade forward before recoiling to guard."
       },
       "animations": {
-        "Idle": { "loop": true, "maxDisplacement": 0.24 },
-        "Walk": { "loop": true, "maxDisplacement": 0.65, "travelSpeedTilesPerSecond": 2, "strideCycles": 1 },
-        "Attack": { "loop": false, "hitTime": 0.18333333333333332, "maxDisplacement": 0.88 }
+        "Idle": { "loop": true, "maxDisplacement": 0.23 },
+        "Walk": { "loop": true, "maxDisplacement": 0.67, "travelSpeedTilesPerSecond": 2, "strideCycles": 1 },
+        "Attack": { "loop": false, "hitTime": 0.18333333333333332, "maxDisplacement": 0.74 }
       }
     },
     {

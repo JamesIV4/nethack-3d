@@ -13,22 +13,22 @@
   "materials": 1,
   "boundsBlender": {
     "min": [
-      -0.44999992847442627,
-      -0.2845248878002167,
-      -1.27846249142749e-08
+      -0.4500000774860382,
+      -0.2975059747695923,
+      -1.3365746731608397e-08
     ],
     "max": [
-      0.4499998986721039,
-      0.2845248579978943,
-      1.6860889196395874
+      0.45000001788139343,
+      0.2975059449672699,
+      1.4441239833831787
     ]
   },
   "dimensionsBlender": [
-    0.8999998569488525,
-    0.5690497159957886,
-    1.6860889196395874
+    0.9000000953674316,
+    0.5950119495391846,
+    1.4441239833831787
   ],
-  "glbBytes": 752940,
+  "glbBytes": 752132,
   "bones": 21,
   "humanoid": true,
   "proceduralAnimations": {
@@ -44,18 +44,18 @@
   "animationContract": {
     "Idle": {
       "loop": true,
-      "maxDisplacement": 0.24
+      "maxDisplacement": 0.23
     },
     "Walk": {
       "loop": true,
-      "maxDisplacement": 0.65,
+      "maxDisplacement": 0.67,
       "travelSpeedTilesPerSecond": 2,
       "strideCycles": 1
     },
     "Attack": {
       "loop": false,
       "hitTime": 0.18333333333333332,
-      "maxDisplacement": 0.88
+      "maxDisplacement": 0.74
     }
   },
   "reviewSmallView": "hero",

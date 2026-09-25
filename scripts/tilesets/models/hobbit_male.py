@@ -23,9 +23,11 @@ LEGS = {}
 GRIPS = {}
 CURLS = {}
 THUMBS = {}
-# The whole dagger rises from the hand at rest. The hand keeps its natural
-# low pose; the arm and wrist carry the upright weapon forward in Attack.
-DAGGER_AXIS = Vector((-.080,-.050,.995)).normalized()
+WEAPON_GRIP = Vector((0,0,0))
+# The complete dagger leaves the thumb-index web diagonally forward and
+# inward toward the raised arm, roughly 45 degrees from vertical in front.
+# The arm stays within its original source segment lengths.
+DAGGER_AXIS = Vector((.700,-.500,.700)).normalized()
 FINGER_HINGE = Vector((0,1,0))
 
 
@@ -151,8 +153,8 @@ def tapered_blade(name, base, tip, width, color, bone):
     """Double-beveled steel with a clear cutting silhouette at small sizes."""
     a,b=Vector(base),Vector(tip)
     along=(b-a).normalized()
-    # The wide bevel is upright in the fist, so the cutting edge leads the
-    # downward-forward attack. The dagger keeps this orientation in every clip.
+    # The bevel's wide axis follows the authored blade angle so the cutting
+    # edge leads the forward attack. Its cross-section is fixed across clips.
     across=(Vector((0,0,1))-along*along.z).normalized()
     normal=along.cross(across).normalized()
     centers=[a,a.lerp(b,.18),a.lerp(b,.72),b]
@@ -204,7 +206,7 @@ def scalp_lock(name, controls, widths, color):
 
 
 def build():
-    global FINGER_HINGE
+    global FINGER_HINGE, WEAPON_GRIP
     PARTS.clear(); ARMS.clear(); LEGS.clear(); GRIPS.clear(); CURLS.clear(); THUMBS.clear()
     ph.VIEWS['hero']=(2.6,-5,2.1)
     ph.VIEWS['front']=(0,-5,1.4)
@@ -239,8 +241,8 @@ def build():
         wrist=landmark((.333,-.022,.862),sign)
         aim_shoulder=shoulder.copy()
         if side=='L':
-            aim_elbow=Vector((-.275,-.045,.79))
-            aim_wrist=Vector((-.375,-.115,.68))
+            aim_elbow=Vector((-.330,-.120,.850))
+            aim_wrist=Vector((-.470,-.180,.900))
         else:
             aim_elbow=Vector((.270,-.005,.76))
             aim_wrist=Vector((.345,-.105,.62))
@@ -580,7 +582,8 @@ def build():
     # Center the hilt in the anatomical web between index knuckle and thumb
     # root, then run it through the palm before the guard clears the fingers.
     web=(GRIPS['L'][0]+THUMBS['L'][0])*.5
-    handle_origin=web-DAGGER_AXIS*.100
+    WEAPON_GRIP=web.copy()
+    handle_origin=web-DAGGER_AXIS*.125
     hilt=handle_origin+DAGGER_AXIS*.055
     guard=handle_origin+DAGGER_AXIS*.192
     point=guard+DAGGER_AXIS*.240
@@ -591,7 +594,7 @@ def build():
     part(smooth(ph.tube('Dagger | brass guard',
                          [guard-crossguard*.032,guard+crossguard*.032],
                          [.012,.012],10,'brass')),'Weapon')
-    tapered_blade('Dagger | double-edged steel',guard,point,.044,'blade','Weapon')
+    tapered_blade('Dagger | double-edged steel',guard,point,.050,'blade','Weapon')
     tapered_blade('Dagger | bright center ridge',guard+Vector((0,-.002,0)),point,
                   .007,'blade_light','Weapon')
 
@@ -617,7 +620,9 @@ def rig_model(objects,transform):
         specs[f'Leg.{side}.lower']=(knee,ankle,f'Leg.{side}.upper')
         specs[f'Foot.{side}']=(ankle,toe,f'Leg.{side}.lower')
     hand=ARMS['L'][2]
-    specs['Weapon']=(hand,hand+DAGGER_AXIS*.24,'Hand.L')
+    # Weapon rotation pivots at the grip web, not the wrist. The hilt remains
+    # seated between thumb and index as the separate blade snap plays.
+    specs['Weapon']=(WEAPON_GRIP,WEAPON_GRIP+DAGGER_AXIS*.24,'Hand.L')
     rig=create_rig('Hobbit male | expressive deform rig',specs,transform)
     for obj in objects: bind(obj,rig,PARTS[obj.name])
     skin=next(obj for obj in objects if obj.name.startswith('Skin |'))
@@ -707,7 +712,7 @@ def animate(rig,transform,soles):
             body_delta=body.matrix @ body.bone.matrix_local.inverted()
             spine_delta=spine.matrix @ spine.bone.matrix_local.inverted()
             if name=='Idle':
-                turn('Arm.L.upper',.035*wave(phase,.3)-.28*glance,0,-.015*math.sin(phase))
+                turn('Arm.L.upper',.035*wave(phase,.3)-.34*glance,0,-.015*math.sin(phase))
                 turn('Arm.L.lower',.030*wave(phase,.65)-.14*glance,0,0)
                 turn('Hand.L',.04*wave(phase,1),0,0)
                 turn('Arm.R.upper',-.055*wave(phase,.8)-.10*glance,0,0)
@@ -729,17 +734,21 @@ def animate(rig,transform,soles):
                 turn('Arm.R.upper',-.20*dash,0,-.10*dash)
                 turn('Arm.R.lower',-.28*dash,0,0)
                 turn('Hand.R',.13*recoil,0,0)
-                turn('Hand.L',1.25*slash,0,-.45*slash)
+                turn('Hand.L',.30*slash,0,-.96*slash)
                 flex('Grasp.L',-.14*slash)
                 flex('Curl.L',-.18*slash)
                 turn('Weapon',.25*slash,0,-.08*slash)
                 shoulder0,elbow0,wrist0=arms['L']
                 shoulder=spine_delta @ shoulder0
-                target=transform @ Vector((-.28,-.33,.85))
+                target=transform @ Vector((-.30,-.37,1.03))
                 back=transform @ Vector((-.34,.035,1.105))
                 wrist=spine_delta @ wrist0.lerp(back,prep).lerp(target,dash)
-                elbow=solve_knee(shoulder,wrist,spine_delta @ elbow0,
-                                 (elbow0-shoulder0).length,(wrist0-elbow0).length)
+                try:
+                    elbow=solve_knee(shoulder,wrist,spine_delta @ elbow0,
+                                     (elbow0-shoulder0).length,(wrist0-elbow0).length)
+                except ValueError as error:
+                    raise ValueError(f'{name} frame {frame}: striking hand target is out of reach '
+                                     f'(shoulder={tuple(shoulder)}, wrist={tuple(wrist)})') from error
                 set_bone_segment(rig,'Arm.L.upper',shoulder,elbow)
                 set_bone_segment(rig,'Arm.L.lower',elbow,wrist)
             for side,(hip0,knee0,ankle0,toe0) in legs.items():
@@ -747,7 +756,7 @@ def animate(rig,transform,soles):
                 ankle=ankle0.copy();foot_rotation=Quaternion((1,0,0),0)
                 if name=='Walk':
                     cycle=(t+(0 if side=='L' else .5))%1
-                    stride=.48*scale
+                    stride=.55*scale
                     if cycle<=.54:
                         ankle.y+=stride*(-.5+cycle/.54)
                         pitch=-.17*(1-ease(0,.12,cycle))+.28*ease(.40,.54,cycle)

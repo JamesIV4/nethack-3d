@@ -404,8 +404,8 @@ if (metadata.id === 'hobbit-male') {
   assert.ok(webToHandle < .04, `Dagger hilt runs through the thumb-index web (${webToHandle}; web ${gripWeb.toArray()}, handle ${ready[nearestHandle].toArray()})`);
   const readyBlade = ready[tipIndex].clone()
     .sub(hand.getWorldPosition(new THREE.Vector3())).normalize();
-  assert.ok(readyBlade.y > .80,
-    `The complete dagger points upward from the ready hand (${readyBlade.y})`);
+  assert.ok(readyBlade.y > .50 && readyBlade.y < .82 && readyBlade.x > .45,
+    `The complete dagger rises diagonally inward about 45 degrees from the ready hand (${readyBlade.toArray()})`);
   const bodyOrigin = body.getWorldPosition(new THREE.Vector3());
   const armReady = arm.quaternion.clone();
   const bladeReady = weapon.quaternion.clone();
@@ -414,6 +414,11 @@ if (metadata.id === 'hobbit-male') {
   const earlyTipMotion = points()[tipIndex].distanceTo(ready[tipIndex]);
   mixer.setTime(metadata.animationContract.Attack.hitTime);
   const impact = points();
+  const impactWeb = fingers.getWorldPosition(new THREE.Vector3())
+    .add(thumb.getWorldPosition(new THREE.Vector3())).multiplyScalar(.5);
+  const impactWebToHandle = Math.min(...handleVertices.map((i) => impact[i].distanceTo(impactWeb)));
+  assert.ok(impactWebToHandle < .04,
+    `Handle stays seated in the thumb-index web during the strike (${impactWebToHandle})`);
   const impactBlade = impact[tipIndex].clone()
     .sub(hand.getWorldPosition(new THREE.Vector3())).normalize();
   const bodyImpact = body.getWorldPosition(new THREE.Vector3()).sub(bodyOrigin);
@@ -425,9 +430,9 @@ if (metadata.id === 'hobbit-male') {
   assert.ok(bodyImpact.z > .07 && tipMotion.z > .12,
     'Hobbit and dagger drive toward a target ahead of the body');
   assert.ok(armSwing > .35 && bladeSnap > .30,
-    'The striking arm and dagger articulate separately at impact');
+    `The striking arm and dagger articulate separately at impact (${armSwing}, ${bladeSnap})`);
   assert.ok(impactBlade.z > .60 && impactBlade.y < .40,
-    `Wrist and arm turn the upright blade forward at impact (${impactBlade.toArray()})`);
+    `Wrist and arm turn the diagonal ready blade forward at impact (${impactBlade.toArray()})`);
   assert.ok(gripTightening > .13, 'Distal fingers tighten around the handle during the cut');
   assert.ok(impact[tipIndex].y > .52,
     'The dagger reaches above the hobbit waist rather than striking the floor');
@@ -445,7 +450,7 @@ if (metadata.id === 'hobbit-male') {
   Object.assign(report.clips.Attack, { earlyTipMotion, bodyMotionAtImpact: bodyImpact.toArray(),
     armSwingRadians: armSwing, daggerSnapRadians: bladeSnap, gripTighteningRadians: gripTightening,
     readyBladeDirection: readyBlade.toArray(), impactBladeDirection: impactBlade.toArray(),
-    webToHandle,
+    webToHandle, impactWebToHandle,
     daggerTipMotionAtImpact: tipMotion.toArray(), highestFoot });
   report.daggerVerticesChecked = blade.length;
   report.grippingFingerVerticesChecked = fingerSurface.length;
@@ -486,7 +491,7 @@ if (metadata.id === 'hobbit-male') {
   const glanceDagger = points()[tipIndex];
   const headTurn = head.getWorldQuaternion(new THREE.Quaternion()).angleTo(readyHead);
   assert.ok(headTurn > .12 && glanceDagger.distanceTo(readyDagger) > .07,
-    'Idle has a visible curious glance and dagger-hand gesture');
+    `Idle has a visible curious glance and dagger-hand gesture (${headTurn}, ${glanceDagger.distanceTo(readyDagger)})`);
   Object.assign(report.clips.Idle, { headTurnRadians: headTurn,
     daggerGestureDistance: glanceDagger.distanceTo(readyDagger) });
   idle.stopAllAction();

@@ -4,66 +4,67 @@
   "triangles": 17430,
   "bones": 21,
   "allVerticesWeighted": true,
-  "restMinimumY": 1.4262433079962486e-8,
+  "restMinimumY": -6.931431265543335e-8,
   "groundClearance": 0,
   "clips": {
     "Attack": {
       "duration": 0.6000000238418579,
       "sampledFrames": 61,
       "loop": false,
-      "minimumY": -0.0024956573422666066,
-      "maximumDisplacement": 0.7838893365150069,
+      "minimumY": -0.0021374822748860822,
+      "maximumDisplacement": 0.6137613175148932,
       "endpointDifference": 0,
       "hitTime": 0.18333333333333332,
       "matchesIdleEndpoints": true,
-      "earlyTipMotion": 0.4572344032993062,
+      "earlyTipMotion": 0.25488549357161866,
       "bodyMotionAtImpact": [
-        -0.02601616413491656,
-        -0.06221258535998686,
-        0.1866376964752836
+        -0.02228265963393558,
+        -0.05328469108788825,
+        0.15985396718809985
       ],
-      "armSwingRadians": 0.6065365899197044,
-      "daggerSnapRadians": 0.3017637907631395,
-      "gripTighteningRadians": 0.20699931915746717,
+      "armSwingRadians": 0.7493691656296003,
+      "daggerSnapRadians": 0.30176569836322475,
+      "gripTighteningRadians": 0.20699926338873,
       "readyBladeDirection": [
-        -0.10732185567518389,
-        0.9664992092804662,
-        0.23315509377808732
+        0.492543366081231,
+        0.6192985581857825,
+        0.6114493669621235
       ],
       "impactBladeDirection": [
-        -0.04105691446579066,
-        0.06262133380349642,
-        0.9971925081583894
+        0.3227138745518914,
+        -0.20126315987180435,
+        0.9248507423633948
       ],
-      "webToHandle": 0.020360360857718904,
+      "webToHandle": 0.017438485553361124,
+      "impactWebToHandle": 0.017438487378654378,
       "daggerTipMotionAtImpact": [
-        0.0600938645545217,
-        -0.32328599874993336,
-        0.7197270319077655
+        0.04641950892252916,
+        -0.3283695534319786,
+        0.526630678581582
       ],
-      "highestFoot": 4.524497346130168e-7
+      "highestFoot": 4.931064769064508e-7
     },
     "Idle": {
       "duration": 3,
       "sampledFrames": 61,
       "loop": true,
-      "minimumY": -2.666106834482097e-7,
-      "maximumDisplacement": 0.18973172783467393,
+      "minimumY": -2.3471831915443112e-7,
+      "maximumDisplacement": 0.17618096941773922,
       "loopSeamError": 0,
-      "headTurnRadians": 0.2646338784411689,
-      "daggerGestureDistance": 0.0753314927588614
+      "headTurnRadians": 0.2646338784944403,
+      "daggerGestureDistance": 0.14565529445324554
     },
     "Walk": {
       "duration": 0.5,
       "sampledFrames": 61,
       "loop": true,
-      "minimumY": -0.0006351684013159676,
-      "maximumDisplacement": 0.5935376330610159,
+      "minimumY": -0.0007222232794398611,
+      "maximumDisplacement": 0.5768013606719838,
       "loopSeamError": 0,
       "travelSpeedTilesPerSecond": 2,
       "strideCycles": 1,
-      "stanceFootSpeed": 2.010911194535214,
-      "swingFootHeight": 0.1360122848726261
+      "stanceFootSpeed": 1.9735060813051535,
+      "swingFootHeight": 0.11612829772003855
     }
   },
   "blink": {

@@ -25,11 +25,18 @@ and [outfit topology](https://studio.blender.org/training/stylized-character-wor
 workflow.
 
 Idle lasts three seconds and adds a curious head turn, weight shift, and dagger
-gesture. The low wrist keeps its natural pose; the whole dagger points upward
-from a handle centered in the thumb-index web, with the guard beyond the
-fingers. The thumb tip is corrected toward the hilt without moving its root.
+gesture. A bent guard pose keeps the whole dagger clear of the sleeve while it
+leaves the thumb-index web diagonally forward and inward, about 45 degrees
+from vertical as seen from the front. The guard stays beyond the fingers, and
+the thumb tip is corrected toward the hilt without moving its root.
+The rigid `Weapon` bone is a child of `Hand.L`, with its pivot at that grip
+web rather than at the wrist. The blade can snap independently without the
+handle sweeping out of the fist. This applies Blender's
+[bone parenting](https://docs.blender.org/manual/en/latest/animation/armatures/bones/editing/parenting.html)
+principle and the [Blender Studio hand-weighting](https://studio.blender.org/training/blenrig/56fc10c0c379cf0006880429/)
+practice of reviewing deformation in the posed hand.
 Walk lasts 0.5 seconds for one left/right cycle, with a wide foot sweep, lift,
-torso twist, and arm swing. The measured planted-foot sweep is 2.01 tiles per
+torso twist, and arm swing. The measured planted-foot sweep is 1.97 tiles per
 second against a two-tile-per-second controller target. Attack draws the hand
 back, steps and leans forward, then rotates the wrist and arm to aim the blade
 nearly straight at the target at 0.183 seconds before recovering to the exact
@@ -40,10 +47,10 @@ independently per displayed character.
 The exported GLB has 17,430 triangles, 21 bones, one primitive and one vertex
 palette material. The model check sampled 61 frames per clip and checked
 finite vertices, normalized weights, joint attachment, grounded contact,
-seam continuity, attack-to-idle alignment, an upright ready blade, a forward
-impact blade, finger and thumb ownership, a measured 0.020-unit distance
-between the grip web and handle surface, and
-blink independence. The shirt, waistcoat, breeches, hat, body, and hair
+seam continuity, attack-to-idle alignment, a diagonal ready blade, a forward
+impact blade, finger and thumb ownership, a measured 0.018-unit distance
+between the grip web and handle surface at both ready and impact, and blink
+independence. The shirt, waistcoat, breeches, hat, body, and hair
 underlay are each checked as connected, closed surfaces in the recipe.
 Five static views, 32/64/128-pixel reductions, exported action poses from
 front/hero/side, and eye states at 0/0.5/1 from front/hero/side were visually
