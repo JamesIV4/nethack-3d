@@ -29,6 +29,34 @@ function fixture() {
 }
 
 describe("temporary XR terrain instances", () => {
+  it("updates cached material groups when direct color, depth, texture or shader state changes", () => {
+    const f = fixture(), a = f.addFloor(0), b = f.addFloor(1);
+    let count = 0;
+    f.renderer.render.mockImplementation(() => { count = f.visibleBatches().length; });
+    f.render(); expect(count).toBe(1);
+    a.material.color.setRGB(.5, .7, .9); f.render(); expect(count).toBe(0);
+    b.material.color.copy(a.material.color); f.render(); expect(count).toBe(1);
+    a.material.depthFunc = THREE.AlwaysDepth; f.render(); expect(count).toBe(0);
+    b.material.depthFunc = THREE.AlwaysDepth; f.render(); expect(count).toBe(1);
+    a.material.customProgramCacheKey = () => "changed-shader"; f.render(); expect(count).toBe(0);
+    b.material.customProgramCacheKey = a.material.customProgramCacheKey; f.render(); expect(count).toBe(1);
+    a.material.map = null; f.render(); expect(count).toBe(0);
+    b.material.map = null; f.render(); expect(count).toBe(1);
+    f.owner.dispose();
+  });
+
+  it("updates cached mesh groups when layers or ordering change", () => {
+    const f = fixture(), a = f.addFloor(0), b = f.addFloor(1);
+    let count = 0;
+    f.renderer.render.mockImplementation(() => { count = f.visibleBatches().length; });
+    f.render(); expect(count).toBe(1);
+    a.layers.set(1); f.render(); expect(count).toBe(0);
+    b.layers.set(1); f.render(); expect(count).toBe(1);
+    a.renderOrder = 4; f.render(); expect(count).toBe(0);
+    b.renderOrder = 4; f.render(); expect(count).toBe(1);
+    expect(a.layers.mask).toBe(2); expect(b.layers.mask).toBe(2);
+    f.owner.dispose();
+  });
   it("batches proven opaque floors, preserves shader hooks and restores original objects for input", () => {
     const f = fixture(), a = f.addFloor(0), b = f.addFloor(1), outside = f.addFloor(30);
     const sources = [...f.tiles.values()].map(o => [o.geometry, o.material]);

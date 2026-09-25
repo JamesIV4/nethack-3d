@@ -176,6 +176,7 @@ export function createEngineSystems(coordinator: EngineCoordinator): EngineSyste
     get worldClassification() { return worldClassification; },
   });
   const tileUpdates: TileUpdates = new TileUpdates({
+    get renderPipeline() { return renderPipeline; },
     get floorOcclusion() { return floorOcclusion; },
     get wallGeometry() { return wallGeometry; },
     get camera() { return camera; },

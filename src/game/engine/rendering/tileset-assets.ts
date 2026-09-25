@@ -39,6 +39,7 @@ export interface TilesetAssetsDependencies {
   readonly engineState: Pick<
     EngineState,
     "characterCreationConfig"
+    | "disposed"
     | "clientOptions"
   >;
   readonly entityBillboards: Pick<
@@ -139,6 +140,7 @@ export class TilesetAssets {
   tilesetCompilationLoadingVisible = false;
 
   tilesetTextureLoadRequestId = 0;
+  tilesetTextureRuntimeVersion: NethackRuntimeVersion | null = null;
 
   loadedTilesetSourceLayoutVersion: Nh3dTilesetTileLayoutVersion =
     "unknown";
@@ -269,7 +271,12 @@ export class TilesetAssets {
   loadTilesetImage(url: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const image = new Image();
-      image.onload = () => resolve(image);
+      image.decoding = "async";
+      image.onload = () => {
+        // Complete decoding before the first drawImage, which would otherwise
+        // force it on the rendering thread during loading.
+        void image.decode().then(() => resolve(image), reject);
+      };
       image.onerror = () =>
         reject(new Error(`Failed to load tileset atlas image: ${url}`));
       image.src = url;
@@ -368,14 +375,15 @@ export class TilesetAssets {
     );
   }
 
-  compileLegacyTilesetAtlasToNh5(
+  async compileLegacyTilesetAtlasToNh5(
     legacyAtlasImage: HTMLImageElement,
     tileSize: number,
     fuseBaseImage: HTMLImageElement | null,
     tileHeight: number = tileSize,
     fuseBaseTileWidth: number = tileSize,
     fuseBaseTileHeight: number = tileHeight,
-  ): HTMLCanvasElement {
+    isCurrent: () => boolean = () => true,
+  ): Promise<HTMLCanvasElement> {
     const outputCanvas = document.createElement("canvas");
     outputCanvas.width = nh5TilesPerRow * tileSize;
     outputCanvas.height = nh5OutputRows * tileHeight;
@@ -402,11 +410,19 @@ export class TilesetAssets {
       fuseBaseTilesPerRow > 0 && fuseBaseRows > 0
         ? fuseBaseTilesPerRow * fuseBaseRows
         : 0;
+    let sliceStartMs = performance.now();
     for (
       let nh5TileIndex = 0;
       nh5TileIndex < nh5ExpectedTileCount;
       nh5TileIndex += 1
     ) {
+      if (nh5TileIndex > 0 && (nh5TileIndex % 64 === 0 || performance.now() - sliceStartMs >= 1.5)) {
+        // A task boundary allows XR and the loading pane to paint. A resolved
+        // Promise only yields to microtasks and would still starve frames.
+        await new Promise<void>(resolve => setTimeout(resolve, 0));
+        if (!isCurrent()) throw new Error("Tileset compilation superseded");
+        sliceStartMs = performance.now();
+      }
       const rawMappedTileIndex =
         translateNh5TileIndexToNh367PreservingAliases(nh5TileIndex);
       const shouldUseFuseBaseTile =
@@ -463,8 +479,15 @@ export class TilesetAssets {
     return outputCanvas;
   }
 
+  ensureTilesetRuntime(options: Nh3dClientOptions): void {
+    // A retained startup renderer can change games without changing the pack's
+    // path. A NetHack 5 compiled atlas must never be reused as a 3.6.7 atlas.
+    if (this.tilesetTextureRuntimeVersion !== this.resolveRuntimeVersion()) this.loadTilesetTexture(options);
+  }
+
   loadTilesetTexture(options: Nh3dClientOptions): void {
     const loadRequestId = ++this.tilesetTextureLoadRequestId;
+    this.tilesetTextureRuntimeVersion = this.resolveRuntimeVersion();
     const shouldShowCompileLoading = options.tilesetMode === "tiles";
     this.setTilesetCompilationLoadingVisible(shouldShowCompileLoading);
     const tileset = findNh3dTilesetByPath(options.tilesetPath);
@@ -522,7 +545,7 @@ export class TilesetAssets {
     void (async () => {
       try {
         const sourceImage = await this.loadTilesetImage(atlasUrl);
-        if (loadRequestId !== this.tilesetTextureLoadRequestId) {
+        if (loadRequestId !== this.tilesetTextureLoadRequestId || this.dependencies.engineState.disposed) {
           return;
         }
         const atlasWidth = Math.max(0, Math.trunc(sourceImage.width || 0));
@@ -573,19 +596,20 @@ export class TilesetAssets {
               );
             }
           }
-          if (loadRequestId !== this.tilesetTextureLoadRequestId) {
+          if (loadRequestId !== this.tilesetTextureLoadRequestId || this.dependencies.engineState.disposed) {
             return;
           }
           const fuseDimensions = fuseBaseImage
             ? inferNh3dTilesetTileDimensions(fuseBaseImage.width, fuseBaseImage.height, fuseBaseTilesetPath, "5.0")
             : { tileWidth: tileSize, tileHeight };
-          textureSource = this.compileLegacyTilesetAtlasToNh5(
+          textureSource = await this.compileLegacyTilesetAtlasToNh5(
             sourceImage,
             tileSize,
             fuseBaseImage,
             tileHeight,
             fuseDimensions.tileWidth,
             fuseDimensions.tileHeight,
+            () => loadRequestId === this.tilesetTextureLoadRequestId && !this.dependencies.engineState.disposed,
           );
           loadedLayoutVersion = "5.0";
           sourceLayoutVersion =
@@ -593,7 +617,7 @@ export class TilesetAssets {
               ? "3.6.7"
               : tileset.tileLayoutVersion;
         }
-        if (loadRequestId !== this.tilesetTextureLoadRequestId) {
+        if (loadRequestId !== this.tilesetTextureLoadRequestId || this.dependencies.engineState.disposed) {
           return;
         }
         const nextTexture = this.createTilesetTextureFromSource(textureSource);
@@ -612,7 +636,7 @@ export class TilesetAssets {
         }
         this.setTilesetCompilationLoadingVisible(false);
       } catch (error) {
-        if (loadRequestId !== this.tilesetTextureLoadRequestId) {
+        if (loadRequestId !== this.tilesetTextureLoadRequestId || this.dependencies.engineState.disposed) {
           return;
         }
         this.loadedTilesetSourceAtlasImage = null;

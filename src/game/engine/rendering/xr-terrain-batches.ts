@@ -9,6 +9,11 @@ interface Batch {
   seen: boolean;
 }
 
+const floorKeyProperties = [
+  "version", "side", "depthFunc", "alphaTest", "polygonOffset", "polygonOffsetFactor",
+  "polygonOffsetUnits", "fog", "toneMapped", "dithering", "premultipliedAlpha",
+] as const;
+
 /** Temporary XR draw batches. Runtime tiles, overlays, effects and picking stay authoritative. */
 export class XrTerrainBatches {
   private readonly root = new THREE.Group();
@@ -21,6 +26,14 @@ export class XrTerrainBatches {
   private readonly masks: number[] = [];
   private readonly swapped: THREE.Mesh[] = [];
   private readonly originalGeometries: THREE.BufferGeometry[] = [];
+  private readonly floorKeys = new WeakMap<THREE.MeshBasicMaterial, {
+    texture: THREE.Texture | null; r: number; g: number; b: number; shader: string;
+    values: (number | boolean)[]; key: string;
+  }>();
+  private readonly meshKeys = new WeakMap<THREE.Mesh, {
+    materialKey: string; geometry: THREE.BufferGeometry; layers: number; order: number;
+    castShadow: boolean; receiveShadow: boolean; key: string;
+  }>();
 
   constructor() {
     this.root.name = "XR terrain draw batches";
@@ -58,10 +71,28 @@ export class XrTerrainBatches {
       material.lightMap || material.aoMap || material.envMap || material.wireframe || material.vertexColors ||
       material.stencilWrite || material.clippingPlanes?.length || material.alphaHash ||
       !this.isOpaqueTexture(material.map)) return null;
-    return [material.map?.id ?? -1, material.version, material.color.r, material.color.g, material.color.b,
-      material.side, material.depthFunc, material.alphaTest, material.polygonOffset, material.polygonOffsetFactor,
-      material.polygonOffsetUnits, material.fog, material.toneMapped, material.dithering, material.premultipliedAlpha,
-      material.customProgramCacheKey()].join(":");
+    const shader = material.customProgramCacheKey(), cached = this.floorKeys.get(material);
+    let unchanged = !!cached && cached.texture === material.map && cached.r === material.color.r &&
+      cached.g === material.color.g && cached.b === material.color.b && cached.shader === shader;
+    for (let i = 0; unchanged && i < floorKeyProperties.length; i++) {
+      unchanged = cached!.values[i] === material[floorKeyProperties[i]];
+    }
+    if (unchanged) return cached!.key;
+    const values = floorKeyProperties.map(property => material[property]);
+    const key = "floor:" + [material.map?.id ?? -1, material.color.r, material.color.g, material.color.b, ...values, shader].join(":");
+    this.floorKeys.set(material, { texture: material.map, r: material.color.r, g: material.color.g, b: material.color.b, shader, values, key });
+    return key;
+  }
+
+  private meshKey(mesh: THREE.Mesh, materialKey: string): string {
+    const cached = this.meshKeys.get(mesh);
+    if (cached && cached.materialKey === materialKey && cached.geometry === mesh.geometry &&
+      cached.layers === mesh.layers.mask && cached.order === mesh.renderOrder &&
+      cached.castShadow === mesh.castShadow && cached.receiveShadow === mesh.receiveShadow) return cached.key;
+    const key = materialKey + ":" + [mesh.geometry.id, mesh.layers.mask, mesh.renderOrder, mesh.castShadow, mesh.receiveShadow].join(":");
+    this.meshKeys.set(mesh, { materialKey, geometry: mesh.geometry, layers: mesh.layers.mask, order: mesh.renderOrder,
+      castShadow: mesh.castShadow, receiveShadow: mesh.receiveShadow, key });
+    return key;
   }
 
   render(
@@ -91,11 +122,13 @@ export class XrTerrainBatches {
           material instanceof THREE.MeshBasicMaterial && overlays.get(tileKey)?.material === material) {
           const floorKey = this.floorKey(material);
           if (floorKey === null) continue;
-          key = "floor:" + floorKey; ownedMaterial = true;
+          key = floorKey; ownedMaterial = true;
         } else if (mesh.userData.isWall === true && material instanceof THREE.MeshLambertMaterial && !material.transparent) {
           key = "wall:" + material.uuid;
         } else continue;
-        key += ":" + [mesh.geometry.id, mesh.layers.mask, mesh.renderOrder, mesh.castShadow, mesh.receiveShadow].join(":");
+        // Avoid allocating two descriptor arrays and long strings per tile on
+        // every headset frame. Transforms and clip tests still update each frame.
+        key = this.meshKey(mesh, key);
         let batch = this.batches.get(key);
         if (!batch) {
           const batchMaterial = ownedMaterial ? material.clone() : material;

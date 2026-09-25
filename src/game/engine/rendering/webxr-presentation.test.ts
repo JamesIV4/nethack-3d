@@ -19,6 +19,7 @@ function fixture(native = false) {
   const classes = new Set<string>();
   vi.stubGlobal("document", Object.assign(new EventTarget(), { visibilityState: "visible", exitPointerLock: vi.fn(), documentElement: { classList: {
     add: (value: string) => classes.add(value), remove: (value: string) => classes.delete(value),
+    contains: (value: string) => classes.has(value),
     toggle: (value: string, enabled: boolean) => enabled ? classes.add(value) : classes.delete(value),
   } } }));
   vi.stubGlobal("location", new URL(native ? "http://127.0.0.1:18973/" : "http://127.0.0.1/?xrHost=wired"));
@@ -74,6 +75,19 @@ function fixture(native = false) {
     frame: () => { const camera = presentation.prepareRender(); if (camera) presentation.render(camera); return !!camera; } };
 }
 describe("Three.js owns the Quest world", () => {
+  it("does not dirty native UI layout with unchanged per-frame class writes", async () => {
+    const f=fixture();
+    const toggle=vi.spyOn(document.documentElement.classList,"toggle");
+    f.presentation.start(); await Promise.resolve(); await toggleWebXr();
+    f.presentation.updateCamera(); toggle.mockClear();
+    f.presentation.updateCamera(); f.presentation.updateCamera();
+    expect(toggle).not.toHaveBeenCalledWith("nh3d-xr-first-person",false);
+    setXrSettings({fpsMode:true}); f.presentation.updateCamera();
+    expect(toggle).toHaveBeenCalledWith("nh3d-xr-first-person",true);
+    toggle.mockClear(); f.presentation.updateCamera();
+    expect(toggle).not.toHaveBeenCalledWith("nh3d-xr-first-person",true);
+    f.presentation.dispose();
+  });
   it("defaults immersive FPS independently, preserves a tabletop choice, and restores flat view",async()=>{
     const f=fixture();setXrSettings({fpsMode:true});
     f.presentation.setStartupMenu(true);
@@ -491,7 +505,7 @@ describe("Three.js owns the Quest world", () => {
     const geometry = f.mesh.geometry, material = f.mesh.material, matrix = f.mesh.matrix.clone();
     f.presentation.start(); await Promise.resolve(); await toggleWebXr();
     expect(f.requestSession).toHaveBeenCalledWith("immersive-vr", { requiredFeatures: ["local-floor"] });
-    expect(f.renderer.xr.setFramebufferScaleFactor).toHaveBeenCalledWith(1.5);
+    expect(f.renderer.xr.setFramebufferScaleFactor).toHaveBeenCalledWith(1.3);
     expect(f.presentation.updateCamera()).toBe(true);
     expect(f.frame()).toBe(true);
     expect(f.renderer.render.mock.calls[0][0]).toBe(f.scene);

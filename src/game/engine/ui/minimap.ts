@@ -110,6 +110,10 @@ export class Minimap {
   minimapCanvasContext: CanvasRenderingContext2D | null = null;
 
   minimapViewportContext: CanvasRenderingContext2D | null = null;
+  private lastFpsViewport: {
+    context: CanvasRenderingContext2D; x: number; y: number; yaw: number; fov: number; aspect: number;
+    width: number | undefined; height: number | undefined;
+  } | null = null;
 
   minimapCells: string[] = Array(
     MINIMAP_WIDTH_TILES * MINIMAP_HEIGHT_TILES,
@@ -190,6 +194,7 @@ export class Minimap {
   }
 
   resetMinimap(): void {
+    this.lastFpsViewport = null;
     const backgroundColor = this.resolveMinimapBackgroundColor();
     this.pendingMinimapCellUpdates.clear();
     this.minimapFlushScheduled = false;
@@ -599,10 +604,21 @@ export class Minimap {
       return;
     }
 
-    const viewport = this.computeMinimapViewportRect();
     const fpsMode = this.dependencies.movementInput.isFpsMode();
-
     const context = this.minimapViewportContext;
+    const minimapPlayerTile = this.resolveMinimapPlayerTile();
+    if (fpsMode) {
+      const camera = this.dependencies.camera.camera, yaw = this.dependencies.camera.cameraYaw;
+      const previous = this.lastFpsViewport;
+      if (previous && previous.context === context && previous.x === minimapPlayerTile.x && previous.y === minimapPlayerTile.y &&
+        previous.yaw === yaw && previous.fov === camera.fov && previous.aspect === camera.aspect &&
+        previous.width === context.canvas?.width && previous.height === context.canvas?.height) return;
+      // Unchanged canvas writes still schedule a document composite in Gecko.
+      // FPS has no pulsing marker; redraw as soon as position or facing changes.
+      this.lastFpsViewport = { context, x: minimapPlayerTile.x, y: minimapPlayerTile.y, yaw,
+        fov: camera.fov, aspect: camera.aspect, width: context.canvas?.width, height: context.canvas?.height };
+    } else this.lastFpsViewport = null;
+    const viewport = this.computeMinimapViewportRect();
     context.clearRect(0, 0, MINIMAP_WIDTH_TILES, MINIMAP_HEIGHT_TILES);
 
     const drawMinX = THREE.MathUtils.clamp(
@@ -642,7 +658,6 @@ export class Minimap {
       );
     }
 
-    const minimapPlayerTile = this.resolveMinimapPlayerTile();
     if (
       this.isValidMinimapCoordinate(
         minimapPlayerTile.x,

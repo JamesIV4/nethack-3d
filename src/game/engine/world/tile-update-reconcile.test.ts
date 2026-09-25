@@ -5,16 +5,105 @@ function fixture() {
   vi.stubGlobal("requestAnimationFrame", vi.fn(() => 1));
   const reconcile = vi.fn(), movement = new Map<string, unknown>(), camera = {fpsStepCameraActive:false};
   const recordDiscovery=vi.fn();
+  const xr = { isPresenting: false };
   const tileBatch={beginTileBatch:vi.fn(),flushTileBatch:vi.fn(),endTileBatch:vi.fn()};
-  const deps = new Proxy({camera, floorOcclusion:tileBatch,wallGeometry:tileBatch,entityMovement:{activeEntityMoveTransitions:movement}, darkCorridorInference:{requestInferredDarkCorridorWallReconcile:reconcile,recordNewlyDiscoveredDarkCorridorTileForCurrentInput:recordDiscovery}, worldClassification:{seedTerrainCacheFromSupersededPendingUpdate:vi.fn()}, minimap:{flushPendingMinimapTileUpdates:vi.fn()}, vultureWalls:{flushPendingVultureWallMaterialRefreshes:vi.fn(),collectPendingVultureRoomDecorReconcileKeys:vi.fn(),flushPendingVultureRoomDecorReconcile:vi.fn()},runtimeEntityTracking:{finalizePendingRuntimeMonsterVacatedTracking:vi.fn()}}, { get:(o,k)=>Reflect.get(o,k)??new Proxy({}, {get:()=>vi.fn()}) });
+  const deps = new Proxy({camera, floorOcclusion:tileBatch,wallGeometry:tileBatch,entityMovement:{activeEntityMoveTransitions:movement}, darkCorridorInference:{invalidateInferredWallVisuals:vi.fn(),requestInferredDarkCorridorWallReconcile:reconcile,recordNewlyDiscoveredDarkCorridorTileForCurrentInput:recordDiscovery}, worldClassification:{seedTerrainCacheFromSupersededPendingUpdate:vi.fn()}, minimap:{flushPendingMinimapTileUpdates:vi.fn()}, vultureWalls:{flushPendingVultureWallMaterialRefreshes:vi.fn(),collectPendingVultureRoomDecorReconcileKeys:vi.fn(),flushPendingVultureRoomDecorReconcile:vi.fn()},runtimeEntityTracking:{finalizePendingRuntimeMonsterVacatedTracking:vi.fn()}}, { get:(o,k)=>Reflect.get(o,k)??new Proxy({}, {get:()=>vi.fn()}) });
   Object.assign(deps, {
+    renderPipeline: { renderer: { xr } },
+    entityBillboards: { monsterBillboards: new Map() },
     tileRendering: { tileMap: new Map() },
     worldClassification: { seedTerrainCacheFromSupersededPendingUpdate: vi.fn(), classifyTilePayload: (tile: { kind?: string }) => ({ materialKind: tile.kind ?? "floor" }) },
   });
   const updates = new TileUpdates(deps as unknown as TileUpdatesDependencies);
   updates.processPendingTileUpdate = vi.fn();
-  return {updates,reconcile,movement,camera,recordDiscovery,tileBatch};
+  return {updates,reconcile,movement,camera,recordDiscovery,tileBatch,xr,deps};
 }
+
+it("keeps actor and feature removal immediate even when replaced by distant terrain", () => {
+  const {updates,deps}=fixture();
+  (deps as any).entityBillboards.monsterBillboards.set("30,10",{});
+  (deps as any).tileRendering.tileMap.set("31,10",{userData:{materialKind:"door"}});
+  updates.enqueueTileUpdate({x:30,y:10,glyph:1});
+  updates.enqueueTileUpdate({x:31,y:10,glyph:2});
+  updates.flushPendingTileUpdatesForPlayerPositionReconcile(4,5,5,5);
+  expect(updates.processPendingTileUpdate).toHaveBeenCalledTimes(2);
+  expect(updates.pendingTileFlushQueue).toEqual([]);
+});
+
+it("reads current cached glyph flags after a queued refresh and skips cleared cells", () => {
+  const {updates,deps}=fixture();
+  updates.tileStateCache.set("1,2","old"); updates.tileStateCache.set("2,2","old");
+  updates.refreshTilesFromStateCache();
+  const parse=vi.fn(()=>({glyph:42,char:".",color:7,tileIndex:12,glyphFlags:8}));
+  const updateTile=vi.fn();
+  (deps as any).levelTerrainCache={parseTileStateSignature:parse};
+  (deps as any).entityMovement.isEntityVisualUpdateDeferred=()=>false;
+  (deps as any).tileRendering.updateTile=updateTile;
+  updates.tileStateCache.set("1,2","new"); updates.tileStateCache.delete("2,2");
+  updates.flushPendingTileUpdates();
+  expect(parse).toHaveBeenCalledExactlyOnceWith("new");
+  expect(updateTile).toHaveBeenCalledExactlyOnceWith(1,2,42,".",7,{runtimeTileIndex:12,runtimeGlyphFlags:8});
+});
+
+it("does not spend a document RAF budget after XR takes ownership of queued work", () => {
+  const {updates,xr}=fixture(); const callbacks: FrameRequestCallback[]=[];
+  vi.stubGlobal("requestAnimationFrame",(callback: FrameRequestCallback)=>{callbacks.push(callback);return callbacks.length;});
+  updates.enqueueTileUpdate({x:1,y:2,glyph:1});
+  xr.isPresenting=true; callbacks[0](0);
+  expect(updates.processPendingTileUpdate).not.toHaveBeenCalled();
+  updates.flushPendingTileUpdatesForFrame();
+  callbacks[0](0);
+  expect(updates.processPendingTileUpdate).toHaveBeenCalledOnce();
+});
+
+it("renders existing XR terrain while distant changes wait for the frame budget", () => {
+  const {updates,xr}=fixture(); xr.isPresenting=true;
+  updates.tileStateCache.set("30,10", "previously rendered");
+  const near={x:5,y:5,glyph:1}, distant={x:30,y:10,glyph:2}, actor={x:31,y:10,glyph:3,monsterId:42};
+  for(const tile of [near,distant,actor])updates.enqueueTileUpdate(tile);
+  updates.flushPendingTileUpdatesForPlayerPositionReconcile(4,5,5,5);
+  expect(vi.mocked(updates.processPendingTileUpdate).mock.calls.map(call=>call[0])).toEqual([near,actor]);
+  expect(updates.pendingTileFlushQueue).toEqual([distant]);
+  expect(requestAnimationFrame).not.toHaveBeenCalled();
+  updates.flushPendingTileUpdatesForFrame();
+  expect(updates.processPendingTileUpdate).toHaveBeenLastCalledWith(distant);
+});
+
+it("counts neighbor rebuilds against the XR budget and resumes document RAF on exit", () => {
+  const {updates,xr,tileBatch}=fixture(); xr.isPresenting=true;
+  let now=0; vi.stubGlobal("performance", {now:()=>now});
+  tileBatch.flushTileBatch.mockImplementation(()=>{now+=1;});
+  for(let x=0;x<100;x++)updates.enqueueTileUpdate({x,y:10,glyph:1});
+  updates.flushPendingTileUpdatesForFrame();
+  expect(updates.processPendingTileUpdate).toHaveBeenCalledTimes(4);
+  expect(updates.tileFlushScheduled).toBe(true);
+  expect(requestAnimationFrame).not.toHaveBeenCalled();
+  xr.isPresenting=false;
+  updates.flushPendingTileUpdatesForFrame();
+  expect(requestAnimationFrame).toHaveBeenCalledOnce();
+});
+
+it("coalesces newer arrivals into an unfinished batch before rebuilding visuals", () => {
+  const {updates,xr}=fixture(); xr.isPresenting=true;
+  updates.pendingTileFlushQueue=[{x:30,y:10,glyph:1}];
+  updates.enqueueTileUpdate({x:30,y:10,glyph:2});
+  updates.flushPendingTileUpdatesForFrame();
+  expect(updates.processPendingTileUpdate).toHaveBeenCalledExactlyOnceWith({x:30,y:10,glyph:2});
+});
+
+it.each([false,true])("paces a full cached level refresh (XR=%s)", presenting => {
+  const {updates,xr}=fixture(); xr.isPresenting=presenting;
+  vi.stubGlobal("performance",{now:()=>0});
+  for(let x=0;x<100;x++)updates.tileStateCache.set(`${x},10`,"old");
+  const refresh=vi.spyOn(updates as any,"refreshQueuedTileVisual").mockImplementation(()=>{});
+  updates.refreshTilesFromStateCache();
+  expect(refresh).not.toHaveBeenCalled();
+  updates.flushPendingTileUpdates();
+  const count=presenting?12:updates.tileFlushMaxPerFrame;
+  expect(refresh).toHaveBeenCalledTimes(count);
+  expect(updates.pendingTileVisualRefreshKeys.size).toBe(100-count);
+  expect(updates.tileFlushScheduled).toBe(true);
+});
 it("applies movement-near arrivals at the player-position fence and leaves discovery budgeted", () => {
   const {updates,tileBatch}=fixture();
   updates.pendingTileFlushQueue=[{x:1,y:1,glyph:1},{x:2,y:1,glyph:2},{x:20,y:20,glyph:8}]; updates.pendingTileFlushQueueIndex=1;
@@ -50,7 +139,7 @@ it("includes the second neighbor ring needed by door trims and chamfers", () => 
   expect(updates.pendingTileFlushQueue).toEqual([far]);
 });
 
-it("keeps distant actors, features and previously rendered changes at the movement fence", () => {
+it("keeps distant actors and features at the fence while explored terrain stays budgeted", () => {
   const {updates}=fixture();
   updates.tileStateCache.set("30,10", "previously rendered");
   const changed = {x:30,y:10,glyph:1};
@@ -59,8 +148,8 @@ it("keeps distant actors, features and previously rendered changes at the moveme
   const discovery = {x:33,y:10,glyph:4};
   for (const tile of [changed,monster,feature,discovery]) updates.enqueueTileUpdate(tile);
   updates.flushPendingTileUpdatesForPlayerPositionReconcile(4,5,5,5);
-  expect(vi.mocked(updates.processPendingTileUpdate).mock.calls.map(call=>call[0])).toEqual([changed,monster,feature]);
-  expect(updates.pendingTileFlushQueue).toEqual([discovery]);
+  expect(vi.mocked(updates.processPendingTileUpdate).mock.calls.map(call=>call[0])).toEqual([monster,feature]);
+  expect(updates.pendingTileFlushQueue).toEqual([changed,discovery]);
 });
 
 it("keeps later discovery frames within the tile-count budget", () => {

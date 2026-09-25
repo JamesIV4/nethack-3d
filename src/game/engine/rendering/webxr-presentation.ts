@@ -540,7 +540,10 @@ export class WebXrPresentation {
       this.uiRecenter = false;
     } else if (this.uiFirstPerson) this.htmlPanel?.recenter(this.anchor, this.heading);
     this.uiFirstPerson = firstPerson;
-    document.documentElement.classList.toggle("nh3d-xr-first-person", firstPerson);
+    // Gecko reports redundant class writes to the native UI layout observer.
+    if (document.documentElement.classList.contains("nh3d-xr-first-person") !== firstPerson) {
+      document.documentElement.classList.toggle("nh3d-xr-first-person", firstPerson);
+    }
     this.tablePosition.set(0, THREE.MathUtils.clamp(this.anchor.y-.65,.45,1.05), -1.55).applyQuaternion(this.heading)
       .add(new THREE.Vector3(this.anchor.x,0,this.anchor.z)).add(this.tableMove.offset);
     const towardX = this.tablePosition.x-pose.transform.position.x, towardZ = this.tablePosition.z-pose.transform.position.z;

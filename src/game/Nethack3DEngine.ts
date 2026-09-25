@@ -118,6 +118,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.inputCommands.numberPadModeEnabled = this.systems.extendedCommands.resolveStartupNumberPadModeEnabled(config.initOptions);
     this.systems.extendedCommands.useNativeExtendedCommandMenu = this.systems.extendedCommands.resolveStartupExtmenuEnabled(config.initOptions);
     this.applyClientOptions(options);
+    this.systems.tilesetAssets.ensureTilesetRuntime(this.systems.engineState.clientOptions);
     this.startupOnly = false;
     setNativeInputModeFps(this.systems.engineState.playMode === "fps");
     this.systems.webXrPresentation.setStartupMenu(false);
@@ -676,7 +677,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.systems.renderPipeline.updateToneAdjustPostProcess();
     }
     if (darkCorridorWallsChanged || darkCorridorWallTileOverrideChanged) {
-      this.systems.darkCorridorInference.requestInferredDarkCorridorWallReconcile({ forceImmediate: true });
+      this.systems.darkCorridorInference.requestInferredDarkCorridorWallReconcile({ forceImmediate: true, refreshVisuals: true });
       if (this.systems.tilesetAssets.resolveRuntimeVersion() === "5.0") {
         this.systems.tilesetAssets.invalidateBillboardTextureCaches();
         this.systems.tileUpdates.refreshTilesFromStateCache();
@@ -1594,6 +1595,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     this.systems.darkCorridorInference.newlyDiscoveredDarkCorridorTilesForCurrentInput.clear();
     this.systems.tileRendering.activeEffectTileKeys.clear();
     this.systems.tileUpdates.pendingTileUpdates.clear();
+    this.systems.tileUpdates.pendingTileVisualRefreshKeys.clear();
     this.systems.tileUpdates.pendingTileFlushQueue = [];
     this.systems.tileUpdates.pendingTileFlushQueueIndex = 0;
     this.systems.tileUpdates.tileFlushScheduled = false;
@@ -1762,6 +1764,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
       this.systems.webXrPresentation.renderStartupFrame(timeMs);
       return;
     }
+    this.systems.tileUpdates.flushPendingTileUpdatesForFrame();
     if (!this.systems.webXrPresentation.active && this.systems.fpsDiagnostics.shouldSkipFrameForFpsDebugOverride(timeMs)) {
       return;
     }

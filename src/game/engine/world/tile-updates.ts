@@ -18,8 +18,10 @@ import type { VultureWalls } from "../rendering/vulture-walls";
 import type { WorldClassification } from "./world-classification";
 import type { FloorOcclusion } from "../rendering/floor-occlusion";
 import type { WallGeometry } from "../rendering/wall-geometry";
+import type { RenderPipeline } from "../rendering/render-pipeline";
 
 export interface TileUpdatesDependencies {
+  readonly renderPipeline: Pick<RenderPipeline, "renderer">;
   readonly floorOcclusion: Pick<FloorOcclusion, "beginTileBatch" | "flushTileBatch" | "endTileBatch">;
   readonly wallGeometry: Pick<WallGeometry, "beginTileBatch" | "flushTileBatch" | "endTileBatch">;
   readonly camera: Pick<
@@ -30,6 +32,7 @@ export interface TileUpdatesDependencies {
     DarkCorridorInference,
     "recordNewlyDiscoveredDarkCorridorTileForCurrentInput"
     | "requestInferredDarkCorridorWallReconcile"
+    | "invalidateInferredWallVisuals"
   >;
   readonly engineState: Pick<
     EngineState,
@@ -134,9 +137,26 @@ export class TileUpdates {
   tileStateCache: Map<string, string> = new Map();
 
   pendingTileUpdates: Map<string, any> = new Map();
+  readonly pendingTileVisualRefreshKeys = new Set<string>();
 
   tileFlushScheduled: boolean = false;
   private tileFlushGeneration = 0;
+  private xrFlushPending = false;
+
+  private get xrPresenting(): boolean {
+    return this.dependencies.renderPipeline?.renderer?.xr?.isPresenting === true;
+  }
+
+  /** XR owns its visual-work budget; document RAF must not spend a second one. */
+  flushPendingTileUpdatesForFrame(): void {
+    if (this.xrPresenting) {
+      if (this.tileFlushScheduled) this.flushPendingTileUpdates();
+    } else if (this.xrFlushPending) {
+      this.xrFlushPending = false;
+      this.tileFlushScheduled = false;
+      this.schedulePendingTileFlush();
+    }
+  }
 
   private corridorInferenceDirty = false;
 
@@ -199,59 +219,24 @@ export class TileUpdates {
   }
 
   refreshTilesFromStateCache(): void {
-    const snapshots: Array<{
-      x: number;
-      y: number;
-      glyph: number;
-      char?: string;
-      color?: number;
-      tileIndex?: number;
-      glyphFlags?: number;
-    }> = [];
-    for (const [key, signature] of this.tileStateCache.entries()) {
-      const [rawX, rawY] = key.split(",");
-      const x = Number.parseInt(rawX, 10);
-      const y = Number.parseInt(rawY, 10);
-      if (!Number.isFinite(x) || !Number.isFinite(y)) {
-        continue;
-      }
-      const parsed = this.dependencies.levelTerrainCache.parseTileStateSignature(signature);
-      if (!parsed) {
-        continue;
-      }
-      snapshots.push({
-        x,
-        y,
-        glyph: parsed.glyph,
-        char: parsed.char,
-        color: parsed.color,
-        tileIndex: parsed.tileIndex,
-        glyphFlags: parsed.glyphFlags,
-      });
-    }
+    this.dependencies.darkCorridorInference.invalidateInferredWallVisuals();
+    // Asset completion must not rebuild an explored level in one task. Read
+    // each cell's current state when its turn comes, never a stale snapshot.
+    for (const key of this.tileStateCache.keys()) this.pendingTileVisualRefreshKeys.add(key);
+    this.corridorInferenceDirty = true;
+    this.schedulePendingTileFlush();
+  }
 
-    for (const snapshot of snapshots) {
-      this.dependencies.tileRendering.updateTile(
-        snapshot.x,
-        snapshot.y,
-        snapshot.glyph,
-        snapshot.char,
-        snapshot.color,
-        {
-          runtimeTileIndex:
-            typeof snapshot.tileIndex === "number"
-              ? snapshot.tileIndex
-              : undefined,
-          runtimeGlyphFlags:
-            typeof snapshot.glyphFlags === "number"
-              ? snapshot.glyphFlags
-              : undefined,
-        },
-      );
-    }
-    this.dependencies.vultureWalls.collectPendingVultureRoomDecorReconcileKeys(false);
-    this.dependencies.vultureWalls.flushPendingVultureRoomDecorReconcile(true);
-    this.dependencies.darkCorridorInference.requestInferredDarkCorridorWallReconcile({ forceImmediate: true });
+  private refreshQueuedTileVisual(key: string): void {
+    if (this.dependencies.entityMovement.isEntityVisualUpdateDeferred(key)) return;
+    const signature = this.tileStateCache.get(key);
+    const snapshot = signature && this.dependencies.levelTerrainCache.parseTileStateSignature(signature);
+    const [x, y] = key.split(",").map(Number);
+    if (!snapshot || !Number.isFinite(x) || !Number.isFinite(y)) return;
+    this.dependencies.tileRendering.updateTile(x, y, snapshot.glyph, snapshot.char, snapshot.color, {
+      runtimeTileIndex: snapshot.tileIndex,
+      runtimeGlyphFlags: snapshot.glyphFlags,
+    });
   }
 
   enqueueTileUpdate(tile: any): void {
@@ -276,10 +261,16 @@ export class TileUpdates {
     if (this.tileFlushScheduled) return;
     this.tileFlushScheduled = true;
     const generation = ++this.tileFlushGeneration;
+    if (this.xrPresenting) {
+      this.xrFlushPending = true;
+      return;
+    }
     requestAnimationFrame(() => {
       // A player-position fence may already have drained this work and queued
       // another flush. Obsolete callbacks must not spend another frame budget.
-      if (this.tileFlushScheduled && generation === this.tileFlushGeneration) this.flushPendingTileUpdates(false);
+      if (!this.tileFlushScheduled || generation !== this.tileFlushGeneration) return;
+      if (this.xrPresenting) this.xrFlushPending = true;
+      else this.flushPendingTileUpdates(false);
     });
   }
 
@@ -376,7 +367,8 @@ export class TileUpdates {
       deferredVisualUpdate.tile = tile;
       return;
     }
-    if (this.tileStateCache.get(key) === signature) {
+    const forceVisualRefresh = this.pendingTileVisualRefreshKeys.delete(key);
+    if (this.tileStateCache.get(key) === signature && !forceVisualRefresh) {
       const shouldHaveElevatedBillboard =
         (behavior !== null &&
           !isRuntimeTrackedPlayerTileInFps &&
@@ -471,11 +463,12 @@ export class TileUpdates {
 
   flushPendingTileUpdates(forceFullBatch: boolean = false): void {
     this.tileFlushScheduled = false;
+    this.xrFlushPending = false;
     this.tileFlushGeneration++;
 
-    if (forceFullBatch && this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length && this.pendingTileUpdates.size) {
-      // A player-position fence must include arrivals queued behind a partially
-      // processed batch, with newer payloads replacing older ones for a tile.
+    if (this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length && this.pendingTileUpdates.size) {
+      // New observations supersede stale work even partway through a batch.
+      // Preserve intermediate terrain information before replacing a payload.
       const merged = new Map(this.pendingTileFlushQueue.slice(this.pendingTileFlushQueueIndex).map(tile => [`${tile.x},${tile.y}`, tile]));
       for (const [key, tile] of this.pendingTileUpdates) {
         const previous = merged.get(key);
@@ -494,35 +487,50 @@ export class TileUpdates {
       this.pendingTileUpdates.clear();
     }
 
-    if (this.pendingTileFlushQueueIndex >= this.pendingTileFlushQueue.length) {
+    if (this.pendingTileFlushQueueIndex >= this.pendingTileFlushQueue.length && !this.pendingTileVisualRefreshKeys.size) {
       this.pendingTileFlushQueue = [];
       this.pendingTileFlushQueueIndex = 0;
       return;
     }
 
     const frameStartMs = performance.now();
+    const xrBudget = this.xrPresenting && !forceFullBatch;
+    const maxTiles = xrBudget ? 12 : this.tileFlushMaxPerFrame;
+    const budgetMs = xrBudget ? 1.5 : this.tileFlushFrameBudgetMs;
     let processedCount = 0;
     this.dependencies.floorOcclusion.beginTileBatch();
     this.dependencies.wallGeometry.beginTileBatch();
     try {
     while (
-      this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length
+      this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length || this.pendingTileVisualRefreshKeys.size > 0
     ) {
       if (!forceFullBatch) {
-        if (processedCount >= this.tileFlushMaxPerFrame) {
+        if (processedCount >= maxTiles) {
           break;
         }
         if (
           processedCount > 0 &&
-          performance.now() - frameStartMs >= this.tileFlushFrameBudgetMs
+          performance.now() - frameStartMs >= budgetMs
         ) {
           break;
         }
       }
-      const tile = this.pendingTileFlushQueue[this.pendingTileFlushQueueIndex];
-      this.pendingTileFlushQueueIndex += 1;
-      this.processPendingTileUpdate(tile);
+      if (this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length) {
+        const tile = this.pendingTileFlushQueue[this.pendingTileFlushQueueIndex++];
+        this.processPendingTileUpdate(tile);
+      } else {
+        const key = this.pendingTileVisualRefreshKeys.values().next().value!;
+        this.pendingTileVisualRefreshKeys.delete(key);
+        this.refreshQueuedTileVisual(key);
+      }
       processedCount += 1;
+      if (!forceFullBatch && (processedCount % 4 === 0 || performance.now() - frameStartMs >= budgetMs)) {
+        // Adjacent cells share neighbor work. Flush small groups inside the
+        // time budget instead of rebuilding the same neighbors after each cell
+        // or leaving a whole discovery burst for the end of the batch.
+        this.dependencies.wallGeometry.flushTileBatch();
+        this.dependencies.floorOcclusion.flushTileBatch();
+      }
     }
     } finally {
       // Door trims consume the final chamfer masks; occlusion consumes both.
@@ -544,7 +552,7 @@ export class TileUpdates {
 
     if (
       (this.pendingTileFlushQueueIndex < this.pendingTileFlushQueue.length ||
-        this.pendingTileUpdates.size > 0)
+        this.pendingTileUpdates.size > 0 || this.pendingTileVisualRefreshKeys.size > 0)
     ) {
       this.schedulePendingTileFlush();
     }
@@ -851,13 +859,17 @@ export class TileUpdates {
     this.dependencies.wallGeometry.beginTileBatch();
     try {
       for (const [key, tile] of merged) {
-        const existingVisual = this.tileStateCache.has(key) || this.dependencies.tileRendering.tileMap.has(key);
+        const existingActor = this.dependencies.entityBillboards.monsterBillboards.has(key);
+        const previousKind = this.dependencies.tileRendering.tileMap.get(key)?.userData.materialKind;
+        const existingFeature = previousKind && !["floor", "wall", "dark", "dark_wall"].includes(previousKind);
         const trackedEntity = typeof tile.monsterId === "number" && tile.monsterId >= 0;
-        if (urgentKeys.has(key) || existingVisual || trackedEntity || vacatedEntityTiles.has(key) || tile.isRuntimeUndiscoveredClear === true) {
+        if (urgentKeys.has(key) || (existingActor || existingFeature) || trackedEntity || vacatedEntityTiles.has(key) || tile.isRuntimeUndiscoveredClear === true) {
           this.processPendingTileUpdate(tile);
         } else {
           const behavior = this.dependencies.worldClassification.classifyTilePayload(tile);
-          // Defer only newly discovered ordinary terrain. Features, effects,
+          // Distant terrain retains its previous mesh until a budgeted
+          // frame applies the update, including previously explored cells.
+          // Features, effects,
           // entity arrivals and vacates retain their movement-step fence.
           if (behavior && ["floor", "wall", "dark", "dark_wall"].includes(behavior.materialKind)) deferred.push(tile);
           else this.processPendingTileUpdate(tile);
@@ -875,7 +887,7 @@ export class TileUpdates {
     this.dependencies.vultureWalls.collectPendingVultureRoomDecorReconcileKeys(false);
     this.dependencies.vultureWalls.flushPendingVultureRoomDecorReconcile();
 
-    if (deferred.length === 0) {
+    if (deferred.length === 0 && this.pendingTileVisualRefreshKeys.size === 0) {
       this.tileFlushScheduled = false;
       this.tileFlushGeneration++;
       this.dependencies.runtimeEntityTracking.finalizePendingRuntimeMonsterVacatedTracking();

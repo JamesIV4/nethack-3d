@@ -6,9 +6,10 @@ it("defaults immersive FPS on while honoring a saved tabletop preference",()=>{
   expect(normalizeXrSettings({}).fpsMode).toBe(true);
   expect(normalizeXrSettings({fpsMode:false}).fpsMode).toBe(false);
 });
-it("defaults to 150% resolution and bounds persisted values", () => {
-  expect(normalizeXrSettings({})).toEqual({ fpsMode: true, resolution: 1.5, fpsScale: 1, area: 1, scale: 1, swipeSensitivity: 1, swipeAttacks: true, instantMovement: false, rainCount: 1000, rainFallSpeed: 1.5, rainChangeRate: .3 });
-  expect(normalizeXrSettings({ resolution: NaN, area: 99, scale: -1, instantMovement: true })).toMatchObject({ resolution: 1.5, area: 2, scale: .5, swipeSensitivity: 1, swipeAttacks: true, instantMovement: true });
+it("defaults to 130% resolution and bounds persisted values", () => {
+  expect(normalizeXrSettings({ resolution: 1.5 }).resolution).toBe(1.5);
+  expect(normalizeXrSettings({})).toEqual({ fpsMode: true, resolution: 1.3, fpsScale: 1, area: 1, scale: 1, swipeSensitivity: 1, swipeAttacks: true, instantMovement: false, rainCount: 1000, rainFallSpeed: 1.5, rainChangeRate: .3 });
+  expect(normalizeXrSettings({ resolution: NaN, area: 99, scale: -1, instantMovement: true })).toMatchObject({ resolution: 1.3, area: 2, scale: .5, swipeSensitivity: 1, swipeAttacks: true, instantMovement: true });
 });
 it("bounds rain counts and rates while allowing an empty field and unchanging letters", () => {
   expect(normalizeXrSettings({ rainCount: 100000, rainFallSpeed: -1, rainChangeRate: NaN })).toMatchObject({ rainCount: 12000, rainFallSpeed: .1, rainChangeRate: .3 });

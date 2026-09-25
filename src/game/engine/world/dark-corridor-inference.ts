@@ -26,6 +26,7 @@ import type { TerminalRendering } from "../rendering/terminal-rendering";
 import type { TileRendering } from "../rendering/tile-rendering";
 import type { TilesetAssets } from "../rendering/tileset-assets";
 import type { TileUpdates } from "./tile-updates";
+import type { Mesh } from "three";
 import type { VultureWalls } from "../rendering/vulture-walls";
 import type { WallGeometry } from "../rendering/wall-geometry";
 import type { WallOverlays } from "../rendering/wall-overlays";
@@ -147,6 +148,12 @@ export interface DarkCorridorInferenceDependencies {
 
 /** Dark corridor discovery windows, boulder-aware inference and inferred wall reconciliation. */
 export class DarkCorridorInference {
+  private inferredWallVisualRevision = 0;
+  private readonly renderedInferredWallRevisions = new WeakMap<Mesh, number>();
+
+  invalidateInferredWallVisuals(): void {
+    this.inferredWallVisualRevision++;
+  }
   constructor(private readonly dependencies: DarkCorridorInferenceDependencies) {}
 
   private pendingInferenceTiles: ReadonlyMap<string, any> = new Map();
@@ -953,7 +960,9 @@ export class DarkCorridorInference {
 
   requestInferredDarkCorridorWallReconcile(options?: {
     forceImmediate?: boolean;
+    refreshVisuals?: boolean;
   }): void {
+    if (options?.refreshVisuals) this.invalidateInferredWallVisuals();
     if (options?.forceImmediate === true) {
       this.reconcileInferredDarkCorridorWalls();
       return;
@@ -1085,10 +1094,20 @@ export class DarkCorridorInference {
         continue;
       }
 
+      // Movement changes the inference result, not the artwork of every wall
+      // already discovered. Neighbor geometry has its own update owner.
+      if (mesh && this.renderedInferredWallRevisions.get(mesh) === this.inferredWallVisualRevision) {
+        continue;
+      }
+
       this.dependencies.tileRendering.updateTile(tile.x, tile.y, darkWallGlyph, " ", undefined, {
         inferredDarkCorridorWall: true,
         restartRevealFade: newlyInferredKeys.has(key),
       });
+      const rendered = this.dependencies.tileRendering.tileMap.get(key);
+      if (rendered?.userData.isInferredDarkCorridorWall) {
+        this.renderedInferredWallRevisions.set(rendered, this.inferredWallVisualRevision);
+      }
     }
   }
 

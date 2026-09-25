@@ -6,6 +6,8 @@ import path from "node:path";
 const adb = path.join(process.env.LOCALAPPDATA, "Android/Sdk/platform-tools/adb.exe");
 const serial = process.env.QUEST_SERIAL ?? "2G0YC5ZF9J05S8";
 const socketName = "com.nethack3d.quest.vr/firefox-debugger-socket";
+const sockets = execFileSync(adb, ["-s", serial, "shell", "cat", "/proc/net/unix"], { encoding: "utf8", windowsHide: true });
+if (!sockets.includes(socketName)) throw new Error("The running app has no Gecko debugger socket. Use a development build with remote debugging enabled. Release native metrics can be captured with capture-native-performance.mjs without restarting the app.");
 const port = Number(execFileSync(adb, ["-s", serial, "forward", "tcp:0", "localabstract:" + socketName], { encoding: "utf8", windowsHide: true }).trim());
 let connection;
 try {

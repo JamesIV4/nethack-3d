@@ -65,6 +65,46 @@ async function fixture(version: "3.6.7" | "5.0" | "slashem") {
 }
 
 describe.each(["3.6.7", "slashem"] as const)("%s corridor observation timing", version => {
+  it("reuses unchanged inferred walls across movement and rebuilds missing visuals", async () => {
+    const f = await fixture(version);
+    f.updates.flushPendingDarkCorridorInference(true);
+    const previous = new Map(f.rendering.tileMap);
+    expect(previous.size).toBeGreaterThan(0);
+    f.rendering.updateTile.mockClear();
+    f.updates.flushPendingDarkCorridorInference(true);
+    expect(f.rendering.updateTile).not.toHaveBeenCalled();
+    expect(f.rendering.tileMap).toEqual(previous);
+    const [key] = previous.keys();
+    f.rendering.tileMap.delete(key);
+    f.updates.flushPendingDarkCorridorInference(true);
+    expect(f.rendering.updateTile).toHaveBeenCalledOnce();
+    expect(f.rendering.tileMap.has(key)).toBe(true);
+  });
+
+  it("refreshes inferred artwork on explicit invalidation without restarting reveal fades", async () => {
+    const f = await fixture(version);
+    f.updates.flushPendingDarkCorridorInference(true);
+    const count = f.rendering.tileMap.size;
+    f.rendering.updateTile.mockClear();
+    f.inference.requestInferredDarkCorridorWallReconcile({ forceImmediate: true, refreshVisuals: true });
+    expect(f.rendering.updateTile).toHaveBeenCalledTimes(count);
+    for (const call of vi.mocked(f.rendering.updateTile).mock.calls) {
+      expect((call as unknown[])[5]).toEqual({ inferredDarkCorridorWall: true, restartRevealFade: false });
+    }
+    f.rendering.updateTile.mockClear();
+    f.updates.flushPendingDarkCorridorInference(true);
+    expect(f.rendering.updateTile).not.toHaveBeenCalled();
+  });
+
+  it("rebuilds a replaced inferred mesh even when its coordinate is unchanged", async () => {
+    const f = await fixture(version);
+    f.updates.flushPendingDarkCorridorInference(true);
+    const [key] = f.rendering.tileMap.keys();
+    f.rendering.tileMap.set(key, { userData: { isInferredDarkCorridorWall: true } });
+    f.rendering.updateTile.mockClear();
+    f.updates.flushPendingDarkCorridorInference(true);
+    expect(f.rendering.updateTile).toHaveBeenCalledOnce();
+  });
   it("retains observed corridor terrain when a later actor covers it before cliparound", async () => {
     const f = await fixture(version);
     f.updates.pendingTileUpdates.clear();

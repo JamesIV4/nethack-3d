@@ -61,8 +61,8 @@ List the headset's tabs first; the host can contain both an old startup page and
 node scripts/quest/webxr/device-rdp.mjs
 $env:QUEST_BROWSER_ID = '<active game browserId>'
 node scripts/quest/webxr/device-rdp.mjs --eval-file scripts/quest/webxr/profile-frame.js
-# Keep the headset rendering for at least six seconds, then collect:
+# Keep the headset rendering for at least 30 seconds, then collect:
 node scripts/quest/webxr/device-rdp.mjs --eval-file scripts/quest/webxr/profile-frame.js
 ```
 
-The profiler restores its method wrappers automatically. The second invocation collects the report; another invocation starts a new sample. CPU timings are nested and should not be added together. Compare the same level, pose, settings and activity. In a rebuilt app, `xrWorldIncludingPreparation` includes instancing/culling; `rendererSubmission` measures the inner Three call.
+The profiler restores its method wrappers automatically. The second invocation collects the report; another invocation starts a new sample. CPU timings are nested and should not be added together. Compare the same level, pose, settings and activity. `webXrPresentation.render` includes instancing/culling; `rendererSubmission` measures the inner Three call. The current profiler also measures the whole engine frame, all render passes, loading/menu/movement/idle phases, tile queues and runtime-event processing. Phase labels describe client animation/loading state, not an externally controlled benchmark. Release builds without the Gecko debugger can use the read-only native capture described in [the September 25 pass](performance-2026-09-25.md).

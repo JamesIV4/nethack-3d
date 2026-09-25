@@ -7,7 +7,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { unzipSync } from "three/examples/jsm/libs/fflate.module.js";
 import { readGeckoArtifact, PAINT_PREFERENCE } from "./gecko-artifact.mjs";
-import { questAppVersion } from "./app-version.mjs";
 
 const args = process.argv.slice(2);
 if (args.some(arg => arg !== "--debug")) throw new Error("Usage: publish-apk.mjs [--debug]");
@@ -35,9 +34,9 @@ const details = execFileSync(aapt, ["dump", "badging", apk], {
 });
 if (!details.includes("package: name='com.nethack3d.quest.vr'"))
   throw new Error("Incorrect Quest VR package identity.");
-const appVersion = questAppVersion();
-if (!details.includes(`versionName='${appVersion.name}'`) || !details.includes(`versionCode='${appVersion.code}'`))
-  throw new Error("Unexpected APK version.");
+const packagedVersion = details.match(/^package: .*\bversionCode='(\d+)' versionName='([^']+)'/m);
+if (!packagedVersion) throw new Error("APK package metadata is missing its version.");
+const [, versionCode, versionName] = packagedVersion;
 if (!details.includes("application-label:'NetHack 3D'")) throw new Error("Incorrect Quest launcher name.");
 for (const permission of ["WAKE_LOCK", "FOREGROUND_SERVICE"]) {
   if (!details.includes("name='android.permission." + permission + "'"))
@@ -144,12 +143,11 @@ mkdirSync(path.dirname(output), { recursive: true });
 copyFileSync(apk, output);
 // Keep the stable sideloading path while also producing a desktop-style release artifact.
 copyFileSync(apk, path.join(path.dirname(output), "nethack3d-webxr.apk"));
-const { version } = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
-const versionedOutput = path.join(root, "release", `NetHack 3D ${version} Quest${debug ? " Debug" : ""}.apk`);
+const versionedOutput = path.join(root, "release", `NetHack 3D ${versionName} Quest${debug ? " Debug" : ""}.apk`);
 mkdirSync(path.dirname(versionedOutput), { recursive: true });
 copyFileSync(apk, versionedOutput);
 console.log("Verified standalone APK: " + versionedOutput);
-console.log(`Version: ${appVersion.name}; versionCode: ${appVersion.code}`);
+console.log(`Version: ${versionName}; versionCode: ${versionCode}`);
 console.log("Latest APK: " + output);
 console.log("SHA256: " + createHash("sha256").update(bytes).digest("hex"));
 console.log("APK binary modified: " + statSync(apk).mtime.toLocaleString());
