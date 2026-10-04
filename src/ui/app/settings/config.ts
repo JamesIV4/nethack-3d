@@ -178,6 +178,18 @@ export const clientOptionsConfig: ClientOption[] = [
     ],
   },
   {
+    key: "asciiTilesForWalls",
+    label: t.asciiTerrain.asciiTilesForWalls.label,
+    description: t.asciiTerrain.asciiTilesForWalls.description,
+    type: "boolean",
+  },
+  {
+    key: "asciiTilesForFloors",
+    label: t.asciiTerrain.asciiTilesForFloors.label,
+    description: t.asciiTerrain.asciiTilesForFloors.description,
+    type: "boolean",
+  },
+  {
     key: "asciiColorMode",
     label: t.clientOptions.config.asciiColorMode.label,
     description: t.clientOptions.config.asciiColorMode.description,
@@ -279,6 +291,12 @@ export const clientOptionsConfig: ClientOption[] = [
     min: 0.7,
     max: 1.8,
     step: 0.01,
+  },
+  {
+    key: "uiFontFamily",
+    label: t.uiFont.label,
+    description: t.uiFont.description,
+    type: "font",
   },
   {
     key: "animatedMovement",
@@ -715,6 +733,12 @@ export const clientOptionsTabs: ClientOptionsTab[] = [
     label: t.clientOptions.tabs.updates.label,
     description: t.clientOptions.tabs.updates.description,
     groupKey: "group-updates",
+  },
+  {
+    id: "saves",
+    label: t.saveTransfer.title,
+    description: t.saveTransfer.description,
+    groupKey: "group-saves",
   },
 ];
 

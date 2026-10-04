@@ -87,6 +87,7 @@ export type ClientOptionSectionHeader = {
 };
 
 export type ClientOption =
+  | { key: "uiFontFamily"; label: string; description: string; type: "font"; developerOnly?: boolean }
   | ClientOptionGroupHeader
   | ClientOptionSectionHeader
   | ClientOptionToggle
@@ -103,6 +104,7 @@ export type ClientOptionsTabId =
   | "combat"
   | "compatibility"
   | "updates"
+  | "saves"
   | "vr";
 
 export type ClientOptionsTab = {
@@ -118,6 +120,8 @@ export type ManualSafeZonePreview = {
 };
 
 export type ClientOptionToggleKey =
+  | "asciiTilesForWalls"
+  | "asciiTilesForFloors"
   | "fpsMode"
   | "lightingEnabled"
   | "fpsFlattenEntityBillboards"

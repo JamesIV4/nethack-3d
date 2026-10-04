@@ -714,6 +714,7 @@ export function useAppModel() {
 
   useClientOptionsCssEffects({
     get clientOptions() { return clientOptions; },
+    get uiFontFamily() { return isClientOptionsVisible ? clientOptionsDraft.uiFontFamily : clientOptions.uiFontFamily; },
   });
 
   useOverflowGlow();
@@ -2083,6 +2084,8 @@ export function useAppModel() {
       visibleLocationLabel,
     },
     clientOptionsDialog: {
+      saveRuntimeVersion: activeRuntimeVersion,
+      gameActive: characterCreationConfig !== null,
       actionCommandNames: mobileExtendedCommandNames,
       isClientOptionsVisible,
       handleClientOptionsDialogBlurCapture,

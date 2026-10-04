@@ -1,4 +1,5 @@
 import type { NethackRuntimeVersion } from "../runtime/types";
+import { normalizeUiFontFamily } from "./ui-font";
 import {
   defaultNh3dTilesetPath,
   isNh3dTilesetCombinedBackgroundRemovalForced,
@@ -338,6 +339,7 @@ export type Nh3dClientOptions = {
   liveMessageFadeOutTimeMs: number;
   showVersionNotificationsOnLaunch: boolean;
   uiFontScale: number;
+  uiFontFamily: string;
   liveMessageLogFontScale: number;
   desktopMessageLogWindowScale: number;
   soundEnabled: boolean;
@@ -368,6 +370,8 @@ export type Nh3dClientOptions = {
   fpsHeldWeaponSpriteFlipX: boolean;
   fpsHeldWeaponSpriteFlipXByTileset: TilesetWeaponSpriteFlipXByTileset;
   tilesetMode: Nh3dTilesetMode;
+  asciiTilesForWalls: boolean;
+  asciiTilesForFloors: boolean;
   asciiColorMode: Nh3dAsciiColorMode;
   tilesetPath: string;
   tilesetUseTileAspectRatio: boolean;
@@ -496,6 +500,7 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
   liveMessageFadeOutTimeMs: 520,
   showVersionNotificationsOnLaunch: true,
   uiFontScale: 1,
+  uiFontFamily: "",
   liveMessageLogFontScale: 1,
   desktopMessageLogWindowScale: 1,
   soundEnabled: true,
@@ -533,6 +538,8 @@ export const defaultNh3dClientOptions: Nh3dClientOptions = {
     resolveDefaultNh3dTilesetWeaponSpriteFlipX(defaultNh3dTilesetPath),
   fpsHeldWeaponSpriteFlipXByTileset: {},
   tilesetMode: "tiles",
+  asciiTilesForWalls: false,
+  asciiTilesForFloors: false,
   asciiColorMode: "nethack-3d",
   tilesetPath: defaultNh3dTilesetPath,
   tilesetUseTileAspectRatio: true,
@@ -1290,6 +1297,7 @@ export function normalizeNh3dClientOptions(
         ? overrides.showVersionNotificationsOnLaunch
         : defaultNh3dClientOptions.showVersionNotificationsOnLaunch,
     uiFontScale,
+    uiFontFamily: normalizeUiFontFamily(overrides?.uiFontFamily),
     liveMessageLogFontScale,
     desktopMessageLogWindowScale,
     soundEnabled:
@@ -1332,6 +1340,8 @@ export function normalizeNh3dClientOptions(
     fpsHeldWeaponSpriteFlipX,
     fpsHeldWeaponSpriteFlipXByTileset,
     tilesetMode,
+    asciiTilesForWalls: overrides?.asciiTilesForWalls === true,
+    asciiTilesForFloors: overrides?.asciiTilesForFloors === true,
     asciiColorMode:
       overrides?.asciiColorMode === "classic" ||
       overrides?.asciiColorMode === "terminal"

@@ -4,16 +4,32 @@ import {
 import type {
   Nh3dClientOptions
 } from "../../../game/ui-types";
+import { getUiFontFamilyCss } from "../../../game/ui-font";
 
 export interface UseClientOptionsCssEffectsDependencies {
   readonly clientOptions: Nh3dClientOptions;
+  readonly uiFontFamily: string;
 }
 
 /** Applies UI scale, safe-zone and animation settings to document styles. */
 export function useClientOptionsCssEffects(dependencies: UseClientOptionsCssEffectsDependencies) {
   const {
     clientOptions,
+    uiFontFamily,
   } = dependencies;
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    const family = getUiFontFamilyCss(uiFontFamily);
+    root.classList.toggle("nh3d-custom-ui-font", Boolean(family));
+    if (family) root.style.setProperty("--nh3d-ui-font-family", family);
+    else root.style.removeProperty("--nh3d-ui-font-family");
+    return () => {
+      root.style.removeProperty("--nh3d-ui-font-family");
+      root.classList.remove("nh3d-custom-ui-font");
+    };
+  }, [uiFontFamily]);
 
   useEffect(() => {
     if (typeof document === "undefined") {

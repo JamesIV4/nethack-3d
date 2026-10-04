@@ -1,3 +1,4 @@
+import { usesTileTextures, usesWallTiles } from "../../terrain-tile-options";
 import * as THREE from "three";
 import type { NethackRuntimeVersion } from "../../../runtime/types";
 import { getGlyphCatalogEntry, getGlyphCatalogRanges } from "../../glyphs/registry";
@@ -154,7 +155,7 @@ export class TilesetAssets {
     "unknown";
 
   readonly handleVultureTilesetAssetReady = (): void => {
-    if (this.dependencies.engineState.clientOptions.tilesetMode !== "tiles") {
+    if (!usesTileTextures(this.dependencies.engineState.clientOptions)) {
       this.refreshTilesetCompilationLoadingState();
       return;
     }
@@ -493,7 +494,7 @@ export class TilesetAssets {
   loadTilesetTexture(options: Nh3dClientOptions): void {
     const loadRequestId = ++this.tilesetTextureLoadRequestId;
     this.tilesetTextureRuntimeVersion = this.resolveRuntimeVersion();
-    const shouldShowCompileLoading = options.tilesetMode === "tiles";
+    const shouldShowCompileLoading = usesTileTextures(options);
     this.setTilesetCompilationLoadingVisible(shouldShowCompileLoading);
     const tileset = findNh3dTilesetByPath(options.tilesetPath);
     this.loadedTilesetSourceAtlasImage = null;
@@ -514,7 +515,7 @@ export class TilesetAssets {
       this.loadedTilesetSourceLayoutVersion = "unknown";
       this.loadedTilesetTileLayoutVersion = "unknown";
       this.invalidateTilesetDependentCaches();
-      if (this.dependencies.engineState.clientOptions.tilesetMode === "tiles") {
+      if (usesTileTextures(this.dependencies.engineState.clientOptions)) {
         this.dependencies.tileUpdates.refreshTilesFromStateCache();
       }
       this.dependencies.vultureProjectionDebug.syncVultureWallProjectionDebugPanelVisibility();
@@ -535,7 +536,7 @@ export class TilesetAssets {
       this.loadedTilesetSourceLayoutVersion = tileset.tileLayoutVersion;
       this.loadedTilesetTileLayoutVersion = tileset.tileLayoutVersion;
       this.invalidateTilesetDependentCaches();
-      if (this.dependencies.engineState.clientOptions.tilesetMode === "tiles") {
+      if (usesTileTextures(this.dependencies.engineState.clientOptions)) {
         this.dependencies.tileUpdates.refreshTilesFromStateCache();
       }
       this.dependencies.vultureProjectionDebug.syncVultureWallProjectionDebugPanelVisibility();
@@ -637,7 +638,7 @@ export class TilesetAssets {
         this.loadedTilesetSourceLayoutVersion = sourceLayoutVersion;
         this.loadedTilesetTileLayoutVersion = loadedLayoutVersion;
         this.invalidateTilesetDependentCaches();
-        if (this.dependencies.engineState.clientOptions.tilesetMode === "tiles") {
+        if (usesTileTextures(this.dependencies.engineState.clientOptions)) {
           this.dependencies.tileUpdates.refreshTilesFromStateCache();
         }
         this.setTilesetCompilationLoadingVisible(false);
@@ -655,7 +656,7 @@ export class TilesetAssets {
 
   shouldUseVultureTiles(): boolean {
     return (
-      this.dependencies.engineState.clientOptions.tilesetMode === "tiles" &&
+      usesTileTextures(this.dependencies.engineState.clientOptions) &&
       this.vultureTilesetTranslator !== null
     );
   }
@@ -687,7 +688,7 @@ export class TilesetAssets {
     materialKind: TileMaterialKind,
     runtimeSymidx: number | null = null,
   ): boolean {
-    if (this.dependencies.engineState.clientOptions.tilesetMode !== "tiles") {
+    if (!usesWallTiles(this.dependencies.engineState.clientOptions)) {
       return false;
     }
     if (this.resolveRuntimeVersion() !== "5.0") {
@@ -887,7 +888,7 @@ export class TilesetAssets {
   }
 
   refreshTilesetCompilationLoadingState(): void {
-    if (this.dependencies.engineState.clientOptions.tilesetMode !== "tiles") {
+    if (!usesTileTextures(this.dependencies.engineState.clientOptions)) {
       this.setTilesetCompilationLoadingVisible(false);
       return;
     }

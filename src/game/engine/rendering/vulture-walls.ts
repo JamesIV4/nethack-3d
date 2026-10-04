@@ -1,3 +1,4 @@
+import { usesTileTextures } from "../../terrain-tile-options";
 import { TILE_SIZE } from "../../constants";
 import { isDoorwayCmapGlyph } from "../../glyphs/behavior";
 import { getActiveGlyphCatalogVersion, getGlyphCatalogEntry, getGlyphCatalogRanges } from "../../glyphs/registry";
@@ -103,7 +104,7 @@ export class VultureWalls {
     if (
       !translator ||
       !this.dependencies.tilesetAssets.shouldUseVultureTiles() ||
-      this.dependencies.engineState.clientOptions.tilesetMode !== "tiles"
+      !usesTileTextures(this.dependencies.engineState.clientOptions)
     ) {
       this.pendingVultureRoomDecorReconcileKeys.clear();
       return;
@@ -139,7 +140,7 @@ export class VultureWalls {
   ): void {
     if (
       !this.dependencies.tilesetAssets.shouldUseVultureTiles() ||
-      this.dependencies.engineState.clientOptions.tilesetMode !== "tiles" ||
+      !usesTileTextures(this.dependencies.engineState.clientOptions) ||
       !this.dependencies.tilesetAssets.vultureTilesetTranslator
     ) {
       this.pendingVultureRoomDecorReconcileKeys.clear();

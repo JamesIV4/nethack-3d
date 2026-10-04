@@ -28,8 +28,11 @@ export function ActionLabel({ children }: { children: string }): JSX.Element {
     };
     const observer = new ResizeObserver(fit);
     observer.observe(button); fit();
+    // A font change can alter text width without resizing a fixed-size button.
+    const fontObserver = new MutationObserver(fit);
+    fontObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
     void document.fonts?.ready.then(fit);
-    return () => { disposed = true; observer.disconnect(); };
+    return () => { disposed = true; observer.disconnect(); fontObserver.disconnect(); };
   }, [children]);
   return <span className="nh3d-action-label" ref={ref}>{children}</span>;
 }

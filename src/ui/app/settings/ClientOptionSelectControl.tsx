@@ -2,6 +2,7 @@ import { constrainFpsModeForTilesetMode } from "../../../game/client-option-cons
 import { resolveSupportedLocale } from "../../../i18n/core";
 import { t } from "../shared/translations";
 import { OptionLabelWithInfo } from "./OptionLabelWithInfo";
+import { usesTileTextures } from "../../../game/terrain-tile-options";
 import type { ClientOptionsDialogProps } from "./ClientOptionsDialog";
 import type { ClientOptionSelect } from "./types";
 
@@ -35,7 +36,7 @@ export function ClientOptionSelectControl({
     : option.options;
   const tilesetSelectDisabledByDisplayMode =
     isTilesetSelect &&
-    clientOptionsDraft.tilesetMode !== "tiles";
+    !usesTileTextures(clientOptionsDraft);
   const selectDisabled = isTilesetSelect
     ? tilesetSelectDisabledByDisplayMode || !hasAnyTilesets
     : isInventoryFixedTileSizeSelect

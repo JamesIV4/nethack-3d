@@ -1,3 +1,4 @@
+import { usesTerrainTiles, usesFloorTiles } from "../../terrain-tile-options";
 import * as THREE from "three";
 import { TILE_SIZE, WALL_HEIGHT } from "../../constants";
 import {
@@ -795,6 +796,7 @@ export class TileRendering {
     } else if (
       !this.dependencies.movementInput.isFpsMode() &&
       !useTiles &&
+      !usesTerrainTiles(this.dependencies.engineState.clientOptions, renderBehavior.isWall, renderBehavior.materialKind) &&
       (isPendingAsciiPlayerTile || isCurrentKnownPlayerTile) &&
       hasAtGlyphForAsciiPlayerTint
     ) {
@@ -807,6 +809,9 @@ export class TileRendering {
       }
       tileTextColor = this.dependencies.glyphTextures.asciiFriendlyGlyphTextColor;
     }
+    const useTerrainTiles = usesTerrainTiles(
+      this.dependencies.engineState.clientOptions, renderBehavior.isWall, renderBehavior.materialKind,
+    );
     let glyphBackgroundColorHex: string | null = null;
     let runtimeAsciiBillboardGlyphChar: string | null = null;
     let runtimeAsciiBillboardTextColor: string | null = null;
@@ -944,7 +949,7 @@ export class TileRendering {
     mesh.userData.sourceGlyph = glyph;
     mesh.userData.tileTextureSourceGlyph = renderBehavior.effective.glyph;
     const shouldCompositeTransparentFloorOnFlatTile =
-      useTiles &&
+      useTerrainTiles &&
       this.dependencies.engineState.clientOptions.tilesetBackgroundRemovalMode === "none" &&
       this.dependencies.worldClassification.isOpenDoorFloorBehavior(renderBehavior);
     const shouldUseTransparentFloorUnderlayTreatmentOnTile =
@@ -955,7 +960,7 @@ export class TileRendering {
         shouldSuppressPlayerTileVisualInFps &&
         this.dependencies.worldClassification.shouldRenderFlatFeatureUnderPlayer(renderBehavior));
     const shouldForceTileTextureBackgroundRemoval =
-      useTiles &&
+      useTerrainTiles &&
       !this.dependencies.tilesetAssets.shouldUseVultureTiles() &&
       renderBehavior.isWall &&
       this.dependencies.worldClassification.shouldUseTransparentWallGroundPlaneUnderlay(renderBehavior) &&
@@ -985,7 +990,7 @@ export class TileRendering {
       );
     mesh.userData.tileIndex = tileTextureIndex;
     const tileFaceTextureVariant =
-      useTiles && !this.dependencies.tilesetAssets.shouldUseVultureTiles()
+      useTerrainTiles && !this.dependencies.tilesetAssets.shouldUseVultureTiles()
         ? this.dependencies.tileFaceTextureRotationDebug.buildVariantKey(
             this.dependencies.tilesetAssets.resolveRuntimeVersion(),
             tileTextureIndex,
@@ -1003,7 +1008,7 @@ export class TileRendering {
     mesh.userData.tileUseBackgroundReferenceTile =
       renderBehavior.useBackgroundReferenceTile === true;
     const shouldCompositeFloorUnderFlatFeatureOnTile =
-      useTiles &&
+      useTerrainTiles &&
       this.dependencies.engineState.clientOptions.tilesetBackgroundRemovalMode === "none" &&
       shouldUseTransparentFloorUnderlayTreatmentOnTile;
     if (shouldCompositeFloorUnderFlatFeatureOnTile) {
@@ -1086,9 +1091,9 @@ export class TileRendering {
       (fpsClosedDoorChamferTransform.scaleX < 0.9999 ||
         fpsClosedDoorChamferTransform.scaleY < 0.9999);
     const shouldRenderClosedDoorChamferExposedFloor =
-      useTiles && hasFpsClosedDoorChamferTrim;
+      usesFloorTiles(this.dependencies.engineState.clientOptions) && hasFpsClosedDoorChamferTrim;
     const shouldRenderTransparentWallGroundPlane =
-      useTiles &&
+      usesFloorTiles(this.dependencies.engineState.clientOptions) &&
       renderBehavior.isWall &&
       ((!this.dependencies.tilesetAssets.shouldUseVultureTiles() &&
         this.dependencies.worldClassification.shouldUseTransparentWallGroundPlaneUnderlay(renderBehavior)) ||

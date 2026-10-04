@@ -1,5 +1,8 @@
 import { QuestWebXrSettings } from "../../../quest/webxr/QuestWebXrControls";
 import { ActionLayoutSettings } from "./ActionLayoutSettings";
+import { SaveGameSettings } from "./SaveGameSettings";
+import { ClientOptionFontControl } from "./ClientOptionFontControl";
+import type { NethackRuntimeVersion } from "../../../runtime/types";
 import { isQuestApk } from "../../../quest/webxr/host";
 import { ClientOptionsUpdates } from "./ClientOptionsUpdates";
 import { ClientOptionToggleControl } from "./ClientOptionToggleControl";
@@ -53,6 +56,8 @@ import type { ConfirmationDialogRequest } from "../../modals/useConfirmationDial
 
 
 export interface ClientOptionsDialogProps {
+  saveRuntimeVersion: NethackRuntimeVersion;
+  gameActive: boolean;
   actionCommandNames: string[];
   isClientOptionsVisible: boolean;
   handleClientOptionsDialogBlurCapture: (event: React.FocusEvent<HTMLDivElement, Element>) => void;
@@ -103,6 +108,8 @@ export interface ClientOptionsDialogProps {
 }
 
 export function ClientOptionsDialog({
+  saveRuntimeVersion,
+  gameActive,
   actionCommandNames,
   isClientOptionsVisible,
   handleClientOptionsDialogBlurCapture,
@@ -215,6 +222,9 @@ export function ClientOptionsDialog({
               </div>
             </div>
             <div className="nh3d-options-list">
+              {selectedClientOptionsTab.id === "saves" && isClientOptionsVisible ? (
+                <SaveGameSettings runtimeVersion={saveRuntimeVersion} gameActive={gameActive} />
+              ) : null}
               {selectedClientOptionsTab.id === "updates" ? (<ClientOptionsUpdates
                 clientOptionsDraft={clientOptionsDraft}
                 updateClientOptionDraft={updateClientOptionDraft}
@@ -225,6 +235,8 @@ export function ClientOptionsDialog({
                 openGitHubReleases={openGitHubReleases}
               />) : null}
               {visibleClientOptions.map((option) => {
+                if ((option.key === "asciiTilesForWalls" || option.key === "asciiTilesForFloors") &&
+                    clientOptionsDraft.tilesetMode !== "ascii") return null;
                 if (option.developerOnly && !showDeveloperClientSettings) {
                   return null;
                 }
@@ -278,6 +290,12 @@ export function ClientOptionsDialog({
                     showManualSafeZonePreview={showManualSafeZonePreview}
                     updateClientSliderDraft={updateClientSliderDraft}
                   />);
+                }
+                if (option.type === "font") {
+                  return <ClientOptionFontControl key={option.key}
+                    value={clientOptionsDraft.uiFontFamily}
+                    onChange={uiFontFamily => setClientOptionsDraft(previous => ({ ...previous, uiFontFamily }))}
+                  />;
                 }
                 if (option.type === "color") {
                   return (<ClientOptionColorControl key={option.key} option={option}

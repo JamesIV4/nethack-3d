@@ -1,3 +1,4 @@
+import { usesTileTextures } from "../../terrain-tile-options";
 import * as THREE from "three";
 import { type VultureTileLookup } from "../../vulture/translation";
 import type {
@@ -213,7 +214,7 @@ export class VultureProjection {
         return;
       }
       this.dependencies.tilesetAssets.invalidateTilesetDependentCaches();
-      if (this.dependencies.engineState.clientOptions.tilesetMode === "tiles") {
+      if (usesTileTextures(this.dependencies.engineState.clientOptions)) {
         this.dependencies.tileUpdates.refreshTilesFromStateCache();
       }
     } catch (error) {

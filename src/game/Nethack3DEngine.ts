@@ -521,6 +521,9 @@ class Nethack3DEngine implements Nethack3DEngineController {
       previous.animatedMovement !== normalized.animatedMovement;
     const asciiColorModeChanged =
       previous.asciiColorMode !== normalized.asciiColorMode;
+    const asciiTerrainTilesChanged =
+      previous.asciiTilesForWalls !== normalized.asciiTilesForWalls ||
+      previous.asciiTilesForFloors !== normalized.asciiTilesForFloors;
     const tilesetPathChanged = previous.tilesetPath !== normalized.tilesetPath ||
       this.systems.tilesetAssets.hasTilesetSourceChanged(normalized.tilesetPath);
     const antialiasingChanged =
@@ -636,7 +639,7 @@ class Nethack3DEngine implements Nethack3DEngineController {
     if (animatedMovementChanged && !normalized.animatedMovement) {
       this.systems.entityMovement.clearEntityMoveTransitions();
     }
-    if (asciiColorModeChanged && !tilesetModeChanged) {
+    if ((asciiColorModeChanged || asciiTerrainTilesChanged) && !tilesetModeChanged) {
       this.systems.tilesetAssets.invalidateTilesetDependentCaches();
       this.systems.tileUpdates.refreshTilesFromStateCache();
     }

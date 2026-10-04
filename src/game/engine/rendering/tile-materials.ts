@@ -1,3 +1,4 @@
+import { usesTerrainTiles } from "../../terrain-tile-options";
 import * as THREE from "three";
 import { TILE_SIZE } from "../../constants";
 import {
@@ -259,6 +260,7 @@ export class TileMaterials {
     const vultureTranslator = this.dependencies.tilesetAssets.vultureTilesetTranslator;
     const resolvedVultureLookup =
       this.dependencies.tilesetAssets.shouldUseVultureTiles() &&
+      usesTerrainTiles(this.dependencies.engineState.clientOptions, isWall, tileTextureMaterialKind) &&
       !useSolidColor &&
       vultureTranslator &&
       (tileTextureSourceGlyph !== null || tileIndex >= 0)
@@ -276,7 +278,7 @@ export class TileMaterials {
       : "";
     const useTiles =
       !useSolidColor &&
-      this.dependencies.engineState.clientOptions.tilesetMode === "tiles" &&
+      usesTerrainTiles(this.dependencies.engineState.clientOptions, isWall, tileTextureMaterialKind) &&
       (tileUseBackgroundReferenceTile ||
         tileIndex >= 0 ||
         canUseTranslatedTileWithoutAtlas);

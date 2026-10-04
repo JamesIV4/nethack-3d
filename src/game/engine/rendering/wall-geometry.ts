@@ -1,3 +1,4 @@
+import { usesWallTiles, usesFloorTiles } from "../../terrain-tile-options";
 import * as THREE from "three";
 import { TileNeighborBatch } from "./tile-neighbor-batch";
 import { TILE_SIZE, WALL_HEIGHT } from "../../constants";
@@ -153,7 +154,7 @@ export class WallGeometry {
       glyphChar,
       sourceGlyph,
     );
-    if (this.dependencies.engineState.clientOptions.tilesetMode === "tiles") {
+    if (usesWallTiles(this.dependencies.engineState.clientOptions)) {
       return "none";
     }
     // Preserve existing ASCII behavior where vertical walls use rotated chamfer sides.
@@ -372,7 +373,7 @@ export class WallGeometry {
     );
 
     const hasTrim = transform.scaleX < 0.9999 || transform.scaleY < 0.9999;
-    if (this.dependencies.engineState.clientOptions.tilesetMode === "tiles" && hasTrim) {
+    if (usesFloorTiles(this.dependencies.engineState.clientOptions) && hasTrim) {
       const floorUnderlayBehavior = this.dependencies.worldClassification.resolveNormalRoomFloorBehavior();
       const floorUnderlayDarkenFactor =
         typeof mesh.userData?.glyphDarkenFactor === "number" &&
@@ -498,7 +499,7 @@ export class WallGeometry {
     const canUseTranslatedTileWithoutAtlas =
       this.dependencies.tilesetAssets.shouldUseVultureTiles() && sourceGlyph !== null;
     const useTiles =
-      this.dependencies.engineState.clientOptions.tilesetMode === "tiles" &&
+      usesFloorTiles(this.dependencies.engineState.clientOptions) &&
       (useBackgroundReferenceTile ||
         tileIndex >= 0 ||
         canUseTranslatedTileWithoutAtlas);

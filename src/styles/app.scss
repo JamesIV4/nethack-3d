@@ -388,6 +388,10 @@
 // Global & Base
 // -----------------------------------------------------------------------------
 
+:where(.nh3d-custom-ui-font) :is(button, input, select, textarea) {
+  font-family: var(--nh3d-ui-font-family);
+}
+
 html,
 body {
   margin: 0;
@@ -396,7 +400,7 @@ body {
   height: 100%;
   overflow: hidden;
   background: #000011; /* Dark blue void background */
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", Courier, monospace);
   -webkit-user-select: none;
   user-select: none;
   -webkit-text-size-adjust: 100%;
@@ -772,7 +776,7 @@ canvas {
   border: 1px solid var(--nh3d-ui-border);
   border-radius: calc(8px * var(--nh3d-ui-font-scale, 1));
   color: var(--nh3d-ui-text);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(12px);
   line-height: 1.4;
   box-shadow: var(--nh3d-ui-shadow);
@@ -942,7 +946,7 @@ canvas {
 
 #stats-bar {
   --nh3d-mobile-stats-core-scale: 1;
-  font-family: "Courier New", monospace !important;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace) !important;
   position: fixed;
   top: var(--nh3d-safe-area-top);
   left: 0;
@@ -1312,7 +1316,7 @@ canvas {
   --floating-message-rise-px: 44px;
   opacity: 1;
   color: #ffffff;
-  font-family: "Segoe UI", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--nh3d-ui-font-family, "Segoe UI", "SF Pro Text", "Helvetica Neue", Arial, sans-serif);
   font-size: nh3d-scale-live-log-font(clamp(14px, 1.4vw, 19px));
   font-weight: bold;
   line-height: 1.2;
@@ -1368,7 +1372,7 @@ canvas {
   border: 2px solid var(--nh3d-ui-border-strong);
   border-radius: 10px;
   box-shadow: var(--nh3d-ui-shadow);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(clamp(22px, 2.3vw, 30px));
   font-weight: bold;
   line-height: 1.15;
@@ -1662,7 +1666,7 @@ canvas {
   padding: 0;
   border: 0;
   background: transparent;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(12px);
   line-height: 1.2;
   letter-spacing: 0.08em;
@@ -1692,7 +1696,7 @@ canvas {
   border-radius: 6px;
   background: rgba(4, 12, 24, 0.9);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(11px);
   line-height: 1.2;
   color: rgba(214, 239, 255, 0.96);
@@ -1712,7 +1716,7 @@ canvas {
   box-shadow:
     0 0 0 1px rgba(126, 208, 255, 0.14),
     0 8px 18px rgba(0, 0, 0, 0.32);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(11px);
   line-height: 1.2;
   color: rgba(230, 245, 255, 0.99);
@@ -1815,7 +1819,7 @@ canvas {
   padding: 20px;
   border-radius: 10px;
   z-index: 2000;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   display: none;
   overflow-x: hidden;
 
@@ -2069,7 +2073,7 @@ canvas {
   border: 1px solid var(--nh3d-ui-button-warm-border);
   background: var(--nh3d-ui-button-warm-bg);
   color: var(--nh3d-ui-button-warm-text);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-weight: 700;
   line-height: 1;
   padding: 0;
@@ -2365,7 +2369,7 @@ canvas {
       ),
       rgba(7, 17, 31, 0.74);
     color: var(--nh3d-ui-text);
-    font-family: "Courier New", monospace;
+    font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
     font-size: nh3d-scale-font(clamp(11px, 1.5vw, 13px));
     line-height: 1;
     font-weight: 700;
@@ -4119,7 +4123,7 @@ canvas {
   border: 1px solid rgba(108, 166, 226, 0.45);
   background: rgba(8, 18, 29, 0.96);
   color: var(--nh3d-ui-text);
-  font-family: "Consolas", "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Consolas", "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   padding: 3px 18px 3px 6px;
   text-align: right;
@@ -4204,6 +4208,36 @@ canvas {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+.nh3d-option-row-font {
+  align-items: flex-start;
+
+  .nh3d-option-select-controls {
+    width: min(280px, 100%);
+    flex-shrink: 0;
+  }
+
+  .nh3d-startup-config-input,
+  .nh3d-startup-config-select {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  @media (max-width: 700px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .nh3d-option-select-controls { width: 100%; }
+  }
+}
+
+.nh3d-ui-font-preview {
+  margin-top: 10px;
+  font-size: nh3d-scale-font(18px);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .nh3d-option-slider-control {
@@ -4938,7 +4972,7 @@ canvas {
   border: 1px solid var(--nh3d-ui-border-strong);
   border-radius: 5px;
   z-index: 2000;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   text-align: center;
   line-height: 1.4;
@@ -5078,7 +5112,7 @@ canvas {
   display: inline-block;
   padding: 0 8px;
   color: rgba(224, 241, 255, 0.96);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -5099,7 +5133,7 @@ canvas {
   min-height: 1em;
   padding: 0;
   color: var(--nh3d-ui-accent-soft);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(clamp(24px, 3.2vw, 32px));
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -6252,7 +6286,7 @@ canvas {
 
 .nh3d-top-score-timeline-progress-label,
 .nh3d-top-score-timeline-tick-label {
-  font-family: "Consolas", "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Consolas", "Courier New", monospace);
 }
 
 .nh3d-top-score-timeline-progress-label {
@@ -6328,7 +6362,7 @@ canvas {
 
 .nh3d-top-score-timeline-axis-caption {
   fill: rgba(191, 217, 239, 0.72);
-  font-family: "Consolas", "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Consolas", "Courier New", monospace);
   font-size: nh3d-scale-font(11px);
   font-weight: 700;
 }
@@ -6661,7 +6695,7 @@ canvas {
   border: 1px solid rgba(118, 176, 214, 0.32);
   background: rgba(20, 51, 72, 0.52);
   color: var(--nh3d-ui-accent-soft);
-  font-family: "Consolas", "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Consolas", "Courier New", monospace);
   font-size: nh3d-scale-font(12px);
   font-weight: bold;
 }
@@ -6769,7 +6803,7 @@ canvas {
   border: 1px solid var(--nh3d-ui-button-border);
   border-radius: 3px;
   padding: 6px 8px;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
 
   @media (pointer: coarse) {
@@ -7309,7 +7343,7 @@ canvas {
   border: 1px solid var(--nh3d-ui-button-warm-border);
   border-radius: 3px;
   cursor: pointer;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   font-weight: bold;
   width: fit-content;
@@ -7372,7 +7406,7 @@ canvas {
   border: 2px solid var(--nh3d-ui-button-warm-border);
   border-radius: 5px;
   cursor: pointer;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(18px);
   font-weight: bold;
   display: flex;
@@ -7971,7 +8005,7 @@ canvas {
   border-radius: 3px;
   padding: 6px 10px;
   text-align: left;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   cursor: pointer;
   transition:
@@ -8234,7 +8268,7 @@ canvas {
   border: 2px solid #96a996;
   background: rgba(24, 34, 24, 0.88);
   color: #e7f8e7;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(20px);
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -8303,7 +8337,7 @@ canvas {
   color: var(--nh3d-ui-text);
   border: 1px solid var(--nh3d-ui-button-border);
   border-radius: 3px;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   margin-bottom: 15px;
 
@@ -8319,7 +8353,7 @@ canvas {
   color: var(--nh3d-ui-text);
   border: 1px solid var(--nh3d-ui-button-border);
   border-radius: 3px;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   margin-bottom: 12px;
   box-sizing: border-box;
@@ -8345,7 +8379,7 @@ canvas {
   border: 1px solid var(--nh3d-ui-confirm-border);
   border-radius: 3px;
   cursor: pointer;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   margin-left: 10px;
   transition:
     background-color 120ms ease,
@@ -8505,7 +8539,7 @@ canvas {
   );
   color: var(--nh3d-ui-text);
   text-align: left;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   line-height: 1.3;
   box-sizing: border-box;
@@ -8840,7 +8874,7 @@ button.nh3d-cast-row {
   );
   color: var(--nh3d-ui-text);
   text-align: left;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   line-height: 1.3;
   box-sizing: border-box;
@@ -9300,7 +9334,7 @@ button.nh3d-technique-row {
   border: 1px solid var(--nh3d-ui-button-border);
   border-radius: 3px;
   cursor: pointer;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   line-height: 1.3;
   text-align: left;
   user-select: none;
@@ -9371,7 +9405,7 @@ button.nh3d-technique-row {
   background: var(--nh3d-ui-button-warm-bg);
   color: var(--nh3d-ui-button-warm-text);
   cursor: pointer;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   font-weight: bold;
   transition:
@@ -9450,7 +9484,7 @@ button.nh3d-technique-row {
   background: var(--nh3d-ui-button-warm-bg);
   color: var(--nh3d-ui-button-warm-text);
   cursor: pointer;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   font-weight: bold;
   transition:
@@ -9489,7 +9523,7 @@ button.nh3d-technique-row {
   border: 1px solid var(--nh3d-ui-button-warm-border);
   border-radius: 3px;
   cursor: pointer;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   font-weight: bold;
   text-align: left;
@@ -9641,7 +9675,7 @@ button.nh3d-technique-row {
   border-radius: 7px;
   background: linear-gradient(180deg, #1b2d48 0%, #12243e 100%);
   color: #d5e7ff;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   font-weight: bold;
   letter-spacing: 0.02em;
@@ -9781,7 +9815,7 @@ button.nh3d-technique-row {
     border-radius: 6px;
     background: rgba(18, 10, 0, 0.86);
     color: #fff7c2;
-    font-family: "Courier New", monospace;
+    font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
     font-size: nh3d-scale-font(13px);
     font-weight: bold;
     line-height: 1.2;
@@ -9816,7 +9850,7 @@ button.nh3d-technique-row {
   border-radius: 6px;
   background: #16253d;
   color: #d5e7ff;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: 11px;
   font-weight: bold;
   line-height: 1.1;
@@ -9862,7 +9896,7 @@ button.nh3d-technique-row {
   border-radius: 8px;
   background: #16253d;
   color: #d5e7ff;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(11px);
   font-weight: bold;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
@@ -9903,7 +9937,7 @@ button.nh3d-technique-row {
   border-radius: 8px;
   background: #16253d;
   color: #d5e7ff;
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(13px);
   font-weight: bold;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
@@ -9990,7 +10024,7 @@ button.nh3d-technique-row {
   border-radius: 6px;
   background: var(--nh3d-ui-button-bg);
   color: var(--nh3d-ui-text);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   padding: 7px 9px;
   text-align: left;
   transition:
@@ -10206,7 +10240,7 @@ button.nh3d-technique-row {
   width: min(16vw, 98px);
   text-align: center;
   color: rgba(220, 242, 255, 0.95);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: nh3d-scale-font(14px);
   line-height: 1.12;
   font-weight: bold;
@@ -10331,7 +10365,7 @@ button.nh3d-technique-row {
   border-radius: 6px;
   background: var(--nh3d-ui-button-alt-bg);
   color: var(--nh3d-ui-text);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: 12px;
   font-weight: bold;
   transition:
@@ -10368,7 +10402,7 @@ button.nh3d-technique-row {
   border-radius: 6px;
   background: var(--nh3d-ui-cancel-bg);
   color: var(--nh3d-ui-cancel-text);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: 12px;
   font-weight: bold;
   transition:
@@ -10503,7 +10537,7 @@ button.nh3d-technique-row {
   border-radius: 6px;
   background: var(--nh3d-ui-button-bg);
   color: var(--nh3d-ui-text);
-  font-family: "Courier New", monospace;
+  font-family: var(--nh3d-ui-font-family, "Courier New", monospace);
   font-size: 12px;
   font-weight: bold;
   transition:
