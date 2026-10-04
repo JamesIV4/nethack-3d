@@ -26,7 +26,6 @@ export function useTextInputState() {
 export interface UseTextInputResetDependencies {
   readonly textInputRequest: TextInputRequestState | null;
   readonly setTextInputValue: React.Dispatch<React.SetStateAction<string>>;
-  readonly textInputRef: React.MutableRefObject<HTMLInputElement | null>;
 }
 
 /** Text entry state, reset, focus and submission */
@@ -34,7 +33,6 @@ export function useTextInputReset(dependencies: UseTextInputResetDependencies) {
   const {
     textInputRequest,
     setTextInputValue,
-    textInputRef,
   } = dependencies;
 
   useEffect(() => {
@@ -42,11 +40,6 @@ export function useTextInputReset(dependencies: UseTextInputResetDependencies) {
       return;
     }
     setTextInputValue("");
-    if (typeof window !== "undefined") {
-      window.setTimeout(() => {
-        textInputRef.current?.focus();
-      }, 0);
-    }
   }, [textInputRequest]);
 
 }

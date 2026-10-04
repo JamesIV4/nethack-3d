@@ -289,7 +289,6 @@ export interface UseQuestionInputDependencies {
   readonly controller: Nethack3DEngineController | null;
   readonly setQuestionTextInputValue: React.Dispatch<React.SetStateAction<string>>;
   readonly shouldRenderQuestionTextInput: boolean;
-  readonly questionTextInputRef: React.MutableRefObject<HTMLInputElement | null>;
   readonly question: QuestionDialogState | null;
   readonly characterCreationConfig: CharacterCreationConfig | null;
   readonly directionQuestion: string | null;
@@ -321,7 +320,6 @@ export function useQuestionInput(dependencies: UseQuestionInputDependencies) {
     controller,
     setQuestionTextInputValue,
     shouldRenderQuestionTextInput,
-    questionTextInputRef,
     question,
     characterCreationConfig,
     directionQuestion,
@@ -362,11 +360,6 @@ export function useQuestionInput(dependencies: UseQuestionInputDependencies) {
       return;
     }
     setQuestionTextInputValue("");
-    if (typeof window !== "undefined") {
-      window.setTimeout(() => {
-        questionTextInputRef.current?.focus();
-      }, 0);
-    }
   }, [question?.text, shouldRenderQuestionTextInput]);
 
   useLayoutEffect(() => {
@@ -408,7 +401,7 @@ export function useQuestionInput(dependencies: UseQuestionInputDependencies) {
       }
     }
 
-    if (topOverlay.id === "text-input-dialog") {
+    if (topOverlay.hasAttribute("data-nh3d-text-entry")) {
       return;
     }
 
@@ -568,7 +561,7 @@ export function useQuestionFocus(dependencies: UseQuestionFocusDependencies) {
       const questionDialog = document.querySelector<HTMLElement>(
         "#question-dialog.nh3d-dialog.is-visible",
       );
-      if (!questionDialog) {
+      if (!questionDialog || questionDialog.hasAttribute("data-nh3d-text-entry")) {
         return;
       }
       const activeQuestionTarget = questionDialog.querySelector<HTMLElement>(

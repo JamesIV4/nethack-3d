@@ -51,13 +51,13 @@ export function QuestUiProbe(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (!textOpen && !dialogOpen) {
+    if (!dialogOpen) {
       return;
     }
     // AnimatedDialog mounts after its open-state effect. Wait for that mount,
     // rather than assuming its input exists on the next animation frame.
     const focusMountedDialog = (): void => {
-      const target = textOpen ? textInputRef.current : closeDialogRef.current;
+      const target = closeDialogRef.current;
       if (target) {
         target.focus();
         observer.disconnect();
@@ -67,7 +67,7 @@ export function QuestUiProbe(): JSX.Element {
     observer.observe(document.body, { childList: true, subtree: true });
     focusMountedDialog();
     return () => observer.disconnect();
-  }, [textOpen, dialogOpen]);
+  }, [dialogOpen]);
 
   const closeDialog = useCallback((): void => {
     setDialogOpen(false);

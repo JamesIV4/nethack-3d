@@ -407,6 +407,18 @@ public class KeyboardInputHarness implements InputDelegate {
   k.require(k.mInputConnection==null,"blur releases the old editor");
   k.restartInput(session,RESTART_REASON_FOCUS);k.drain();
   k.require(k.resets==2 && k.mWidgetPlacement.visible,"new focus creates exactly one new connection");
+  // A delayed Call prompt follows a click/blur, with no user-gesture show call.
+  // The blur may still be queued while the previous connection remains live.
+  k.dismiss();k.mWidgetPlacement.visible=false;
+  k.restartInput(session,RESTART_REASON_BLUR);
+  k.restartInput(session,RESTART_REASON_FOCUS);k.drain();
+  k.require(k.mWidgetPlacement.visible && k.resets==2,"new async prompt reopens a dismissed live connection");
+  k.dismiss();k.mWidgetPlacement.visible=false;
+  k.restartInput(session,RESTART_REASON_CONTENT_CHANGE);k.drain();
+  k.require(!k.mWidgetPlacement.visible,"typing cannot reopen a dismissed keyboard");
+  k.restartInput(session,RESTART_REASON_BLUR);k.drain();
+  k.restartInput(session,RESTART_REASON_FOCUS);k.dismiss();k.mWidgetPlacement.visible=false;k.drain();
+  k.require(!k.mWidgetPlacement.visible,"Close wins over pending autofocus on a new prompt");
   k.showSoftInput(session);k.mAttachedWindow=new WindowWidget();k.mWidgetPlacement.visible=false;k.drain();
   k.require(k.resets==2 && !k.mWidgetPlacement.visible,"stale window callback is ignored");
   System.out.println("keyboard callback lifecycle passed");

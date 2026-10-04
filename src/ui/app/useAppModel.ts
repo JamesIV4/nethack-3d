@@ -1209,7 +1209,6 @@ export function useAppModel() {
   useTextInputReset({
     get textInputRequest() { return textInputRequest; },
     get setTextInputValue() { return setTextInputValue; },
-    get textInputRef() { return textInputRef; },
   });
 
   const {
@@ -1281,7 +1280,6 @@ export function useAppModel() {
     get controller() { return controller; },
     get setQuestionTextInputValue() { return setQuestionTextInputValue; },
     get shouldRenderQuestionTextInput() { return shouldRenderQuestionTextInput; },
-    get questionTextInputRef() { return questionTextInputRef; },
     get question() { return question; },
     get characterCreationConfig() { return characterCreationConfig; },
     get directionQuestion() { return directionQuestion; },

@@ -1,4 +1,4 @@
-import AnimatedDialog from "../../modals/AnimatedDialog";
+import { TextEntryDialog } from "../../modals/TextEntryDialog";
 import type * as React from "react";
 import {
   commonStrings,
@@ -25,64 +25,29 @@ export function TextInputDialog({
   textInputRef,
 }: TextInputDialogProps) {
   return (
-    <AnimatedDialog
-      className="nh3d-dialog nh3d-dialog-text nh3d-dialog-fixed-actions nh3d-dialog-has-mobile-close"
+    <TextEntryDialog
       open={Boolean(textInputRequest)}
       id="text-input-dialog"
-    >
-      {textInputRequest ? (
-        <>
-          {renderMobileDialogCloseButton(
-            () => submitTextInput(""),
-            t.dialogs.textInput.cancelLabel,
-          )}
-          {textInputRequest.contextMessage ? (
-            <div className="nh3d-text-input-context" role="note">
-              <div className="nh3d-text-input-context-value">
-                {textInputRequest.contextMessage}
-              </div>
-            </div>
-          ) : null}
-          <div className="nh3d-question-text">{textInputRequest.text}</div>
-          <input
-            className="nh3d-text-input"
-            maxLength={textInputRequest.maxLength ?? 256}
-            onChange={(event) => setTextInputValue(event.target.value)}
-            onKeyDown={(event) => {
-              event.stopPropagation();
-              if (event.key === "Enter") {
-                event.preventDefault();
-                submitTextInput(textInputValue);
-              } else if (event.key === "Escape") {
-                event.preventDefault();
-                submitTextInput("");
-              }
-            }}
-            placeholder={
-              textInputRequest.placeholder ?? t.dialogs.textInput.placeholder
-            }
-            ref={textInputRef}
-            type="text"
-            value={textInputValue}
-          />
-          <div className="nh3d-menu-actions">
-            <button
-              className="nh3d-menu-action-button nh3d-menu-action-confirm"
-              onClick={() => submitTextInput(textInputValue)}
-              type="button"
-            >
-              {t.dialogs.textInput.ok}
-            </button>
-            <button
-              className="nh3d-menu-action-button nh3d-menu-action-cancel"
-              onClick={() => submitTextInput("")}
-              type="button"
-            >
-              {commonStrings.cancel}
-            </button>
-          </div>
-        </>
+      className="nh3d-dialog-text nh3d-dialog-has-mobile-close"
+      prompt={textInputRequest?.text ?? ""}
+      focusKey={textInputRequest}
+      value={textInputValue}
+      onChange={setTextInputValue}
+      onSubmit={submitTextInput}
+      onCancel={() => submitTextInput("")}
+      confirmLabel={t.dialogs.textInput.ok}
+      cancelLabel={commonStrings.cancel}
+      placeholder={textInputRequest?.placeholder ?? t.dialogs.textInput.placeholder}
+      maxLength={textInputRequest?.maxLength}
+      inputRef={textInputRef}
+      closeButton={renderMobileDialogCloseButton(
+        () => submitTextInput(""), t.dialogs.textInput.cancelLabel,
+      )}
+      context={textInputRequest?.contextMessage ? (
+        <div className="nh3d-text-input-context" role="note">
+          <div className="nh3d-text-input-context-value">{textInputRequest.contextMessage}</div>
+        </div>
       ) : null}
-    </AnimatedDialog>
+    />
   );
 }

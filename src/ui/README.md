@@ -92,6 +92,18 @@ The following helpers support those feature owners:
 
 Run `npm run check:tsc` and focused tests for the feature being changed. UI regression tests live beside their helpers under `app/`; engine input lifecycle coverage remains in [input-lifecycle.test.ts](../game/engine/input/input-lifecycle.test.ts).
 
+Free-text runtime prompts (`shim_getlin`, including Call prompts after quaffing or
+reading, item naming, engraving, wishing and genocide) use `TextInputDialog`.
+It and the single-symbol question path share [TextEntryDialog](modals/TextEntryDialog.tsx),
+which owns focus after its contents mount, text keyboard hints, IME-safe Enter,
+Escape, labels and actions. Customize it with `className` and
+`inputClassName`; retain the `data-nh3d-text-entry` marker so generic
+question navigation does not move focus to a button. Startup and settings fields
+remain inside their existing form dialogs. The native Quest keyboard handles new
+editor focus centrally in `scripts/quest/webxr/patch-keyboard.mjs`, including
+asynchronous prompts without a pointer gesture; duplicate focus and content
+notifications must not reopen a keyboard dismissed with Close/B.
+
 For dialog changes, check open, close, Escape, Enter and focus restoration in the browser. Inventory changes also need row activation, context actions, drop amount and scroll checks. Status/layout changes need the desktop and mobile presentation. Controller changes need release/neutral behavior and dialog priority, beyond merely rendering the buttons.
 
 Build and packaging validation remain user-run under the [repository guidance](../../.agents/rules/AGENTS.md).

@@ -36,6 +36,7 @@ export function patchKeyboard(checkout) {
     }
 
     private int mImmersiveInputRevision = 0;
+    private boolean mImmersiveInputFocused = false;
 
     private void queueImmersiveInput(boolean show) {
         final int revision = mImmersiveInputRevision;
@@ -44,7 +45,7 @@ export function patchKeyboard(checkout) {
             if (revision != mImmersiveInputRevision || window != mAttachedWindow || mIsInVoiceInput) return;
             updateImmersiveInput();
             // An explicit request can reopen the same focused field without
-            // replacing its keyboard. Focus notifications alone cannot.
+            // replacing its keyboard. A new editor also requests visibility.
             if (show && mInputConnection != null && mFocusedView == mAttachedWindow && !mWidgetPlacement.visible) {
                 mWidgetManager.pushBackHandler(mBackHandler);
                 mWidgetPlacement.visible = true;
@@ -57,9 +58,16 @@ export function patchKeyboard(checkout) {
     public void restartInput(@NonNull WSession session, int reason) {
         mInputRestarted = true;
         if (BuildConfig.NH3D_GAME_HOST && MotionEventGenerator.gameImmersive) {
-            // Content changes must not reset a held key or reopen a dismissed keyboard.
-            if (reason == RESTART_REASON_FOCUS) queueImmersiveInput(false);
-            else if (reason == RESTART_REASON_BLUR) {
+            // Async game prompts can focus without a showSoftInput gesture.
+            // Reopen for a new editor, but not for connection feedback or typing
+            // in the same editor after the user dismissed the keyboard.
+            if (reason == RESTART_REASON_FOCUS) {
+                final boolean newFocus = !mImmersiveInputFocused;
+                mImmersiveInputFocused = true;
+                if (newFocus) ++mImmersiveInputRevision;
+                queueImmersiveInput(newFocus);
+            } else if (reason == RESTART_REASON_BLUR) {
+                mImmersiveInputFocused = false;
                 final int revision = ++mImmersiveInputRevision;
                 post(() -> {
                     if (revision == mImmersiveInputRevision) updateFocusedView(null);

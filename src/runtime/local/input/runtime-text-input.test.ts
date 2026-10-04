@@ -29,6 +29,11 @@ function readAnswer() {
 
 describe("explicit runtime text submissions", () => {
   it.each([
+    ["Call a smoky potion:", "healing"],
+    ["Call a scroll labeled KERNOD WEL:", "identify"],
+    ["Call a glass wand:", "light"],
+    ["What do you want to name this dagger?", "Sting"],
+    ["What do you want to write in the dust here?", "Elbereth"],
     ["For what do you wish?", "blessed +2 silver dragon scale mail"],
     ["What class of monsters do you wish to genocide?", "L"],
     ["What monster do you want to genocide?", "mind flayer"],

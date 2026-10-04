@@ -10,6 +10,7 @@ import type {
 import { CastSpellMenu, type CastSpellMenuData } from "../../modals/cast-menu";
 import { TechniqueMenu, type TechniqueMenuData } from "../../modals/technique-menu";
 import AnimatedDialog from "../../modals/AnimatedDialog";
+import { TextEntryDialog } from "../../modals/TextEntryDialog";
 import {
   type EnhanceMenuData
 } from "../../modals/enhance-menu";
@@ -101,6 +102,28 @@ export function QuestionDialog({
   questionMenuPageCount,
   questionMenuPageIndex,
 }: QuestionDialogProps) {
+  if (shouldRenderQuestionTextInput) {
+    return <TextEntryDialog
+      open={Boolean(question)}
+      id="question-dialog"
+      className="nh3d-dialog-question nh3d-dialog-has-mobile-close"
+      inputClassName="nh3d-question-text-input"
+      prompt={displayedQuestionText}
+      focusKey={question?.text}
+      value={questionTextInputValue}
+      onChange={setQuestionTextInputValue}
+      onSubmit={submitQuestionTextInput}
+      onCancel={() => controller?.cancelActivePrompt()}
+      confirmLabel={t.dialogs.textInput.ok}
+      cancelLabel={commonStrings.cancel}
+      placeholder={t.dialogs.textInput.placeholder}
+      maxLength={1}
+      inputRef={questionTextInputRef}
+      closeButton={renderMobileDialogCloseButton(
+        () => controller?.cancelActivePrompt(), t.dialogs.question.cancelPrompt,
+      )}
+    />;
+  }
   return (
     <AnimatedDialog
       className={`nh3d-dialog nh3d-dialog-question nh3d-dialog-fixed-actions nh3d-dialog-has-mobile-close${question?.menuItems.length === 0 && isYesNoQuestionChoices
@@ -536,55 +559,6 @@ export function QuestionDialog({
                 ) : null}
               </>
             )
-          ) : shouldRenderQuestionTextInput ? (
-            <>
-              <input
-                aria-label={
-                  displayedQuestionText || t.dialogs.textInput.placeholder
-                }
-                autoCapitalize="none"
-                autoComplete="off"
-                autoCorrect="off"
-                autoFocus
-                className="nh3d-text-input nh3d-question-text-input"
-                inputMode="text"
-                maxLength={1}
-                onChange={(event) =>
-                  setQuestionTextInputValue(event.target.value)
-                }
-                onKeyDown={(event) => {
-                  event.stopPropagation();
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    submitQuestionTextInput();
-                  } else if (event.key === "Escape") {
-                    event.preventDefault();
-                    controller?.cancelActivePrompt();
-                  }
-                }}
-                placeholder={t.dialogs.textInput.placeholder}
-                ref={questionTextInputRef}
-                spellCheck={false}
-                type="text"
-                value={questionTextInputValue}
-              />
-              <div className="nh3d-menu-actions">
-                <button
-                  className="nh3d-menu-action-button nh3d-menu-action-confirm"
-                  onClick={submitQuestionTextInput}
-                  type="button"
-                >
-                  {t.dialogs.textInput.ok}
-                </button>
-                <button
-                  className="nh3d-menu-action-button nh3d-menu-action-cancel"
-                  onClick={() => controller?.cancelActivePrompt()}
-                  type="button"
-                >
-                  {commonStrings.cancel}
-                </button>
-              </div>
-            </>
           ) : (
             <>
               <div className="nh3d-overflow-glow-frame">
