@@ -21,11 +21,13 @@ type Nh3dBaseTilesetEntry = Omit<
 };
 
 export type Nh3dTilesetEntry = Nh3dBaseTilesetEntry & {
+  readonly atlasColumns?: number;
   readonly source: Nh3dTilesetSource;
   readonly assetUrl: string;
 };
 
 export type Nh3dUserTilesetRegistration = {
+  readonly atlasColumns?: number;
   readonly id: string;
   readonly label: string;
   readonly tileSize: number;
@@ -201,8 +203,11 @@ export function inferNh3dTilesetTileDimensions(
   height: number,
   path?: string | null,
   layoutVersion?: Nh3dTilesetTileLayoutVersion,
+  atlasColumns?: number,
 ): { tileWidth: number; tileHeight: number } {
-  const tileWidth = inferNh3dTilesetTileSizeFromAtlasWidthForPath(width, path);
+  const tileWidth = Number.isSafeInteger(atlasColumns) && atlasColumns! > 0 && width > 0
+    ? Math.max(1, Math.trunc(width / atlasColumns!))
+    : inferNh3dTilesetTileSizeFromAtlasWidthForPath(width, path);
   const entry = findNh3dTilesetByPath(path);
   if (entry?.tileHeight && entry.tileHeight > 0) {
     return { tileWidth, tileHeight: Math.max(1, Math.round(entry.tileHeight * tileWidth / entry.tileSize)) };
@@ -224,6 +229,8 @@ export function getNh3dTilesetAtlasTileColumns(
   path: string | null | undefined,
 ): number {
   const normalizedPath = String(path || "").trim();
+  const registeredColumns = findNh3dTilesetByPath(path)?.atlasColumns;
+  if (Number.isSafeInteger(registeredColumns) && registeredColumns! > 0) return registeredColumns!;
   const preset =
     tilesetAtlasTileColumnsPresetByPath[normalizedPath] ??
     tilesetAtlasTileColumnsPresetByPath[String(findNh3dTilesetByPath(path)?.path || "").trim()];
@@ -407,6 +414,7 @@ export function setNh3dUserTilesets(
       label,
       tileSize,
       tileHeight: registration.tileHeight,
+      atlasColumns: registration.atlasColumns === 38 ? 38 : nh3dTilesetAtlasTileColumns,
       source: "user",
       assetUrl,
       tileLayoutVersion,

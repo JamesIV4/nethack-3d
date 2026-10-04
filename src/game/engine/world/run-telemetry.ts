@@ -22,6 +22,7 @@ export interface RunTelemetryDependencies {
   readonly gameOver: Pick<
     GameOver,
     "pendingSuppressedGameOverReportKind"
+    | "pendingGameOverReportKind"
     | "postmortemReports"
   >;
   readonly heldWeapon: Pick<
@@ -119,6 +120,7 @@ export class RunTelemetry {
     this.recentSpellKillAttribution = null;
     this.dependencies.gameOver.postmortemReports = createEmptyGameOverPostmortemReports();
     this.dependencies.gameOver.pendingSuppressedGameOverReportKind = null;
+    this.dependencies.gameOver.pendingGameOverReportKind = null;
   }
 
   buildSortedRunTelemetryBreakdown(

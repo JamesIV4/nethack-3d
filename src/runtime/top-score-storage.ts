@@ -14,6 +14,7 @@ import type {
 import { supportsRuntimeTopScores } from "./runtime-capabilities";
 import { resolveRuntimeSaveDbNames } from "./save-storage";
 import type { NethackRuntimeVersion } from "./types";
+import { resolveArchivedDungeonOverview } from "./dungeon-overview";
 
 const scoreDetailsDbName = "nh3d-top-score-details-v1";
 const scoreDetailsDbVersion = 1;
@@ -362,7 +363,7 @@ function buildFallbackScoreKeyCandidates(
   );
 }
 
-function createSnapshotId(runtimeVersion: NethackRuntimeVersion): string {
+export function createTopScoreSnapshotId(runtimeVersion: NethackRuntimeVersion): string {
   const randomPart =
     typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
       ? crypto.randomUUID()
@@ -814,8 +815,11 @@ export async function saveTopScoreDetailSnapshot(input: {
   const points = normalizeFiniteInteger(input.playerStats.score);
   const turns = normalizeFiniteInteger(input.playerStats.time);
   const capturedAtMs = Date.now();
+  const timeline = sanitizeTimelineEvents(input.timeline);
+  const postmortemReports = sanitizeGameOverPostmortemReports(input.postmortemReports);
+  postmortemReports.dungeonOverview = resolveArchivedDungeonOverview(postmortemReports.dungeonOverview, timeline);
   const snapshot: TopScoreDetailSnapshot = {
-    id: normalizeText(input.id) || createSnapshotId(input.runtimeVersion),
+    id: normalizeText(input.id) || createTopScoreSnapshotId(input.runtimeVersion),
     runtimeVersion: input.runtimeVersion,
     capturedAtMs,
     capturedAtIso: new Date(capturedAtMs).toISOString(),
@@ -828,21 +832,24 @@ export async function saveTopScoreDetailSnapshot(input: {
     attributes: buildAttributeSnapshot(input.playerStats),
     playerStats: { ...input.playerStats },
     inventory: sanitizeInventoryItems(input.inventoryItems),
-    timeline: sanitizeTimelineEvents(input.timeline),
+    timeline,
     tombstoneLines: Array.isArray(input.tombstoneLines)
       ? input.tombstoneLines.map((line) => normalizePreservedLine(line))
       : [],
     telemetry: sanitizeRunTelemetrySnapshot(input.telemetry),
-    postmortemReports: sanitizeGameOverPostmortemReports(
-      input.postmortemReports,
-    ),
+    postmortemReports,
   };
 
   const db = await openScoreDetailsDatabase();
   try {
     const transaction = db.transaction([scoreDetailsStoreName], "readwrite");
     const store = transaction.objectStore(scoreDetailsStoreName);
-    await idbRequestToPromise(store.put(snapshot));
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error ?? new Error("Unable to save score snapshot."));
+      transaction.onabort = () => reject(transaction.error ?? new Error("Score snapshot transaction aborted."));
+      store.put(snapshot);
+    });
   } finally {
     db.close();
   }

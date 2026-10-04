@@ -141,6 +141,11 @@ export class TilesetAssets {
 
   tilesetTextureLoadRequestId = 0;
   tilesetTextureRuntimeVersion: NethackRuntimeVersion | null = null;
+  tilesetTextureAssetUrl: string | null = null;
+
+  hasTilesetSourceChanged(path: string): boolean {
+    return this.tilesetTextureAssetUrl !== resolveNh3dTilesetAssetUrl(path);
+  }
 
   loadedTilesetSourceLayoutVersion: Nh3dTilesetTileLayoutVersion =
     "unknown";
@@ -498,6 +503,7 @@ export class TilesetAssets {
     this.loadedTilesetTileLayoutVersion =
       tileset?.tileLayoutVersion ?? "unknown";
     const tilesetAssetUrl = resolveNh3dTilesetAssetUrl(options.tilesetPath);
+    this.tilesetTextureAssetUrl = tilesetAssetUrl;
     if (!tileset) {
       this.disposeVultureTilesetTranslator();
       this.tilesetTexture?.dispose();

@@ -102,7 +102,7 @@ export function useMessageLogView(dependencies: UseMessageLogViewDependencies) {
   } = dependencies;
 
   const gameMessageLog =
-    clientOptions.liveMessageLog || terminalDesktopGutterVisible ? (
+    clientOptions.liveMessageLog ? (
       <div
         className="nh3d-message-log-scroll"
         data-nh3d-overflow-glow

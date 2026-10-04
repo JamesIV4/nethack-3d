@@ -36,6 +36,7 @@ export interface RuntimeMessagesDependencies {
   readonly positionInput: Pick<
     RuntimePositionInput,
     "armPendingTravelPositionInput"
+    | "activateTargetPositionInputFromPrompt"
   >;
   readonly postActionRefresh: Pick<
     RuntimePostActionRefresh,
@@ -87,6 +88,7 @@ export class RuntimeMessages {
     }
     this.deps.windowText.appendWindowTextBuffer(win, textStr);
     if (this.deps.windows.isMessageWindow(win)) {
+      this.deps.positionInput.activateTargetPositionInputFromPrompt(textStr);
       this.deps.promptContext.rememberPromptContextMessage(textStr, "message_window");
       if (this.deps.contextualLook.isContextualInfoQuiet() && !this.deps.gameOver.gameOverSequenceActive) return 0;
     }
@@ -145,6 +147,7 @@ export class RuntimeMessages {
     if (normalizedRawText) {
       this.deps.promptContext.rememberPromptContextMessage(normalizedRawText, "raw_print");
       this.deps.positionInput.armPendingTravelPositionInput(normalizedRawText);
+      this.deps.positionInput.activateTargetPositionInputFromPrompt(normalizedRawText);
       this.deps.postActionRefresh.armPendingPostActionPlayerTileRefreshForAutopickupRawPrint(
         normalizedRawText,
       );
@@ -199,6 +202,7 @@ export class RuntimeMessages {
       );
     }
     if (normalizedRawBoldText) {
+      this.deps.positionInput.activateTargetPositionInputFromPrompt(normalizedRawBoldText);
       this.deps.promptContext.rememberPromptContextMessage(
         normalizedRawBoldText,
         "raw_print_bold",

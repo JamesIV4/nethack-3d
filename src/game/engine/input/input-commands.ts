@@ -84,6 +84,7 @@ export interface InputCommandsDependencies {
     GameOver,
     "gameOverState"
     | "pendingSuppressedGameOverReportKind"
+    | "pendingGameOverReportKind"
     | "resolveGameOverPostmortemReportKindFromQuestion"
   >;
   readonly movementInput: Pick<
@@ -1161,13 +1162,10 @@ export class InputCommands {
       ) {
         resolvedInput = "y";
       }
-      if (
-        shouldSuppressReportDisplay &&
-        String(resolvedInput || "")
-          .trim()
-          .toLowerCase() === "y"
-      ) {
-        this.dependencies.gameOver.pendingSuppressedGameOverReportKind = pendingGameOverReportKind;
+      if (String(resolvedInput).trim().toLowerCase() === "y") {
+        this.dependencies.gameOver.pendingGameOverReportKind = pendingGameOverReportKind;
+        this.dependencies.gameOver.pendingSuppressedGameOverReportKind = shouldSuppressReportDisplay
+          ? pendingGameOverReportKind : null;
       }
     }
     if (

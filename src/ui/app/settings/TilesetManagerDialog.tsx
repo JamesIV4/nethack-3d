@@ -183,20 +183,29 @@ export function TilesetManagerDialog({
                   <select
                     className="nh3d-startup-config-select"
                     id="nh3d-tileset-version"
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      // Switching between Slash'EM column counts should keep
+                      // automatic square cells square, while retaining custom heights.
+                      if (event.target.value.startsWith("slashem") &&
+                          tilesetManagerTileHeight === String(tilesetManagerTileDimensions?.tileWidth)) {
+                        setTilesetManagerTileHeight("");
+                      }
                       setTilesetManagerTileLayoutVersion(
-                        event.target.value === "slashem"
-                          ? "slashem"
-                          : event.target.value === "5.0"
-                            ? "5.0"
-                            : event.target.value === "3.4.3"
-                              ? "3.4.3"
-                              : "3.6.7",
-                      )
-                    }
+                        event.target.value === "slashem-38"
+                          ? "slashem-38"
+                          : event.target.value === "slashem"
+                            ? "slashem"
+                            : event.target.value === "5.0"
+                              ? "5.0"
+                              : event.target.value === "3.4.3"
+                                ? "3.4.3"
+                                : "3.6.7",
+                      );
+                    }}
                     value={tilesetManagerTileLayoutVersion}
                   >
-                    <option value="slashem">Slash&apos;EM layout</option>
+                    <option value="slashem">Slash&apos;EM layout (40 columns)</option>
+                    <option value="slashem-38">Slash&apos;EM layout (38 columns)</option>
                     <option value="3.4.3">NetHack 3.4.3 layout</option>
                     <option value="3.6.7">
                       {t.dialogs.tilesetManager.layout367}

@@ -8,6 +8,7 @@ import type { RuntimePromptContext } from "../messages/prompt-context";
 import type { RuntimeStartupConfiguration } from "../startup/startup-configuration";
 import type { RuntimeCheckpoints } from "../persistence/checkpoint-files";
 import type { RuntimeWindowText } from "../messages/window-text";
+import { parseFinalScoreSummary } from "../../final-score";
 
 export interface RuntimeGameOverDependencies {
   readonly checkpoints: Pick<
@@ -59,6 +60,7 @@ export class RuntimeGameOver {
   declare lastGameOverDeathSummary: string;
   declare lastKnownPlayerName: string;
   declare lastKnownGold: any;
+  private finalScore: number | null = null;
 
   constructor(private readonly deps: RuntimeGameOverDependencies) {
     this.pendingGameOverPossessionsInventoryFlow = false;
@@ -89,6 +91,7 @@ export class RuntimeGameOver {
     this.gameOverSequenceActive = true;
     this.gameOverEmptyRawPrintCount = 0;
     this.lastGameOverDeathSummary = "";
+    this.finalScore = null;
     if (this.deps.coordinator.eventHandler) {
       this.deps.coordinator.emit({
         type: "game_over_started",
@@ -153,6 +156,11 @@ export class RuntimeGameOver {
   captureGameOverSummaryFromLines(lines, source = "unknown") {
     if (!this.gameOverSequenceActive || !Array.isArray(lines)) {
       return;
+    }
+    const score = parseFinalScoreSummary(lines);
+    if (score !== null && score !== this.finalScore) {
+      this.finalScore = score;
+      this.deps.coordinator.emit({ type: "game_over_score", points: score });
     }
     for (const line of lines) {
       const summary = this.extractGameOverDeathSummary(line);

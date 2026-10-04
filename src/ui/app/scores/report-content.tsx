@@ -1,3 +1,4 @@
+import { resolveArchivedDungeonOverview } from "../../../runtime/dungeon-overview";
 import type {
   RunTelemetryLootEvent
 } from "../../../game/ui-types";
@@ -156,7 +157,7 @@ export function buildTopScoreRawReportSections(
     {
       id: "dungeon-overview",
       title: "Dungeon overview",
-      lines: reports.dungeonOverview,
+      lines: resolveArchivedDungeonOverview(reports.dungeonOverview, score.detail?.timeline),
       emptyLabel: "No dungeon-overview report was archived for this run.",
     },
   ];

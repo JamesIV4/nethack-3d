@@ -521,7 +521,8 @@ class Nethack3DEngine implements Nethack3DEngineController {
       previous.animatedMovement !== normalized.animatedMovement;
     const asciiColorModeChanged =
       previous.asciiColorMode !== normalized.asciiColorMode;
-    const tilesetPathChanged = previous.tilesetPath !== normalized.tilesetPath;
+    const tilesetPathChanged = previous.tilesetPath !== normalized.tilesetPath ||
+      this.systems.tilesetAssets.hasTilesetSourceChanged(normalized.tilesetPath);
     const antialiasingChanged =
       previous.antialiasing !== normalized.antialiasing;
     const brightnessChanged = previous.brightness !== normalized.brightness;
@@ -1290,13 +1291,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
           title: String(data.title || "NetHack Information"),
           lines: this.systems.promptDialogs.normalizeInfoMenuLines(data.lines),
         };
+        const inferredReportKind = this.systems.gameOver.resolveGameOverPostmortemReportKindFromInfoMenu(
+          normalizedInfoMenu.title, normalizedInfoMenu.lines,
+        );
         const postmortemReportKind = this.systems.gameOver.gameOverState.active
-          ? (this.systems.gameOver.pendingSuppressedGameOverReportKind ??
-            this.systems.gameOver.resolveGameOverPostmortemReportKindFromInfoMenu(
-              normalizedInfoMenu.title,
-              normalizedInfoMenu.lines,
-            ))
-          : null;
+          ? (this.systems.gameOver.pendingGameOverReportKind ??
+            this.systems.gameOver.pendingSuppressedGameOverReportKind ?? inferredReportKind)
+          : inferredReportKind === "dungeonOverview" ? inferredReportKind : null;
         if (postmortemReportKind) {
           const shouldSuppressPostmortemReportDisplay =
             this.systems.gameOver.pendingSuppressedGameOverReportKind !== null;
@@ -1412,6 +1413,13 @@ class Nethack3DEngine implements Nethack3DEngineController {
           typeof data.amount === "number"
         ) {
           this.systems.combatAttribution.triggerDamageEffectsAtTile(data.x, data.y, data.amount);
+        }
+        break;
+
+      case "game_over_score":
+        if (typeof data.points === "number" && Number.isSafeInteger(data.points) && data.points >= 0) {
+          this.systems.playerStatus.playerStats.score = data.points;
+          this.systems.playerStatus.updateStatsDisplay();
         }
         break;
 

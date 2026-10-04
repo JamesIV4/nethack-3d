@@ -90,6 +90,19 @@ The following helpers support those feature owners:
 
 ## Validation
 
+Custom Slash'EM imports offer explicit 40-column (legacy/default) and 38-column
+layouts. The stored `slashem-38` choice becomes ordinary `slashem` glyph ordering
+plus per-sheet `atlasColumns: 38` at registration, shared by rendering and tile
+previews. Existing imports stay at 40 columns; the bundled Abigaba and Absurd
+38-column presets remain unchanged.
+
+Score snapshots reserve a run ID synchronously and serialize IndexedDB writes so
+late score, inventory and report updates replace the same record. Postmortem
+report selection is tracked separately from whether the player chose to display
+it. Native dungeon overviews are recognized by branch/level headings; when no
+native report exists, saved timeline locations provide a labeled record of
+dungeon visits, including for Slash'EM and older snapshots.
+
 Run `npm run check:tsc` and focused tests for the feature being changed. UI regression tests live beside their helpers under `app/`; engine input lifecycle coverage remains in [input-lifecycle.test.ts](../game/engine/input/input-lifecycle.test.ts).
 
 Free-text runtime prompts (`shim_getlin`, including Call prompts after quaffing or

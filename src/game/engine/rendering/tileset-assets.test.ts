@@ -5,8 +5,20 @@ import { DarkCorridorInference, type DarkCorridorInferenceDependencies } from ".
 import type { NethackRuntimeVersion } from "../../../runtime/types";
 import type { Nh3dClientOptions } from "../../ui-types";
 import * as THREE from "three";
+import { clearNh3dUserTilesets, resolveNh3dTilesetAssetUrl, setNh3dUserTilesets } from "../../tilesets";
 
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
+it("detects an edited user atlas under the same path so changed columns reload", () => {
+  const assets = new TilesetAssets({} as TilesetAssetsDependencies);
+  const registration = { id: "columns", label: "Columns", tileSize: 24, tileLayoutVersion: "slashem" as const, blob: new Blob() };
+  try {
+    setNh3dUserTilesets([registration]);
+    assets.tilesetTextureAssetUrl = resolveNh3dTilesetAssetUrl("user:columns");
+    expect(assets.hasTilesetSourceChanged("user:columns")).toBe(false);
+    setNh3dUserTilesets([{ ...registration, atlasColumns: 38 }]);
+    expect(assets.hasTilesetSourceChanged("user:columns")).toBe(true);
+  } finally { clearNh3dUserTilesets(); }
+});
 function canvasFixture() {
   const drawImage = vi.fn();
   const getImageData = vi.fn((_x, _y, width, height) => ({ data: new Uint8ClampedArray(width * height * 4) }));

@@ -124,7 +124,7 @@ export function useAppVisibility(dependencies: UseAppVisibilityDependencies) {
     !loadingVisible;
 
   const terminalDesktopGutterVisible =
-    isDesktopGameRunning && clientOptions.tilesetMode === "terminal";
+    isDesktopGameRunning && clientOptions.tilesetMode === "terminal" && clientOptions.liveMessageLog;
 
   useLayoutEffect(() => {
     if (typeof document === "undefined" || typeof window === "undefined") {

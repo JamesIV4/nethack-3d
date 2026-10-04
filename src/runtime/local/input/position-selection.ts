@@ -54,7 +54,7 @@ export interface RuntimePositionInputDependencies {
   >;
 }
 
-/** Far-look and travel position mode, cursor state and position request activation. */
+/** Far-look, attack targeting and travel cursor state and position requests. */
 export class RuntimePositionInput {
   declare farLookMode: string;
   declare farLookOrigin: any;
@@ -68,7 +68,7 @@ export class RuntimePositionInput {
     this.farLookMode = "none";
     // none | armed | active
     this.farLookOrigin = null;
-    // null | "direct" | "look_menu" | "floor_target_menu" | "legacy_cursor_prompt" | "travel"
+    // null | "direct" | "look_menu" | "floor_target_menu" | "legacy_cursor_prompt" | "travel" | "target"
     this.pendingLookMenuFarLookArm = false;
     this.pendingLegacySlashEmCursorPromptFarLook = false;
     this.pendingTravelPositionInputArm = false;
@@ -125,6 +125,25 @@ export class RuntimePositionInput {
     const normalized =
       typeof text === "string" ? text.trim().toLowerCase() : "";
     return normalized === "where do you want to travel to?";
+  }
+
+  activateTargetPositionInputFromPrompt(text) {
+    // Polearms (and grappling hooks) call getpos after this pline in all
+    // supported engines. Activate before its first cliparound/curs callback:
+    // nh_poskey alone also serves ordinary commands and is too late to infer it.
+    if (typeof text !== "string" || text.trim().toLowerCase() !== "where do you want to hit?") return;
+    if (this.farLookMode === "active" && this.farLookOrigin === "target") return;
+    this.farLookMode = "active";
+    this.farLookOrigin = "target";
+    this.pendingTravelPositionInputArm = false;
+    this.pendingLookMenuFarLookArm = false;
+    this.positionCursor = null;
+    this.setPositionInputActive(true);
+    this.deps.coordinator.emit({ type: "position_request", text });
+  }
+
+  isTargetPositionSelectionInput(input) {
+    return ["Enter", "\r", "\n", ".", ",", ";", ":"].includes(input);
   }
 
   armPendingTravelPositionInput(text) {
@@ -204,6 +223,7 @@ export class RuntimePositionInput {
     if (typeof normalized !== "string" || normalized.length === 0) {
       return false;
     }
+    if (this.farLookOrigin === "target" && this.isTargetPositionSelectionInput(normalized)) return true;
     if (
       this.isTravelPositionOrigin() &&
       this.isTravelPositionRequestInput(normalized)
@@ -223,6 +243,13 @@ export class RuntimePositionInput {
     const normalized = this.deps.keyboardInput.normalizeInputKey(input);
     if (typeof normalized !== "string" || normalized.length === 0) {
       return false;
+    }
+    if (this.farLookOrigin === "target") {
+      if (this.isTargetPositionSelectionInput(normalized) || this.isFarLookExitInput(normalized)) return false;
+      // getpos owns target cycling, help, and feature-search keys as well as
+      // directions. Unlike far-look, every pick key finishes this selection.
+      return this.deps.keyboardInput.isDirectionalMovementInput(normalized) ||
+        (normalized.length === 1 && normalized.charCodeAt(0) >= 32);
     }
     if (
       this.isTravelPositionOrigin() &&
@@ -262,6 +289,8 @@ export class RuntimePositionInput {
     if (this.farLookMode !== "active") {
       return input;
     }
+
+    if (this.farLookOrigin === "target" && ["Enter", "\r", "\n"].includes(input)) return ".";
 
     // NetHack look mode uses ';' for detailed object description.
     // Treat Enter as that confirm key to avoid leaving far-look in a bad state.

@@ -572,11 +572,11 @@ export class PositionSelection {
     return null;
   }
 
-  resolveTravelPositionShortcutKey(
+  resolvePositionInputShortcutKey(
     event: KeyboardEvent,
     priorityOnly: boolean = false,
   ): string | null {
-    if (this.positionInputOrigin !== "travel") {
+    if (this.positionInputOrigin !== "travel" && this.positionInputOrigin !== "target") {
       return null;
     }
     if (event.altKey || event.ctrlKey || event.metaKey) {

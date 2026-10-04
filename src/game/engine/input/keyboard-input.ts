@@ -151,7 +151,7 @@ export interface KeyboardInputDependencies {
     | "positionHideTimerId"
     | "positionInputModeActive"
     | "resolvePositionInputConfirmKey"
-    | "resolveTravelPositionShortcutKey"
+    | "resolvePositionInputShortcutKey"
     | "setPositionInputMode"
     | "tryResolvePositionInputMovementKey"
   >;
@@ -559,13 +559,13 @@ export class KeyboardInput {
       !this.dependencies.questionMenus.isInQuestion &&
       !this.dependencies.directionPrompts.isInDirectionQuestion
     ) {
-      const priorityTravelShortcutKey = this.dependencies.positionSelection.resolveTravelPositionShortcutKey(
+      const priorityPositionShortcutKey = this.dependencies.positionSelection.resolvePositionInputShortcutKey(
         event,
         true,
       );
-      if (priorityTravelShortcutKey) {
+      if (priorityPositionShortcutKey) {
         event.preventDefault();
-        this.dependencies.inputCommands.sendInput(priorityTravelShortcutKey);
+        this.dependencies.inputCommands.sendInput(priorityPositionShortcutKey);
         return;
       }
       const positionMoveKey = this.dependencies.positionSelection.tryResolvePositionInputMovementKey(event);
@@ -580,10 +580,10 @@ export class KeyboardInput {
         this.dependencies.inputCommands.sendInput(positionConfirmKey);
         return;
       }
-      const travelShortcutKey = this.dependencies.positionSelection.resolveTravelPositionShortcutKey(event);
-      if (travelShortcutKey) {
+      const positionShortcutKey = this.dependencies.positionSelection.resolvePositionInputShortcutKey(event);
+      if (positionShortcutKey) {
         event.preventDefault();
-        this.dependencies.inputCommands.sendInput(travelShortcutKey);
+        this.dependencies.inputCommands.sendInput(positionShortcutKey);
         return;
       }
       event.preventDefault();

@@ -5,10 +5,34 @@ import {
   resolveDefaultNh3dTilesetBackgroundRemovalMode, resolveDefaultNh3dTilesetBackgroundTileId,
   resolveDefaultNh3dTilesetSolidChromaKeyColorHex,
   setNh3dUserTilesets,
+  getNh3dTilesetAtlasTileColumns,
 } from "./tilesets";
 import { shouldTranslateNh367TilesetForNh5Runtime } from "./tileset-367-to-5-translation";
 
 afterEach(() => clearNh3dUserTilesets());
+describe("Slash'EM atlas columns", () => {
+  it.each([
+    ["assets/slashem/Abigaba.bmp", 912, 888, 24],
+    ["assets/slashem/Absurd.png", 4864, 4736, 128],
+  ] as const)("preserves the built-in 38-column sheet %s", (path, width, height, size) => {
+    expect(getNh3dTilesetAtlasTileColumns(path)).toBe(38);
+    expect(inferNh3dTilesetTileDimensions(width, height, path)).toEqual({ tileWidth: size, tileHeight: size });
+  });
+
+  it("keeps old imports on 40 columns and scopes 38 columns to the opted-in sheet", () => {
+    setNh3dUserTilesets([
+      { id: "legacy", label: "Legacy", tileSize: 24, tileLayoutVersion: "slashem", blob: new Blob() },
+      { id: "native", label: "Native", tileSize: 24, atlasColumns: 38, tileLayoutVersion: "slashem", blob: new Blob() },
+    ]);
+    expect(getNh3dTilesetAtlasTileColumns("user:legacy")).toBe(40);
+    expect(inferNh3dTilesetTileDimensions(960, 888, "user:legacy")).toEqual({ tileWidth: 24, tileHeight: 24 });
+    expect(getNh3dTilesetAtlasTileColumns("user:native")).toBe(38);
+    expect(inferNh3dTilesetTileDimensions(912, 888, "user:native")).toEqual({ tileWidth: 24, tileHeight: 24 });
+    expect(findNh3dTilesetByPath("user:native")?.tileLayoutVersion).toBe("slashem");
+    expect(getNh3dCompatibleTilesetCatalog("5.0").some(entry => entry.path === "user:native")).toBe(false);
+    expect(getNh3dTilesetAtlasTileColumns("assets/3.6/DuskHack.bmp")).toBe(40);
+  });
+});
 describe("DuskHack built-in support", () => {
   it("offers its original 16px sheet for 3.6 and translates it for NetHack 5", () => {
     const path = "assets/3.6/DuskHack.bmp";

@@ -1,5 +1,6 @@
 import {
-  inferNh3dTilesetTileDimensions
+  inferNh3dTilesetTileDimensions,
+  type Nh3dUserTilesetRegistration,
 } from "../../../game/tilesets";
 import {
   type StoredUserTilesetRecord,
@@ -37,20 +38,14 @@ export function resolveUserTilesetTileHeight(rawHeight: string, inferredHeight: 
 
 export function toUserTilesetRegistrations(
   records: ReadonlyArray<StoredUserTilesetRecord>,
-): ReadonlyArray<{
-  id: string;
-  label: string;
-  tileSize: number;
-  tileHeight?: number;
-  tileLayoutVersion: StoredUserTilesetTileLayoutVersion;
-  blob: Blob;
-}> {
+): ReadonlyArray<Nh3dUserTilesetRegistration> {
   return records.map((record) => ({
     id: record.id,
     label: record.label,
     tileSize: record.tileSize,
     tileHeight: record.tileHeight,
-    tileLayoutVersion: record.tileLayoutVersion,
+    tileLayoutVersion: record.tileLayoutVersion === "slashem-38" ? "slashem" : record.tileLayoutVersion,
+    atlasColumns: record.tileLayoutVersion === "slashem-38" ? 38 : 40,
     blob: record.blob,
   }));
 }
@@ -68,7 +63,11 @@ export async function inferTilesetTileDimensionsFromBlob(
       const image = new window.Image();
       image.onload = () =>
         resolve(
-          inferNh3dTilesetTileDimensions(image.naturalWidth, image.naturalHeight, undefined, tileLayoutVersion),
+          inferNh3dTilesetTileDimensions(
+            image.naturalWidth, image.naturalHeight, undefined,
+            tileLayoutVersion === "slashem-38" ? "slashem" : tileLayoutVersion,
+            tileLayoutVersion === "slashem-38" ? 38 : undefined,
+          ),
         );
       image.onerror = () => reject(new Error(t.tilesets.failedToReadImage));
       image.src = objectUrl;

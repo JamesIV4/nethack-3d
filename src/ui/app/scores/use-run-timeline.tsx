@@ -12,6 +12,7 @@ import {
 } from "../../../runtime/runtime-capabilities";
 import {
   saveTopScoreDetailSnapshot,
+  createTopScoreSnapshotId,
   type TopScoreTimelineEvent
 } from "../../../runtime/top-score-storage";
 import type * as React from "react";
@@ -73,6 +74,7 @@ export interface UseRunTimelineTrackingDependencies {
 
 /** Capture gameplay status/message/death telemetry and persist scores */
 export function useRunTimelineTracking(dependencies: UseRunTimelineTrackingDependencies) {
+  const scoreSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const {
     seenTopScoreTimelineSignaturesRef,
     topScoreTimelineEventsRef,
@@ -351,6 +353,8 @@ export function useRunTimelineTracking(dependencies: UseRunTimelineTrackingDepen
       gameOver.deathMessage ?? "",
       gameOver.telemetry ?? null,
       gameOver.postmortemReports ?? null,
+      gameOver.tombstoneLines ?? null,
+      inventory.items,
     ]);
     if (persistedTopScoreSignatureRef.current === signature) {
       return;
@@ -371,26 +375,29 @@ export function useRunTimelineTracking(dependencies: UseRunTimelineTrackingDepen
       currentLocation,
     );
 
-    void (async () => {
+    // Reserve the identity before IndexedDB yields. Slow storage can otherwise
+    // create a second record when a late score/report triggers another effect.
+    const snapshotId = persistedTopScoreSnapshotIdRef.current || createTopScoreSnapshotId(activeRuntimeVersion);
+    persistedTopScoreSnapshotIdRef.current = snapshotId;
+    const snapshotInput = {
+      id: snapshotId,
+      runtimeVersion: activeRuntimeVersion,
+      playerStats,
+      inventoryItems: inventory.items,
+      timeline: [...topScoreTimelineEventsRef.current],
+      deathMessage: gameOver.deathMessage,
+      tombstoneLines: gameOver.tombstoneLines,
+      telemetry: gameOver.telemetry,
+      postmortemReports: gameOver.postmortemReports,
+    };
+    scoreSaveQueueRef.current = scoreSaveQueueRef.current.then(async () => {
       try {
-        const snapshotId = await saveTopScoreDetailSnapshot({
-          id: persistedTopScoreSnapshotIdRef.current || undefined,
-          runtimeVersion: activeRuntimeVersion,
-          playerStats,
-          inventoryItems: inventory.items,
-          timeline: topScoreTimelineEventsRef.current,
-          deathMessage: gameOver.deathMessage,
-          tombstoneLines: gameOver.tombstoneLines,
-          telemetry: gameOver.telemetry,
-          postmortemReports: gameOver.postmortemReports,
-        });
-        if (snapshotId) {
-          persistedTopScoreSnapshotIdRef.current = snapshotId;
-        }
+        await saveTopScoreDetailSnapshot(snapshotInput);
       } catch (error) {
+        if (persistedTopScoreSignatureRef.current === signature) persistedTopScoreSignatureRef.current = "";
         console.warn("Failed to save top score detail snapshot:", error);
       }
-    })();
+    });
   }, [
     activeRuntimeVersion,
     captureTopScoreTimelineDeath,

@@ -25,6 +25,17 @@ function record(extra: Partial<StoredUserTilesetRecord> = {}): StoredUserTileset
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe("user tileset rectangular dimensions", () => {
+  it.each([["slashem-38", 912, 38], ["slashem", 960, 40]] as const)(
+    "restores %s imports without changing their glyph layout or column count", async (layout, width, columns) => {
+      imageBoundary(width, 888);
+      expect(await inferTilesetTileDimensionsFromBlob(new Blob(), layout)).toEqual({ tileWidth: 24, tileHeight: 24 });
+      const [restored] = await normalizeUserTilesetTileSizes([record({ tileSize: 24, tileHeight: 24, tileLayoutVersion: layout })]);
+      expect(restored.tileLayoutVersion).toBe(layout);
+      expect(toUserTilesetRegistrations([restored])[0]).toMatchObject({
+        tileSize: 24, tileHeight: 24, tileLayoutVersion: "slashem", atlasColumns: columns,
+      });
+    },
+  );
   it.each([8, 17, 24, 48, 73])("supports custom height %s without assuming Geoduck's ratio", async height => {
     imageBoundary(1280, height * 39);
     const dimensions = await inferTilesetTileDimensionsFromBlob(new Blob(), "3.6.7");

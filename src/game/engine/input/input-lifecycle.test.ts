@@ -56,6 +56,17 @@ function positionFixture() {
 }
 
 describe("position selection lifecycle", () => {
+  it.each(["travel", "target"])("routes getpos shortcuts in %s mode instead of cancelling it", origin => {
+    const f = positionFixture();
+    f.position.setPositionInputMode(true, origin);
+    for (const key of ["m", "?", "@", ",", ";", ":"]) {
+      expect(f.position.resolvePositionInputShortcutKey({ key } as KeyboardEvent, true)).toBe(key);
+    }
+    expect(f.position.resolvePositionInputShortcutKey({ key: "m", ctrlKey: true } as KeyboardEvent)).toBeNull();
+    f.position.setPositionInputMode(true, "direct");
+    expect(f.position.resolvePositionInputShortcutKey({ key: "m" } as KeyboardEvent)).toBeNull();
+  });
+
   it("keeps FPS and overhead camera targets fixed while contextual Info selects a distant tile", () => {
     const f = positionFixture();
     const camera = new Camera({

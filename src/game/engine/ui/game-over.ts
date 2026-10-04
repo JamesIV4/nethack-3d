@@ -98,6 +98,8 @@ export class GameOver {
   pendingSuppressedGameOverReportKind: GameOverPostmortemReportId | null =
     null;
 
+  pendingGameOverReportKind: GameOverPostmortemReportId | null = null;
+
   pendingGameOverPromptReady: boolean = false;
 
   gameOverUiRevealBlocked: boolean = false;
@@ -193,7 +195,10 @@ export class GameOver {
     }
     if (
       combined.includes("dungeon overview") ||
-      (combined.includes("overview") && combined.includes("dungeon"))
+      (combined.includes("overview") && combined.includes("dungeon")) ||
+      // Native overviews use branch names as headings, not an overview title.
+      (/\b[^\n]+:\s*levels?\s+-?\d+/i.test([title, ...lines].join("\n")) &&
+        lines.some(line => /^\s*Level\s+-?\d+\s*:/i.test(line)))
     ) {
       return "dungeonOverview";
     }
@@ -222,6 +227,7 @@ export class GameOver {
       [kind]: storedLines.length > 0 ? storedLines : null,
     };
     this.pendingSuppressedGameOverReportKind = null;
+    this.pendingGameOverReportKind = null;
     this.syncActiveGameOverDetails();
   }
 

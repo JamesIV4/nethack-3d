@@ -12,7 +12,9 @@ export type StoredUserTilesetRecord = {
 };
 
 export type StoredUserTilesetTileLayoutVersion =
+  // Keep old imports at 40 columns; the opt-in variant uses the same glyph order.
   | "slashem"
+  | "slashem-38"
   | "3.4.3"
   | "3.6.7"
   | "5.0";
@@ -34,6 +36,9 @@ const storeName = "tilesets";
 function normalizeStoredTileLayoutVersion(
   rawValue: unknown,
 ): StoredUserTilesetTileLayoutVersion {
+  if (rawValue === "slashem-38") {
+    return "slashem-38";
+  }
   if (rawValue === "slashem") {
     return "slashem";
   }
